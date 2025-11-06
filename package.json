@@ -10,7 +10,7 @@
   "scripts": {
     "dev": "turbo run dev --parallel",
     "build": "turbo run build",
-    "start": "cd apps/server && npm run start:prod & cd apps/web && npm run preview",
+    "start": "npm run start:prod --workspace=@mbit-erp/server & npm run preview --workspace=@mbit-erp/web",
     "build:desktop": "cd apps/desktop && npm run build",
     "build:pwa": "cd apps/web && npm run build:pwa",
     "package:win": "cd apps/desktop && npm run package:win",
