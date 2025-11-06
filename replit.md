@@ -29,7 +29,77 @@ mbit-erp/
 
 ## Recent Changes (November 6, 2025)
 
-### ✅ Sprint 1 Complete - Enterprise Foundation (Latest)
+### ✅ Sprint 2 Complete - CRM Sales Pipeline (Latest)
+**Status**: Production-ready CRM Opportunities and Quotes modules
+
+**Features Implemented**:
+1. **Opportunities (Lehetőségek)** (`apps/server/src/crm/opportunity.service.ts`, `opportunity.controller.ts`)
+   - Full CRUD operations with RBAC permissions
+   - Opportunity tracking: név, érték, szakasz, valószínűség, zárvás dátum
+   - Filter by szakasz (stage: új, ajánlatadás, tárgyalás, lezárt-nyert, lezárt-veszített)
+   - Statistics endpoint: total opportunities, total value, win rate
+   - Account relationship integration
+   - Audit logging for all changes
+
+2. **Quotes (Árajánlatok)** (`apps/server/src/crm/quote.service.ts`, `quote.controller.ts`)
+   - Full CRUD operations with RBAC permissions
+   - Quote number generation using system settings pattern (AJ-{YYYY}-{####})
+   - Quote items support with automatic totals calculation (összeg, ÁFA, végösszeg)
+   - Approval workflow integrated with system settings threshold
+   - Approve/reject endpoints with automatic status updates
+   - Filter by állapot (status: piszkozat, küldve, jóváhagyott, elutasított)
+   - Account and opportunity relationships
+
+3. **Pagination Validation Fix**
+   - Added proper validation for skip/take query parameters
+   - Default values: skip=0, take=10 when not provided
+   - BadRequestException for invalid/malformed parameters (prevents 500 errors)
+   - Validation: NaN checks, skip >= 0, take >= 1
+
+**Frontend Additions**:
+- Opportunities page (`apps/web/src/pages/Opportunities.tsx`)
+  - Hungarian UI with summary cards (összes, összérték, átlagos)
+  - Filter by szakasz dropdown
+  - Data table with all fields, dates, currency formatting
+- Quotes page (`apps/web/src/pages/Quotes.tsx`)
+  - Hungarian UI with summary cards (összes, jóváhagyott, össz végösszeg)
+  - Filter by állapot dropdown
+  - Data table with opportunity reference, dates, amounts
+
+**API Endpoints Added**:
+```
+GET    /crm/opportunities           # List with pagination (skip, take) and szakasz filter
+GET    /crm/opportunities/stats     # Opportunity statistics
+GET    /crm/opportunities/:id       # Single opportunity
+POST   /crm/opportunities           # Create opportunity
+PUT    /crm/opportunities/:id       # Update opportunity
+DELETE /crm/opportunities/:id       # Delete opportunity
+
+GET    /crm/quotes                  # List with pagination (skip, take) and állapot filter
+GET    /crm/quotes/:id              # Single quote with items
+POST   /crm/quotes                  # Create quote with items
+PUT    /crm/quotes/:id              # Update quote
+DELETE /crm/quotes/:id              # Delete quote
+POST   /crm/quotes/:id/approve      # Approve quote
+POST   /crm/quotes/:id/reject       # Reject quote
+```
+
+**Database Updates**:
+- New models: `Opportunity`, `Quote`, `QuoteItem`
+- Opportunity fields: név, szakasz, érték, valószínűség, zárvásDátum, accountId
+- Quote fields: azonosító, összeg, afa, végösszeg, állapot, érvényesség, accountId, opportunityId
+- QuoteItem fields: quoteId, itemId, mennyiség, egységÁr, kedvezmény, összeg
+- Seed data: 3 opportunities and 1 quote with items
+
+**Key Files**:
+- `apps/server/src/crm/opportunity.service.ts` - Opportunity business logic
+- `apps/server/src/crm/opportunity.controller.ts` - Opportunity API endpoints
+- `apps/server/src/crm/quote.service.ts` - Quote business logic with approval workflow
+- `apps/server/src/crm/quote.controller.ts` - Quote API endpoints
+- `apps/web/src/pages/Opportunities.tsx` - Opportunities frontend
+- `apps/web/src/pages/Quotes.tsx` - Quotes frontend
+
+### ✅ Sprint 1 Complete - Enterprise Foundation
 **Status**: Production-ready backend infrastructure with Hungarian UI
 
 **Backend Infrastructure Implemented**:
