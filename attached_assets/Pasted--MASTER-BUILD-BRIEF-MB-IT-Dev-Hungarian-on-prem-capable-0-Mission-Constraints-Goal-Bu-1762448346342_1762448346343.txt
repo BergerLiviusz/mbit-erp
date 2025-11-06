@@ -1,0 +1,182 @@
+📦 MASTER BUILD BRIEF — MB IT Dev (Hungarian, on-prem capable)
+
+0) Mission & Constraints
+	•	Goal: Build a modular, enterprise web application (desktop-packaged & browser) for a financial audit firm (Audit Institute) with CRM, DMS/archiving, OCR pipeline, logistics/inventory (basic), and foundation for future modules (HR, controlling/BI, gyártás, ecommerce, online marketing).
+	•	Language/locale: All end-user UI, content, and default data in Hungarian. Date/time: Europe/Budapest. Currency: HUF by default.
+	•	Deployment modes:
+	1.	Desktop app (cross-platform packaged) +
+	2.	Local-first browser app (PWA) running entirely on the client when needed.
+	•	Compliance anchors (audit-ready):
+	•	Documentation & training artifacts present (install/admin/user guides or e-learning).  ￼
+	•	Support/maintenance & versioning approach documented through the fenntartási időszak.  ￼
+	•	Törvényi megfelelőség + GDPR where personal data are processed.  ￼
+	•	Integráltság, naplózás, jogosultság-kezelés, magyar/angol elérhetőség, távoli elérés, hibabejelentés, adatmentés/ÜBT, elérhetőség ≥96%.  ￼
+	•	Data ownership: All data remains on customer infrastructure by default (on-prem/in-house operation).
+
+1) Tech Stack (propose & scaffold)
+	•	Monorepo with workspaces.
+	•	Frontend: React + Vite + TypeScript. State: TanStack Query + Zustand. Forms: React Hook Form + Zod. UI kit: shadcn/ui + Tailwind (HU copy). i18n: i18next (hu as default).
+	•	Desktop packaging: Electron + electron-builder (targets: Windows MSI, macOS DMG/ZIP, Linux AppImage). Also generate PWA build.
+	•	Backend (local embedded or service):
+	•	NestJS (TypeScript) REST + WebSocket.
+	•	Prisma ORM.
+	•	SQLite for single-user/local; PostgreSQL option for multi-user on-prem.
+	•	Search & OCR pipeline: Tesseract (on-device) with Hungarian language pack; prepare adapters for optional cloud OCR.
+	•	Document preview: PDF.js, image thumbnails.
+	•	Auth & RBAC: JWT (desktop local) or cookie sessions (browser). Roles: User, PowerUser, Admin, Auditor (read-only).
+	•	Logging & audit trails: Winston + Prisma middleware, immutable append-only event store. User/session/event logs across all critical business flows to satisfy “naplózás” requirements.  ￼
+	•	Backups & ÜBT: CLI + scheduler for encrypted backups (file + DB), restore workflow, DR checklist; minimal SLA monitor to target ≥96% availability.  ￼
+	•	Security: HTTPS for browser mode, secure IPC in Electron, role-scoped endpoints, field-level PII masking in logs (GDPR).
+	•	Testing: Vitest + Playwright (E2E on packaged build).
+	•	CI Packaging (Replit): Provide Replit “Nix + run” config to build Electron installers for Win/macOS/Linux and serve a PWA build artifact folder.
+
+2) Global Non-Functional Requirements (NFRs)
+	•	Hungarian UX everywhere; use formal business tone in system messages.
+	•	Accessibility: WCAG 2.1 AA.
+	•	Performance: sub-200ms avg API on local; search across ~50k docs <2s.
+	•	Offline-first: PWA uses local IndexedDB cache; background sync when online.
+	•	Documentation deliverables:
+	•	Telepítési/üzemeltetői kézikönyv, felhasználói kézikönyv, and a short e-learning outline.  ￼
+	•	Support pack: ticketing link in app + “hiba bejelentése” page.  ￼
+
+3) Core Modules & Must-Have Features
+
+A) CRM (Értékesítés & ügyfélkapcsolat)
+
+Purpose: pipeline & ügyfél-élettörténet, kampányok, ajánlat→rendelés→számlázás átadás.
+Key features (align to melléklet):
+	•	Kampánymenedzsment alapok: célközönség szűrés, export, visszajelzés kezelése.  ￼
+	•	Értékesítési folyamat lánc: Ajánlat → Rendelés → Szállítás → Számlázás; adatreuse és integráció logisztika/pénzügy felé.  ￼
+	•	Kedvezménykezelés: mennyiségi, egyedi ár, értékhatár, időszaki.  ￼
+	•	Ügyféltörzs: egyedi azonosító, név, kapcsolattartók, címek, egyedi jellemzők; import külső adatbázisból.  ￼
+	•	Front office csatornák: legalább 2 (e-mail + chat/IVR/SMS/közösségi).  ￼
+	•	Reklamáció/ticketing + eszkaláció.  ￼
+	•	Riportok, emlékeztetők, naptár integráció.
+	•	RBAC + naplózás minden műveletre.  ￼
+
+B) DMS / Iratkezelés + Archiválás
+
+Purpose: egyesített, kereshető irattár; scannelt papírok digitalizálása, hiteles archiválás opció.
+Key features:
+	•	Érkeztetés & iktatás, ügyirat életciklus (iktatószám, státuszok, határidők, felelős).  ￼
+	•	Elektronikus kezelés, tárolás, keresés (min. 10 minta a bemutatáshoz).
+	•	OCR pipeline (HU): tömeges feldolgozás, manuális korrekció UI, minőségjelentés.
+	•	Változatkezelés & naplózás (ki nézte/letöltötte/módosította).  ￼
+	•	Jogosultság-kezelés (minimum felhasználó/admin), szerepkör-alapú irathozzáférés.  ￼
+	•	Biztonsági mentés & visszaállítás, incidensnapló és bejelentés.  ￼
+
+C) Logisztika / Raktár (alap)
+
+Purpose: alap cikk-/készletkezelés a CRM és számlafolyamatokhoz.
+Key features (pick essentials now, keep others as toggles):
+	•	Cikktörzs (azonosító, név, tulajdonságok, cikkcsoport, beszerzési adatok).  ￼
+	•	Cikkcsoportosítás, több raktár, készletek raktáranként.  ￼
+	•	Készletszint figyelés (min/max + automatikus figyelmeztetés).  ￼
+	•	Sarzs/gyártási szám kezelése (nyomonkövethetőség).  ￼
+	•	Árlista kezelés (szállítónként eltérő ár; import XLS/CSV/XML/TXT).  ￼
+	•	Beszerzési lánc nyomon követése (Rendelés→Szállítás→Számlázás).  ￼
+	•	Leltározás (leltárív, korrekciók, hiány/többlet).  ￼
+
+D) Pénzügy integráció (alap interfészek)
+	•	Kimenő/bemenő számla meta-adatok átadása; Online Számla API előkészítés; vevő/szállító analitika export; főkönyvi/ÁFA riport export (CSV/XML) — min. export követelmények a kontroll/kimutatásokhoz. (Általános pénzügyi megfelelés + beszámolók a pénzügyi modul követelményei szerint.)  ￼
+
+E) Táv- és csoportmunka (alap képességek)
+	•	Biztonságos távoli elérés: HTTPS, 2FA lehetőség.
+	•	Valósidejű üzenetküldés (in-app chat/RTC) és feladat státuszkövetés; min. 80% usernek saját hozzáférés.
+	•	Osztott információs bázis (hierarchikus tudásbázis, mobilról is elérhető).  ￼
+	•	Papíralapú dokumentumok elektronikusan kezelhetők/tárolhatók/archiválhatók.  ￼
+
+4) Future Modules (scaffold now, implement later)
+	•	HR & bér (skeleton): dolgozói alapadatok, munkakör nyilvántartás, szerződés-verziózás; NAV/KSH riport export hely.  ￼
+	•	Kontrolling/BI (skeleton): adatkapcsolatok, tervezett KPI-k, előre-definiált & ad-hoc lekérdezések, export (XLS/CSV/XML).  ￼
+	•	Gyártás (skeleton): gyártási rendelés entitás, ütemezési helyek, hulladék/selejt kimutatások placeholder.  ￼
+	•	Webáruház (skeleton): termékkatalógus, kosár, szállítási/fizetési módok paraméterezése, állapot értesítések, készlet interfész, HTTPS kötelező tranzakciós szakaszokban.
+	•	Online marketing (skeleton): ügyféladat betöltés/összekötés, profilozás/szegmentálás, mérőfelületek. (Lásd online marketing melléklet.)  ￼
+
+5) Data Model (initial)
+
+Create Prisma schemas for:
+	•	User, Role, Permission, Session, AuditLog
+	•	Account(Partner), Contact, Campaign, Lead, Opportunity, Quote, Order, InvoiceStub
+	•	Item, ItemGroup, Warehouse, StockLot (sarzs/gyártási), StockMove, PriceList, Supplier
+	•	Case/Ticket, Message, Task, WorkflowStep
+	•	Document, DocumentVersion, OCRJob, Tag, Filing (iktatás), RegistryEntry
+	•	ReportJob, ExportJob, BackupJob
+
+6) API & UI – High-Level Requirements
+
+Cross-module UX
+	•	Global search (ügyfél, irat, cikk, rendelés, számla meta).
+	•	Notifications & reminders (emails/SMS hooks prepared).
+	•	Hungarian date/time/number formatting across app; CSV exports use semicolon by default for HU locale.
+	•	Every mutating action is auditable (who/when/what, before/after snapshot).  ￼
+
+CRM UI
+	•	Pipeline táblák, ügyfél 360º nézet (kapcsolatok, dokumentumok, reklamációk, ajánlatok).
+	•	Kedvezményrendszer beállítás UI (mennyiségi/egyedi/értékhatár/időszaki).  ￼
+	•	Kampányszegmens építő + export.
+
+DMS / Iratkezelés UI
+	•	Beérkeztetés/iktatás varázsló, tétel meta + vonalkód/QR támogatás.  ￼
+	•	OCR munkasor: státuszok (beérkezett → OCR → ellenőrzés → kész), karakterpontos szerkesztő.
+	•	Verziólista + ki/behivatkozások, szerepkör-alapú hozzáférés.
+
+Logisztika UI
+	•	Cikktörzs és árlista kezelő (multi supplier), raktárnézetek, min/max riasztás.
+	•	Sarzs/gyártási szám életút.  ￼
+	•	Beszerzési lánc: rendelés → beérkeztetés → számlázás (meta).  ￼
+
+7) Security, Roles & Logging
+	•	Roles: User (saját ügyfél/irat hozzáférések), PowerUser (osztott erőforrások), Admin (konfiguráció), Auditor (read-only + export).
+	•	RBAC enforcement on backend & UI route guards.  ￼
+	•	Audit trail for: login, permission changes, CRUD on CRM, DMS, logisztika, kedvezmények, árlisták, készletmozgás.  ￼
+
+8) Backups, Üzletfolytonosság (ÜBT) & Remote
+	•	Encrypted scheduled backups (DB + files), restore wizard.
+	•	HTTPS with valid cert for any remote UI; optional 2FA. Provide remote access demo flow.  ￼
+	•	Incidens bejelentés felület és hibanapló megtekintés.  ￼
+	•	Availability target ≥96% (simple uptime monitor + status page).  ￼
+
+9) Deliverables Checklist (what you must generate)
+	1.	Monorepo with packages: apps/web, apps/desktop, apps/server, packages/ui, packages/config, packages/types.
+	2.	Database schema (Prisma) + seeders with Hungarian sample data (ügyfelek, cikkek, raktárak, iktatott iratok, árlisták).
+	3.	API reference (OpenAPI) in Hungarian comments for business terms.
+	4.	Installer artifacts: Windows MSI, macOS DMG, Linux AppImage; plus /dist-pwa build.
+	5.	Operations bundle (docs folder):
+	•	Telepítési_és_üzemeltetői_kézikönyv.md
+	•	Felhasználói_kézikönyv.md (HU screenshots)
+	•	E-learning_vázlat.md (modulonkénti 5–8 lecke)
+	•	Támogatási_szerződés_sablon.md (SLA ≥96%, ticketing folyamat)
+	•	Verziókezelési_és_karbantartási_stratégia.md
+	•	Adatkezelési_tájékoztató_GDPR.md (HU)
+	•	IT_biztonsági_szabályzat_kivonat.md + DRP_összefoglaló.md
+(These satisfy dokumentáltság, fenntarthatóság/támogatás, törvényi megfelelőség, adatmentés/ÜBT requirements.)  ￼
+	6.	Acceptance test scripts mapped to each GINOP point we implement (see section 10).
+
+10) Acceptance Criteria (GINOP traceability samples)
+	•	Dokumentáltság: provide the above manuals/e-learning, version-matched to the shipped build.  ￼
+	•	Jogosultság-kezelés: verify min. two roles show different UI & rights.  ￼
+	•	Integráció: same ügyfél-törzs visible across CRM & DMS; edit in one reflects in the other.  ￼
+	•	Naplózás: show run-time and archived logs for a full business year.  ￼
+	•	Távoli elérés: perform a remote transaction through the UI.  ￼
+	•	Hibabejelentés: open in-app issue form and record case.  ￼
+	•	Magyar UI: end-to-end HU interface verified.  ￼
+	•	Táv-/csoportmunka: chat present + 80% users have accounts; shared knowledge base reachable from mobile.  ￼
+	•	Logisztika minták:
+	•	Create 10 cikktörzs entries; set min/max and trigger alerts.  ￼
+	•	Show sarzs/gyártási tracking on a chosen item.  ￼
+	•	Import árlista variants from CSV; show two supplier prices.  ￼
+	•	Run beszerzési lánc with reused data.  ￼
+	•	DMS/iratkezelés minták:
+	•	Ingest 10 scanned docs → OCR (HU) → iktatás → kereshető archiv.  ￼
+	•	Show iktatási lifecycle and access controls.  ￼
+
+11) What to do now (Agent instructions)
+	1.	Scaffold the monorepo and all packages with the stack above.
+	2.	Implement MVP features for CRM, DMS/OCR, Logisztika as specified; add toggles/feature flags for future modules.
+	3.	Seed with realistic Hungarian demo data.
+	4.	Generate all documentation files (HU) in /docs with screenshots wired into the built UI.
+	5.	Produce installers (MSI/DMG/AppImage) and a PWA build; output paths clearly.
+	6.	Run automated acceptance scripts that demonstrate each criterion in §10 and export a short Megvalósulási jelentés markdown summarizing evidence (screens, logs, exports).
+
+⸻

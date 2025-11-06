@@ -1,0 +1,698 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String         @id @default(uuid())
+  email             String         @unique
+  password          String
+  nev               String
+  aktiv             Boolean        @default(true)
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  roles             UserRole[]
+  sessions          Session[]
+  auditLogs         AuditLog[]
+  ownedAccounts     Account[]      @relation("AccountOwner")
+  assignedTasks     Task[]
+  createdCampaigns  Campaign[]
+  createdLeads      Lead[]
+  createdTickets    Ticket[]
+  createdDocuments  Document[]
+  documentAccess    DocumentAccess[]
+
+  @@map("felhasznalok")
+}
+
+model Role {
+  id          String     @id @default(uuid())
+  nev         String     @unique
+  leiras      String?
+  permissions String
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  users       UserRole[]
+
+  @@map("szerepkorok")
+}
+
+model UserRole {
+  id        String   @id @default(uuid())
+  userId    String
+  roleId    String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId])
+  @@map("felhasznalo_szerepkorok")
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model AuditLog {
+  id             String   @id @default(uuid())
+  userId         String?
+  esemeny        String
+  entitas        String
+  entitasId      String?
+  regi           String?
+  uj             String?
+  ipCim          String?
+  userAgent      String?
+  createdAt      DateTime @default(now())
+  user           User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([entitas, entitasId])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("audit_naplo")
+}
+
+model Account {
+  id                  String        @id @default(uuid())
+  azonosito           String        @unique
+  nev                 String
+  tipus               String
+  adoszam             String?
+  cim                 String?
+  email               String?
+  telefon             String?
+  megjegyzesek        String?
+  aktiv               Boolean       @default(true)
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  ownerId             String?
+  owner               User?         @relation("AccountOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  contacts            Contact[]
+  campaigns           CampaignAccount[]
+  leads               Lead[]
+  opportunities       Opportunity[]
+  quotes              Quote[]
+  orders              Order[]
+  invoiceStubs        InvoiceStub[]
+  tickets             Ticket[]
+  documents           Document[]
+  customFields        AccountCustomField[]
+
+  @@index([ownerId])
+  @@map("ugyfelek")
+}
+
+model AccountCustomField {
+  id        String   @id @default(uuid())
+  accountId String
+  kulcs     String
+  ertek     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  account   Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@unique([accountId, kulcs])
+  @@map("ugyfel_egyedi_mezo")
+}
+
+model Contact {
+  id           String   @id @default(uuid())
+  accountId    String
+  nev          String
+  email        String?
+  telefon      String?
+  pozicio      String?
+  elsodleges   Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  account      Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+  @@map("kapcsolattartok")
+}
+
+model Campaign {
+  id                String            @id @default(uuid())
+  nev               String
+  leiras            String?
+  tipus             String
+  allapot           String
+  kezdetDatum       DateTime
+  befejezesDatum    DateTime?
+  koltsegvetes      Float?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  createdById       String?
+  createdBy         User?             @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  accounts          CampaignAccount[]
+  leads             Lead[]
+
+  @@index([createdById])
+  @@map("kampanyok")
+}
+
+model CampaignAccount {
+  id         String   @id @default(uuid())
+  campaignId String
+  accountId  String
+  visszajelzes String?
+  createdAt  DateTime @default(now())
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  account    Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@unique([campaignId, accountId])
+  @@map("kampany_ugyfel")
+}
+
+model Lead {
+  id           String       @id @default(uuid())
+  accountId    String?
+  campaignId   String?
+  forras       String
+  allapot      String
+  minositesScore Int?
+  megjegyzesek String?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  createdById  String?
+  account      Account?     @relation(fields: [accountId], references: [id], onDelete: SetNull)
+  campaign     Campaign?    @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  createdBy    User?        @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  opportunity  Opportunity?
+
+  @@index([accountId])
+  @@index([campaignId])
+  @@map("leadek")
+}
+
+model Opportunity {
+  id              String    @id @default(uuid())
+  accountId       String
+  leadId          String?   @unique
+  nev             String
+  szakasz         String
+  ertek           Float
+  valoszinuseg    Int
+  zarvasDatum     DateTime?
+  lezartDatum     DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  account         Account   @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  lead            Lead?     @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  quotes          Quote[]
+
+  @@index([accountId])
+  @@map("lehetosegek")
+}
+
+model Quote {
+  id               String       @id @default(uuid())
+  accountId        String
+  opportunityId    String?
+  azonosito        String       @unique
+  ervenyessegDatum DateTime
+  osszeg           Float
+  afa              Float
+  vegosszeg        Float
+  allapot          String
+  megjegyzesek     String?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  account          Account      @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  opportunity      Opportunity? @relation(fields: [opportunityId], references: [id], onDelete: SetNull)
+  items            QuoteItem[]
+  discounts        Discount[]
+  order            Order?
+
+  @@index([accountId])
+  @@index([opportunityId])
+  @@map("ajanlatok")
+}
+
+model QuoteItem {
+  id          String   @id @default(uuid())
+  quoteId     String
+  itemId      String
+  mennyiseg   Float
+  egysegAr    Float
+  kedvezmeny  Float    @default(0)
+  osszeg      Float
+  createdAt   DateTime @default(now())
+  quote       Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  item        Item     @relation(fields: [itemId], references: [id])
+
+  @@map("ajanlat_tetelek")
+}
+
+model Discount {
+  id              String    @id @default(uuid())
+  quoteId         String?
+  orderId         String?
+  tipus           String
+  ertek           Float
+  mennyisegiHatar Float?
+  ertekHatar      Float?
+  kezdetDatum     DateTime?
+  vegesDatum      DateTime?
+  leiras          String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  quote           Quote?    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  order           Order?    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("kedvezmenyek")
+}
+
+model Order {
+  id               String        @id @default(uuid())
+  accountId        String
+  quoteId          String?       @unique
+  azonosito        String        @unique
+  rendelesiDatum   DateTime      @default(now())
+  szallitasiDatum  DateTime?
+  teljesitesiDatum DateTime?
+  osszeg           Float
+  afa              Float
+  vegosszeg        Float
+  allapot          String
+  megjegyzesek     String?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  account          Account       @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  quote            Quote?        @relation(fields: [quoteId], references: [id], onDelete: SetNull)
+  items            OrderItem[]
+  discounts        Discount[]
+  invoiceStub      InvoiceStub?
+  shipments        Shipment[]
+
+  @@index([accountId])
+  @@map("rendelesek")
+}
+
+model OrderItem {
+  id          String   @id @default(uuid())
+  orderId     String
+  itemId      String
+  mennyiseg   Float
+  egysegAr    Float
+  kedvezmeny  Float    @default(0)
+  osszeg      Float
+  createdAt   DateTime @default(now())
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  item        Item     @relation(fields: [itemId], references: [id])
+
+  @@map("rendeles_tetelek")
+}
+
+model Shipment {
+  id              String    @id @default(uuid())
+  orderId         String
+  szallitasiCim   String
+  szallitasiMod   String
+  szallitasiDatum DateTime?
+  allapot         String
+  megjegyzesek    String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  order           Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@map("szallitasok")
+}
+
+model InvoiceStub {
+  id                String   @id @default(uuid())
+  accountId         String
+  orderId           String?  @unique
+  szamlaSzam        String   @unique
+  kiallitasDatum    DateTime @default(now())
+  teljesitesDatum   DateTime
+  fizetesiHataridoDatum DateTime
+  osszeg            Float
+  afa               Float
+  vegosszeg         Float
+  tipus             String
+  allapot           String
+  megjegyzesek      String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  account           Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  order             Order?   @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  @@index([accountId])
+  @@map("szamla_meta")
+}
+
+model Item {
+  id                String           @id @default(uuid())
+  azonosito         String           @unique
+  nev               String
+  leiras            String?
+  itemGroupId       String?
+  egyseg            String
+  beszerzesiAr      Float
+  eladasiAr         Float
+  afaKulcs          Float
+  aktiv             Boolean          @default(true)
+  beszerzesiAdatok  String?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  itemGroup         ItemGroup?       @relation(fields: [itemGroupId], references: [id], onDelete: SetNull)
+  quoteItems        QuoteItem[]
+  orderItems        OrderItem[]
+  stockLots         StockLot[]
+  stockMoves        StockMove[]
+  priceLists        PriceListItem[]
+
+  @@index([itemGroupId])
+  @@map("cikkek")
+}
+
+model ItemGroup {
+  id        String   @id @default(uuid())
+  nev       String   @unique
+  leiras    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  items     Item[]
+
+  @@map("cikkcsoportok")
+}
+
+model Warehouse {
+  id          String       @id @default(uuid())
+  azonosito   String       @unique
+  nev         String
+  cim         String?
+  aktiv       Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  stockLots   StockLot[]
+  stockMoves  StockMove[]
+
+  @@map("raktarak")
+}
+
+model StockLot {
+  id                  String       @id @default(uuid())
+  itemId              String
+  warehouseId         String
+  sarzsGyartasiSzam   String?
+  mennyiseg           Float
+  minKeszlet          Float        @default(0)
+  maxKeszlet          Float?
+  lejarat             DateTime?
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+  item                Item         @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  warehouse           Warehouse    @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+
+  @@index([itemId, warehouseId])
+  @@index([sarzsGyartasiSzam])
+  @@map("keszlet_tetelek")
+}
+
+model StockMove {
+  id            String    @id @default(uuid())
+  itemId        String
+  warehouseId   String
+  tipus         String
+  mennyiseg     Float
+  referenciaId  String?
+  megjegyzesek  String?
+  createdAt     DateTime  @default(now())
+  item          Item      @relation(fields: [itemId], references: [id])
+  warehouse     Warehouse @relation(fields: [warehouseId], references: [id])
+
+  @@index([itemId])
+  @@index([warehouseId])
+  @@index([createdAt])
+  @@map("keszlet_mozgasok")
+}
+
+model Supplier {
+  id          String          @id @default(uuid())
+  nev         String
+  adoszam     String?
+  cim         String?
+  email       String?
+  telefon     String?
+  aktiv       Boolean         @default(true)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  priceLists  PriceList[]
+
+  @@map("szallitok")
+}
+
+model PriceList {
+  id           String          @id @default(uuid())
+  supplierId   String
+  nev          String
+  ervenyessegKezdet DateTime
+  ervenyessegVeg    DateTime?
+  aktiv        Boolean         @default(true)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  supplier     Supplier        @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  items        PriceListItem[]
+
+  @@index([supplierId])
+  @@map("arlistak")
+}
+
+model PriceListItem {
+  id          String    @id @default(uuid())
+  priceListId String
+  itemId      String
+  ar          Float
+  valuta      String    @default("HUF")
+  createdAt   DateTime  @default(now())
+  priceList   PriceList @relation(fields: [priceListId], references: [id], onDelete: Cascade)
+  item        Item      @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@unique([priceListId, itemId])
+  @@map("arlista_tetelek")
+}
+
+model Ticket {
+  id             String         @id @default(uuid())
+  accountId      String?
+  azonosito      String         @unique
+  targy          String
+  leiras         String
+  tipus          String
+  prioritas      String
+  allapot        String
+  eszkalalva     Boolean        @default(false)
+  megnyitasDatum DateTime       @default(now())
+  lezarasDatum   DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  createdById    String?
+  assignedToId   String?
+  account        Account?       @relation(fields: [accountId], references: [id], onDelete: SetNull)
+  createdBy      User?          @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  messages       Message[]
+
+  @@index([accountId])
+  @@index([allapot])
+  @@map("ticketek")
+}
+
+model Message {
+  id        String   @id @default(uuid())
+  ticketId  String?
+  felhaszCsak String?
+  targy     String?
+  szoveg    String
+  tipus     String
+  createdAt DateTime @default(now())
+  ticket    Ticket?  @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@index([ticketId])
+  @@map("uzenetek")
+}
+
+model Task {
+  id             String    @id @default(uuid())
+  cim            String
+  leiras         String?
+  allapot        String
+  prioritas      String
+  hataridoDatum  DateTime?
+  assignedToId   String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  assignedTo     User?     @relation(fields: [assignedToId], references: [id], onDelete: SetNull)
+
+  @@index([assignedToId])
+  @@index([allapot])
+  @@map("feladatok")
+}
+
+model Document {
+  id                String              @id @default(uuid())
+  accountId         String?
+  iktatoSzam        String?             @unique
+  nev               String
+  tipus             String
+  fajlNev           String
+  fajlMeret         Int
+  fajlUtvonal       String
+  mimeType          String
+  allapot           String
+  ervenyessegKezdet DateTime?
+  ervenyessegVeg    DateTime?
+  lejarat           DateTime?
+  felelos           String?
+  megjegyzesek      String?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  createdById       String?
+  account           Account?            @relation(fields: [accountId], references: [id], onDelete: SetNull)
+  createdBy         User?               @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  versions          DocumentVersion[]
+  ocrJob            OCRJob?
+  tags              DocumentTag[]
+  access            DocumentAccess[]
+
+  @@index([accountId])
+  @@index([iktatoSzam])
+  @@index([tipus])
+  @@map("dokumentumok")
+}
+
+model DocumentVersion {
+  id           String   @id @default(uuid())
+  documentId   String
+  verzioSzam   Int
+  fajlUtvonal  String
+  valtoztatasLeiras String?
+  createdAt    DateTime @default(now())
+  createdById  String?
+  document     Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@index([documentId])
+  @@map("dokumentum_verziok")
+}
+
+model DocumentAccess {
+  id         String   @id @default(uuid())
+  documentId String
+  userId     String
+  jogosultsag String
+  createdAt  DateTime @default(now())
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([documentId, userId])
+  @@map("dokumentum_jogosultsagok")
+}
+
+model OCRJob {
+  id            String    @id @default(uuid())
+  documentId    String    @unique
+  allapot       String
+  eredmeny      String?
+  pontossag     Float?
+  nyelv         String    @default("hun")
+  hibalista     String?
+  feldolgozasKezdet DateTime?
+  feldolgozasVeg    DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  document      Document  @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@index([allapot])
+  @@map("ocr_feladatok")
+}
+
+model Tag {
+  id        String        @id @default(uuid())
+  nev       String        @unique
+  szin      String?
+  createdAt DateTime      @default(now())
+  documents DocumentTag[]
+
+  @@map("cimkek")
+}
+
+model DocumentTag {
+  id         String   @id @default(uuid())
+  documentId String
+  tagId      String
+  createdAt  DateTime @default(now())
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  tag        Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([documentId, tagId])
+  @@map("dokumentum_cimkek")
+}
+
+model BackupJob {
+  id             String    @id @default(uuid())
+  tipus          String
+  allapot        String
+  fajlUtvonal    String?
+  meret          Int?
+  hibaUzenet     String?
+  inditas        DateTime  @default(now())
+  befejezes      DateTime?
+  createdAt      DateTime  @default(now())
+
+  @@index([allapot])
+  @@index([inditas])
+  @@map("biztonsagi_mentest")
+}
+
+model ReportJob {
+  id          String    @id @default(uuid())
+  nev         String
+  tipus       String
+  parameterek String?
+  allapot     String
+  eredmeny    String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("riport_feladatok")
+}
+
+model ExportJob {
+  id          String    @id @default(uuid())
+  tipus       String
+  formatum    String
+  parameterek String?
+  allapot     String
+  fajlUtvonal String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("export_feladatok")
+}
+
+model KnowledgeBase {
+  id        String   @id @default(uuid())
+  cim       String
+  tartalom  String
+  kategoria String
+  szulo     String?
+  aktiv     Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([kategoria])
+  @@map("tudasbazis")
+}
