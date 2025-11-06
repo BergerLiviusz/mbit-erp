@@ -40,12 +40,21 @@ async function seedSystemSettings() {
     { kulcs: 'numbering.quote.pattern', ertek: 'AJ-{YYYY}-{####}', tipus: 'string', kategoria: 'numbering', leiras: 'Árajánlat számozási minta' },
     { kulcs: 'numbering.order.pattern', ertek: 'R-{YYYY}-{####}', tipus: 'string', kategoria: 'numbering', leiras: 'Rendelés számozási minta' },
     { kulcs: 'numbering.document.pattern', ertek: 'MBIT/{YYYY}/{####}', tipus: 'string', kategoria: 'numbering', leiras: 'Dokumentum iktatószám minta' },
+    { kulcs: 'numbering.purchase_order.pattern', ertek: 'BR-{YYYY}-{####}', tipus: 'string', kategoria: 'numbering', leiras: 'Beszerzési rendelés számozási minta' },
+    { kulcs: 'numbering.delivery_note.pattern', ertek: 'SZL-{YYYY}-{####}', tipus: 'string', kategoria: 'numbering', leiras: 'Szállítólevél számozási minta' },
     { kulcs: 'backup.daily.enabled', ertek: 'false', tipus: 'boolean', kategoria: 'backup', leiras: 'Napi mentés engedélyezése' },
     { kulcs: 'backup.daily.schedule', ertek: '0 2 * * *', tipus: 'string', kategoria: 'backup', leiras: 'Napi mentés időpontja (cron)' },
     { kulcs: 'backup.weekly.enabled', ertek: 'false', tipus: 'boolean', kategoria: 'backup', leiras: 'Heti mentés engedélyezése' },
     { kulcs: 'backup.weekly.schedule', ertek: '0 3 * * 0', tipus: 'string', kategoria: 'backup', leiras: 'Heti mentés időpontja (cron)' },
     { kulcs: 'backup.retention.count', ertek: '10', tipus: 'number', kategoria: 'backup', leiras: 'Megőrzendő mentések száma' },
     { kulcs: 'quote.approval.threshold', ertek: '1000000', tipus: 'number', kategoria: 'crm', leiras: 'Árajánlat jóváhagyási küszöb (HUF)' },
+    { kulcs: 'dms.ocr.enabled', ertek: 'false', tipus: 'boolean', kategoria: 'dms', leiras: 'OCR szövegfelismerés engedélyezése' },
+    { kulcs: 'dms.default_retention_years', ertek: '7', tipus: 'number', kategoria: 'dms', leiras: 'Alapértelmezett megőrzési idő (év)' },
+    { kulcs: 'dms.auto_archive_enabled', ertek: 'true', tipus: 'boolean', kategoria: 'dms', leiras: 'Automatikus archiválás engedélyezése' },
+    { kulcs: 'logistics.low_stock_threshold', ertek: '10', tipus: 'number', kategoria: 'logistics', leiras: 'Alacsony készlet riasztási küszöb (%)' },
+    { kulcs: 'logistics.valuation_method', ertek: 'FIFO', tipus: 'string', kategoria: 'logistics', leiras: 'Készlet értékelési módszer (FIFO/AVG)' },
+    { kulcs: 'logistics.auto_location_assign', ertek: 'false', tipus: 'boolean', kategoria: 'logistics', leiras: 'Automatikus raktári hely hozzárendelés' },
+    { kulcs: 'purchase_order.approval.threshold', ertek: '500000', tipus: 'number', kategoria: 'logistics', leiras: 'Beszerzési rendelés jóváhagyási küszöb (HUF)' },
     { kulcs: 'system.lan.enabled', ertek: 'false', tipus: 'boolean', kategoria: 'system', leiras: 'LAN együttműködés engedélyezése' },
   ];
 
@@ -464,6 +473,212 @@ async function main() {
     });
 
     console.log('✅ Árajánlatok létrehozva');
+  }
+
+  const documentCategories = await Promise.all([
+    prisma.documentCategory.create({
+      data: {
+        nev: 'Szerződések',
+        leiras: 'Üzleti szerződések és megállapodások',
+        aktiv: true,
+      },
+    }),
+    prisma.documentCategory.create({
+      data: {
+        nev: 'Számlák',
+        leiras: 'Bejövő és kimenő számlák',
+        aktiv: true,
+      },
+    }),
+    prisma.documentCategory.create({
+      data: {
+        nev: 'Adminisztratív',
+        leiras: 'Hivatalos iratok és adminisztratív dokumentumok',
+        aktiv: true,
+      },
+    }),
+  ]);
+
+  console.log('✅ Dokumentum kategóriák létrehozva');
+
+  const documentTypes = await Promise.all([
+    prisma.documentType.create({
+      data: {
+        nev: 'Vállalkozási szerződés',
+        leiras: 'Vállalkozási szerződés dokumentum típus',
+        kotelezo: true,
+        ervenyessegKell: true,
+        jovalagasKell: true,
+        aktiv: true,
+      },
+    }),
+    prisma.documentType.create({
+      data: {
+        nev: 'Számla',
+        leiras: 'Bejövő vagy kimenő számla',
+        kotelezo: false,
+        ervenyessegKell: false,
+        jovalagasKell: false,
+        aktiv: true,
+      },
+    }),
+  ]);
+
+  console.log('✅ Dokumentum típusok létrehozva');
+
+  await Promise.all([
+    prisma.document.create({
+      data: {
+        accountId: accounts[0].id,
+        categoryId: documentCategories[0].id,
+        typeId: documentTypes[0].id,
+        iktatoSzam: 'MBIT/2025/0001',
+        nev: 'Irodaszer szállítási szerződés 2025',
+        tipus: 'szerzodes',
+        fajlNev: 'szerzodes_irodaszer_2025.pdf',
+        fajlMeret: 245678,
+        fajlUtvonal: '/uploads/documents/szerzodes_irodaszer_2025.pdf',
+        mimeType: 'application/pdf',
+        allapot: 'approved',
+        ervenyessegKezdet: new Date('2025-01-01'),
+        ervenyessegVeg: new Date('2025-12-31'),
+        createdById: adminUser.id,
+      },
+    }),
+    prisma.document.create({
+      data: {
+        accountId: accounts[1].id,
+        categoryId: documentCategories[1].id,
+        typeId: documentTypes[1].id,
+        iktatoSzam: 'MBIT/2025/0002',
+        nev: 'Beérkező számla - Tech Solutions',
+        tipus: 'szamla',
+        fajlNev: 'szamla_techsol_202501.pdf',
+        fajlMeret: 125000,
+        fajlUtvonal: '/uploads/documents/szamla_techsol_202501.pdf',
+        mimeType: 'application/pdf',
+        allapot: 'registered',
+        createdById: adminUser.id,
+      },
+    }),
+  ]);
+
+  console.log('✅ Dokumentumok létrehozva');
+
+  const logisticsWarehouses = await Promise.all([
+    prisma.warehouse.create({
+      data: {
+        azonosito: 'R-01',
+        nev: 'Központi raktár',
+        cim: '1111 Budapest, Fő utca 1.',
+        aktiv: true,
+      },
+    }),
+    prisma.warehouse.create({
+      data: {
+        azonosito: 'R-02',
+        nev: 'Vidéki raktár',
+        cim: '6000 Kecskemét, Raktár út 5.',
+        aktiv: true,
+      },
+    }),
+  ]);
+
+  console.log('✅ Raktárak létrehozva');
+
+  const locations = await Promise.all([
+    prisma.warehouseLocation.create({
+      data: {
+        warehouseId: logisticsWarehouses[0].id,
+        azonosito: 'A-01-01',
+        nev: 'A zóna, 1. folyosó, 1. polc',
+        zona: 'A',
+        folyoso: '01',
+        polc: '01',
+        tipus: 'palettás',
+        aktiv: true,
+      },
+    }),
+    prisma.warehouseLocation.create({
+      data: {
+        warehouseId: logisticsWarehouses[0].id,
+        azonosito: 'A-01-02',
+        nev: 'A zóna, 1. folyosó, 2. polc',
+        zona: 'A',
+        folyoso: '01',
+        polc: '02',
+        tipus: 'polcos',
+        aktiv: true,
+      },
+    }),
+  ]);
+
+  console.log('✅ Raktári helyek létrehozva');
+
+  const stockItems = await prisma.item.findMany({ take: 3 });
+  if (stockItems.length > 0) {
+    await Promise.all([
+      prisma.stockLevel.create({
+        data: {
+          itemId: stockItems[0].id,
+          warehouseId: logisticsWarehouses[0].id,
+          locationId: locations[0].id,
+          mennyiseg: 150,
+          minimum: 50,
+          maximum: 500,
+        },
+      }),
+      prisma.stockLevel.create({
+        data: {
+          itemId: stockItems[1].id,
+          warehouseId: logisticsWarehouses[0].id,
+          locationId: locations[1].id,
+          mennyiseg: 25,
+          minimum: 100,
+          maximum: 300,
+        },
+      }),
+      prisma.stockLevel.create({
+        data: {
+          itemId: stockItems[2].id,
+          warehouseId: logisticsWarehouses[1].id,
+          mennyiseg: 200,
+          minimum: 80,
+          maximum: 400,
+        },
+      }),
+    ]);
+
+    console.log('✅ Készletszintek létrehozva');
+  }
+
+  const suppliers = await prisma.supplier.findMany();
+  if (suppliers.length > 0 && stockItems.length > 0) {
+    await prisma.purchaseOrder.create({
+      data: {
+        supplierId: suppliers[0].id,
+        azonosito: 'BR-2025-0001',
+        rendelesiDatum: new Date('2025-11-01'),
+        szallitasiDatum: new Date('2025-11-15'),
+        osszeg: 500000,
+        afa: 135000,
+        vegosszeg: 635000,
+        allapot: 'piszkozat',
+        megjegyzesek: 'Irodaszerek utánrendelése',
+        items: {
+          create: [
+            {
+              itemId: stockItems[0].id,
+              mennyiseg: 100,
+              egysegAr: 5000,
+              osszeg: 500000,
+            },
+          ],
+        },
+      },
+    });
+
+    console.log('✅ Beszerzési rendelések létrehozva');
   }
 
   await prisma.knowledgeBase.createMany({

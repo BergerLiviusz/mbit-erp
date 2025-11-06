@@ -118,6 +118,20 @@ export class SystemSettingsService {
         leiras: 'Dokumentum iktatószám minta',
       },
       {
+        kulcs: 'numbering.purchase_order.pattern',
+        ertek: 'PO-{YYYY}-{####}',
+        tipus: 'string',
+        kategoria: 'numbering',
+        leiras: 'Beszerzési rendelés számozási minta',
+      },
+      {
+        kulcs: 'logistics.low_stock_threshold',
+        ertek: '10',
+        tipus: 'number',
+        kategoria: 'logistics',
+        leiras: 'Alacsony készlet küszöbérték',
+      },
+      {
         kulcs: 'backup.daily.enabled',
         ertek: 'true',
         tipus: 'boolean',

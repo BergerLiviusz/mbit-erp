@@ -1,43 +1,119 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { SystemSettingsService } from '../system/settings.service';
+
+export interface CreateDocumentDto {
+  nev: string;
+  tipus: string;
+  categoryId?: string;
+  accountId?: string;
+  allapot: string;
+  fajlNev: string;
+  fajlMeret: number;
+  mimeType: string;
+  megjegyzesek?: string;
+  fajlUtvonal?: string;
+}
+
+export interface UpdateDocumentDto {
+  nev?: string;
+  tipus?: string;
+  categoryId?: string;
+  accountId?: string;
+  allapot?: string;
+  megjegyzesek?: string;
+}
+
+export interface DocumentFilters {
+  categoryId?: string;
+  allapot?: string;
+  accountId?: string;
+  search?: string;
+}
 
 @Injectable()
 export class DocumentService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private systemSettings: SystemSettingsService,
+  ) {}
 
-  async findAll(skip = 0, take = 50, search?: string) {
-    const where = search ? {
-      OR: [
-        { nev: { contains: search } },
-        { iktatoSzam: { contains: search } },
-      ],
-    } : {};
+  async findAll(skip = 0, take = 50, filters?: DocumentFilters) {
+    const where: any = {};
 
-    const [total, items] = await Promise.all([
+    if (filters?.categoryId) {
+      where.categoryId = filters.categoryId;
+    }
+
+    if (filters?.allapot) {
+      where.allapot = filters.allapot;
+    }
+
+    if (filters?.accountId) {
+      where.accountId = filters.accountId;
+    }
+
+    if (filters?.search) {
+      where.OR = [
+        { nev: { contains: filters.search } },
+        { iktatoSzam: { contains: filters.search } },
+      ];
+    }
+
+    const [total, data] = await Promise.all([
       this.prisma.document.count({ where }),
       this.prisma.document.findMany({
         where,
         skip,
         take,
         include: {
-          account: true,
-          createdBy: { select: { id: true, nev: true } },
-          ocrJob: true,
-          tags: { include: { tag: true } },
+          category: {
+            select: {
+              id: true,
+              nev: true,
+            },
+          },
+          account: {
+            select: {
+              id: true,
+              nev: true,
+            },
+          },
+          createdBy: {
+            select: {
+              id: true,
+              nev: true,
+              email: true,
+            },
+          },
         },
         orderBy: { createdAt: 'desc' },
       }),
     ]);
 
-    return { total, items };
+    const page = Math.floor(skip / take) + 1;
+    const pageSize = take;
+
+    return { data, total, page, pageSize };
   }
 
   async findOne(id: string) {
     return this.prisma.document.findUnique({
       where: { id },
       include: {
+        category: true,
         account: true,
-        versions: true,
+        createdBy: {
+          select: {
+            id: true,
+            nev: true,
+            email: true,
+          },
+        },
+        versions: {
+          orderBy: { createdAt: 'desc' },
+          take: 10,
+        },
         ocrJob: true,
         tags: { include: { tag: true } },
         access: { include: { user: true } },
@@ -45,22 +121,59 @@ export class DocumentService {
     });
   }
 
-  async create(data: any) {
-    const docCount = await this.prisma.document.count();
-    const iktatoSzam = data.iktatoSzam || `IK-${new Date().getFullYear()}-${String(docCount + 1).padStart(6, '0')}`;
-    
+  async create(dto: CreateDocumentDto) {
+    const iktatoSzam = await this.generateIktatoSzam();
+
     return this.prisma.document.create({
       data: {
-        ...data,
+        nev: dto.nev,
+        tipus: dto.tipus,
+        categoryId: dto.categoryId,
+        accountId: dto.accountId,
+        allapot: dto.allapot,
+        fajlNev: dto.fajlNev,
+        fajlMeret: dto.fajlMeret,
+        fajlUtvonal: dto.fajlUtvonal || '',
+        mimeType: dto.mimeType,
+        megjegyzesek: dto.megjegyzesek,
         iktatoSzam,
       },
     });
   }
 
-  async update(id: string, data: any) {
+  async update(id: string, dto: UpdateDocumentDto) {
     return this.prisma.document.update({
       where: { id },
-      data,
+      data: dto,
     });
+  }
+
+  async generateIktatoSzam(): Promise<string> {
+    const pattern = await this.systemSettings.get('numbering.document.pattern');
+    const defaultPattern = 'MBIT/{YYYY}/{####}';
+    const template = pattern || defaultPattern;
+
+    const now = new Date();
+    const year = now.getFullYear();
+
+    const countThisYear = await this.prisma.document.count({
+      where: {
+        createdAt: {
+          gte: new Date(year, 0, 1),
+          lt: new Date(year + 1, 0, 1),
+        },
+      },
+    });
+
+    const sequenceNumber = countThisYear + 1;
+
+    let iktatoSzam = template
+      .replace('{YYYY}', year.toString())
+      .replace('{YY}', year.toString().slice(-2))
+      .replace('{####}', sequenceNumber.toString().padStart(4, '0'))
+      .replace('{###}', sequenceNumber.toString().padStart(3, '0'))
+      .replace('{##}', sequenceNumber.toString().padStart(2, '0'));
+
+    return iktatoSzam;
   }
 }
