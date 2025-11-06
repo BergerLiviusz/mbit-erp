@@ -1,10 +1,69 @@
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+import { Permission, PermissionDescriptions } from '../src/common/rbac/permission.enum';
 
 const prisma = new PrismaClient();
 
+async function seedPermissions() {
+  console.log('🔑 Jogosultságok létrehozása...');
+  
+  const permissionEntries = Object.entries(Permission).map(([key, value]) => ({
+    kod: value,
+    ...PermissionDescriptions[value as Permission],
+  }));
+
+  for (const perm of permissionEntries) {
+    await prisma.permission.upsert({
+      where: { kod: perm.kod },
+      update: {
+        nev: perm.nev,
+        modulo: perm.modulo,
+        leiras: perm.leiras,
+      },
+      create: perm,
+    });
+  }
+
+  console.log(`✅ ${permissionEntries.length} jogosultság létrehozva`);
+  return await prisma.permission.findMany();
+}
+
+async function seedSystemSettings() {
+  console.log('⚙️ Rendszerbeállítások inicializálása...');
+  
+  const settings = [
+    { kulcs: 'organization.name', ertek: 'MB-IT Kft.', tipus: 'string', kategoria: 'organization', leiras: 'Szervezet neve' },
+    { kulcs: 'organization.address', ertek: '', tipus: 'string', kategoria: 'organization', leiras: 'Szervezet címe' },
+    { kulcs: 'organization.tax_number', ertek: '', tipus: 'string', kategoria: 'organization', leiras: 'Adószám' },
+    { kulcs: 'organization.email', ertek: 'admin@mbit.hu', tipus: 'string', kategoria: 'organization', leiras: 'Kapcsolattartói email' },
+    { kulcs: 'organization.phone', ertek: '', tipus: 'string', kategoria: 'organization', leiras: 'Telefonszám' },
+    { kulcs: 'numbering.quote.pattern', ertek: 'AJ-{YYYY}-{####}', tipus: 'string', kategoria: 'numbering', leiras: 'Árajánlat számozási minta' },
+    { kulcs: 'numbering.order.pattern', ertek: 'R-{YYYY}-{####}', tipus: 'string', kategoria: 'numbering', leiras: 'Rendelés számozási minta' },
+    { kulcs: 'numbering.document.pattern', ertek: 'MBIT/{YYYY}/{####}', tipus: 'string', kategoria: 'numbering', leiras: 'Dokumentum iktatószám minta' },
+    { kulcs: 'backup.daily.enabled', ertek: 'false', tipus: 'boolean', kategoria: 'backup', leiras: 'Napi mentés engedélyezése' },
+    { kulcs: 'backup.daily.schedule', ertek: '0 2 * * *', tipus: 'string', kategoria: 'backup', leiras: 'Napi mentés időpontja (cron)' },
+    { kulcs: 'backup.weekly.enabled', ertek: 'false', tipus: 'boolean', kategoria: 'backup', leiras: 'Heti mentés engedélyezése' },
+    { kulcs: 'backup.weekly.schedule', ertek: '0 3 * * 0', tipus: 'string', kategoria: 'backup', leiras: 'Heti mentés időpontja (cron)' },
+    { kulcs: 'backup.retention.count', ertek: '10', tipus: 'number', kategoria: 'backup', leiras: 'Megőrzendő mentések száma' },
+    { kulcs: 'quote.approval.threshold', ertek: '1000000', tipus: 'number', kategoria: 'crm', leiras: 'Árajánlat jóváhagyási küszöb (HUF)' },
+    { kulcs: 'system.lan.enabled', ertek: 'false', tipus: 'boolean', kategoria: 'system', leiras: 'LAN együttműködés engedélyezése' },
+  ];
+
+  for (const setting of settings) {
+    await prisma.systemSetting.upsert({
+      where: { kulcs: setting.kulcs },
+      update: setting,
+      create: setting,
+    });
+  }
+
+  console.log(`✅ ${settings.length} rendszerbeállítás inicializálva`);
+}
+
 async function main() {
   console.log('🌱 Adatbázis feltöltése kezdődik...');
+
+  const permissions = await seedPermissions();
 
   const roles = await Promise.all([
     prisma.role.upsert({
@@ -46,6 +105,30 @@ async function main() {
   ]);
 
   console.log('✅ Szerepkörök létrehozva');
+
+  const adminPermissions = permissions.filter(p => 
+    p.modulo === 'CRM' || p.modulo === 'DMS' || p.modulo === 'Logisztika' || 
+    p.modulo === 'Rendszer' || p.modulo === 'Felhasználók' || p.modulo === 'Szerepkörök' ||
+    p.modulo === 'Jelentések'
+  );
+  
+  for (const perm of adminPermissions) {
+    await prisma.rolePermission.upsert({
+      where: {
+        roleId_permissionId: {
+          roleId: roles[0].id,
+          permissionId: perm.id,
+        },
+      },
+      update: {},
+      create: {
+        roleId: roles[0].id,
+        permissionId: perm.id,
+      },
+    });
+  }
+
+  console.log('✅ Admin szerepkörhöz jogosultságok hozzárendelve');
 
   const hashedPassword = await bcrypt.hash('admin123', 10);
   const adminUser = await prisma.user.upsert({
@@ -341,6 +424,8 @@ async function main() {
   });
 
   console.log('✅ Tudásbázis elemek létrehozva');
+
+  await seedSystemSettings();
 
   console.log('🎉 Adatbázis feltöltése sikeres!');
 }
