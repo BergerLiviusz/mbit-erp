@@ -44,17 +44,49 @@ export enum Permission {
   DMS_VERSION = 'dms:version',
   DMS_APPROVE_DISPOSAL = 'dms:approve_disposal',
   
+  // Document specific
+  DOCUMENT_VIEW = 'document:view',
+  DOCUMENT_CREATE = 'document:create',
+  DOCUMENT_EDIT = 'document:edit',
+  DOCUMENT_DELETE = 'document:delete',
+  DOCUMENT_APPROVE = 'document:approve',
+  DOCUMENT_ARCHIVE = 'document:archive',
+  DOCUMENT_OCR = 'document:ocr',
+  
   // Logistics Permissions
   LOGISTICS_VIEW = 'logistics:view',
   LOGISTICS_CREATE = 'logistics:create',
   LOGISTICS_EDIT = 'logistics:edit',
   LOGISTICS_DELETE = 'logistics:delete',
   
+  // Warehouse specific
+  WAREHOUSE_VIEW = 'warehouse:view',
+  WAREHOUSE_CREATE = 'warehouse:create',
+  WAREHOUSE_EDIT = 'warehouse:edit',
+  WAREHOUSE_DELETE = 'warehouse:delete',
+  WAREHOUSE_MANAGE_LOCATIONS = 'warehouse:manage_locations',
+  
   // Stock specific
   STOCK_VIEW = 'stock:view',
   STOCK_MOVE = 'stock:move',
   STOCK_ADJUST = 'stock:adjust',
   STOCK_INVENTORY = 'stock:inventory',
+  STOCK_TRANSFER = 'stock:transfer',
+  
+  // Purchase Order specific
+  PURCHASE_ORDER_VIEW = 'purchase_order:view',
+  PURCHASE_ORDER_CREATE = 'purchase_order:create',
+  PURCHASE_ORDER_EDIT = 'purchase_order:edit',
+  PURCHASE_ORDER_DELETE = 'purchase_order:delete',
+  PURCHASE_ORDER_APPROVE = 'purchase_order:approve',
+  PURCHASE_ORDER_RECEIVE = 'purchase_order:receive',
+  
+  // Shipment specific
+  SHIPMENT_VIEW = 'shipment:view',
+  SHIPMENT_CREATE = 'shipment:create',
+  SHIPMENT_EDIT = 'shipment:edit',
+  SHIPMENT_DELETE = 'shipment:delete',
+  SHIPMENT_DISPATCH = 'shipment:dispatch',
   
   // System Permissions
   SYSTEM_SETTINGS = 'system:settings',
@@ -123,15 +155,43 @@ export const PermissionDescriptions: Record<Permission, { nev: string; modulo: s
   [Permission.DMS_VERSION]: { nev: 'Verziókezelés', modulo: 'DMS', leiras: 'Dokumentum verziók kezelése' },
   [Permission.DMS_APPROVE_DISPOSAL]: { nev: 'Selejtezés jóváhagyás', modulo: 'DMS', leiras: 'Dokumentum selejtezés engedélyezése' },
   
+  [Permission.DOCUMENT_VIEW]: { nev: 'Dokumentum megtekintés', modulo: 'DMS', leiras: 'Egyes dokumentumok megtekintése' },
+  [Permission.DOCUMENT_CREATE]: { nev: 'Dokumentum létrehozás', modulo: 'DMS', leiras: 'Új dokumentum rekord rögzítése' },
+  [Permission.DOCUMENT_EDIT]: { nev: 'Dokumentum adatok szerkesztés', modulo: 'DMS', leiras: 'Metaadatok módosítása' },
+  [Permission.DOCUMENT_DELETE]: { nev: 'Dokumentum eltávolítás', modulo: 'DMS', leiras: 'Dokumentum végeleges törlése' },
+  [Permission.DOCUMENT_APPROVE]: { nev: 'Dokumentum jóváhagyás', modulo: 'DMS', leiras: 'Dokumentumok workflow jóváhagyása' },
+  [Permission.DOCUMENT_ARCHIVE]: { nev: 'Dokumentum archiválás', modulo: 'DMS', leiras: 'Dokumentumok archiválása' },
+  [Permission.DOCUMENT_OCR]: { nev: 'OCR feldolgozás', modulo: 'DMS', leiras: 'OCR szövegfelismerés futtatása' },
+  
   [Permission.LOGISTICS_VIEW]: { nev: 'Logisztika megtekintése', modulo: 'Logisztika', leiras: 'Logisztikai adatok böngészése' },
   [Permission.LOGISTICS_CREATE]: { nev: 'Logisztika létrehozás', modulo: 'Logisztika', leiras: 'Új törzsadatok rögzítése' },
   [Permission.LOGISTICS_EDIT]: { nev: 'Logisztika szerkesztés', modulo: 'Logisztika', leiras: 'Törzsadatok módosítása' },
   [Permission.LOGISTICS_DELETE]: { nev: 'Logisztika törlés', modulo: 'Logisztika', leiras: 'Törzsadatok törlése' },
   
+  [Permission.WAREHOUSE_VIEW]: { nev: 'Raktárak megtekintése', modulo: 'Logisztika', leiras: 'Raktárak és helyek böngészése' },
+  [Permission.WAREHOUSE_CREATE]: { nev: 'Raktár létrehozás', modulo: 'Logisztika', leiras: 'Új raktár rögzítése' },
+  [Permission.WAREHOUSE_EDIT]: { nev: 'Raktár szerkesztés', modulo: 'Logisztika', leiras: 'Raktár adatok módosítása' },
+  [Permission.WAREHOUSE_DELETE]: { nev: 'Raktár törlés', modulo: 'Logisztika', leiras: 'Raktár eltávolítása' },
+  [Permission.WAREHOUSE_MANAGE_LOCATIONS]: { nev: 'Raktári helyek kezelése', modulo: 'Logisztika', leiras: 'Helyek, zónák, polcok szervezése' },
+  
   [Permission.STOCK_VIEW]: { nev: 'Készlet megtekintése', modulo: 'Logisztika', leiras: 'Készletállományok megtekintése' },
   [Permission.STOCK_MOVE]: { nev: 'Készletmozgás', modulo: 'Logisztika', leiras: 'Készletmozgások rögzítése' },
   [Permission.STOCK_ADJUST]: { nev: 'Készlet korrekció', modulo: 'Logisztika', leiras: 'Készlet korrekciók végrehajtása' },
   [Permission.STOCK_INVENTORY]: { nev: 'Leltározás', modulo: 'Logisztika', leiras: 'Leltár rögzítés és lezárás' },
+  [Permission.STOCK_TRANSFER]: { nev: 'Készlet áthelyezés', modulo: 'Logisztika', leiras: 'Raktárak közötti készletáthelyezés' },
+  
+  [Permission.PURCHASE_ORDER_VIEW]: { nev: 'Beszerzési rendelések megtekintése', modulo: 'Logisztika', leiras: 'Beszerzések böngészése' },
+  [Permission.PURCHASE_ORDER_CREATE]: { nev: 'Beszerzési rendelés létrehozás', modulo: 'Logisztika', leiras: 'Új beszerzések rögzítése' },
+  [Permission.PURCHASE_ORDER_EDIT]: { nev: 'Beszerzési rendelés szerkesztés', modulo: 'Logisztika', leiras: 'Beszerzések módosítása' },
+  [Permission.PURCHASE_ORDER_DELETE]: { nev: 'Beszerzési rendelés törlés', modulo: 'Logisztika', leiras: 'Beszerzések törlése' },
+  [Permission.PURCHASE_ORDER_APPROVE]: { nev: 'Beszerzés jóváhagyás', modulo: 'Logisztika', leiras: 'Beszerzések engedélyezése' },
+  [Permission.PURCHASE_ORDER_RECEIVE]: { nev: 'Áruátvétel rögzítés', modulo: 'Logisztika', leiras: 'Beszerzett áruk bevételezése' },
+  
+  [Permission.SHIPMENT_VIEW]: { nev: 'Szállítások megtekintése', modulo: 'Logisztika', leiras: 'Szállítmányok böngészése' },
+  [Permission.SHIPMENT_CREATE]: { nev: 'Szállítás létrehozás', modulo: 'Logisztika', leiras: 'Új szállítmány rögzítése' },
+  [Permission.SHIPMENT_EDIT]: { nev: 'Szállítás szerkesztés', modulo: 'Logisztika', leiras: 'Szállítmány adatok módosítása' },
+  [Permission.SHIPMENT_DELETE]: { nev: 'Szállítás törlés', modulo: 'Logisztika', leiras: 'Szállítmány törlése' },
+  [Permission.SHIPMENT_DISPATCH]: { nev: 'Szállítás indítás', modulo: 'Logisztika', leiras: 'Szállítmány kiadása/indítása' },
   
   [Permission.SYSTEM_SETTINGS]: { nev: 'Rendszer beállítások', modulo: 'Rendszer', leiras: 'Rendszerbeállítások módosítása' },
   [Permission.SYSTEM_BACKUP]: { nev: 'Biztonsági mentés', modulo: 'Rendszer', leiras: 'Mentések készítése' },
