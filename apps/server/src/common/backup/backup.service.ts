@@ -110,8 +110,8 @@ export class BackupService {
 
       await archive.finalize();
 
-      await new Promise((resolve, reject) => {
-        output.on('close', resolve);
+      await new Promise<void>((resolve, reject) => {
+        output.on('close', () => resolve());
         output.on('error', reject);
       });
 
@@ -145,11 +145,12 @@ export class BackupService {
       };
     } catch (error) {
       this.logger.error('Backup failed:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       await this.prisma.backupJob.update({
         where: { id: backupJob.id },
         data: {
           allapot: 'hiba',
-          hibaUzenet: error.message,
+          hibaUzenet: errorMessage,
           befejezes: new Date(),
         },
       });

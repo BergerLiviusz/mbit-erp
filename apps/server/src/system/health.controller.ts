@@ -33,10 +33,11 @@ export class HealthController {
         details: 'Connection successful',
       });
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       checks.push({
         name: 'Database',
         status: 'error',
-        details: error.message,
+        details: errorMessage,
       });
     }
 
@@ -49,10 +50,11 @@ export class HealthController {
         details: `Accessible at ${dataDir}`,
       });
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       checks.push({
         name: 'Data Directory',
         status: 'error',
-        details: error.message,
+        details: errorMessage,
       });
     }
 
