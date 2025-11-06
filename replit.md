@@ -29,6 +29,24 @@ mbit-erp/
 
 ## Recent Changes (November 6, 2025)
 
+### Deployment Configuration (Latest)
+**Problem**: Deployment was failing with health check errors because the run command was starting the backend (port 3000) instead of the frontend (port 5000).
+
+**Solution Implemented**:
+1. Added production `start` script to root package.json that runs both services concurrently using npm workspaces
+2. Configured deployment build command to install dependencies, generate Prisma client, and build both apps
+3. Configured deployment run command to execute the new start script
+
+**Key Configuration**:
+```json
+// package.json
+"start": "npm run start:prod --workspace=@mbit-erp/server & npm run preview --workspace=@mbit-erp/web"
+```
+
+**Deployment Commands**:
+- Build: `npm install && DATABASE_URL='file:/home/runner/workspace/apps/server/prisma/dev.db' npm run db:generate && npm run build`
+- Run: `npm run start` (starts both backend on port 3000 and frontend on port 5000)
+
 ### Complete Rebranding
 - **From**: "Audit Institute" → **To**: "Mbit" / "MB-IT Kft."
 - All package names updated from @audit-erp to @mbit-erp
