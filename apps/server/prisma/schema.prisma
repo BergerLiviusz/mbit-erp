@@ -30,15 +30,41 @@ model User {
 }
 
 model Role {
-  id          String     @id @default(uuid())
-  nev         String     @unique
+  id          String           @id @default(uuid())
+  nev         String           @unique
   leiras      String?
   permissions String
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
   users       UserRole[]
+  rolePermissions RolePermission[]
 
   @@map("szerepkorok")
+}
+
+model Permission {
+  id        String           @id @default(uuid())
+  kod       String           @unique
+  nev       String
+  modulo    String
+  leiras    String?
+  createdAt DateTime         @default(now())
+  roles     RolePermission[]
+
+  @@index([modulo])
+  @@map("jogosultsagok")
+}
+
+model RolePermission {
+  id           String     @id @default(uuid())
+  roleId       String
+  permissionId String
+  createdAt    DateTime   @default(now())
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+  @@map("szerepkor_jogosultsagok")
 }
 
 model UserRole {
@@ -646,8 +672,11 @@ model BackupJob {
   tipus          String
   allapot        String
   fajlUtvonal    String?
+  fajlNev        String?
   meret          Int?
   hibaUzenet     String?
+  tartalomManifeszt String?
+  jellel         Boolean   @default(false)
   inditas        DateTime  @default(now())
   befejezes      DateTime?
   createdAt      DateTime  @default(now())
@@ -655,6 +684,20 @@ model BackupJob {
   @@index([allapot])
   @@index([inditas])
   @@map("biztonsagi_mentest")
+}
+
+model SystemSetting {
+  id        String   @id @default(uuid())
+  kulcs     String   @unique
+  ertek     String
+  tipus     String
+  kategoria String
+  leiras    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([kategoria])
+  @@map("rendszer_beallitasok")
 }
 
 model ReportJob {

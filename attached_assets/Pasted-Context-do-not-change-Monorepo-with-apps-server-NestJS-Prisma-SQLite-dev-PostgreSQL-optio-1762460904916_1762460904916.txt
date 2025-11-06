@@ -1,0 +1,199 @@
+Context (do not change):
+	•	Monorepo with apps/server (NestJS, Prisma, SQLite dev / PostgreSQL optional), apps/web (React 18 + Vite), and apps/desktop (Electron scaffold).
+	•	Tech highlights: Node 22, Prisma, JWT (Passport), bcrypt, Tesseract.js OCR, pdf-parse, multer, Socket.io, node-cron, Winston logs, React Router, Tailwind, Zustand + React Query, i18next (HU), Recharts, Dexie (IndexedDB), Axios, PWA plugin.
+	•	API base http://localhost:3000; Web base http://localhost:5000.
+	•	Hungarian UI, English code/comments.
+
+Objectives:
+	1.	Implement working, backend-ready features for CRM, DMS (OCR, iktatás, archiválás), Logistics, as described below.
+	2.	Keep the system 100% local-only: no external cloud/SaaS; all storage on a configurable local data directory (server-side), shareable on a LAN file share if the app is installed on an office server.
+	3.	Produce GINOP-compatible controls and documentation (audit, RBAC, retention, backup, data protection).
+	4.	Prepare production builds so clients can install and use the system locally without extra setup.
+
+⸻
+
+0) Global Non-Functional Requirements
+	•	Local-only deployment: The server runs on the same machine (or a LAN server). No external dependencies (no third-party DBs/search engines/queues).
+	•	Data directory: Configurable (ENV MBIT_DATA_DIR and Settings UI). Store: uploads, OCR text, backups, logs, exports. Default to ~/mbit-data/.
+	•	Auth/RBAC: JWT auth (local issuance), roles: Admin, Sales, Finance, Warehouse, Auditor(read-only). Enforce RBAC on every route & UI action; show HU toasts/tooltips for denied actions.
+	•	Audit log: Append on every C/U/D (who/when/what), entity/type. Exportable as CSV/JSON for date ranges.
+	•	Backups: node-cron scheduled backups (daily/weekly) → ZIP of SQLite DB + files + a manifest. Optional password protection (AES zip). Retention (keep last N). Logs to Winston + backup.log.
+	•	Logging: Winston JSON logs under data/logs, rolling files; expose a “Diagnostics ZIP” (last 24–72h logs + manifest).
+	•	Internationalization: All UI strings in Hungarian via i18next; keep code/messages in English internally.
+	•	Accessibility/UX: Clear loading/empty/error states in HU; consistent dark theme; keyboard usage optional (no requirement for full keyboard-only navigation).
+	•	Tests: Add pragmatic unit/integration tests for critical flows; smoke E2E (Playwright optional).
+
+⸻
+
+1) CRM — Functional Implementation
+
+1.1 Customers (Ügyfelek) + 360
+	•	Backend: Prisma models for Customer, Contact, Tag, Activity. Endpoints under /crm/accounts for CRUD + search + tag filter + pagination.
+	•	Customer 360 view: return core data, contacts, activity timeline (tasks/notes/files/quotes/orders), open opportunities, quotes, orders, last activity, data quality score with missing fields list.
+	•	Frontend: Implement Customers list (sort/filter/search/paginate), detail with tabs: Áttekintés, Kapcsolattartók, Tevékenységek, Ajánlatok, Rendelések, Csatolmányok, Adatminőség. HU toasts/errors.
+
+Acceptance: CRUD works; timeline paginated; data quality shows quick-fix links (jump to edit fields).
+
+1.2 Opportunities (Lehetőségek)
+	•	Backend: /crm/opportunities CRUD, Kanban by stages (New → In Progress → Negotiation → Won/Lost). Stage change records audit.
+	•	Frontend: Kanban board with drag&drop, card fields (ügyfél, összeg, valószínűség %, felelős). Filters by owner/customer/value/updated. HU success/error toasts; rollback on failure.
+
+Acceptance: Stage counters align with filtered totals; transitions audited.
+
+1.3 Quotes (Árajánlatok)
+	•	Backend: /crm/quotes CRUD; line items (name, qty, unit price, discount, VAT); statuses (draft/sent/approved/expired/rejected). Approval rule for high-value quotes (env or setting threshold). Numbering with pattern tokens (YYYY, ####). Send: SMTP optional → if missing, PDF export to data dir.
+	•	Frontend: List + detail editor, template picker, status badges, expiry indicator, approval flow. HU toasts. Convert to order.
+
+Acceptance: Quote → Order conversion works; PDF saved when SMTP disabled.
+
+1.4 Orders (Rendelések)
+	•	Backend: /crm/orders CRUD; statuses (created/confirmed/fulfilled/closed/cancelled) with status timeline (actor+timestamp).
+	•	Frontend: List + detail with quick actions (confirm/fulfill/close/cancel w/reason). Show full timeline.
+
+Acceptance: All transitions audited and visible; optional link to logistics movements.
+
+1.5 Tasks & Activities (Feladatok)
+	•	Backend: /crm/tasks with statuses, due date, owner, entity linkage. Activities typed: call/email/meeting/note/file.
+	•	Frontend: Task list with filters; quick status change (complete/snooze). Show on Customer 360.
+
+Acceptance: Tasks reflect due states, visible on 360 & dashboard.
+
+1.6 Dashboard (Áttekintés)
+	•	Backend: simple aggregates endpoints: pipeline total, open tasks, expiring quotes, orders by stage.
+	•	Frontend: 4–6 KPI cards, Today’s tasks panel, quick actions (new customer/quote/upload). Cards navigate to filtered lists.
+
+Acceptance: KPI numbers match list aggregates; links functional.
+
+⸻
+
+2) DMS — Functional Implementation
+
+2.1 Document Registry (Iktatás)
+	•	Backend: /dms/documents CRUD; metadata: registration no., type, category, handler, customer ref, retention policy, tags. Numbering configurable: e.g. MBIT/ÉÉÉÉ/####.
+	•	Frontend: List with filters (type, handler, retention, customer, tags). Create/edit with required fields marked. HU validation.
+
+Acceptance: Unique iktatószám; fast search by all metadata.
+
+2.2 Upload • Preview • Versioning
+	•	Backend: multer uploads to data/files/{entity}/{id}/{uuid}-{slug}.{ext}. MIME + size allowlist; PDF/image preview endpoints; version table with comments.
+	•	Frontend: Drag&drop with progress; preview PDF/image; version history; restore version. HU toasts.
+
+Acceptance: Safe file paths; version rollback works.
+
+2.3 OCR + Full-Text Search (Local-only)
+	•	OCR pipeline: Tesseract.js + pdf-parse. Extracted text stored in DB.
+	•	Search: SQLite FTS5 virtual table for full-text index (no external engine). Index OCR text + title + tags.
+	•	Queue: node-cron/queue with statuses (Várakozik/Folyamatban/Kész/Hiba), retry action; log to logs/ocr.log.
+	•	Frontend: OCR status list, retry, global search box; highlight matches on preview if feasible.
+
+Acceptance: Searching finds OCR’d content; retries operate; no external services required.
+
+2.4 Archiving & Retention
+	•	Backend: retention per doc type; expiration alerts; disposal workflow with approval and Selejtezési jegyzőkönyv (PDF/CSV) generation. Audit export by period/customer.
+	•	Frontend: Expiring docs view; disposal flow with confirmation + reason; export buttons.
+
+Acceptance: Proper flags, approvals, and report generation; audit export includes logs + list.
+
+⸻
+
+3) Logistics — Functional Implementation
+
+3.1 Master Data
+	•	Backend: /logistics/items, /warehouses, /stock master data CRUD. Prices (net/brutto), min/max.
+	•	Frontend: Lists with filters; detail forms.
+
+Acceptance: CRUD complete; validations in HU.
+
+3.2 Stock Movements
+	•	Backend: Endpoints for inbound/outbound/transfer/inventory-correction; each movement audited and updates balances atomically. Link to Order when applicable.
+	•	Frontend: Movement forms with required fields; success toasts; live stock view by warehouse.
+
+Acceptance: Balances update instantly; audit present.
+
+3.3 Inventory & Reports
+	•	Backend: Inventory capture endpoints; min/max alerts; reports for turnover, top movers, high-value stock, slow movers (date-range).
+	•	Frontend: Inventory UI (record counts, post variances), Reports with CSV/PDF export.
+
+Acceptance: Variance reconciliation correct; reports accurate to filters.
+
+⸻
+
+4) System Settings & Utilities
+	•	Organization: logo, address, contacts (used in prints/reports).
+	•	Numbering formats: quotes/orders/documents — tokenized patterns configurable.
+	•	Backups: schedule (daily/weekly), retention N, “Backup now”, list/history, Restore with confirmation.
+	•	Diagnostics ZIP: last logs + manifests; downloadable for support/audit.
+	•	LAN cooperation (optional): Socket.io limited to LAN; toggle in Settings with HU security notice; no internet endpoints.
+	•	Security: JWT rotation; bcrypt hashing; rate-limit sensitive endpoints (auth/upload).
+	•	Health: /health detailed status; dashboard shows “System OK/Warning” pill.
+
+⸻
+
+5) GINOP Compliance Requirements (deliver with code)
+	•	Docs (HU) in /docs updated/added:
+	•	architecture.md (local-only, data flows)
+	•	rbac-matrix.md (roles → permissions)
+	•	audit-log.md (what is tracked, how to export)
+	•	backup-policy.md (schedule, retention, encryption option, restore steps)
+	•	data-protection.md (GDPR basics; data at rest paths; access controls)
+	•	ops-checklist.md (pilot & acceptance steps)
+	•	dms-retention-and-disposal.md (retention mapping + disposal report)
+	•	Features present: RBAC; audit; backup/restore; retention/disposal; HU UI; offline mode; export for audits.
+	•	Acceptance pack: Scripted “Pilot Acceptance Checklist” (HU) that a client can run end-to-end; sample screenshots (or generated PDFs) for reports.
+
+⸻
+
+6) Implementation Notes (tailored to this repo)
+	•	Database: default SQLite (apps/server/prisma/dev.db) with FTS5 enabled for OCR search. Keep Prisma ready for PostgreSQL but do not require it.
+	•	OCR: use pdf-parse to extract embedded text when available; fallback to Tesseract.js for scanned PDFs; store plain text and index via FTS5.
+	•	File paths: derive from MBIT_DATA_DIR or default; ensure safe slugging; enforce size/MIME allowlists.
+	•	Socket.io: local host + LAN only; disable/limit CORS to LAN ranges; feature guarded by a Settings toggle.
+	•	Web app: all labels/messages in Hungarian (i18next).
+	•	Electron (optional): keep scaffold; PWA works offline; focus on server+web working locally first.
+	•	CI: keep as is; produce unsigned installers/bundles; no cloud steps.
+
+⸻
+
+7) Deliverables & Acceptance Criteria
+
+Deliverables:
+	•	Working endpoints and UI flows for all features above.
+	•	Prisma schema + migrations; seed data for demo (HU logs).
+	•	Updated HU copy in UI; updated docs in /docs.
+	•	Basic tests (unit/integration) for: OCR pipeline success/failure+retry; quote→order; stock movement balance update; backup schedule & retention.
+	•	CLI/README steps for local production run (server+web) and “first-run” (admin user, data dir).
+
+Acceptance criteria:
+	•	Entire system runs offline, locally; only local file paths used.
+	•	CRM pipeline Lehetőség → Ajánlat → Rendelés works end-to-end.
+	•	DMS iktatás + OCR + keresés + verziózás + archiválás/selejtezés működik.
+	•	Logistics stock balances update immediately on movements; inventory reconciles.
+	•	Backups scheduled; restore tested on a small dataset.
+	•	RBAC enforced; denied actions show HU explanation.
+	•	Audit logs export by period/entity.
+	•	Docs updated for GINOP annexes; pilot checklist included.
+
+⸻
+
+8) Commands & Handover (keep or add as needed)
+	•	Dev: turbo run dev (or run apps/server then apps/web)
+	•	Build: turbo run build
+	•	Server prod: node apps/server/dist/main.js (with MBIT_DATA_DIR set)
+	•	Web prod: Vite preview or serve built assets from apps/web/dist
+	•	Seed: ts-node apps/server/prisma/seed.ts
+	•	Backup test: run scheduled job now + verify zip & manifest in data dir
+
+⸻
+
+Important: Do not introduce any external services. Everything must remain local-only and office-server-friendly. Keep UI in Hungarian throughout.
+
+⸻
+
+Return the following:
+	1.	A short plan summary (files to modify/create).
+	2.	Diff-style file list (no full code dumps).
+	3.	Prisma migration outline.
+	4.	Endpoints list added/changed.
+	5.	Test list + how to run.
+	6.	Updated docs list.
+	7.	Any follow-ups or open questions you encountered.
