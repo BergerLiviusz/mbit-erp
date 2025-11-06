@@ -223,20 +223,21 @@ model Lead {
 }
 
 model Opportunity {
-  id              String    @id @default(uuid())
+  id              String     @id @default(uuid())
   accountId       String
-  leadId          String?   @unique
+  leadId          String?    @unique
   nev             String
   szakasz         String
   ertek           Float
   valoszinuseg    Int
   zarvasDatum     DateTime?
   lezartDatum     DateTime?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  account         Account   @relation(fields: [accountId], references: [id], onDelete: Cascade)
-  lead            Lead?     @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  account         Account    @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  lead            Lead?      @relation(fields: [leadId], references: [id], onDelete: SetNull)
   quotes          Quote[]
+  documents       Document[]
 
   @@index([accountId])
   @@map("lehetosegek")
@@ -259,6 +260,7 @@ model Quote {
   opportunity      Opportunity? @relation(fields: [opportunityId], references: [id], onDelete: SetNull)
   items            QuoteItem[]
   discounts        Discount[]
+  documents        Document[]
   order            Order?
 
   @@index([accountId])
@@ -342,16 +344,17 @@ model OrderItem {
 }
 
 model Shipment {
-  id              String    @id @default(uuid())
+  id              String         @id @default(uuid())
   orderId         String
   szallitasiCim   String
   szallitasiMod   String
   szallitasiDatum DateTime?
   allapot         String
   megjegyzesek    String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  order           Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  order           Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  deliveryNotes   DeliveryNote[]
 
   @@index([orderId])
   @@map("szallitasok")
@@ -381,25 +384,30 @@ model InvoiceStub {
 }
 
 model Item {
-  id                String           @id @default(uuid())
-  azonosito         String           @unique
-  nev               String
-  leiras            String?
-  itemGroupId       String?
-  egyseg            String
-  beszerzesiAr      Float
-  eladasiAr         Float
-  afaKulcs          Float
-  aktiv             Boolean          @default(true)
-  beszerzesiAdatok  String?
-  createdAt         DateTime         @default(now())
-  updatedAt         DateTime         @updatedAt
-  itemGroup         ItemGroup?       @relation(fields: [itemGroupId], references: [id], onDelete: SetNull)
-  quoteItems        QuoteItem[]
-  orderItems        OrderItem[]
-  stockLots         StockLot[]
-  stockMoves        StockMove[]
-  priceLists        PriceListItem[]
+  id                   String              @id @default(uuid())
+  azonosito            String              @unique
+  nev                  String
+  leiras               String?
+  itemGroupId          String?
+  egyseg               String
+  beszerzesiAr         Float
+  eladasiAr            Float
+  afaKulcs             Float
+  aktiv                Boolean             @default(true)
+  beszerzesiAdatok     String?
+  suly                 Float?
+  mertekEgyseg         String?
+  vonalkod             String?
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+  itemGroup            ItemGroup?          @relation(fields: [itemGroupId], references: [id], onDelete: SetNull)
+  quoteItems           QuoteItem[]
+  orderItems           OrderItem[]
+  stockLots            StockLot[]
+  stockMoves           StockMove[]
+  stockLevels          StockLevel[]
+  priceLists           PriceListItem[]
+  purchaseOrderItems   PurchaseOrderItem[]
 
   @@index([itemGroupId])
   @@map("cikkek")
@@ -417,17 +425,59 @@ model ItemGroup {
 }
 
 model Warehouse {
-  id          String       @id @default(uuid())
-  azonosito   String       @unique
+  id          String              @id @default(uuid())
+  azonosito   String              @unique
   nev         String
   cim         String?
+  aktiv       Boolean             @default(true)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  locations   WarehouseLocation[]
+  stockLots   StockLot[]
+  stockMoves  StockMove[]
+  stockLevels StockLevel[]
+
+  @@map("raktarak")
+}
+
+model WarehouseLocation {
+  id          String       @id @default(uuid())
+  warehouseId String
+  azonosito   String
+  nev         String
+  zona        String?
+  folyoso     String?
+  polc        String?
+  tipus       String?
   aktiv       Boolean      @default(true)
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
-  stockLots   StockLot[]
-  stockMoves  StockMove[]
+  warehouse   Warehouse    @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+  stockLevels StockLevel[]
 
-  @@map("raktarak")
+  @@unique([warehouseId, azonosito])
+  @@index([warehouseId])
+  @@map("raktari_helyek")
+}
+
+model StockLevel {
+  id         String             @id @default(uuid())
+  itemId     String
+  warehouseId String
+  locationId String?
+  mennyiseg  Float              @default(0)
+  minimum    Float?
+  maximum    Float?
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+  item       Item               @relation(fields: [itemId], references: [id])
+  warehouse  Warehouse          @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+  location   WarehouseLocation? @relation(fields: [locationId], references: [id], onDelete: SetNull)
+
+  @@unique([itemId, warehouseId, locationId])
+  @@index([itemId])
+  @@index([warehouseId])
+  @@map("keszletszintek")
 }
 
 model StockLot {
@@ -468,16 +518,17 @@ model StockMove {
 }
 
 model Supplier {
-  id          String          @id @default(uuid())
-  nev         String
-  adoszam     String?
-  cim         String?
-  email       String?
-  telefon     String?
-  aktiv       Boolean         @default(true)
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
-  priceLists  PriceList[]
+  id              String          @id @default(uuid())
+  nev             String
+  adoszam         String?
+  cim             String?
+  email           String?
+  telefon         String?
+  aktiv           Boolean         @default(true)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  priceLists      PriceList[]
+  purchaseOrders  PurchaseOrder[]
 
   @@map("szallitok")
 }
@@ -568,9 +619,41 @@ model Task {
   @@map("feladatok")
 }
 
+model DocumentCategory {
+  id        String     @id @default(uuid())
+  nev       String     @unique
+  leiras    String?
+  szulo     String?
+  aktiv     Boolean    @default(true)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  documents Document[]
+
+  @@map("dokumentum_kategoriak")
+}
+
+model DocumentType {
+  id               String     @id @default(uuid())
+  nev              String     @unique
+  leiras           String?
+  kotelezo         Boolean    @default(false)
+  ervenyessegKell  Boolean    @default(false)
+  jovalagasKell    Boolean    @default(false)
+  aktiv            Boolean    @default(true)
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+  documents        Document[]
+
+  @@map("dokumentum_tipusok")
+}
+
 model Document {
   id                String              @id @default(uuid())
   accountId         String?
+  categoryId        String?
+  typeId            String?
+  opportunityId     String?
+  quoteId           String?
   iktatoSzam        String?             @unique
   nev               String
   tipus             String
@@ -588,15 +671,23 @@ model Document {
   updatedAt         DateTime            @updatedAt
   createdById       String?
   account           Account?            @relation(fields: [accountId], references: [id], onDelete: SetNull)
+  category          DocumentCategory?   @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  type              DocumentType?       @relation(fields: [typeId], references: [id], onDelete: SetNull)
+  opportunity       Opportunity?        @relation(fields: [opportunityId], references: [id], onDelete: SetNull)
+  quote             Quote?              @relation(fields: [quoteId], references: [id], onDelete: SetNull)
   createdBy         User?               @relation(fields: [createdById], references: [id], onDelete: SetNull)
   versions          DocumentVersion[]
+  workflowLogs      DocumentWorkflowLog[]
   ocrJob            OCRJob?
   tags              DocumentTag[]
   access            DocumentAccess[]
 
   @@index([accountId])
+  @@index([categoryId])
+  @@index([typeId])
   @@index([iktatoSzam])
   @@index([tipus])
+  @@index([allapot])
   @@map("dokumentumok")
 }
 
@@ -625,6 +716,20 @@ model DocumentAccess {
 
   @@unique([documentId, userId])
   @@map("dokumentum_jogosultsagok")
+}
+
+model DocumentWorkflowLog {
+  id            String   @id @default(uuid())
+  documentId    String
+  regiAllapot   String
+  ujAllapot     String
+  megjegyzes    String?
+  userId        String?
+  createdAt     DateTime @default(now())
+  document      Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@index([documentId])
+  @@map("dokumentum_workflow_naplo")
 }
 
 model OCRJob {
@@ -738,4 +843,62 @@ model KnowledgeBase {
 
   @@index([kategoria])
   @@map("tudasbazis")
+}
+
+model PurchaseOrder {
+  id                String              @id @default(uuid())
+  supplierId        String
+  azonosito         String              @unique
+  rendelesiDatum    DateTime            @default(now())
+  szallitasiDatum   DateTime?
+  osszeg            Float
+  afa               Float
+  vegosszeg         Float
+  allapot           String
+  megjegyzesek      String?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  supplier          Supplier            @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  items             PurchaseOrderItem[]
+  deliveryNotes     DeliveryNote[]
+
+  @@index([supplierId])
+  @@index([allapot])
+  @@map("beszerzesi_rendelesek")
+}
+
+model PurchaseOrderItem {
+  id               String        @id @default(uuid())
+  purchaseOrderId  String
+  itemId           String
+  mennyiseg        Float
+  egysegAr         Float
+  osszeg           Float
+  createdAt        DateTime      @default(now())
+  purchaseOrder    PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  item             Item          @relation(fields: [itemId], references: [id])
+
+  @@index([purchaseOrderId])
+  @@map("beszerzesi_rendeles_tetelek")
+}
+
+model DeliveryNote {
+  id                String         @id @default(uuid())
+  purchaseOrderId   String?
+  shipmentId        String?
+  azonosito         String         @unique
+  tipus             String
+  kiallitasDatum    DateTime       @default(now())
+  szallitasiDatum   DateTime?
+  feladoCim         String?
+  cimzettCim        String?
+  megjegyzesek      String?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  purchaseOrder     PurchaseOrder? @relation(fields: [purchaseOrderId], references: [id], onDelete: SetNull)
+  shipment          Shipment?      @relation(fields: [shipmentId], references: [id], onDelete: SetNull)
+
+  @@index([purchaseOrderId])
+  @@index([shipmentId])
+  @@map("szallitolevelek")
 }
