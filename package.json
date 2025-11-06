@@ -27,11 +27,15 @@
   },
   "devDependencies": {
     "@types/node": "^22.13.11",
+    "tsconfig-paths": "^4.2.0",
     "turbo": "^2.0.0",
     "typescript": "^5.3.3"
   },
   "engines": {
     "node": ">=20.0.0",
     "npm": ">=10.0.0"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.3"
   }
 }

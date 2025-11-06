@@ -1,3 +1,17 @@
+import * as dotenv from 'dotenv';
+import { resolve, join } from 'path';
+
+// Load .env from correct location
+const envPath = join(__dirname, '..', '.env');
+dotenv.config({ path: envPath });
+
+// Resolve DATABASE_URL relative path to absolute for consistent behavior
+if (process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith('file:./')) {
+  const relativePath = process.env.DATABASE_URL.replace('file:./', '');
+  const absolutePath = join(__dirname, '..', relativePath);
+  process.env.DATABASE_URL = `file:${absolutePath}`;
+}
+
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
