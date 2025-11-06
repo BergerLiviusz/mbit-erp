@@ -1,5 +1,5 @@
 # E-learning Oktatási Vázlat
-## Audit Institute ERP Rendszer v1.0
+## Mbit ERP Rendszer v1.0
 
 ---
 
@@ -281,7 +281,7 @@
 
 ## Tanúsítvány
 
-A sikeres záróvizsga után a résztvevők **„Audit Institute ERP Rendszer Felhasználói"** tanúsítványt kapnak.
+A sikeres záróvizsga után a résztvevők **„Mbit ERP Rendszer Felhasználói"** tanúsítványt kapnak.
 
 **Érvényesség:** 2 év  
 **Megújítás:** Online frissítő kurzus
@@ -325,4 +325,4 @@ A sikeres záróvizsga után a résztvevők **„Audit Institute ERP Rendszer Fe
 
 **Készült:** 2025. november 6.  
 **Verzió:** 1.0  
-**Fejlesztette:** Audit Institute Oktatási Csapat
+**Fejlesztette:** Mbit Oktatási Csapat

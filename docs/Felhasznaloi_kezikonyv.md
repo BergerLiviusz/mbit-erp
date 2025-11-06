@@ -1,11 +1,11 @@
 # Felhasználói Kézikönyv
-## Audit Institute ERP Rendszer v1.0
+## Mbit ERP Rendszer v1.0
 
 ---
 
 ## 1. Bevezetés
 
-Üdvözöljük az Audit Institute ERP rendszerben! Ez a modul vállalati alkalmazás egyesíti a CRM, DMS és Logisztikai funkciókat egy könnyen használható felületen.
+Üdvözöljük az Mbit ERP rendszerben! Ez a modul vállalati alkalmazás egyesíti a CRM, DMS és Logisztikai funkciókat egy könnyen használható felületen.
 
 ### 1.1 A Rendszer Főbb Funkciói
 
@@ -24,7 +24,7 @@
 3. Kattintson a "Bejelentkezés" gombra
 
 **Alapértelmezett admin fiók:**
-- Email: `admin@audit.hu`
+- Email: `admin@mbit.hu`
 - Jelszó: `admin123`
 
 ⚠️ **Fontos:** Első bejelentkezés után változtassa meg a jelszavát!
@@ -351,7 +351,7 @@ V: Logisztika > Készlet Áttekintés > "Összes raktár" nézet
 
 Ha további segítségre van szüksége:
 
-- **Email:** support@auditinstitute.hu
+- **Email:** support@mbit.hu
 - **Telefon:** +36 1 234 5678
 - **Munkaidő:** Hétfő-Péntek, 9:00-17:00
 - **Hibabejelentés:** Rendszeren belül a "Hiba Bejelentése" menüpont
@@ -365,4 +365,4 @@ Ha további segítségre van szüksége:
 
 **Verzió:** 1.0  
 **Utolsó frissítés:** 2025. november 6.  
-**Készítette:** Audit Institute IT Csapat
+**Készítette:** Mbit IT Csapat

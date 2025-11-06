@@ -19,8 +19,8 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
-      "@audit-erp/types": ["../../packages/types/src"],
-      "@audit-erp/ui": ["../../packages/ui/src"]
+      "@mbit-erp/types": ["../../packages/types/src"],
+      "@mbit-erp/ui": ["../../packages/ui/src"]
     }
   },
   "include": ["src"],

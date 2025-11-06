@@ -21,7 +21,7 @@ function App() {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-8">
-              <h1 className="text-xl font-bold">Audit Institute ERP</h1>
+              <h1 className="text-xl font-bold">Mbit ERP</h1>
               <div className="flex space-x-4">
                 <Link to="/" className="hover:bg-blue-800 px-3 py-2 rounded">
                   Főoldal

@@ -1,11 +1,11 @@
 # Telepítési és Üzemeltetői Kézikönyv
-## Audit Institute ERP Rendszer v1.0
+## Mbit ERP Rendszer v1.0
 
 ---
 
 ## 1. Bevezetés
 
-Ez a dokumentum az Audit Institute ERP rendszer telepítésének és üzemeltetésének teljes folyamatát ismerteti.
+Ez a dokumentum az Mbit ERP rendszer telepítésének és üzemeltetésének teljes folyamatát ismerteti.
 
 ### 1.1 Rendszerkövetelmények
 
@@ -33,21 +33,21 @@ Ez a dokumentum az Audit Institute ERP rendszer telepítésének és üzemeltet�
 ### 2.1 Desktop Alkalmazás Telepítése
 
 #### Windows:
-1. Töltse le a  `Audit-Institute-ERP-Setup.msi` fájlt
+1. Töltse le a  `Mbit-ERP-Setup.msi` fájlt
 2. Futtassa a telepítőt rendszergazdai jogosultsággal
 3. Kövesse a telepítési varázslót
 4. A telepítés után az alkalmazás elérhető a Start menüből
 
 #### macOS:
-1. Töltse le a `Audit-Institute-ERP.dmg` fájlt
+1. Töltse le a `Mbit-ERP.dmg` fájlt
 2. Nyissa meg a DMG fájlt
 3. Húzza az alkalmazást az Applications mappába
 4. Első indításkor engedélyezze a biztonsági beállításokban
 
 #### Linux:
-1. Töltse le a `Audit-Institute-ERP.AppImage` fájlt
-2. Adjon végrehajtási jogot: `chmod +x Audit-Institute-ERP.AppImage`
-3. Futtassa a fájlt: `./Audit-Institute-ERP.AppImage`
+1. Töltse le a `Mbit-ERP.AppImage` fájlt
+2. Adjon végrehajtási jogot: `chmod +x Mbit-ERP.AppImage`
+3. Futtassa a fájlt: `./Mbit-ERP.AppImage`
 
 ### 2.2 Saját Szerver Telepítése
 
@@ -57,7 +57,7 @@ Ez a dokumentum az Audit Institute ERP rendszer telepítésének és üzemeltet�
 
 # 2. Projekt letöltése
 git clone [repository-url]
-cd audit-institute-erp
+cd mbit-erp
 
 # 3. Függőségek telepítése
 npm install
@@ -88,7 +88,7 @@ DATABASE_URL="file:./prisma/dev.db"
 
 #### PostgreSQL:
 ```env
-DATABASE_URL="postgresql://user:password@localhost:5432/audit_erp"
+DATABASE_URL="postgresql://user:password@localhost:5432/mbit_erp"
 ```
 
 ### 3.2 Biztonsági Beállítások
@@ -104,7 +104,7 @@ NODE_ENV=production
 ```env
 SMTP_HOST=smtp.example.com
 SMTP_PORT=587
-SMTP_USER=noreply@auditinstitute.hu
+SMTP_USER=noreply@mbit.hu
 SMTP_PASS=jelszó
 ```
 
@@ -128,7 +128,7 @@ npm run start:prod
 #### PM2 használatával (ajánlott):
 ```bash
 npm install -g pm2
-pm2 start apps/server/dist/main.js --name audit-erp-server
+pm2 start apps/server/dist/main.js --name mbit-erp-server
 pm2 save
 pm2 startup
 ```
@@ -138,7 +138,7 @@ pm2 startup
 #### Naplók Ellenőrzése:
 ```bash
 # PM2 naplók
-pm2 logs audit-erp-server
+pm2 logs mbit-erp-server
 
 # Manuális naplók
 tail -f logs/application.log
@@ -178,7 +178,7 @@ npm install
 npm run db:push
 
 # 5. Újraindítás
-pm2 restart audit-erp-server
+pm2 restart mbit-erp-server
 ```
 
 ---
@@ -250,7 +250,7 @@ lsof -i :3000
 pm2 logs --err
 
 # Újraindítás
-pm2 restart audit-erp-server
+pm2 restart mbit-erp-server
 ```
 
 #### Adatbázis kapcsolati hiba:
@@ -273,7 +273,7 @@ npm run db:optimize
 
 ### 7.2 Support Elérhetőség
 
-- **Email:** support@auditinstitute.hu
+- **Email:** support@mbit.hu
 - **Telefon:** +36 1 234 5678
 - **Munkaidő:** H-P 9:00-17:00
 - **SLA:** 96% elérhetőség, 4 óra válaszidő
@@ -350,4 +350,4 @@ Minden kritikus művelet naplózásra kerül:
 
 **Verzió:** 1.0  
 **Utolsó frissítés:** 2025. november 6.  
-**Készítette:** Audit Institute IT Csapat
+**Készítette:** Mbit IT Csapat

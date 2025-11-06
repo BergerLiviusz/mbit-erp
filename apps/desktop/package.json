@@ -1,8 +1,8 @@
 {
-  "name": "@audit-erp/desktop",
+  "name": "@mbit-erp/desktop",
   "version": "1.0.0",
   "private": true,
-  "description": "Electron desktop application wrapper for Audit Institute ERP",
+  "description": "Electron desktop application wrapper for Mbit ERP",
   "main": "dist/main.js",
   "scripts": {
     "build": "tsc",
@@ -16,8 +16,8 @@
     "test": "echo \"No tests yet\""
   },
   "build": {
-    "appId": "com.auditinstitute.erp",
-    "productName": "Audit Institute ERP",
+    "appId": "com.mbit.erp",
+    "productName": "Mbit ERP",
     "directories": {
       "output": "dist",
       "buildResources": "resources"

@@ -1,5 +1,5 @@
 # Verziókezelési és Karbantartási Stratégia
-## Audit Institute ERP Rendszer
+## Mbit ERP Rendszer
 
 **Verzió:** 1.0  
 **Dátum:** 2025. november 6.
@@ -499,6 +499,6 @@ deploy:
 
 ---
 
-**Jóváhagyva:** Audit Institute CTO  
+**Jóváhagyva:** Mbit CTO  
 **Következő felülvizsgálat:** 2026. május 6.  
 **Verzió:** 1.0

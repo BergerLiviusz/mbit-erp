@@ -1,4 +1,4 @@
-# Audit Institute ERP
+# Mbit ERP
 ## Modular Vállalati Alkalmazás | Desktop & PWA | Magyar Nyelvű
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
@@ -24,7 +24,7 @@
 
 ## 🎯 Áttekintés
 
-Az **Audit Institute ERP** egy átfogó, moduláris vállalati alkalmazás, amely egyesíti a CRM, DMS (Dokumentumkezelés) és Logisztikai funkciókat egyetlen, könnyen használható rendszerben. 
+Az **Mbit ERP** egy átfogó, moduláris vállalati alkalmazás, amely egyesíti a CRM, DMS (Dokumentumkezelés) és Logisztikai funkciókat egyetlen, könnyen használható rendszerben. 
 
 ### Kulcs Jellemzők
 
@@ -122,7 +122,7 @@ npm >= 10.0.0
 
 ```bash
 git clone <repository-url>
-cd audit-institute-erp
+cd mbit-erp
 npm install
 ```
 
@@ -166,7 +166,7 @@ npm run dev
 ### 5. Bejelentkezés
 
 - **URL:** http://localhost:5000
-- **Email:** admin@audit.hu
+- **Email:** admin@mbit.hu
 - **Jelszó:** admin123
 
 ⚠️ **Változtassa meg a jelszót első bejelentkezéskor!**
@@ -178,7 +178,7 @@ npm run dev
 ### Projekt Struktúra
 
 ```
-audit-institute-erp/
+mbit-erp/
 ├── apps/
 │   ├── server/          # NestJS backend
 │   │   ├── src/
@@ -298,11 +298,11 @@ npm run build
 
 # Environment setup
 export NODE_ENV=production
-export DATABASE_URL="postgresql://user:pass@localhost:5432/audit_erp"
+export DATABASE_URL="postgresql://user:pass@localhost:5432/mbit_erp"
 export JWT_SECRET="strong-secret-key-256-bit"
 
 # Start with PM2 (ajánlott)
-pm2 start apps/server/dist/main.js --name audit-erp-server
+pm2 start apps/server/dist/main.js --name mbit-erp-server
 pm2 save
 pm2 startup
 ```
@@ -359,7 +359,7 @@ CMD ["npm", "run", "start:prod"]
 ### Hibabejelentés
 
 1. **Rendszeren belül:** CRM > Reklamációk > Új Ticket
-2. **Email:** support@auditinstitute.hu
+2. **Email:** support@mbit.hu
 3. **Telefon:** +36 1 234 5678
 
 ### SLA
@@ -434,7 +434,7 @@ Jelenleg belső fejlesztés alatt. További információ hamarosan.
 
 ## 👥 Készítette
 
-**Audit Institute IT Csapat**  
+**MB-IT Kft. Fejlesztői Csapat**  
 **Verzió:** 1.0  
 **Dátum:** 2025. november 6.
 
@@ -461,4 +461,4 @@ const ocrDocument = async (filePath) => {
 
 ---
 
-**Köszönjük, hogy az Audit Institute ERP rendszert választotta!** 🚀
+**Köszönjük, hogy az Mbit ERP rendszert választotta!** 🚀

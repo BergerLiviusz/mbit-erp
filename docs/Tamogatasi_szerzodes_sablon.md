@@ -1,11 +1,11 @@
 # Támogatási Szerződés Sablon
-## Audit Institute ERP Rendszer
+## Mbit ERP Rendszer
 
 ---
 
 ## SZOFTVERMEGÁLLAPODÁS ÉS TÁMOGATÁSI SZERZŐDÉS
 
-**Szerződés azonosító:** AI-ERP-SUPP-2025-XXX  
+**Szerződés azonosító:** MBIT-ERP-SUPP-2025-XXX  
 **Kelt:** 2025. november 6.
 
 ---
@@ -13,7 +13,7 @@
 ### 1. SZERZŐDŐ FELEK
 
 **Szolgáltató:**
-- Név: Audit Institute Kft.
+- Név: Mbit Kft.
 - Székhely: 1055 Budapest, Példa utca 1.
 - Adószám: 12345678-2-41
 - Képviseli: [Ügyvezető neve]
@@ -28,7 +28,7 @@
 
 ### 2. SZERZŐDÉS TÁRGYA
 
-A Szolgáltató vállalja az Audit Institute ERP rendszer üzemeltetési támogatását és karbantartását az alábbi feltételek szerint.
+A Szolgáltató vállalja az Mbit ERP rendszer üzemeltetési támogatását és karbantartását az alábbi feltételek szerint.
 
 #### 2.1 Szoftver Komponensek
 - CRM (Ügyfélkapcsolat-kezelés) modul
@@ -107,7 +107,7 @@ Elérhetőség % = (Teljes idő - Leállási idő) / Teljes idő × 100
 - Oktatási anyagok biztosítása
 
 **Elérhetőségek:**
-- **Email:** support@auditinstitute.hu
+- **Email:** support@mbit.hu
 - **Telefon:** +36 1 234 5678
 - **Online:** Ticketing rendszer a felületen
 
@@ -296,7 +296,7 @@ Vitás kérdésekben a felek a békés megoldást részesítik előnyben. Ennek 
 
 **Szolgáltató:**
 
-Audit Institute Kft.
+Mbit Kft.
 
 _______________________  
 Név:  
@@ -328,4 +328,4 @@ Dátum:
 
 **Verzió:** 1.0  
 **Készült:** 2025. november 6.  
-**Jóváhagyta:** Audit Institute Jogi Osztály
+**Jóváhagyta:** Mbit Jogi Osztály

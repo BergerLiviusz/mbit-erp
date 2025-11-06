@@ -38,7 +38,7 @@ export default function Dashboard() {
       </div>
 
       <div className="bg-white p-6 rounded-lg shadow">
-        <h2 className="text-xl font-bold mb-4">Üdvözöljük az Audit Institute ERP rendszerben!</h2>
+        <h2 className="text-xl font-bold mb-4">Üdvözöljük az Mbit ERP rendszerben!</h2>
         <p className="text-gray-700 mb-4">
           Ez a modular vállalati alkalmazás CRM, DMS és logisztikai funkciókkal rendelkezik.
         </p>

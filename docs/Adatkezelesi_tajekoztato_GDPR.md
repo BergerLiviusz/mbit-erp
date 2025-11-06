@@ -1,5 +1,5 @@
 # Adatkezelési Tájékoztató (GDPR)
-## Audit Institute ERP Rendszer
+## Mbit ERP Rendszer
 
 **Hatálybalépés:** 2025. november 6.  
 **Utolsó frissítés:** 2025. november 6.
@@ -8,22 +8,22 @@
 
 ## 1. Bevezetés
 
-Jelen Adatkezelési Tájékoztató az Európai Unió 2016/679 számú általános adatvédelmi rendelete (GDPR) alapján készült, és részletezi, hogyan kezeljük a személyes adatokat az Audit Institute ERP rendszerben.
+Jelen Adatkezelési Tájékoztató az Európai Unió 2016/679 számú általános adatvédelmi rendelete (GDPR) alapján készült, és részletezi, hogyan kezeljük a személyes adatokat az Mbit ERP rendszerben.
 
 ---
 
 ## 2. Adatkezelő Azonosítása
 
 **Adatkezelő:**
-- Név: Audit Institute Kft.
+- Név: Mbit Kft.
 - Székhely: 1055 Budapest, Példa utca 1.
 - Adószám: 12345678-2-41
-- Email: adatvedelem@auditinstitute.hu
+- Email: adatvedelem@mbit.hu
 - Telefon: +36 1 234 5678
 
 **Adatvédelmi tisztviselő:**
 - Név: [DPO Neve]
-- Email: dpo@auditinstitute.hu
+- Email: dpo@mbit.hu
 
 ---
 
@@ -148,7 +148,7 @@ Jelen Adatkezelési Tájékoztató az Európai Unió 2016/679 számú általáno
 
 | Szolgáltató | Tevékenység | Adattovábbítás helye |
 |-------------|-------------|----------------------|
-| Audit Institute IT | Rendszerfejlesztés, support | Magyarország |
+| Mbit IT | Rendszerfejlesztés, support | Magyarország |
 | Hosting Partner* | Szerver tárhelyszolgáltatás | EU (opcionális) |
 
 _* Csak ha ügyfél nem on-premise használja_
@@ -183,14 +183,14 @@ Amennyiben harmadik országba továbbítás szükséges (pl. cloud szolgáltató
 
 Ön jogosult tájékoztatást kérni az általunk kezelt személyes adatairól.
 
-**Kérvényezés:** adatvedelem@auditinstitute.hu  
+**Kérvényezés:** adatvedelem@mbit.hu  
 **Válaszidő:** 30 nap
 
 ### 9.2 Helyesbítési Jog
 
 Ön kérheti pontatlan vagy hiányos adatainak helyesbítését.
 
-**Kérvényezés:** A rendszerben saját maga is módosíthat, vagy adatvedelem@auditinstitute.hu
+**Kérvényezés:** A rendszerben saját maga is módosíthat, vagy adatvedelem@mbit.hu
 
 ### 9.3 Törléshez Való Jog ("Elfeledtetéshez való jog")
 
@@ -275,7 +275,7 @@ A rendszer használatához minimum 18 év szükséges. Tudatosan nem gyűjtünk 
 
 ### 13.1 Panasz Adatkezelőnél
 
-Email: adatvedelem@auditinstitute.hu  
+Email: adatvedelem@mbit.hu  
 Válaszidő: 30 nap
 
 ### 13.2 Felügyeleti Hatóság
@@ -306,14 +306,14 @@ Fenntartjuk a jogot jelen tájékoztató módosítására. Jelentős változáso
 ## 15. Kapcsolat
 
 **Adatvédelmi kérdések:**
-- Email: adatvedelem@auditinstitute.hu
+- Email: adatvedelem@mbit.hu
 - Telefon: +36 1 234 5678
 - Postai cím: 1055 Budapest, Példa utca 1.
 
 **DPO (Adatvédelmi tisztviselő):**
-- Email: dpo@auditinstitute.hu
+- Email: dpo@mbit.hu
 
 ---
 
-**Jóváhagyva:** Audit Institute Jogi és Compliance Osztály  
+**Jóváhagyva:** Mbit Jogi és Compliance Osztály  
 **Következő felülvizsgálat:** 2026. november 6.

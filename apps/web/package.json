@@ -1,5 +1,5 @@
 {
-  "name": "@audit-erp/web",
+  "name": "@mbit-erp/web",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -12,8 +12,8 @@
     "test": "vitest"
   },
   "dependencies": {
-    "@audit-erp/types": "*",
-    "@audit-erp/ui": "*",
+    "@mbit-erp/types": "*",
+    "@mbit-erp/ui": "*",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.21.3",

@@ -1,8 +1,8 @@
 {
-  "name": "audit-institute-erp",
+  "name": "mbit-erp",
   "version": "1.0.0",
   "private": true,
-  "description": "Modular enterprise application for Hungarian audit firm with CRM, DMS, and Logistics",
+  "description": "Comprehensive modular ERP application with CRM, DMS, and Logistics by MB-IT Kft.",
   "workspaces": [
     "apps/*",
     "packages/*"

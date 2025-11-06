@@ -1,7 +1,7 @@
 # Megvalósulási Jelentés
-## Audit Institute ERP Rendszer - MVP v1.0
+## Mbit ERP Rendszer - MVP v1.0
 
-**Projekt azonosító:** AI-ERP-2025  
+**Projekt azonosító:** MBIT-ERP-2025  
 **Verzió:** 1.0  
 **Dátum:** 2025. november 6.  
 **Státusz:** ✅ MVP Készen áll
@@ -10,7 +10,7 @@
 
 ## Executive Summary
 
-Az Audit Institute ERP rendszer MVP (Minimum Viable Product) verziója sikeresen megvalósult. A rendszer egy átfogó, modult vállalati alkalmazás, amely egyesíti a CRM, Dokumentumkezelés (DMS/Iratkezelés) és Logisztikai funkciókat egy modern, cross-platform környezetben.
+Az Mbit ERP rendszer MVP (Minimum Viable Product) verziója sikeresen megvalósult. A rendszer egy átfogó, modult vállalati alkalmazás, amely egyesíti a CRM, Dokumentumkezelés (DMS/Iratkezelés) és Logisztikai funkciókat egy modern, cross-platform környezetben.
 
 **Kulcs Eredmények:**
 - ✅ Teljes monorepo architektúra (Turbo)
@@ -578,7 +578,7 @@ npm run build:desktop
 ### 7.3 Seed Adatok
 
 ✅ **Magyar Teszt Adatok**
-- 1 Admin user (admin@audit.hu / admin123)
+- 1 Admin user (admin@mbit.hu / admin123)
 - 5 CRM ügyfelek (magyar cégnevek, címek)
 - 10 Cikkek (irodaszerek kategória)
 - 2 Raktárak (Központi, Telephelyi)
@@ -964,7 +964,7 @@ _______________________
 Név:  
 Dátum: 2025. november 6.
 
-**Megrendelő (Audit Institute):**
+**Megrendelő (Mbit):**
 
 _______________________  
 Név:  
@@ -975,5 +975,5 @@ Dátum:
 
 **Verzió:** 1.0  
 **Státusz:** ✅ ELFOGADÁSRA KÉSZ  
-**Projekt ID:** AI-ERP-2025  
+**Projekt ID:** MBIT-ERP-2025  
 **Lezárva:** 2025. november 6.

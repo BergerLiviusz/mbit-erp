@@ -49,10 +49,10 @@ async function main() {
 
   const hashedPassword = await bcrypt.hash('admin123', 10);
   const adminUser = await prisma.user.upsert({
-    where: { email: 'admin@audit.hu' },
+    where: { email: 'admin@mbit.hu' },
     update: {},
     create: {
-      email: 'admin@audit.hu',
+      email: 'admin@mbit.hu',
       password: hashedPassword,
       nev: 'Rendszergazda',
       aktiv: true,
@@ -73,7 +73,7 @@ async function main() {
     },
   });
 
-  console.log('✅ Admin felhasználó létrehozva (admin@audit.hu / admin123)');
+  console.log('✅ Admin felhasználó létrehozva (admin@mbit.hu / admin123)');
 
   const accounts = await Promise.all([
     prisma.account.create({

@@ -1,5 +1,5 @@
 {
-  "name": "@audit-erp/config",
+  "name": "@mbit-erp/config",
   "version": "1.0.0",
   "private": true,
   "main": "./index.js",

@@ -1,5 +1,5 @@
 # Disaster Recovery Plan (DRP) Összefoglaló
-## Audit Institute ERP Rendszer
+## Mbit ERP Rendszer
 
 **Verzió:** 1.0  
 **Hatálybalépés:** 2025. november 6.  
@@ -9,7 +9,7 @@
 
 ## 1. Executive Summary
 
-A Disaster Recovery Plan (DRP) célja az Audit Institute ERP rendszer üzemfolytonosságának biztosítása katasztrófa (természeti csapás, technikai meghibásodás, emberi hiba, kibertámadás) esetén.
+A Disaster Recovery Plan (DRP) célja az Mbit ERP rendszer üzemfolytonosságának biztosítása katasztrófa (természeti csapás, technikai meghibásodás, emberi hiba, kibertámadás) esetén.
 
 **Kulcs Metrikák:**
 - **RTO (Recovery Time Objective):** 4 óra
@@ -248,7 +248,7 @@ Level 4: CEO + External Support
 
 **Üzenet sablon:**
 ```
-Tárgy: [SÜRGŐS] Audit Institute ERP - Szolgáltatási Zavar
+Tárgy: [SÜRGŐS] Mbit ERP - Szolgáltatási Zavar
 
 Tisztelt Ügyfeleink,
 
@@ -264,7 +264,7 @@ Frissítéseket a [URL] címen találnak.
 
 Megértésüket köszönjük!
 
-Audit Institute IT Csapat
+Mbit IT Csapat
 ```
 
 ---

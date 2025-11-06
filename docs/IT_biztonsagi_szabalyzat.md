@@ -1,5 +1,5 @@
 # IT Biztonsági Szabályzat Kivonat
-## Audit Institute ERP Rendszer
+## Mbit ERP Rendszer
 
 **Verzió:** 1.0  
 **Hatálybalépés:** 2025. november 6.  
@@ -11,7 +11,7 @@
 
 ### 1.1 Cél
 
-Jelen IT Biztonsági Szabályzat célja az Audit Institute ERP rendszer információbiztonságának biztosítása a CIA triád (Confidentiality, Integrity, Availability - Bizalmasság, Sértetlenség, Rendelkezésre állás) alapelvei szerint.
+Jelen IT Biztonsági Szabályzat célja az Mbit ERP rendszer információbiztonságának biztosítása a CIA triád (Confidentiality, Integrity, Availability - Bizalmasság, Sértetlenség, Rendelkezésre állás) alapelvei szerint.
 
 ### 1.2 Hatály
 
@@ -473,8 +473,8 @@ Kivétel kérvényezhető megalapozott indokkal:
 ## 17. Kapcsolattartás
 
 **IT Security Team:**
-- Email: security@auditinstitute.hu
-- Incidens bejelentés: security-incident@auditinstitute.hu
+- Email: security@mbit.hu
+- Incidens bejelentés: security-incident@mbit.hu
 - Telefon: +36 1 234 5678 (7×24)
 
 **Sürgős biztonsági incidens:**
@@ -482,6 +482,6 @@ Kivétel kérvényezhető megalapozott indokkal:
 
 ---
 
-**Jóváhagyva:** Audit Institute Vezetősége  
+**Jóváhagyva:** Mbit Vezetősége  
 **Következő felülvizsgálat:** 2026. november 6.  
 **Verzió:** 1.0

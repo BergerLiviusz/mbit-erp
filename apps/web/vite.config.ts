@@ -9,9 +9,9 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       manifest: {
-        name: 'Audit Institute ERP',
-        short_name: 'Audit ERP',
-        description: 'Modular enterprise application for Hungarian audit firm',
+        name: 'Mbit ERP',
+        short_name: 'Mbit ERP',
+        description: 'Modular enterprise application for MB-IT Kft.',
         theme_color: '#ffffff',
         icons: [
           {

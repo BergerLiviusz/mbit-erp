@@ -6,7 +6,7 @@ interface LoginProps {
 }
 
 export default function Login({ onLogin }: LoginProps) {
-  const [email, setEmail] = useState('admin@audit.hu');
+  const [email, setEmail] = useState('admin@mbit.hu');
   const [password, setPassword] = useState('admin123');
   const [error, setError] = useState('');
 
@@ -27,7 +27,7 @@ export default function Login({ onLogin }: LoginProps) {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="bg-white p-8 rounded-lg shadow-md w-96">
-        <h1 className="text-2xl font-bold mb-6 text-center">Audit Institute ERP</h1>
+        <h1 className="text-2xl font-bold mb-6 text-center">Mbit ERP</h1>
         <h2 className="text-lg mb-4 text-center text-gray-600">Bejelentkezés</h2>
         
         {error && (
@@ -69,7 +69,7 @@ export default function Login({ onLogin }: LoginProps) {
 
         <div className="mt-4 text-sm text-gray-600 text-center">
           <p>Alapértelmezett hozzáférés:</p>
-          <p>Email: admin@audit.hu</p>
+          <p>Email: admin@mbit.hu</p>
           <p>Jelszó: admin123</p>
         </div>
       </div>
