@@ -2,8 +2,8 @@ import { Routes, Route, Link } from 'react-router-dom';
 import { useState } from 'react';
 import Dashboard from './pages/Dashboard';
 import CRM from './pages/CRM';
-import DMS from './pages/DMS';
-import Logistics from './pages/Logistics';
+import Documents from './pages/Documents';
+import Warehouses from './pages/Warehouses';
 import Settings from './pages/Settings';
 import Opportunities from './pages/Opportunities';
 import Quotes from './pages/Quotes';
@@ -38,11 +38,11 @@ function App() {
                 <Link to="/quotes" className="hover:bg-blue-800 px-3 py-2 rounded">
                   Árajánlatok
                 </Link>
-                <Link to="/dms" className="hover:bg-blue-800 px-3 py-2 rounded">
-                  DMS
+                <Link to="/documents" className="hover:bg-blue-800 px-3 py-2 rounded">
+                  Dokumentumok
                 </Link>
-                <Link to="/logistics" className="hover:bg-blue-800 px-3 py-2 rounded">
-                  Logisztika
+                <Link to="/warehouses" className="hover:bg-blue-800 px-3 py-2 rounded">
+                  Raktárak
                 </Link>
                 <Link to="/settings" className="hover:bg-blue-800 px-3 py-2 rounded">
                   Beállítások
@@ -68,8 +68,8 @@ function App() {
           <Route path="/crm" element={<CRM />} />
           <Route path="/opportunities" element={<Opportunities />} />
           <Route path="/quotes" element={<Quotes />} />
-          <Route path="/dms" element={<DMS />} />
-          <Route path="/logistics" element={<Logistics />} />
+          <Route path="/documents" element={<Documents />} />
+          <Route path="/warehouses" element={<Warehouses />} />
           <Route path="/settings" element={<Settings />} />
         </Routes>
       </main>
