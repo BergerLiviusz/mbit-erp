@@ -6,13 +6,16 @@ import {
   Body,
   Param,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { WarehouseService, CreateWarehouseDto, UpdateWarehouseDto } from './warehouse.service';
 import { AuditService } from '../common/audit/audit.service';
 import { Permissions } from '../common/rbac/rbac.decorator';
 import { Permission } from '../common/rbac/permission.enum';
+import { RbacGuard } from '../common/rbac/rbac.guard';
 
 @Controller('logistics/warehouses')
+@UseGuards(RbacGuard)
 export class WarehouseController {
   constructor(
     private warehouseService: WarehouseService,

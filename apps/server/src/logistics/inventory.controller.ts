@@ -1,9 +1,11 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
 import { InventoryService } from './inventory.service';
 import { Permissions } from '../common/rbac/rbac.decorator';
 import { Permission } from '../common/rbac/permission.enum';
+import { RbacGuard } from '../common/rbac/rbac.guard';
 
 @Controller('logistics/inventory')
+@UseGuards(RbacGuard)
 export class InventoryController {
   constructor(private inventoryService: InventoryService) {}
 

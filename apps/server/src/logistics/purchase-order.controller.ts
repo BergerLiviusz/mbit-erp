@@ -6,6 +6,7 @@ import {
   Body,
   Param,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import {
   PurchaseOrderService,
@@ -15,8 +16,10 @@ import {
 import { AuditService } from '../common/audit/audit.service';
 import { Permissions } from '../common/rbac/rbac.decorator';
 import { Permission } from '../common/rbac/permission.enum';
+import { RbacGuard } from '../common/rbac/rbac.guard';
 
 @Controller('logistics/purchase-orders')
+@UseGuards(RbacGuard)
 export class PurchaseOrderController {
   constructor(
     private purchaseOrderService: PurchaseOrderService,
