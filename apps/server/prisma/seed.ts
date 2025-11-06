@@ -237,7 +237,7 @@ async function main() {
     },
   });
 
-  const items = await Promise.all([
+  const catalogItems = await Promise.all([
     prisma.item.create({
       data: {
         azonosito: 'CIKK-001',
@@ -278,7 +278,7 @@ async function main() {
 
   console.log('✅ Cikkek létrehozva');
 
-  const warehouses = await Promise.all([
+  const initialWarehouses = await Promise.all([
     prisma.warehouse.create({
       data: {
         azonosito: 'RAK-01',
@@ -299,11 +299,11 @@ async function main() {
 
   console.log('✅ Raktárak létrehozva');
 
-  for (const item of items) {
+  for (const item of catalogItems) {
     await prisma.stockLot.create({
       data: {
         itemId: item.id,
-        warehouseId: warehouses[0].id,
+        warehouseId: initialWarehouses[0].id,
         mennyiseg: Math.floor(Math.random() * 100) + 50,
         minKeszlet: 10,
         maxKeszlet: 200,
@@ -332,7 +332,7 @@ async function main() {
       ervenyessegVeg: new Date('2025-03-31'),
       aktiv: true,
       items: {
-        create: items.map(item => ({
+        create: catalogItems.map(item => ({
           itemId: item.id,
           ar: item.beszerzesiAr * 0.9,
           valuta: 'HUF',
@@ -444,9 +444,9 @@ async function main() {
 
   console.log('✅ Lehetőségek létrehozva');
 
-  const items = await prisma.item.findMany({ take: 3 });
+  const quoteItems = await prisma.item.findMany({ take: 3 });
 
-  if (items.length > 0) {
+  if (quoteItems.length > 0) {
     await prisma.quote.create({
       data: {
         accountId: accounts[0].id,
@@ -461,7 +461,7 @@ async function main() {
         items: {
           create: [
             {
-              itemId: items[0].id,
+              itemId: quoteItems[0].id,
               mennyiseg: 500,
               egysegAr: 30000,
               kedvezmeny: 0,
