@@ -4,6 +4,7 @@ import Dashboard from './pages/Dashboard';
 import CRM from './pages/CRM';
 import DMS from './pages/DMS';
 import Logistics from './pages/Logistics';
+import Settings from './pages/Settings';
 import Login from './pages/Login';
 
 function App() {
@@ -35,6 +36,9 @@ function App() {
                 <Link to="/logistics" className="hover:bg-blue-800 px-3 py-2 rounded">
                   Logisztika
                 </Link>
+                <Link to="/settings" className="hover:bg-blue-800 px-3 py-2 rounded">
+                  Beállítások
+                </Link>
               </div>
             </div>
             <button
@@ -56,6 +60,7 @@ function App() {
           <Route path="/crm" element={<CRM />} />
           <Route path="/dms" element={<DMS />} />
           <Route path="/logistics" element={<Logistics />} />
+          <Route path="/settings" element={<Settings />} />
         </Routes>
       </main>
     </div>
