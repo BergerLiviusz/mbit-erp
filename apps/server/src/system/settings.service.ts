@@ -23,22 +23,26 @@ export class SystemSettingsService {
   }
 
   async set(kulcs: string, ertek: string, kategoria: string = 'general', tipus: string = 'string', leiras?: string): Promise<void> {
-    await this.prisma.systemSetting.upsert({
+    const existing = await this.prisma.systemSetting.findUnique({
       where: { kulcs },
-      create: {
-        kulcs,
-        ertek,
-        tipus,
-        kategoria,
-        leiras,
-      },
-      update: {
-        ertek,
-        tipus,
-        kategoria,
-        leiras,
-      },
     });
+
+    if (existing) {
+      await this.prisma.systemSetting.update({
+        where: { kulcs },
+        data: { ertek },
+      });
+    } else {
+      await this.prisma.systemSetting.create({
+        data: {
+          kulcs,
+          ertek,
+          tipus,
+          kategoria,
+          leiras,
+        },
+      });
+    }
     this.logger.log(`Setting updated: ${kulcs} = ${ertek}`);
   }
 
