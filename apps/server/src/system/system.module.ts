@@ -12,5 +12,6 @@ import { StorageModule } from '../common/storage/storage.module';
   imports: [PrismaModule, BackupModule, AuditModule, StorageModule],
   controllers: [SystemSettingsController, HealthController, DiagnosticsController],
   providers: [SystemSettingsService],
+  exports: [SystemSettingsService],
 })
 export class SystemModule {}

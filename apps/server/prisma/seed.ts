@@ -400,6 +400,72 @@ async function main() {
 
   console.log('✅ Ticket létrehozva');
 
+  const opportunities = await Promise.all([
+    prisma.opportunity.create({
+      data: {
+        accountId: accounts[0].id,
+        nev: 'Irodaszerek éves szerződés megújítása',
+        szakasz: 'targyalas',
+        ertek: 15000000,
+        valoszinuseg: 70,
+        zarvasDatum: new Date('2025-12-31'),
+      },
+    }),
+    prisma.opportunity.create({
+      data: {
+        accountId: accounts[1].id,
+        nev: 'IT infrastruktúra bővítés',
+        szakasz: 'ajanlatadas',
+        ertek: 25000000,
+        valoszinuseg: 50,
+        zarvasDatum: new Date('2026-01-15'),
+      },
+    }),
+    prisma.opportunity.create({
+      data: {
+        accountId: accounts[2].id,
+        nev: 'Szoftver licenc csomag',
+        szakasz: 'uj',
+        ertek: 8000000,
+        valoszinuseg: 30,
+        zarvasDatum: new Date('2025-11-30'),
+      },
+    }),
+  ]);
+
+  console.log('✅ Lehetőségek létrehozva');
+
+  const items = await prisma.item.findMany({ take: 3 });
+
+  if (items.length > 0) {
+    await prisma.quote.create({
+      data: {
+        accountId: accounts[0].id,
+        opportunityId: opportunities[0].id,
+        azonosito: 'AJ-2025-0001',
+        ervenyessegDatum: new Date('2025-12-31'),
+        osszeg: 15000000,
+        afa: 4050000,
+        vegosszeg: 19050000,
+        allapot: 'jovahagyott',
+        megjegyzesek: 'Éves szerződés megújítása kedvezményes feltételekkel',
+        items: {
+          create: [
+            {
+              itemId: items[0].id,
+              mennyiseg: 500,
+              egysegAr: 30000,
+              kedvezmeny: 0,
+              osszeg: 15000000,
+            },
+          ],
+        },
+      },
+    });
+
+    console.log('✅ Árajánlatok létrehozva');
+  }
+
   await prisma.knowledgeBase.createMany({
     data: [
       {

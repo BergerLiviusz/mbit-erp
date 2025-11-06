@@ -5,6 +5,8 @@ import CRM from './pages/CRM';
 import DMS from './pages/DMS';
 import Logistics from './pages/Logistics';
 import Settings from './pages/Settings';
+import Opportunities from './pages/Opportunities';
+import Quotes from './pages/Quotes';
 import Login from './pages/Login';
 
 function App() {
@@ -29,6 +31,12 @@ function App() {
                 </Link>
                 <Link to="/crm" className="hover:bg-blue-800 px-3 py-2 rounded">
                   CRM
+                </Link>
+                <Link to="/opportunities" className="hover:bg-blue-800 px-3 py-2 rounded">
+                  Lehetőségek
+                </Link>
+                <Link to="/quotes" className="hover:bg-blue-800 px-3 py-2 rounded">
+                  Árajánlatok
                 </Link>
                 <Link to="/dms" className="hover:bg-blue-800 px-3 py-2 rounded">
                   DMS
@@ -58,6 +66,8 @@ function App() {
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/crm" element={<CRM />} />
+          <Route path="/opportunities" element={<Opportunities />} />
+          <Route path="/quotes" element={<Quotes />} />
           <Route path="/dms" element={<DMS />} />
           <Route path="/logistics" element={<Logistics />} />
           <Route path="/settings" element={<Settings />} />
