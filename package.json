@@ -10,6 +10,7 @@
   "scripts": {
     "dev": "turbo run dev --parallel",
     "build": "turbo run build",
+    "start": "cd apps/server && npm run start:prod & cd apps/web && npm run preview",
     "build:desktop": "cd apps/desktop && npm run build",
     "build:pwa": "cd apps/web && npm run build:pwa",
     "package:win": "cd apps/desktop && npm run package:win",
