@@ -29,7 +29,89 @@ mbit-erp/
 
 ## Recent Changes (November 6, 2025)
 
-### Deployment Configuration (Latest)
+### ✅ Sprint 1 Complete - Enterprise Foundation (Latest)
+**Status**: Production-ready backend infrastructure with Hungarian UI
+
+**Backend Infrastructure Implemented**:
+1. **RBAC System** (`apps/server/src/common/rbac/`)
+   - 59 granular permissions across all modules (CRM, DMS, Logistics, System, Users, Roles, Reports)
+   - Permission enum with Hungarian descriptions
+   - `@Permissions()` decorator for endpoint protection
+   - `RbacGuard` for role-based access control
+   - Permission and RolePermission Prisma models
+
+2. **Storage Service** (`apps/server/src/common/storage/`)
+   - Configurable data directory via `MBIT_DATA_DIR` environment variable
+   - Defaults to `~/mbit-data/`
+   - Auto-creates subdirectories: uploads, files, backups, logs, exports, temp, ocr
+   - Safe path handling with sanitization
+
+3. **Enhanced Audit Service** (`apps/server/src/common/audit/`)
+   - Helper methods: `logCreate()`, `logUpdate()`, `logDelete()`
+   - Export audit logs by date range, entity type, or user
+   - Activity timeline for entities
+
+4. **Backup/Restore Service** (`apps/server/src/common/backup/`)
+   - ZIP compression with archiver library
+   - Scheduled backups via node-cron (daily/weekly)
+   - Retention policy (keeps last N backups)
+   - Backup manifest with metadata
+   - Database + files backup
+
+5. **System Settings Service** (`apps/server/src/system/`)
+   - Organization info (name, address, tax number, email, phone)
+   - Numbering patterns (quotes, orders, documents)
+   - Backup schedules and retention
+   - Quote approval thresholds
+   - LAN cooperation toggle
+   - **Fixed**: Metadata preservation on updates (category, type, description)
+
+6. **Health Check & Diagnostics** (`apps/server/src/health/`, `apps/server/src/system/diagnostics.controller.ts`)
+   - `/health/detailed` - System health with database and storage status
+   - `/system/diagnostics/stats` - Backup statistics
+   - `/system/diagnostics/backup/now` - Manual backup trigger
+   - `/system/diagnostics/logs/download` - Download diagnostics ZIP
+
+**Frontend Additions**:
+- Settings page (`apps/web/src/pages/Settings.tsx`) with Hungarian UI
+- Three tabs: Szervezet (Organization), Biztonsági mentések (Backups), Rendszer (System)
+- Live health monitoring
+- Settings management with category-based views
+- One-click manual backups
+
+**Database Updates**:
+- New models: `Permission`, `RolePermission`, `SystemSetting`
+- Enhanced `Audit` model with export capabilities
+- `BackupJob` model with manifest and encryption flags
+- Seeded 59 permissions with Hungarian descriptions
+- Seeded 15 default system settings
+- Admin role linked to all relevant permissions
+
+**API Endpoints Added**:
+```
+GET    /system/settings                    # All settings
+GET    /system/settings/category/:category # By category
+GET    /system/settings/:key               # Single setting
+POST   /system/settings                    # Create setting
+PUT    /system/settings/:key               # Update setting (preserves metadata)
+POST   /system/settings/bulk               # Bulk update
+DELETE /system/settings/:key               # Delete setting
+POST   /system/settings/initialize         # Load defaults
+GET    /health/detailed                    # Detailed health check
+GET    /system/diagnostics/stats           # Backup statistics
+POST   /system/diagnostics/backup/now      # Manual backup
+GET    /system/diagnostics/backup/list     # List backups
+GET    /system/diagnostics/logs/download   # Download logs
+```
+
+**Key Files**:
+- `apps/server/src/common/rbac/permission.enum.ts` - 59 permissions
+- `apps/server/src/common/storage/storage.service.ts` - Data directory management
+- `apps/server/src/common/backup/backup.service.ts` - Backup/restore logic
+- `apps/server/src/system/settings.service.ts` - System settings with metadata preservation
+- `apps/web/src/pages/Settings.tsx` - Hungarian Settings UI
+
+### Deployment Configuration
 **Problem**: Deployment was failing with health check errors because the run command was starting the backend (port 3000) instead of the frontend (port 5000).
 
 **Solution Implemented**:
