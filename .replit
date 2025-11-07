@@ -18,6 +18,27 @@ build = ["sh", "-c", "npm install && DATABASE_URL='file:/home/runner/workspace/a
 expertMode = true
 
 [workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Desktop App Info"
+
+[[workflows.workflow]]
+name = "Desktop App Info"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "/tmp/electron-info.sh"
+
+[workflows.workflow.metadata]
+outputType = "console"
 
 [[ports]]
 localPort = 3000
