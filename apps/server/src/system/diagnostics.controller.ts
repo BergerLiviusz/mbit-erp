@@ -1,7 +1,8 @@
-import { Controller, Get, Post, Res, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Res, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
 import { Response } from 'express';
-import { Permissions, Public } from '../common/rbac/rbac.decorator';
+import { Permissions } from '../common/rbac/rbac.decorator';
 import { Permission } from '../common/rbac/permission.enum';
+import { RbacGuard } from '../common/rbac/rbac.guard';
 import { StorageService } from '../common/storage/storage.service';
 import { BackupService } from '../common/backup/backup.service';
 import { AuditService } from '../common/audit/audit.service';
@@ -11,6 +12,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 @Controller('system/diagnostics')
+@UseGuards(RbacGuard)
 export class DiagnosticsController {
   constructor(
     private storage: StorageService,
@@ -109,7 +111,7 @@ export class DiagnosticsController {
   }
 
   @Get('permissions/check-admin')
-  @Public()
+  @Permissions(Permission.SYSTEM_DIAGNOSTICS)
   async checkAdminPermissions() {
     const adminUser = await this.prisma.user.findUnique({
       where: { email: 'admin@mbit.hu' },
@@ -159,7 +161,7 @@ export class DiagnosticsController {
   }
 
   @Post('permissions/fix-admin')
-  @Public()
+  @Permissions(Permission.SYSTEM_DIAGNOSTICS)
   @HttpCode(HttpStatus.OK)
   async fixAdminPermissions() {
     const adminUser = await this.prisma.user.findUnique({

@@ -66,4 +66,10 @@ export class ItemService {
       include: { itemGroup: true },
     });
   }
+
+  async delete(id: string) {
+    return this.prisma.item.delete({
+      where: { id },
+    });
+  }
 }

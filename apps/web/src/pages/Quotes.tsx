@@ -37,7 +37,7 @@ interface Item {
   id: string;
   nev: string;
   azonosito: string;
-  egysegar?: number;
+  eladasiAr: number;
 }
 
 interface QuoteItem {
@@ -200,8 +200,8 @@ export default function Quotes() {
     
     if (field === 'itemId') {
       const selectedItem = items.find(item => item.id === value);
-      if (selectedItem && selectedItem.egysegar) {
-        newItems[index].egysegAr = selectedItem.egysegar.toString();
+      if (selectedItem && selectedItem.eladasiAr) {
+        newItems[index].egysegAr = selectedItem.eladasiAr.toString();
       }
     }
     
@@ -555,7 +555,7 @@ export default function Quotes() {
                           >
                             <option value="">-- Válasszon --</option>
                             {items.map(i => (
-                              <option key={i.id} value={i.id}>{i.nev} ({i.azonosito})</option>
+                              <option key={i.id} value={i.id}>{i.nev} ({i.eladasiAr} Ft)</option>
                             ))}
                           </select>
                         </div>

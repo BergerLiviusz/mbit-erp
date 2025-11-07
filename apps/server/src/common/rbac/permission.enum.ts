@@ -79,6 +79,12 @@ export enum Permission {
   WAREHOUSE_DELETE = 'warehouse:delete',
   WAREHOUSE_MANAGE_LOCATIONS = 'warehouse:manage_locations',
   
+  // Product/Item specific
+  PRODUCT_VIEW = 'product:view',
+  PRODUCT_CREATE = 'product:create',
+  PRODUCT_EDIT = 'product:edit',
+  PRODUCT_DELETE = 'product:delete',
+  
   // Stock specific
   STOCK_VIEW = 'stock:view',
   STOCK_MOVE = 'stock:move',
@@ -197,6 +203,11 @@ export const PermissionDescriptions: Record<Permission, { nev: string; modulo: s
   [Permission.WAREHOUSE_EDIT]: { nev: 'Raktár szerkesztés', modulo: 'Logisztika', leiras: 'Raktár adatok módosítása' },
   [Permission.WAREHOUSE_DELETE]: { nev: 'Raktár törlés', modulo: 'Logisztika', leiras: 'Raktár eltávolítása' },
   [Permission.WAREHOUSE_MANAGE_LOCATIONS]: { nev: 'Raktári helyek kezelése', modulo: 'Logisztika', leiras: 'Helyek, zónák, polcok szervezése' },
+  
+  [Permission.PRODUCT_VIEW]: { nev: 'Termékek megtekintése', modulo: 'Logisztika', leiras: 'Termékek és cikkek böngészése' },
+  [Permission.PRODUCT_CREATE]: { nev: 'Termék létrehozás', modulo: 'Logisztika', leiras: 'Új termékek felvétele' },
+  [Permission.PRODUCT_EDIT]: { nev: 'Termék szerkesztés', modulo: 'Logisztika', leiras: 'Termékek módosítása' },
+  [Permission.PRODUCT_DELETE]: { nev: 'Termék törlés', modulo: 'Logisztika', leiras: 'Termékek törlése' },
   
   [Permission.STOCK_VIEW]: { nev: 'Készlet megtekintése', modulo: 'Logisztika', leiras: 'Készletállományok megtekintése' },
   [Permission.STOCK_MOVE]: { nev: 'Készletmozgás', modulo: 'Logisztika', leiras: 'Készletmozgások rögzítése' },

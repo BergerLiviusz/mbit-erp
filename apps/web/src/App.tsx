@@ -4,6 +4,7 @@ import Dashboard from './pages/Dashboard';
 import CRM from './pages/CRM';
 import Documents from './pages/Documents';
 import Warehouses from './pages/Warehouses';
+import Products from './pages/Products';
 import Settings from './pages/Settings';
 import Opportunities from './pages/Opportunities';
 import Quotes from './pages/Quotes';
@@ -25,9 +26,8 @@ function App() {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-8">
-              <Link to="/" className="flex items-center space-x-2">
-                <img src={MbitLogo} alt="Mbit ERP" className="h-8 w-8" />
-                <h1 className="text-xl font-bold">Mbit ERP</h1>
+              <Link to="/" className="flex items-center">
+                <img src={MbitLogo} alt="Mbit Logo" className="h-10 w-auto" />
               </Link>
               <div className="flex space-x-4">
                 <Link to="/" className="hover:bg-gray-800 px-3 py-2 rounded">
@@ -47,6 +47,9 @@ function App() {
                 </Link>
                 <Link to="/warehouses" className="hover:bg-gray-800 px-3 py-2 rounded">
                   Raktárak
+                </Link>
+                <Link to="/products" className="hover:bg-gray-800 px-3 py-2 rounded">
+                  Termékek
                 </Link>
                 <Link to="/settings" className="hover:bg-gray-800 px-3 py-2 rounded">
                   Beállítások
@@ -74,6 +77,7 @@ function App() {
           <Route path="/quotes" element={<Quotes />} />
           <Route path="/documents" element={<Documents />} />
           <Route path="/warehouses" element={<Warehouses />} />
+          <Route path="/products" element={<Products />} />
           <Route path="/settings" element={<Settings />} />
         </Routes>
       </main>
