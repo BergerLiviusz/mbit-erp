@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useState } from 'react';
 import Modal from '../components/Modal';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem('token');
