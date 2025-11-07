@@ -27,6 +27,7 @@
     "appId": "com.mbit.erp",
     "productName": "Mbit ERP",
     "copyright": "Copyright © 2025 MB-IT Kft.",
+    "electronVersion": "28.3.3",
     "directories": {
       "output": "release",
       "buildResources": "resources"
@@ -154,8 +155,8 @@
     "@typescript-eslint/parser": "^6.19.0",
     "concurrently": "^8.2.2",
     "cross-env": "^10.1.0",
-    "electron": "^28.1.4",
-    "electron-builder": "^24.9.1",
+    "electron": "^28.3.3",
+    "electron-builder": "^24.13.3",
     "eslint": "^8.56.0",
     "rimraf": "^5.0.10",
     "typescript": "^5.3.3",

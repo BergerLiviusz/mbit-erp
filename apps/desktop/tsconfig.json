@@ -15,7 +15,8 @@
     "declarationMap": true,
     "sourceMap": true,
     "moduleResolution": "node",
-    "types": ["node"]
+    "types": ["node"],
+    "noEmit": false
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist-electron", "release"]
