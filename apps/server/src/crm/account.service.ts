@@ -35,6 +35,11 @@ export class AccountService {
   }
 
   async create(data: any) {
+    if (!data.azonosito) {
+      const accountCount = await this.prisma.account.count();
+      data.azonosito = `U-${new Date().getFullYear()}-${String(accountCount + 1).padStart(5, '0')}`;
+    }
+    
     return this.prisma.account.create({
       data,
       include: { contacts: true },

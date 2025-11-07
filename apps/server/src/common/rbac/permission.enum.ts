@@ -26,6 +26,19 @@ export enum Permission {
   QUOTE_APPROVE = 'quote:approve',
   QUOTE_SEND = 'quote:send',
   
+  // Campaign specific
+  CAMPAIGN_VIEW = 'campaign:view',
+  CAMPAIGN_CREATE = 'campaign:create',
+  CAMPAIGN_EDIT = 'campaign:edit',
+  CAMPAIGN_DELETE = 'campaign:delete',
+  
+  // Ticket specific
+  TICKET_VIEW = 'ticket:view',
+  TICKET_CREATE = 'ticket:create',
+  TICKET_EDIT = 'ticket:edit',
+  TICKET_DELETE = 'ticket:delete',
+  TICKET_ASSIGN = 'ticket:assign',
+  
   // Order specific
   ORDER_VIEW = 'order:view',
   ORDER_CREATE = 'order:create',
@@ -138,6 +151,17 @@ export const PermissionDescriptions: Record<Permission, { nev: string; modulo: s
   [Permission.QUOTE_DELETE]: { nev: 'Árajánlat törlés', modulo: 'CRM', leiras: 'Árajánlatok törlése' },
   [Permission.QUOTE_APPROVE]: { nev: 'Árajánlat jóváhagyás', modulo: 'CRM', leiras: 'Magas értékű árajánlatok jóváhagyása' },
   [Permission.QUOTE_SEND]: { nev: 'Árajánlat küldés', modulo: 'CRM', leiras: 'Árajánlatok kiküldése ügyfeleknek' },
+  
+  [Permission.CAMPAIGN_VIEW]: { nev: 'Kampányok megtekintése', modulo: 'CRM', leiras: 'Marketing kampányok böngészése' },
+  [Permission.CAMPAIGN_CREATE]: { nev: 'Kampány létrehozás', modulo: 'CRM', leiras: 'Új kampányok indítása' },
+  [Permission.CAMPAIGN_EDIT]: { nev: 'Kampány szerkesztés', modulo: 'CRM', leiras: 'Kampányok módosítása' },
+  [Permission.CAMPAIGN_DELETE]: { nev: 'Kampány törlés', modulo: 'CRM', leiras: 'Kampányok törlése' },
+  
+  [Permission.TICKET_VIEW]: { nev: 'Reklamációk megtekintése', modulo: 'CRM', leiras: 'Ticketek és reklamációk böngészése' },
+  [Permission.TICKET_CREATE]: { nev: 'Reklamáció létrehozás', modulo: 'CRM', leiras: 'Új ticketek rögzítése' },
+  [Permission.TICKET_EDIT]: { nev: 'Reklamáció szerkesztés', modulo: 'CRM', leiras: 'Ticketek módosítása' },
+  [Permission.TICKET_DELETE]: { nev: 'Reklamáció törlés', modulo: 'CRM', leiras: 'Ticketek törlése' },
+  [Permission.TICKET_ASSIGN]: { nev: 'Reklamáció hozzárendelés', modulo: 'CRM', leiras: 'Ticketek kiosztása felhasználóknak' },
   
   [Permission.ORDER_VIEW]: { nev: 'Rendelések megtekintése', modulo: 'CRM', leiras: 'Rendelések böngészése' },
   [Permission.ORDER_CREATE]: { nev: 'Rendelés létrehozás', modulo: 'CRM', leiras: 'Új rendelések rögzítése' },

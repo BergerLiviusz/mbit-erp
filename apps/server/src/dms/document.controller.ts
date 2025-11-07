@@ -1,9 +1,13 @@
-import { Controller, Get, Post, Put, Body, Param, Query, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, Param, Query, UseGuards, Request, UseInterceptors, UploadedFile, BadRequestException } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { DocumentService, CreateDocumentDto, UpdateDocumentDto, DocumentFilters } from './document.service';
 import { AuditService } from '../common/audit/audit.service';
 import { Permissions } from '../common/rbac/rbac.decorator';
 import { Permission } from '../common/rbac/permission.enum';
 import { RbacGuard } from '../common/rbac/rbac.guard';
+import { StorageService } from '../common/storage/storage.service';
+import { OcrService } from './ocr.service';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Controller('dms/documents')
 @UseGuards(RbacGuard)
@@ -11,6 +15,9 @@ export class DocumentController {
   constructor(
     private documentService: DocumentService,
     private auditService: AuditService,
+    private storageService: StorageService,
+    private ocrService: OcrService,
+    private prisma: PrismaService,
   ) {}
 
   @Get()
@@ -81,7 +88,56 @@ export class DocumentController {
 
   @Post(':id/upload')
   @Permissions(Permission.DMS_UPLOAD)
-  async upload(@Param('id') id: string, @Request() req: any) {
+  @UseInterceptors(FileInterceptor('file', {
+    limits: {
+      fileSize: 50 * 1024 * 1024,
+    },
+    fileFilter: (req, file, callback) => {
+      const allowedMimeTypes = [
+        'application/pdf',
+        'image/jpeg',
+        'image/png',
+        'image/gif',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'text/plain',
+      ];
+      
+      if (allowedMimeTypes.includes(file.mimetype)) {
+        callback(null, true);
+      } else {
+        callback(new BadRequestException('Nem támogatott fájltípus'), false);
+      }
+    },
+  }))
+  async upload(
+    @Param('id') id: string,
+    @UploadedFile() file: Express.Multer.File,
+    @Request() req: any,
+  ) {
+    if (!file) {
+      throw new BadRequestException('Nincs fájl feltöltve');
+    }
+
+    const sanitizedFilename = this.storageService.sanitizeFilename(file.originalname);
+    const relativePath = await this.storageService.saveFile(
+      'files',
+      sanitizedFilename,
+      file.buffer,
+    );
+
+    const updatedDocument = await this.prisma.document.update({
+      where: { id },
+      data: {
+        fajlNev: file.originalname,
+        fajlMeret: file.size,
+        fajlUtvonal: relativePath,
+        mimeType: file.mimetype,
+      },
+    });
+
     await this.auditService.log({
       userId: req.user?.id,
       esemeny: 'upload',
@@ -89,10 +145,24 @@ export class DocumentController {
       entitasId: id,
     });
 
+    const settings = await this.prisma.systemSetting.findUnique({
+      where: { kulcs: 'dms.ocr.enabled' },
+    });
+
+    if (settings?.ertek === 'true' && file.mimetype === 'application/pdf') {
+      await this.ocrService.createJob(id);
+    }
+
     return {
       success: true,
-      message: 'File upload endpoint ready - implementation pending',
+      message: 'Fájl sikeresen feltöltve',
       documentId: id,
+      file: {
+        nev: file.originalname,
+        meret: file.size,
+        utvonal: relativePath,
+        mimeType: file.mimetype,
+      },
     };
   }
 }

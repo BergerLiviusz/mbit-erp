@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import Modal from '../components/Modal';
+import FileUpload from '../components/FileUpload';
 
 interface Document {
   id: string;
@@ -21,6 +23,16 @@ interface Document {
   createdAt: string;
 }
 
+interface Category {
+  id: string;
+  nev: string;
+}
+
+interface Account {
+  id: string;
+  nev: string;
+}
+
 const TIPUSOK = [
   { kod: 'szerzodes', nev: 'Szerződés', szin: 'bg-blue-100 text-blue-800' },
   { kod: 'szamla', nev: 'Számla', szin: 'bg-green-100 text-green-800' },
@@ -38,12 +50,36 @@ export default function Documents() {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedAllapot, setSelectedAllapot] = useState<string>('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string>('');
+  const [success, setSuccess] = useState<string>('');
+
+  const [formData, setFormData] = useState({
+    nev: '',
+    tipus: 'szerzodes',
+    categoryId: '',
+    accountId: '',
+    allapot: 'aktiv',
+    ervenyessegKezdet: '',
+    ervenyessegVeg: '',
+  });
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
   useEffect(() => {
     loadDocuments();
   }, [selectedAllapot]);
+
+  useEffect(() => {
+    if (isModalOpen) {
+      loadCategories();
+      loadAccounts();
+    }
+  }, [isModalOpen]);
 
   const loadDocuments = async () => {
     setLoading(true);
@@ -65,6 +101,173 @@ export default function Documents() {
       console.error('Hiba a dokumentumok betöltésekor:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadCategories = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/dms/categories?skip=0&take=100`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setCategories(data.data || []);
+      }
+    } catch (error) {
+      console.error('Hiba a kategóriák betöltésekor:', error);
+    }
+  };
+
+  const loadAccounts = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/crm/accounts?skip=0&take=100`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setAccounts(data.items || []);
+      }
+    } catch (error) {
+      console.error('Hiba az ügyfelek betöltésekor:', error);
+    }
+  };
+
+  const handleOpenModal = () => {
+    setFormData({
+      nev: '',
+      tipus: 'szerzodes',
+      categoryId: '',
+      accountId: '',
+      allapot: 'aktiv',
+      ervenyessegKezdet: '',
+      ervenyessegVeg: '',
+    });
+    setSelectedFile(null);
+    setError('');
+    setSuccess('');
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setFormData({
+      nev: '',
+      tipus: 'szerzodes',
+      categoryId: '',
+      accountId: '',
+      allapot: 'aktiv',
+      ervenyessegKezdet: '',
+      ervenyessegVeg: '',
+    });
+    setSelectedFile(null);
+    setError('');
+    setSuccess('');
+  };
+
+  const handleFileSelect = (file: File) => {
+    setSelectedFile(file);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+
+    if (!formData.nev.trim()) {
+      setError('A név megadása kötelező');
+      return;
+    }
+
+    if (!selectedFile) {
+      setError('Kérem válasszon ki egy fájlt');
+      return;
+    }
+
+    setSaving(true);
+
+    try {
+      const token = localStorage.getItem('token');
+
+      const documentData = {
+        nev: formData.nev,
+        tipus: formData.tipus,
+        categoryId: formData.categoryId || undefined,
+        accountId: formData.accountId || undefined,
+        allapot: formData.allapot,
+        fajlNev: selectedFile.name,
+        fajlMeret: selectedFile.size,
+        mimeType: selectedFile.type,
+        ervenyessegKezdet: formData.ervenyessegKezdet || undefined,
+        ervenyessegVeg: formData.ervenyessegVeg || undefined,
+      };
+
+      const createResponse = await fetch(`${API_URL}/dms/documents`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(documentData),
+      });
+
+      if (!createResponse.ok) {
+        if (createResponse.status === 401) {
+          throw new Error('Nincs hitelesítve. Kérem jelentkezzen be újra.');
+        } else if (createResponse.status === 403) {
+          throw new Error('Nincs jogosultsága ehhez a művelethez.');
+        } else if (createResponse.status === 400) {
+          const errorData = await createResponse.json();
+          throw new Error(errorData.message || 'Hibás adatok.');
+        } else if (createResponse.status >= 500) {
+          throw new Error('Szerver hiba. Kérem próbálja újra később.');
+        } else {
+          const errorData = await createResponse.json();
+          throw new Error(errorData.message || 'Hiba a dokumentum létrehozásakor');
+        }
+      }
+
+      const createdDocument = await createResponse.json();
+
+      const uploadFormData = new FormData();
+      uploadFormData.append('file', selectedFile);
+
+      const uploadResponse = await fetch(`${API_URL}/dms/documents/${createdDocument.id}/upload`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: uploadFormData,
+      });
+
+      if (!uploadResponse.ok) {
+        if (uploadResponse.status === 401) {
+          throw new Error('Nincs hitelesítve. Kérem jelentkezzen be újra.');
+        } else if (uploadResponse.status === 403) {
+          throw new Error('Nincs jogosultsága ehhez a művelethez.');
+        } else if (uploadResponse.status === 400) {
+          const errorData = await uploadResponse.json();
+          throw new Error(errorData.message || 'Hibás adatok.');
+        } else if (uploadResponse.status >= 500) {
+          throw new Error('Szerver hiba. Kérem próbálja újra később.');
+        } else {
+          const errorData = await uploadResponse.json();
+          throw new Error(errorData.message || 'Hiba a fájl feltöltésekor');
+        }
+      }
+
+      setSuccess('Dokumentum sikeresen létrehozva!');
+      setTimeout(() => {
+        handleCloseModal();
+        loadDocuments();
+      }, 1500);
+    } catch (err: any) {
+      setError(err.message || 'Hiba történt a mentés során');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -109,7 +312,10 @@ export default function Documents() {
     <div>
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-3xl font-bold">Dokumentumok</h1>
-        <button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+        <button 
+          onClick={handleOpenModal}
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+        >
           + Új dokumentum
         </button>
       </div>
@@ -215,6 +421,149 @@ export default function Documents() {
           </div>
         )}
       </div>
+
+      <Modal isOpen={isModalOpen} onClose={handleCloseModal} title="Új dokumentum" size="lg">
+        <form onSubmit={handleSubmit}>
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+              {error}
+            </div>
+          )}
+          {success && (
+            <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded">
+              {success}
+            </div>
+          )}
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Név <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={formData.nev}
+                onChange={(e) => setFormData({ ...formData, nev: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Típus <span className="text-red-500">*</span>
+              </label>
+              <select
+                value={formData.tipus}
+                onChange={(e) => setFormData({ ...formData, tipus: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              >
+                {TIPUSOK.map(t => (
+                  <option key={t.kod} value={t.kod}>{t.nev}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Kategória
+              </label>
+              <select
+                value={formData.categoryId}
+                onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">-- Válasszon --</option>
+                {categories.map(c => (
+                  <option key={c.id} value={c.id}>{c.nev}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Ügyfél
+              </label>
+              <select
+                value={formData.accountId}
+                onChange={(e) => setFormData({ ...formData, accountId: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">-- Válasszon --</option>
+                {accounts.map(a => (
+                  <option key={a.id} value={a.id}>{a.nev}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Állapot <span className="text-red-500">*</span>
+              </label>
+              <select
+                value={formData.allapot}
+                onChange={(e) => setFormData({ ...formData, allapot: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              >
+                <option value="aktiv">Aktív</option>
+                <option value="archivalva">Archivált</option>
+              </select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Érvényesség kezdete
+                </label>
+                <input
+                  type="date"
+                  value={formData.ervenyessegKezdet}
+                  onChange={(e) => setFormData({ ...formData, ervenyessegKezdet: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Érvényesség vége
+                </label>
+                <input
+                  type="date"
+                  value={formData.ervenyessegVeg}
+                  onChange={(e) => setFormData({ ...formData, ervenyessegVeg: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Fájl <span className="text-red-500">*</span>
+              </label>
+              <FileUpload onFileSelect={handleFileSelect} />
+            </div>
+          </div>
+
+          <div className="mt-6 flex justify-end gap-3">
+            <button
+              type="button"
+              onClick={handleCloseModal}
+              className="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50"
+              disabled={saving}
+            >
+              Mégse
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+              disabled={saving}
+            >
+              {saving ? 'Mentés...' : 'Mentés'}
+            </button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

@@ -661,6 +661,7 @@ model Document {
   fajlMeret         Int
   fajlUtvonal       String
   mimeType          String
+  tartalom          String?
   allapot           String
   ervenyessegKezdet DateTime?
   ervenyessegVeg    DateTime?

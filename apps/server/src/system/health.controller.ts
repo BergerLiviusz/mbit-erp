@@ -23,71 +23,44 @@ export class HealthController {
 
   @Get('detailed')
   async getDetailedHealth() {
-    const checks: any[] = [];
+    let dbStatus = 'healthy';
+    let dbLatency = 0;
+    const dbStartTime = Date.now();
 
     try {
       await this.prisma.$queryRaw`SELECT 1`;
-      checks.push({
-        name: 'Database',
-        status: 'ok',
-        details: 'Connection successful',
-      });
+      dbLatency = Date.now() - dbStartTime;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      checks.push({
-        name: 'Database',
-        status: 'error',
-        details: errorMessage,
-      });
+      dbStatus = 'unhealthy';
+      dbLatency = -1;
     }
+
+    let storageStatus = 'ok';
+    let storageAvailable = true;
+    const dataDir = this.storage.getBasePath();
 
     try {
-      const dataDir = this.storage.getBasePath();
       await fs.access(dataDir);
-      checks.push({
-        name: 'Data Directory',
-        status: 'ok',
-        details: `Accessible at ${dataDir}`,
-      });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      checks.push({
-        name: 'Data Directory',
-        status: 'error',
-        details: errorMessage,
-      });
+      storageStatus = 'error';
+      storageAvailable = false;
     }
 
-    const memUsage = process.memoryUsage();
-    checks.push({
-      name: 'Memory',
-      status: 'ok',
-      details: {
-        heapUsed: `${Math.round(memUsage.heapUsed / 1024 / 1024)} MB`,
-        heapTotal: `${Math.round(memUsage.heapTotal / 1024 / 1024)} MB`,
-        rss: `${Math.round(memUsage.rss / 1024 / 1024)} MB`,
-      },
-    });
-
-    checks.push({
-      name: 'System',
-      status: 'ok',
-      details: {
-        platform: os.platform(),
-        arch: os.arch(),
-        cpus: os.cpus().length,
-        freeMemory: `${Math.round(os.freemem() / 1024 / 1024)} MB`,
-        totalMemory: `${Math.round(os.totalmem() / 1024 / 1024)} MB`,
-        uptime: `${Math.round(os.uptime() / 60)} minutes`,
-      },
-    });
-
-    const overallStatus = checks.every((c) => c.status === 'ok') ? 'ok' : 'degraded';
+    const overallStatus = dbStatus === 'healthy' && storageAvailable ? 'ok' : 'degraded';
 
     return {
       status: overallStatus,
       timestamp: new Date().toISOString(),
-      checks,
+      version: '1.0.0',
+      database: {
+        status: dbStatus,
+        latency: dbLatency,
+      },
+      storage: {
+        status: storageStatus,
+        dataDir: dataDir,
+        available: storageAvailable,
+      },
     };
   }
 }

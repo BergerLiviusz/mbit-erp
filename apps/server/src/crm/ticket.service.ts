@@ -50,4 +50,10 @@ export class TicketService {
       data,
     });
   }
+
+  async delete(id: string) {
+    return this.prisma.ticket.delete({
+      where: { id },
+    });
+  }
 }

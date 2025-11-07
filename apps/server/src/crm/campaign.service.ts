@@ -47,4 +47,10 @@ export class CampaignService {
       data,
     });
   }
+
+  async delete(id: string) {
+    return this.prisma.campaign.delete({
+      where: { id },
+    });
+  }
 }
