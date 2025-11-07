@@ -25,6 +25,27 @@ The project utilizes a monorepo structure managed by Turborepo, encompassing a R
 - **Deployment**: Configured for concurrent execution of both frontend (port 5000) and backend (port 3000) for seamless Replit deployment.
 
 ## Recent Changes (November 7, 2025)
+**Sprint 7 - UX Improvements & Organization Management:**
+- ✅ **Logo Update**: Replaced header logo with official mbitvector.svg from attached_assets, properly aligned and sized (h-10 w-auto)
+- ✅ **Organization Data Management**: Complete implementation in Beállítások > Szervezet tab
+  - Added 2 new organization fields: Cégjegyzékszám (registration_number), Weboldal (website)
+  - Implemented grid-based form layout with 7 editable fields (név, cím, adószám, email, telefon, cégjegyzékszám, weboldal)
+  - Auto-initialization of defaults when page loads via `/system/settings/initialize` endpoint
+  - Batch save functionality with Promise.all and proper response validation
+  - Comprehensive error handling (401/403/general errors) with user feedback
+  - Success/error messages with automatic clearing
+- ✅ **Navigation Reorganization**: Created dropdown menu structure for cleaner navigation
+  - "Ügyfélkezelés" dropdown: Partnerek, Lehetőségek, Árajánlatok
+  - "Logisztika" dropdown: Raktárak, Termékek
+  - Hover-based dropdown with proper z-index and styling
+  - Maintains direct links for Főoldal, Dokumentumok, Beállítások
+- ✅ **Document Category Management**: Added inline category creation in document modal
+  - "+ Új kategória" button next to category dropdown
+  - Mini-modal for creating categories with Enter key support
+  - Auto-selection of newly created category
+  - Proper RBAC error handling (401/403/400)
+  - Instant category list refresh after creation
+
 **Sprint 6 - Product Management & Security Hardening:**
 - ✅ **Header Redesign**: Removed "Mbit ERP" text from navigation header, keeping only logo SVG (h-10 w-auto sizing)
 - ✅ **Product Management System**: Complete CRUD implementation for product catalog
