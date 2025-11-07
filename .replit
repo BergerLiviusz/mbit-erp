@@ -1,5 +1,5 @@
 entrypoint = "index.js"
-modules = ["nodejs-22"]
+modules = ["nodejs-22", "postgresql-16"]
 hidden = [".config", "package-lock.json"]
 
 [gitHubImport]
@@ -68,10 +68,6 @@ externalPort = 80
 [[ports]]
 localPort = 33459
 externalPort = 3001
-
-[[ports]]
-localPort = 37211
-externalPort = 3003
 
 [[ports]]
 localPort = 41845

@@ -1,10 +1,11 @@
-import { Controller, Get, Post, Res } from '@nestjs/common';
+import { Controller, Get, Post, Res, HttpCode, HttpStatus } from '@nestjs/common';
 import { Response } from 'express';
-import { Permissions } from '../common/rbac/rbac.decorator';
+import { Permissions, Public } from '../common/rbac/rbac.decorator';
 import { Permission } from '../common/rbac/permission.enum';
 import { StorageService } from '../common/storage/storage.service';
 import { BackupService } from '../common/backup/backup.service';
 import { AuditService } from '../common/audit/audit.service';
+import { PrismaService } from '../prisma/prisma.service';
 import * as archiver from 'archiver';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -15,6 +16,7 @@ export class DiagnosticsController {
     private storage: StorageService,
     private backupService: BackupService,
     private auditService: AuditService,
+    private prisma: PrismaService,
   ) {}
 
   @Get('logs/download')
@@ -104,5 +106,122 @@ export class DiagnosticsController {
   @Permissions(Permission.SYSTEM_BACKUP)
   async listBackups() {
     return await this.backupService.listBackups();
+  }
+
+  @Get('permissions/check-admin')
+  @Public()
+  async checkAdminPermissions() {
+    const adminUser = await this.prisma.user.findUnique({
+      where: { email: 'admin@mbit.hu' },
+      include: {
+        roles: {
+          include: {
+            role: {
+              include: {
+                rolePermissions: {
+                  include: {
+                    permission: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!adminUser) {
+      return { error: 'Admin user not found' };
+    }
+
+    const allPermissions = new Set<string>();
+    const roles = [];
+
+    for (const userRole of adminUser.roles) {
+      const rolePerms = userRole.role.rolePermissions.map(rp => rp.permission.kod);
+      roles.push({
+        name: userRole.role.nev,
+        permissionsCount: rolePerms.length,
+        permissions: rolePerms.sort(),
+      });
+      rolePerms.forEach(p => allPermissions.add(p));
+    }
+
+    return {
+      user: adminUser.email,
+      rolesCount: adminUser.roles.length,
+      roles,
+      totalUniquePermissions: allPermissions.size,
+      hasCustomerCreate: allPermissions.has('customer:create'),
+      customerPermissions: Array.from(allPermissions).filter(p => p.startsWith('customer:')),
+      crmPermissions: Array.from(allPermissions).filter(p => p.startsWith('crm:')),
+    };
+  }
+
+  @Post('permissions/fix-admin')
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  async fixAdminPermissions() {
+    const adminUser = await this.prisma.user.findUnique({
+      where: { email: 'admin@mbit.hu' },
+      include: {
+        roles: {
+          include: {
+            role: true,
+          },
+        },
+      },
+    });
+
+    if (!adminUser || adminUser.roles.length === 0) {
+      return { error: 'Admin user or role not found' };
+    }
+
+    const adminRole = adminUser.roles[0].role;
+    
+    // Get all permissions that admin should have
+    const allPermissions = await this.prisma.permission.findMany({
+      where: {
+        OR: [
+          { modulo: 'CRM' },
+          { modulo: 'DMS' },
+          { modulo: 'Logisztika' },
+          { modulo: 'Rendszer' },
+          { modulo: 'Felhasználók' },
+          { modulo: 'Szerepkörök' },
+          { modulo: 'Jelentések' },
+        ],
+      },
+    });
+
+    let addedCount = 0;
+
+    for (const perm of allPermissions) {
+      const exists = await this.prisma.rolePermission.findUnique({
+        where: {
+          roleId_permissionId: {
+            roleId: adminRole.id,
+            permissionId: perm.id,
+          },
+        },
+      });
+
+      if (!exists) {
+        await this.prisma.rolePermission.create({
+          data: {
+            roleId: adminRole.id,
+            permissionId: perm.id,
+          },
+        });
+        addedCount++;
+      }
+    }
+
+    return {
+      message: 'Admin permissions updated successfully',
+      addedPermissions: addedCount,
+      totalPermissions: allPermissions.length,
+      adminRole: adminRole.nev,
+    };
   }
 }
