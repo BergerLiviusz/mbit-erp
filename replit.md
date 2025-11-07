@@ -25,6 +25,23 @@ The project utilizes a monorepo structure managed by Turborepo, encompassing a R
 - **Deployment**: Configured for concurrent execution of both frontend (port 5000) and backend (port 3000) for seamless Replit deployment.
 
 ## Recent Changes (November 7, 2025)
+**Sprint 6 - Product Management & Security Hardening:**
+- ✅ **Header Redesign**: Removed "Mbit ERP" text from navigation header, keeping only logo SVG (h-10 w-auto sizing)
+- ✅ **Product Management System**: Complete CRUD implementation for product catalog
+  - Added PRODUCT_VIEW/CREATE/EDIT/DELETE permissions to RBAC enum with Hungarian descriptions
+  - ItemController protected with @UseGuards(RbacGuard) and @Permissions decorators
+  - New `/products` frontend route with full CRUD modals (név, leírás, egységár, egység, raktár fields)
+  - Products navigation added between "Raktárak" and "Beállítások"
+  - Admin role granted all 4 new product permissions (87 total permissions)
+- ✅ **Quotes Integration**: Updated Quotes modal to fetch real products from `/api/logistics/items` instead of mock data, auto-populating egységár when product selected
+- ✅ **Critical Security Fixes**: 
+  - Fixed unauthenticated privilege-escalation vulnerability in DiagnosticsController
+  - Removed @Public() decorators from permission diagnostic endpoints
+  - Added @UseGuards(RbacGuard) to DiagnosticsController
+  - Imported RbacModule in SystemModule to enable guard instantiation
+  - All diagnostic endpoints now protected by @Permissions(Permission.SYSTEM_DIAGNOSTICS)
+- ✅ **Permission Diagnostics**: Created diagnostic endpoints for admin permission verification (secured with RBAC)
+
 **Sprint 5 - Complete Modal Suite & OCR Integration:**
 - ✅ **API Proxy Migration**: All frontend pages now use `/api` relative paths (Documents, CRM, Opportunities, Quotes, Settings, Warehouses), eliminating CORS issues
 - ✅ **Opportunities Modal**: Full CRUD with név, accountId, szakasz, érték, valószínűség, zárás dátum fields; account dropdown; validation; RBAC error handling
