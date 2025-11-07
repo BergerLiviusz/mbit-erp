@@ -47,8 +47,15 @@ The project utilizes a monorepo structure managed by Turborepo, encompassing a R
   - Automated artifact upload
   - GitHub Releases integration on git tags
   - Manual workflow dispatch option
+- ✅ **Critical Production Fixes**: Architect-reviewed stability improvements
+  - Backend Readiness Probe: Dynamic health check (30s timeout) instead of fixed 5s delay
+  - Error Handling: Magyar dialog box with error details on backend startup failure
+  - Graceful Shutdown: SIGTERM→SIGKILL fallback, proper process cleanup
+  - Logging: Progresszív health check logging (every 5 attempts)
+  - Endpoint Fix: Corrected health check path from `/api/health` to `/health`
+  - Resource Management: No memory leaks, bounded timeouts, socket cleanup
 - ✅ **Documentation**: Comprehensive build and usage guides
-  - BUILD_DESKTOP.md - Complete build instructions
+  - BUILD_DESKTOP.md - Complete build instructions + architecture section
   - apps/desktop/README.md - Architecture and configuration
   - Updated main README.md with desktop app info
   - Icon conversion instructions

@@ -14,6 +14,34 @@ Az Mbit ERP most **Electron desktop alkalmazásként** is elérhető, teljes **o
 
 ---
 
+## 🔧 Architektúra & Kritikus Javítások
+
+### Backend Startup & Health Check
+
+Az alkalmazás **intelligens backend readiness probe**-ot használ:
+
+- ✅ **Dinamikus health check** - polling a `/health` endpoint-ra (fix delay helyett)
+- ✅ **30 másodperces timeout** - max 30 próbálkozás, 1s intervallummal
+- ✅ **Progresszív logging** - státusz üzenet 5 próbálkozásonként
+- ✅ **Hibakezelés** - magyar nyelvű dialog box backend hiba esetén
+
+### Graceful Shutdown
+
+Backend leállítás biztonságosan történik:
+
+- ✅ **SIGTERM first** - először graceful shutdown kérés
+- ✅ **SIGKILL fallback** - 5s után force kill ha nem állt le
+- ✅ **1s grace period** - app exit előtt várakozás
+- ✅ **Cross-platform** - Windows/macOS/Linux támogatás
+
+### Resource Management
+
+- ✅ **No memory leaks** - minden timeout bounded
+- ✅ **Socket cleanup** - HTTP health check automatikus teardown
+- ✅ **Process cleanup** - child process tracking és leállítás
+
+---
+
 ## 🏗️ Build Process
 
 ### 1. Előkészületek
