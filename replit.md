@@ -25,6 +25,16 @@ The project utilizes a monorepo structure managed by Turborepo, encompassing a R
 - **Deployment**: Configured for concurrent execution of both frontend (port 5000) and backend (port 3000) for seamless Replit deployment.
 
 ## Recent Changes (November 7, 2025)
+**Sprint 8 - Electron Desktop Application & Build Fix:**
+- ✅ **Replit Build Probléma Debug & Megoldás**: TypeScript incremental compilation cache (.tsbuildinfo fájlok) blokkolta a dist mappák generálását
+  - Root cause: .tsbuildinfo cache fájlok megakadályozták az output generálást
+  - Megoldás: Automatikus cache törlés build előtt (`prebuild` script módosítva)
+  - Build script javítások: tsbuildinfo törlés backend/frontend build előtt
+  - Prisma path javítás: ../../node_modules helyett monorepo hoisted paths
+  - Package.json metadata kiegészítés: homepage, author email, Linux maintainer
+  - Linux AppImage SIKERES build (119 MB) - teljes működőképes installer
+  - DEB package sikertelen (Replit környezeti limitáció - FPM segfault)
+  - Windows/macOS build ajánlás: GitHub Actions CI/CD használata
 **Sprint 8 - Electron Desktop Application:**
 - ✅ **Electron Desktop App Implementation**: Complete desktop application setup
   - Electron main process with embedded NestJS backend

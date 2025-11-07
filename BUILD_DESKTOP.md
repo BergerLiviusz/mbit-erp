@@ -42,6 +42,31 @@ Backend leállítás biztonságosan történik:
 
 ---
 
+## ⚠️ FONTOS: TypeScript Build Cache Probléma
+
+**Probléma**: A monorepo TypeScript incremental compilation-t használ, ami `.tsbuildinfo` cache fájlokat hoz létre. Ezek a cache fájlok **blokkolhatják a dist mappák generálását** build során.
+
+**Megoldás**: A build script-ek most automatikusan tisztítják ezeket a cache fájlokat **cross-platform** módon (Windows/macOS/Linux):
+```json
+"prebuild": "npm run clean && npx rimraf \"**/*.tsbuildinfo\" tsconfig.tsbuildinfo",
+"build:electron": "npx rimraf tsconfig.tsbuildinfo && tsc",
+"build:backend": "cd ../server && npx rimraf tsconfig.tsbuildinfo && npm run build",
+"build:frontend": "cd ../web && npx rimraf tsconfig.tsbuildinfo && cross-env ELECTRON_BUILD=true npm run build"
+```
+
+Ha hiányzó `dist` mappákkal találkozol, manuálisan futtasd:
+```bash
+# Windows/macOS/Linux:
+npx rimraf "**/*.tsbuildinfo"
+```
+
+**Javított build script-ek**:
+- `prebuild` - törli a cache fájlokat
+- `build:backend` - törli a server cache-t build előtt
+- `build:frontend` - törli a web cache-t build előtt
+
+---
+
 ## 🏗️ Build Process
 
 ### 1. Előkészületek
@@ -101,7 +126,28 @@ npm run package:mac
 
 **Méret:** ~150-200 MB
 
-### 5. Összes Platform Egyszerre
+### 5. Linux Installer Készítése
+
+```bash
+cd apps/desktop
+npm run package:linux
+```
+
+**Kimenet:**
+- `release/Mbit ERP-1.0.0-x86_64.AppImage` - ✅ **SIKERES** (~119 MB)
+- `release/Mbit ERP-1.0.0-amd64.deb` - ❌ **Replit limitáció** (FPM segfault)
+
+**⚠️ Replit Build Korlátozások:**
+
+A Replit fejlesztői környezetben:
+- ✅ **Linux AppImage**: Sikeresen buildelődik
+- ❌ **DEB package**: FPM tool crash (Ruby binary segfault)
+- ❌ **Windows NSIS**: Wine függőség hiányzik
+- ❌ **macOS DMG**: macOS környezet szükséges
+
+**💡 Ajánlás**: **GitHub Actions CI/CD** használata production build-ekhez (lásd alább)
+
+### 6. Összes Platform Egyszerre
 
 ```bash
 cd apps/desktop
