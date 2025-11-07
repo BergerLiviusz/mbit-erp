@@ -25,6 +25,37 @@ The project utilizes a monorepo structure managed by Turborepo, encompassing a R
 - **Deployment**: Configured for concurrent execution of both frontend (port 5000) and backend (port 3000) for seamless Replit deployment.
 
 ## Recent Changes (November 7, 2025)
+**Sprint 8 - GitHub Actions CI/CD & Production-Ready Build Pipeline:**
+- ✅ **GitHub Actions CI/CD Implementáció**: Teljes automatizált build pipeline Windows + macOS installer-ekhez
+  - Multi-OS build matrix (windows-latest, macos-latest) - Linux kihagyva (DEB build issue miatt)
+  - Platform-specifikus code signing támogatás explicit platform check-kel
+  - Conditional expression fix: Windows csak WINDOWS_CSC_LINK-et használ, macOS csak MACOS_CSC_LINK-et
+  - Notarization support macOS-hez (APPLE_ID, APPLE_ID_PASSWORD, APPLE_TEAM_ID)
+  - Automatic artifact upload (30 napos megőrzéssel)
+  - GitHub Releases integration git tag push-ra
+  - Prisma client generation minden build előtt
+- ✅ **Code Signing Dokumentáció**: GITHUB_ACTIONS_SETUP.md teljes útmutató
+  - README.md placeholder frissítési instrukciók
+  - GitHub Secrets beállítási útmutató (Windows/macOS certificate-ek)
+  - Base64 certificate encoding példák
+  - Platform-specifikus secret táblázatok "Használat a workflow-ban" oszloppal
+  - Build triggerek dokumentálása (tag push, branch push, PR, manual)
+  - Troubleshooting section gyakori hibákra
+  - Production release checklist 11 ponttal
+  - Build időtartamok (~20-25 perc párhuzamos build-eléssel)
+- ✅ **.gitignore Biztonsági Frissítések**: Érzékeny fájlok és build artifact-ok kizárása
+  - Code signing certificate-ek: *.p12, *.pfx, *.cer, *.crt, *.key, *.pem
+  - Generált icon-ok: apps/desktop/resources/*.ico, *.icns (+ legacy fallback)
+  - Build artifact-ok: *.msi, *.dmg, *.exe, *.deb, *.rpm, *.AppImage
+- ✅ **README.md Frissítések**: CI/CD státusz és linkek
+  - GitHub Actions badge hozzáadva (ORG_NAME/REPO_NAME placeholder-rel)
+  - GITHUB_ACTIONS_SETUP.md dokumentáció link
+  - GitHub Releases letöltési link
+- ✅ **Architect Review Process**: 3 iterációs review és javítási ciklus
+  - 1. FAIL: Code signing env változók hiányoztak
+  - 2. FAIL: macOS secret-ek nem kerültek injektálásra
+  - 3. FAIL: Conditional expression logikai hiba (Windows build macOS cert-et kapott volna)
+  - 4. PASS: Explicit platform check-kel minden scenario helyes (architect-approved)
 **Sprint 8 - Electron Desktop Application & Build Fix:**
 - ✅ **Replit Build Probléma Debug & Megoldás**: TypeScript incremental compilation cache (.tsbuildinfo fájlok) blokkolta a dist mappák generálását
   - Root cause: .tsbuildinfo cache fájlok megakadályozták az output generálást
@@ -35,7 +66,6 @@ The project utilizes a monorepo structure managed by Turborepo, encompassing a R
   - Linux AppImage SIKERES build (119 MB) - teljes működőképes installer
   - DEB package sikertelen (Replit környezeti limitáció - FPM segfault)
   - Windows/macOS build ajánlás: GitHub Actions CI/CD használata
-**Sprint 8 - Electron Desktop Application:**
 - ✅ **Electron Desktop App Implementation**: Complete desktop application setup
   - Electron main process with embedded NestJS backend
   - Preload script for secure IPC communication
@@ -52,11 +82,6 @@ The project utilizes a monorepo structure managed by Turborepo, encompassing a R
   - Frontend build with Electron-specific base path
   - Cross-platform build scripts (Windows/Mac/Linux)
   - electron-builder configuration with proper file inclusion
-- ✅ **CI/CD Pipeline**: GitHub Actions automated builds
-  - Multi-OS build matrix (windows-latest, macos-latest)
-  - Automated artifact upload
-  - GitHub Releases integration on git tags
-  - Manual workflow dispatch option
 - ✅ **Critical Production Fixes**: Architect-reviewed stability improvements
   - Backend Readiness Probe: Dynamic health check (30s timeout) instead of fixed 5s delay
   - Error Handling: Magyar dialog box with error details on backend startup failure
@@ -67,7 +92,8 @@ The project utilizes a monorepo structure managed by Turborepo, encompassing a R
 - ✅ **Documentation**: Comprehensive build and usage guides
   - BUILD_DESKTOP.md - Complete build instructions + architecture section
   - apps/desktop/README.md - Architecture and configuration
-  - Updated main README.md with desktop app info
+  - GITHUB_ACTIONS_SETUP.md - CI/CD setup és troubleshooting
+  - Updated main README.md with desktop app info + GitHub Actions badge
   - Icon conversion instructions
   - Code signing guidance
 
