@@ -89,7 +89,7 @@
           ]
         }
       ],
-      "icon": "resources/icon.ico",
+      "icon": "resources/icon.png",
       "artifactName": "${productName}-Setup-${version}.${ext}",
       "publisherName": "MB-IT Kft."
     },
@@ -99,9 +99,9 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "Mbit ERP",
-      "installerIcon": "resources/icon.ico",
-      "uninstallerIcon": "resources/icon.ico",
-      "installerHeaderIcon": "resources/icon.ico"
+      "installerIcon": "resources/icon.png",
+      "uninstallerIcon": "resources/icon.png",
+      "installerHeaderIcon": "resources/icon.png"
     },
     "mac": {
       "target": [
@@ -113,7 +113,7 @@
           ]
         }
       ],
-      "icon": "resources/icon.icns",
+      "icon": "resources/icon.png",
       "category": "public.app-category.business",
       "artifactName": "${productName}-${version}-${arch}.${ext}",
       "hardenedRuntime": true,
