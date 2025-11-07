@@ -1,0 +1,49 @@
+Run cd apps/desktop
+
+> @mbit-erp/desktop@1.0.0 package:mac
+> npm run build && electron-builder --mac
+
+
+> @mbit-erp/desktop@1.0.0 prebuild
+> npm run clean && npx rimraf "**/*.tsbuildinfo" tsconfig.tsbuildinfo
+
+
+> @mbit-erp/desktop@1.0.0 clean
+> rimraf dist-electron release
+
+
+> @mbit-erp/desktop@1.0.0 build
+> npm run build:electron && npm run build:backend && npm run build:frontend
+
+
+> @mbit-erp/desktop@1.0.0 build:electron
+> npx rimraf tsconfig.tsbuildinfo && tsc
+
+npm error Lifecycle script `build:electron` failed with error:
+Error: src/main.ts(1,53): error TS2307: Cannot find module 'electron' or its corresponding type declarations.
+Error: src/main.ts(110,45): error TS2339: Property 'resourcesPath' does not exist on type 'Process'.
+npm error code 2
+Error: src/main.ts(155,25): error TS2339: Property 'resourcesPath' does not exist on type 'Process'.
+npm error path /Users/runner/work/mbit-erp/mbit-erp/apps/desktop
+Error: src/main.ts(182,41): error TS2339: Property 'resourcesPath' does not exist on type 'Process'.
+npm error workspace @mbit-erp/desktop@1.0.0
+Error: src/main.ts(258,24): error TS7006: Parameter 'event' implicitly has an 'any' type.
+Error: src/preload.ts(1,44): error TS2307: Cannot find module 'electron' or its corresponding type declarations.
+npm error location /Users/runner/work/mbit-erp/mbit-erp/apps/desktop
+npm error command failed
+npm error command sh -c npx rimraf tsconfig.tsbuildinfo && tsc
+npm error Lifecycle script `build` failed with error:
+npm error code 2
+npm error path /Users/runner/work/mbit-erp/mbit-erp/apps/desktop
+npm error workspace @mbit-erp/desktop@1.0.0
+npm error location /Users/runner/work/mbit-erp/mbit-erp/apps/desktop
+npm error command failed
+npm error command sh -c npm run build:electron && npm run build:backend && npm run build:frontend
+npm error Lifecycle script `package:mac` failed with error:
+npm error code 2
+npm error path /Users/runner/work/mbit-erp/mbit-erp/apps/desktop
+npm error workspace @mbit-erp/desktop@1.0.0
+npm error location /Users/runner/work/mbit-erp/mbit-erp/apps/desktop
+npm error command failed
+npm error command sh -c npm run build && electron-builder --mac
+Error: Process completed with exit code 2.
