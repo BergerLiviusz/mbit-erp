@@ -102,10 +102,7 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "Mbit ERP",
-      "installerIcon": "resources/icon.png",
-      "uninstallerIcon": "resources/icon.png",
-      "installerHeaderIcon": "resources/icon.png"
+      "shortcutName": "Mbit ERP"
     },
     "mac": {
       "target": [

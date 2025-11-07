@@ -1,0 +1,154 @@
+Run cd apps/desktop
+  
+> @mbit-erp/desktop@1.0.0 package:win
+> npm run build && electron-builder --win --x64
+> @mbit-erp/desktop@1.0.0 prebuild
+> npm run clean
+> @mbit-erp/desktop@1.0.0 clean
+> rimraf dist-electron release
+> @mbit-erp/desktop@1.0.0 build
+> npm run build:electron && npm run build:backend && npm run build:frontend
+> @mbit-erp/desktop@1.0.0 build:electron
+> npx rimraf tsconfig.tsbuildinfo && tsc
+> @mbit-erp/desktop@1.0.0 build:backend
+> cd ../server && npx rimraf tsconfig.tsbuildinfo && npm run build
+> @mbit-erp/server@1.0.0 build
+> nest build
+> @mbit-erp/desktop@1.0.0 build:frontend
+> cd ../web && npx rimraf tsconfig.tsbuildinfo && cross-env ELECTRON_BUILD=true npm run build
+> @mbit-erp/web@1.0.0 build
+> tsc && vite build
+vite v5.4.21 building for production...
+transforming...
+✓ 142 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/registerSW.js                0.14 kB
+dist/manifest.webmanifest         0.29 kB
+dist/index.html                   0.59 kB │ gzip:  0.35 kB
+dist/assets/index-BS2ebifF.css   20.46 kB │ gzip:  4.40 kB
+dist/assets/index-W4mie_pU.js   340.25 kB │ gzip: 96.03 kB
+✓ built in 2.84s
+PWA v0.17.5
+mode      generateSW
+precache  5 entries (354.00 KiB)
+files generated
+  dist\sw.js
+  dist\workbox-1be04862.js
+  • electron-builder  version=24.13.3 os=10.0.26100
+  • artifacts will be published if draft release exists  reason=CI detected
+  • loaded configuration  file=package.json ("build" field)
+  • packaging       platform=win32 arch=x64 electron=28.3.3 appOutDir=release\win-unpacked
+  • downloading     url=https://github.com/electron/electron/releases/download/v28.3.3/electron-v28.3.3-win32-x64.zip size=108 MB parts=8
+  • downloaded      url=https://github.com/electron/electron/releases/download/v28.3.3/electron-v28.3.3-win32-x64.zip duration=1.145s
+  • downloading     url=https://github.com/electron-userland/electron-builder-binaries/releases/download/winCodeSign-2.6.0/winCodeSign-2.6.0.7z size=5.6 MB parts=1
+  • downloaded      url=https://github.com/electron-userland/electron-builder-binaries/releases/download/winCodeSign-2.6.0/winCodeSign-2.6.0.7z duration=473ms
+  • building        target=nsis file=release\Mbit ERP-Setup-1.0.0.exe archs=x64 oneClick=false perMachine=false
+  • downloading     url=https://github.com/electron-userland/electron-builder-binaries/releases/download/nsis-3.0.4.1/nsis-3.0.4.1.7z size=1.3 MB parts=1
+  • downloaded      url=https://github.com/electron-userland/electron-builder-binaries/releases/download/nsis-3.0.4.1/nsis-3.0.4.1.7z duration=407ms
+  • downloading     url=https://github.com/electron-userland/electron-builder-binaries/releases/download/nsis-resources-3.4.1/nsis-resources-3.4.1.7z size=731 kB parts=1
+  • downloaded      url=https://github.com/electron-userland/electron-builder-binaries/releases/download/nsis-resources-3.4.1/nsis-resources-3.4.1.7z duration=428ms
+  ⨯ C:\Users\runneradmin\AppData\Local\electron-builder\Cache\nsis\nsis-3.0.4.1\Bin\makensis.exe process failed ERR_ELECTRON_BUILDER_CANNOT_EXECUTE
+Exit code:
+1
+Output:
+Command line defined: "APP_ID=com.mbit.erp"
+Command line defined: "APP_GUID=c6cc6eb7-4f1f-578d-9823-8ac010eb76fb"
+Command line defined: "UNINSTALL_APP_KEY=c6cc6eb7-4f1f-578d-9823-8ac010eb76fb"
+Command line defined: "PRODUCT_NAME=Mbit ERP"
+Command line defined: "PRODUCT_FILENAME=Mbit ERP"
+Command line defined: "APP_FILENAME=Mbit ERP"
+Command line defined: "APP_DESCRIPTION=Electron desktop application for Mbit ERP - on-premise capable"
+Command line defined: "VERSION=1.0.0"
+Command line defined: "PROJECT_DIR=D:\a\mbit-erp\mbit-erp\apps\desktop"
+Command line defined: "BUILD_RESOURCES_DIR=D:\a\mbit-erp\mbit-erp\apps\desktop\resources"
+Command line defined: "APP_PACKAGE_NAME=@mbit-erp\desktop"
+Command line defined: "MUI_ICON=D:\a\mbit-erp\mbit-erp\apps\desktop\resources\icon.png"
+Command line defined: "MUI_UNICON=D:\a\mbit-erp\mbit-erp\apps\desktop\resources\icon.png"
+Command line defined: "APP_64=D:\a\mbit-erp\mbit-erp\apps\desktop\release\@mbit-erpdesktop-1.0.0-x64.nsis.7z"
+Command line defined: "APP_64_NAME=@mbit-erpdesktop-1.0.0-x64.nsis.7z"
+Command line defined: "APP_64_HASH=F59CC87AFA173FA051BC716703ED35A0D759D954861320EFA8EC3CE001C6DBC858856701A2CA98D170ED3FCCF2A78A1CC67987738A53C9A960A128FEFA9A19E8"
+Command line defined: "APP_64_UNPACKED_SIZE=366003"
+Command line defined: "COMPANY_NAME=MB-IT Kft."
+Command line defined: "APP_INSTALLER_STORE_FILE=@mbit-erpdesktop-updater\installer.exe"
+Command line defined: "COMPRESSION_METHOD=7z"
+Command line defined: "MULTIUSER_INSTALLMODE_ALLOW_ELEVATION"
+Command line defined: "INSTALL_MODE_PER_ALL_USERS_REQUIRED"
+Command line defined: "allowToChangeInstallationDirectory"
+Command line defined: "SHORTCUT_NAME=Mbit ERP"
+Command line defined: "UNINSTALL_DISPLAY_NAME=Mbit ERP 1.0.0"
+Command line defined: "MUI_WELCOMEFINISHPAGE_BITMAP=${NSISDIR}\Contrib\Graphics\Wizard\nsis3-metro.bmp"
+Command line defined: "MUI_UNWELCOMEFINISHPAGE_BITMAP=${NSISDIR}\Contrib\Graphics\Wizard\nsis3-metro.bmp"
+Command line defined: "UNINSTALLER_ICON=D:\a\mbit-erp\mbit-erp\apps\desktop\resources\icon.png"
+Command line defined: "ESTIMATED_SIZE=366003"
+Command line defined: "COMPRESS=auto"
+Command line defined: "BUILD_UNINSTALLER"
+Command line defined: "UNINSTALLER_OUT_FILE=D:\a\mbit-erp\mbit-erp\apps\desktop\release\__uninstaller-nsis-@mbit-erpdesktop.exe"
+Processing config: C:\Users\runneradmin\AppData\Local\electron-builder\Cache\nsis\nsis-3.0.4.1\nsisconf.nsh
+Processing script file: "<stdin>" (UTF8)
+Error output:
+Error while loading icon from "D:\a\mbit-erp\mbit-erp\apps\desktop\resources\icon.png": invalid icon file
+Error in macro MUI_INTERFACE on macroline 87
+Error in macro MUI_UNPAGE_INIT on macroline 7
+Error in macro MUI_UNPAGE_WELCOME on macroline 5
+!include: error in script: "assistedInstaller.nsh" on line 70
+Error in script "<stdin>" on line 110 -- aborting creation process
+  failedTask=build stackTrace=Error: C:\Users\runneradmin\AppData\Local\electron-builder\Cache\nsis\nsis-3.0.4.1\Bin\makensis.exe process failed ERR_ELECTRON_BUILDER_CANNOT_EXECUTE
+Exit code:
+1
+Output:
+Command line defined: "APP_ID=com.mbit.erp"
+Command line defined: "APP_GUID=c6cc6eb7-4f1f-578d-9823-8ac010eb76fb"
+Command line defined: "UNINSTALL_APP_KEY=c6cc6eb7-4f1f-578d-9823-8ac010eb76fb"
+Command line defined: "PRODUCT_NAME=Mbit ERP"
+Command line defined: "PRODUCT_FILENAME=Mbit ERP"
+Command line defined: "APP_FILENAME=Mbit ERP"
+Command line defined: "APP_DESCRIPTION=Electron desktop application for Mbit ERP - on-premise capable"
+Command line defined: "VERSION=1.0.0"
+Command line defined: "PROJECT_DIR=D:\a\mbit-erp\mbit-erp\apps\desktop"
+Command line defined: "BUILD_RESOURCES_DIR=D:\a\mbit-erp\mbit-erp\apps\desktop\resources"
+Command line defined: "APP_PACKAGE_NAME=@mbit-erp\desktop"
+Command line defined: "MUI_ICON=D:\a\mbit-erp\mbit-erp\apps\desktop\resources\icon.png"
+Command line defined: "MUI_UNICON=D:\a\mbit-erp\mbit-erp\apps\desktop\resources\icon.png"
+Command line defined: "APP_64=D:\a\mbit-erp\mbit-erp\apps\desktop\release\@mbit-erpdesktop-1.0.0-x64.nsis.7z"
+Command line defined: "APP_64_NAME=@mbit-erpdesktop-1.0.0-x64.nsis.7z"
+Command line defined: "APP_64_HASH=F59CC87AFA173FA051BC716703ED35A0D759D954861320EFA8EC3CE001C6DBC858856701A2CA98D170ED3FCCF2A78A1CC67987738A53C9A960A128FEFA9A19E8"
+Command line defined: "APP_64_UNPACKED_SIZE=366003"
+Command line defined: "COMPANY_NAME=MB-IT Kft."
+Command line defined: "APP_INSTALLER_STORE_FILE=@mbit-erpdesktop-updater\installer.exe"
+Command line defined: "COMPRESSION_METHOD=7z"
+Command line defined: "MULTIUSER_INSTALLMODE_ALLOW_ELEVATION"
+Command line defined: "INSTALL_MODE_PER_ALL_USERS_REQUIRED"
+Command line defined: "allowToChangeInstallationDirectory"
+Command line defined: "SHORTCUT_NAME=Mbit ERP"
+Command line defined: "UNINSTALL_DISPLAY_NAME=Mbit ERP 1.0.0"
+Command line defined: "MUI_WELCOMEFINISHPAGE_BITMAP=${NSISDIR}\Contrib\Graphics\Wizard\nsis3-metro.bmp"
+Command line defined: "MUI_UNWELCOMEFINISHPAGE_BITMAP=${NSISDIR}\Contrib\Graphics\Wizard\nsis3-metro.bmp"
+Command line defined: "UNINSTALLER_ICON=D:\a\mbit-erp\mbit-erp\apps\desktop\resources\icon.png"
+Command line defined: "ESTIMATED_SIZE=366003"
+Command line defined: "COMPRESS=auto"
+Command line defined: "BUILD_UNINSTALLER"
+Command line defined: "UNINSTALLER_OUT_FILE=D:\a\mbit-erp\mbit-erp\apps\desktop\release\__uninstaller-nsis-@mbit-erpdesktop.exe"
+Processing config: C:\Users\runneradmin\AppData\Local\electron-builder\Cache\nsis\nsis-3.0.4.1\nsisconf.nsh
+Processing script file: "<stdin>" (UTF8)
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
+Error while loading icon from "D:\a\mbit-erp\mbit-erp\apps\desktop\resources\icon.png": invalid icon file
+Error in macro MUI_INTERFACE on macroline 87
+Error in macro MUI_UNPAGE_INIT on macroline 7
+Error in macro MUI_UNPAGE_WELCOME on macroline 5
+!include: error in script: "assistedInstaller.nsh" on line 70
+Error in script "<stdin>" on line 110 -- aborting creation process
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
+    at Object.onceWrapper (node:events:639:26)
+    at ChildProcess.emit (node:events:524:28)
+    at ChildProcess.cp.emit (D:\a\mbit-erp\mbit-erp\node_modules\cross-spawn\lib\enoent.js:34:29)
+    at maybeClose (node:internal/child_process:1104:16)
+    at Process.ChildProcess._handle.onexit (node:internal/child_process:304:5)
+npm error Lifecycle script `package:win` failed with error:
+npm error code 1
+npm error path D:\a\mbit-erp\mbit-erp\apps\desktop
+npm error workspace @mbit-erp/desktop@1.0.0
+npm error location D:\a\mbit-erp\mbit-erp\apps\desktop
+npm error command failed
+npm error command C:\Windows\system32\cmd.exe /d /s /c npm run build && electron-builder --win --x64
+Error: Process completed with exit code 1.
