@@ -1,7 +1,8 @@
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain, dialog } from 'electron';
 import * as path from 'path';
 import { spawn, ChildProcess } from 'child_process';
 import * as fs from 'fs';
+import * as http from 'http';
 
 let mainWindow: BrowserWindow | null = null;
 let backendProcess: ChildProcess | null = null;
@@ -25,6 +26,64 @@ function ensureDataDirectories(): void {
       fs.mkdirSync(dir, { recursive: true });
     }
   });
+}
+
+async function checkBackendHealth(): Promise<boolean> {
+  return new Promise((resolve) => {
+    const options = {
+      hostname: 'localhost',
+      port: BACKEND_PORT,
+      path: '/health',
+      method: 'GET',
+      timeout: 2000,
+    };
+
+    const req = http.request(options, (res) => {
+      if (res.statusCode === 200) {
+        console.log('[Health Check] Backend is ready ✓');
+        resolve(true);
+      } else {
+        console.log(`[Health Check] Backend returned status ${res.statusCode}`);
+        resolve(false);
+      }
+    });
+
+    req.on('error', () => {
+      // Silent fail - backend not ready yet
+      resolve(false);
+    });
+
+    req.on('timeout', () => {
+      req.destroy();
+      resolve(false);
+    });
+
+    req.end();
+  });
+}
+
+async function waitForBackend(maxRetries = 30, intervalMs = 1000): Promise<void> {
+  console.log('[Backend] Waiting for backend to be ready...');
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    const isHealthy = await checkBackendHealth();
+    
+    if (isHealthy) {
+      console.log(`[Backend] ✓ Ready after ${attempt} attempt(s) (~${attempt}s)`);
+      return;
+    }
+    
+    // Log progress every 5 attempts to avoid spam
+    if (attempt % 5 === 0) {
+      console.log(`[Backend] Still waiting... (attempt ${attempt}/${maxRetries})`);
+    }
+    
+    if (attempt < maxRetries) {
+      await new Promise(resolve => setTimeout(resolve, intervalMs));
+    }
+  }
+  
+  throw new Error(`Backend failed to start after ${maxRetries} attempts (~${maxRetries}s)`);
 }
 
 async function startBackend(): Promise<void> {
@@ -70,12 +129,21 @@ async function startBackend(): Promise<void> {
 
     backendProcess.on('exit', (code) => {
       console.log(`[Backend] Process exited with code ${code}`);
+      if (code !== 0 && code !== null) {
+        reject(new Error(`Backend process exited with code ${code}`));
+      }
     });
 
-    setTimeout(() => {
-      console.log('[Backend] Started successfully');
-      resolve();
-    }, 5000);
+    // Wait for backend to be healthy instead of fixed delay
+    waitForBackend()
+      .then(() => {
+        console.log('[Backend] Started successfully');
+        resolve();
+      })
+      .catch((error) => {
+        console.error('[Backend] Failed to become ready:', error);
+        reject(error);
+      });
   });
 }
 
@@ -141,6 +209,17 @@ app.whenReady().then(async () => {
     createWindow();
   } catch (error) {
     console.error('[App] Failed to start backend:', error);
+    
+    const errorMessage = error instanceof Error ? error.message : 'Ismeretlen hiba';
+    
+    await dialog.showMessageBox({
+      type: 'error',
+      title: 'Backend Indítási Hiba',
+      message: 'Az alkalmazás backend szervert nem sikerült elindítani.',
+      detail: `Hiba: ${errorMessage}\n\nKérem ellenőrizze a naplófájlokat vagy próbálja újra az alkalmazást indítani.`,
+      buttons: ['Bezárás']
+    });
+    
     app.quit();
   }
 
@@ -151,25 +230,39 @@ app.whenReady().then(async () => {
   });
 });
 
-app.on('window-all-closed', () => {
-  if (backendProcess) {
-    console.log('[App] Stopping backend process...');
-    backendProcess.kill();
+function stopBackend(): void {
+  if (backendProcess && !backendProcess.killed) {
+    console.log('[App] Stopping backend process gracefully...');
+    
+    // Send SIGTERM for graceful shutdown
+    backendProcess.kill('SIGTERM');
+    
+    // Force kill after 5 seconds if still running
+    setTimeout(() => {
+      if (backendProcess && !backendProcess.killed) {
+        console.log('[App] Forcing backend process termination...');
+        backendProcess.kill('SIGKILL');
+      }
+    }, 5000);
   }
+}
+
+app.on('window-all-closed', () => {
+  stopBackend();
   
   if (process.platform !== 'darwin') {
     app.quit();
   }
 });
 
-app.on('before-quit', () => {
-  if (backendProcess) {
-    backendProcess.kill();
-  }
-});
-
-app.on('will-quit', () => {
-  if (backendProcess) {
-    backendProcess.kill();
+app.on('before-quit', (event) => {
+  if (backendProcess && !backendProcess.killed) {
+    event.preventDefault();
+    stopBackend();
+    
+    // Wait a bit for graceful shutdown, then quit
+    setTimeout(() => {
+      app.exit(0);
+    }, 1000);
   }
 });
