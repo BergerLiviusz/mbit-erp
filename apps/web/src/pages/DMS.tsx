@@ -55,7 +55,7 @@ export default function DMS() {
             <tbody className="bg-white divide-y divide-gray-200">
               {documents?.items?.map((doc: any) => (
                 <tr key={doc.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-mbit-blue">
                     {doc.iktatoSzam}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-900">{doc.nev}</td>
@@ -82,7 +82,7 @@ export default function DMS() {
         )}
       </div>
 
-      <div className="mt-6 bg-blue-50 border-l-4 border-blue-500 p-4">
+      <div className="mt-6 bg-blue-50 border-l-4 border-mbit-blue p-4">
         <h3 className="font-bold mb-2">DMS Modul Funkciók:</h3>
         <ul className="text-sm text-gray-700 space-y-1">
           <li>• Iktatási rendszer automatikus iktatószám generálással</li>

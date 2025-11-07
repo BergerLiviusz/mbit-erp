@@ -160,7 +160,7 @@ export default function Settings() {
           <button
             onClick={createBackup}
             disabled={loading}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:bg-gray-400"
+            className="bg-mbit-blue text-white px-4 py-2 rounded hover:bg-blue-600 disabled:bg-gray-400"
           >
             {loading ? 'Mentés folyamatban...' : 'Azonnali mentés létrehozása'}
           </button>
@@ -253,7 +253,7 @@ export default function Settings() {
         <div className="mt-6">
           <button
             onClick={loadHealth}
-            className="text-blue-600 hover:text-blue-800 text-sm"
+            className="text-mbit-blue hover:text-blue-800 text-sm"
           >
             ↻ Frissítés
           </button>
@@ -280,7 +280,7 @@ export default function Settings() {
             onClick={() => setActiveTab('organization')}
             className={`py-4 px-1 border-b-2 font-medium text-sm ${
               activeTab === 'organization'
-                ? 'border-blue-500 text-blue-600'
+                ? 'border-mbit-blue text-mbit-blue'
                 : 'border-transparent text-gray-500 hover:text-gray-700'
             }`}
           >
@@ -290,7 +290,7 @@ export default function Settings() {
             onClick={() => setActiveTab('backup')}
             className={`py-4 px-1 border-b-2 font-medium text-sm ${
               activeTab === 'backup'
-                ? 'border-blue-500 text-blue-600'
+                ? 'border-mbit-blue text-mbit-blue'
                 : 'border-transparent text-gray-500 hover:text-gray-700'
             }`}
           >
@@ -300,7 +300,7 @@ export default function Settings() {
             onClick={() => setActiveTab('system')}
             className={`py-4 px-1 border-b-2 font-medium text-sm ${
               activeTab === 'system'
-                ? 'border-blue-500 text-blue-600'
+                ? 'border-mbit-blue text-mbit-blue'
                 : 'border-transparent text-gray-500 hover:text-gray-700'
             }`}
           >

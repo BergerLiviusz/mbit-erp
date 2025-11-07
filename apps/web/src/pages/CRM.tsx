@@ -325,7 +325,7 @@ export default function CRM() {
         {activeTab === 'accounts' && (
           <button
             onClick={handleOpenAccountModal}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+            className="bg-mbit-blue text-white px-4 py-2 rounded hover:bg-blue-600"
           >
             + Új ügyfél
           </button>
@@ -333,7 +333,7 @@ export default function CRM() {
         {activeTab === 'campaigns' && (
           <button
             onClick={handleOpenCampaignModal}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+            className="bg-mbit-blue text-white px-4 py-2 rounded hover:bg-blue-600"
           >
             + Új kampány
           </button>
@@ -341,7 +341,7 @@ export default function CRM() {
         {activeTab === 'tickets' && (
           <button
             onClick={handleOpenTicketModal}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+            className="bg-mbit-blue text-white px-4 py-2 rounded hover:bg-blue-600"
           >
             + Új reklamáció
           </button>
@@ -354,7 +354,7 @@ export default function CRM() {
             onClick={() => setActiveTab('accounts')}
             className={`py-4 px-1 border-b-2 font-medium text-sm ${
               activeTab === 'accounts'
-                ? 'border-blue-500 text-blue-600'
+                ? 'border-mbit-blue text-mbit-blue'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
             }`}
           >
@@ -364,7 +364,7 @@ export default function CRM() {
             onClick={() => setActiveTab('campaigns')}
             className={`py-4 px-1 border-b-2 font-medium text-sm ${
               activeTab === 'campaigns'
-                ? 'border-blue-500 text-blue-600'
+                ? 'border-mbit-blue text-mbit-blue'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
             }`}
           >
@@ -374,7 +374,7 @@ export default function CRM() {
             onClick={() => setActiveTab('tickets')}
             className={`py-4 px-1 border-b-2 font-medium text-sm ${
               activeTab === 'tickets'
-                ? 'border-blue-500 text-blue-600'
+                ? 'border-mbit-blue text-mbit-blue'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
             }`}
           >
@@ -597,7 +597,7 @@ export default function CRM() {
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+              className="px-4 py-2 bg-mbit-blue text-white rounded hover:bg-blue-600 disabled:opacity-50"
               disabled={saving}
             >
               {saving ? 'Mentés...' : 'Mentés'}
@@ -721,7 +721,7 @@ export default function CRM() {
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+              className="px-4 py-2 bg-mbit-blue text-white rounded hover:bg-blue-600 disabled:opacity-50"
               disabled={saving}
             >
               {saving ? 'Mentés...' : 'Mentés'}
@@ -843,7 +843,7 @@ export default function CRM() {
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+              className="px-4 py-2 bg-mbit-blue text-white rounded hover:bg-blue-600 disabled:opacity-50"
               disabled={saving}
             >
               {saving ? 'Mentés...' : 'Mentés'}

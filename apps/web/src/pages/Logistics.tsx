@@ -42,7 +42,7 @@ export default function Logistics() {
             onClick={() => setActiveTab('items')}
             className={`py-4 px-1 border-b-2 font-medium text-sm ${
               activeTab === 'items'
-                ? 'border-blue-500 text-blue-600'
+                ? 'border-mbit-blue text-mbit-blue'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
             }`}
           >
@@ -52,7 +52,7 @@ export default function Logistics() {
             onClick={() => setActiveTab('warehouses')}
             className={`py-4 px-1 border-b-2 font-medium text-sm ${
               activeTab === 'warehouses'
-                ? 'border-blue-500 text-blue-600'
+                ? 'border-mbit-blue text-mbit-blue'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
             }`}
           >
@@ -62,7 +62,7 @@ export default function Logistics() {
             onClick={() => setActiveTab('stock')}
             className={`py-4 px-1 border-b-2 font-medium text-sm ${
               activeTab === 'stock'
-                ? 'border-blue-500 text-blue-600'
+                ? 'border-mbit-blue text-mbit-blue'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
             }`}
           >

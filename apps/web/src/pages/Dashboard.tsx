@@ -43,7 +43,7 @@ export default function Dashboard() {
           Ez a modular vállalati alkalmazás CRM, DMS és logisztikai funkciókkal rendelkezik.
         </p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="border-l-4 border-blue-500 pl-4">
+          <div className="border-l-4 border-mbit-blue pl-4">
             <h3 className="font-bold mb-2">CRM Modul</h3>
             <ul className="text-sm text-gray-600 space-y-1">
               <li>• Ügyfélkapcsolat-kezelés</li>

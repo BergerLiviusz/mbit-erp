@@ -34,7 +34,7 @@ interface Account {
 }
 
 const TIPUSOK = [
-  { kod: 'szerzodes', nev: 'Szerződés', szin: 'bg-blue-100 text-blue-800' },
+  { kod: 'szerzodes', nev: 'Szerződés', szin: 'bg-blue-100 text-mbit-blue' },
   { kod: 'szamla', nev: 'Számla', szin: 'bg-green-100 text-green-800' },
   { kod: 'jelentes', nev: 'Jelentés', szin: 'bg-purple-100 text-purple-800' },
   { kod: 'egyeb', nev: 'Egyéb', szin: 'bg-gray-100 text-gray-800' },
@@ -314,7 +314,7 @@ export default function Documents() {
         <h1 className="text-3xl font-bold">Dokumentumok</h1>
         <button 
           onClick={handleOpenModal}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          className="bg-mbit-blue text-white px-4 py-2 rounded hover:bg-blue-600"
         >
           + Új dokumentum
         </button>
@@ -344,7 +344,7 @@ export default function Documents() {
           onClick={() => setSelectedAllapot('')}
           className={`px-4 py-2 rounded ${
             selectedAllapot === ''
-              ? 'bg-blue-600 text-white'
+              ? 'bg-mbit-blue text-white'
               : 'bg-white border border-gray-300 hover:bg-gray-50'
           }`}
         >
@@ -356,7 +356,7 @@ export default function Documents() {
             onClick={() => setSelectedAllapot(all.kod)}
             className={`px-4 py-2 rounded ${
               selectedAllapot === all.kod
-                ? 'bg-blue-600 text-white'
+                ? 'bg-mbit-blue text-white'
                 : 'bg-white border border-gray-300 hover:bg-gray-50'
             }`}
           >
@@ -389,7 +389,7 @@ export default function Documents() {
                 {documents.map(doc => (
                   <tr key={doc.id} className="hover:bg-gray-50 cursor-pointer">
                     <td className="p-4">
-                      <div className="font-medium text-blue-600">{doc.iktatoSzam}</div>
+                      <div className="font-medium text-mbit-blue">{doc.iktatoSzam}</div>
                       <div className="text-xs text-gray-500">{formatFileSize(doc.fajlMeret)}</div>
                     </td>
                     <td className="p-4">
@@ -556,7 +556,7 @@ export default function Documents() {
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+              className="px-4 py-2 bg-mbit-blue text-white rounded hover:bg-blue-600 disabled:opacity-50"
               disabled={saving}
             >
               {saving ? 'Mentés...' : 'Mentés'}

@@ -87,7 +87,7 @@ export default function Warehouses() {
     <div>
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-3xl font-bold">Raktárak</h1>
-        <button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+        <button className="bg-mbit-blue text-white px-4 py-2 rounded hover:bg-blue-600">
           + Új raktár
         </button>
       </div>
@@ -134,7 +134,7 @@ export default function Warehouses() {
                   {warehouses.map(warehouse => (
                     <tr key={warehouse.id} className="hover:bg-gray-50 cursor-pointer">
                       <td className="p-4">
-                        <div className="font-medium text-blue-600">{warehouse.nev}</div>
+                        <div className="font-medium text-mbit-blue">{warehouse.nev}</div>
                         <div className="text-xs text-gray-500">{warehouse.azonosito}</div>
                       </td>
                       <td className="p-4 text-sm">
@@ -198,7 +198,7 @@ export default function Warehouses() {
                   {lowStockAlerts.map(alert => (
                     <tr key={alert.id} className="hover:bg-gray-50 cursor-pointer">
                       <td className="p-4">
-                        <div className="font-medium text-blue-600">
+                        <div className="font-medium text-mbit-blue">
                           {alert.item?.cikkszam || '-'}
                         </div>
                       </td>

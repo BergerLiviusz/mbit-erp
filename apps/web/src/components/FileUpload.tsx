@@ -77,7 +77,7 @@ export default function FileUpload({
       
       <div
         className={`relative border-2 border-dashed rounded-lg p-6 ${
-          dragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 bg-gray-50'
+          dragActive ? 'border-mbit-blue bg-blue-50' : 'border-gray-300 bg-gray-50'
         } transition-colors`}
         onDragEnter={handleDrag}
         onDragLeave={handleDrag}
@@ -118,7 +118,7 @@ export default function FileUpload({
           <button
             type="button"
             onClick={onButtonClick}
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            className="mt-4 px-4 py-2 bg-mbit-blue text-white rounded hover:bg-blue-600"
           >
             {label}
           </button>

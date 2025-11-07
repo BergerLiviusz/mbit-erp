@@ -20,31 +20,31 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <nav className="bg-blue-900 text-white shadow-lg">
+      <nav className="bg-mbit-dark text-white shadow-lg">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-8">
               <h1 className="text-xl font-bold">Mbit ERP</h1>
               <div className="flex space-x-4">
-                <Link to="/" className="hover:bg-blue-800 px-3 py-2 rounded">
+                <Link to="/" className="hover:bg-gray-800 px-3 py-2 rounded">
                   Főoldal
                 </Link>
-                <Link to="/crm" className="hover:bg-blue-800 px-3 py-2 rounded">
+                <Link to="/crm" className="hover:bg-gray-800 px-3 py-2 rounded">
                   CRM
                 </Link>
-                <Link to="/opportunities" className="hover:bg-blue-800 px-3 py-2 rounded">
+                <Link to="/opportunities" className="hover:bg-gray-800 px-3 py-2 rounded">
                   Lehetőségek
                 </Link>
-                <Link to="/quotes" className="hover:bg-blue-800 px-3 py-2 rounded">
+                <Link to="/quotes" className="hover:bg-gray-800 px-3 py-2 rounded">
                   Árajánlatok
                 </Link>
-                <Link to="/documents" className="hover:bg-blue-800 px-3 py-2 rounded">
+                <Link to="/documents" className="hover:bg-gray-800 px-3 py-2 rounded">
                   Dokumentumok
                 </Link>
-                <Link to="/warehouses" className="hover:bg-blue-800 px-3 py-2 rounded">
+                <Link to="/warehouses" className="hover:bg-gray-800 px-3 py-2 rounded">
                   Raktárak
                 </Link>
-                <Link to="/settings" className="hover:bg-blue-800 px-3 py-2 rounded">
+                <Link to="/settings" className="hover:bg-gray-800 px-3 py-2 rounded">
                   Beállítások
                 </Link>
               </div>
@@ -54,7 +54,7 @@ function App() {
                 localStorage.removeItem('token');
                 setIsAuthenticated(false);
               }}
-              className="hover:bg-blue-800 px-4 py-2 rounded"
+              className="hover:bg-gray-800 px-4 py-2 rounded"
             >
               Kijelentkezés
             </button>

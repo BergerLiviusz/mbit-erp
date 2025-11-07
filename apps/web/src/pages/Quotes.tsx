@@ -95,7 +95,7 @@ export default function Quotes() {
     <div>
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-3xl font-bold">Árajánlatok</h1>
-        <button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+        <button className="bg-mbit-blue text-white px-4 py-2 rounded hover:bg-blue-600">
           + Új árajánlat
         </button>
       </div>
@@ -107,7 +107,7 @@ export default function Quotes() {
         </div>
         <div className="bg-white p-4 rounded-lg shadow">
           <div className="text-sm text-gray-600">Összes érték</div>
-          <div className="text-2xl font-bold text-blue-600">
+          <div className="text-2xl font-bold text-mbit-blue">
             {formatCurrency(quotes.reduce((sum, q) => sum + q.vegosszeg, 0))}
           </div>
         </div>
@@ -124,7 +124,7 @@ export default function Quotes() {
           onClick={() => setSelectedAllapot('')}
           className={`px-4 py-2 rounded ${
             selectedAllapot === ''
-              ? 'bg-blue-600 text-white'
+              ? 'bg-mbit-blue text-white'
               : 'bg-white border border-gray-300 hover:bg-gray-50'
           }`}
         >
@@ -136,7 +136,7 @@ export default function Quotes() {
             onClick={() => setSelectedAllapot(all.kod)}
             className={`px-4 py-2 rounded ${
               selectedAllapot === all.kod
-                ? 'bg-blue-600 text-white'
+                ? 'bg-mbit-blue text-white'
                 : 'bg-white border border-gray-300 hover:bg-gray-50'
             }`}
           >
@@ -169,7 +169,7 @@ export default function Quotes() {
               {quotes.map(quote => (
                 <tr key={quote.id} className="hover:bg-gray-50 cursor-pointer">
                   <td className="p-4">
-                    <div className="font-medium text-blue-600">{quote.azonosito}</div>
+                    <div className="font-medium text-mbit-blue">{quote.azonosito}</div>
                   </td>
                   <td className="p-4">
                     <div className="text-sm">{quote.account.nev}</div>
