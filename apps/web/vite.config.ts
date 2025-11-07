@@ -12,7 +12,7 @@ export default defineConfig({
         name: 'Mbit ERP',
         short_name: 'Mbit ERP',
         description: 'Modular enterprise application for MB-IT Kft.',
-        theme_color: '#ffffff',
+        theme_color: '#1E1E1E',
         icons: [
           {
             src: '/icon.png',
