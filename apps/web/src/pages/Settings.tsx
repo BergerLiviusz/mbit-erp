@@ -211,15 +211,15 @@ export default function Settings() {
   };
 
   const renderOrganizationTab = () => {
-    const orgSettings = getSettingsByCategory('organization');
-    
-    if (orgSettings.length === 0) {
-      return (
-        <div className="text-gray-500 text-center py-8">
-          <p>Betöltés...</p>
-        </div>
-      );
-    }
+    const orgFields = [
+      { kulcs: 'organization.name', leiras: 'Szervezet neve' },
+      { kulcs: 'organization.address', leiras: 'Cím' },
+      { kulcs: 'organization.tax_number', leiras: 'Adószám' },
+      { kulcs: 'organization.email', leiras: 'Email' },
+      { kulcs: 'organization.phone', leiras: 'Telefon' },
+      { kulcs: 'organization.registration_number', leiras: 'Cégjegyzékszám' },
+      { kulcs: 'organization.website', leiras: 'Weboldal' }
+    ];
     
     return (
       <div className="space-y-6">
@@ -229,22 +229,22 @@ export default function Settings() {
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {orgSettings.map(setting => (
-            <div key={setting.id} className="flex flex-col">
+          {orgFields.map(field => (
+            <div key={field.kulcs} className="flex flex-col">
               <label className="text-sm font-medium text-gray-700 mb-2">
-                {setting.leiras}
+                {field.leiras}
               </label>
               <input
                 type="text"
-                value={orgData[setting.kulcs] || setting.ertek || ''}
+                value={orgData[field.kulcs] || ''}
                 onChange={(e) => {
                   setOrgData(prev => ({
                     ...prev,
-                    [setting.kulcs]: e.target.value
+                    [field.kulcs]: e.target.value
                   }));
                 }}
                 className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-mbit-blue"
-                placeholder={`Adja meg: ${setting.leiras.toLowerCase()}`}
+                placeholder={`Adja meg: ${field.leiras.toLowerCase()}`}
               />
             </div>
           ))}
@@ -259,6 +259,12 @@ export default function Settings() {
             {loading ? 'Mentés...' : 'Mentés'}
           </button>
         </div>
+
+        {message && (
+          <div className={`text-center py-2 ${message.includes('sikeres') ? 'text-green-600' : 'text-red-600'}`}>
+            {message}
+          </div>
+        )}
       </div>
     );
   };

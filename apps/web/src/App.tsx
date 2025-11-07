@@ -16,7 +16,7 @@ function DropdownMenu({ title, items }: { title: string; items: Array<{ to: stri
 
   return (
     <div 
-      className="relative"
+      className="relative group"
       onMouseEnter={() => setIsOpen(true)}
       onMouseLeave={() => setIsOpen(false)}
     >
@@ -27,7 +27,7 @@ function DropdownMenu({ title, items }: { title: string; items: Array<{ to: stri
         </svg>
       </button>
       {isOpen && (
-        <div className="absolute top-full left-0 mt-1 bg-mbit-dark border border-gray-700 rounded shadow-lg min-w-[200px] z-50">
+        <div className="absolute top-full left-0 bg-mbit-dark border border-gray-700 rounded shadow-lg min-w-[200px] z-50">
           {items.map((item) => (
             <Link
               key={item.to}
