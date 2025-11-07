@@ -10,6 +10,16 @@ Ez a dokumentáció leírja, hogyan kell beállítani a GitHub Actions CI/CD pip
 
 ### 1. GitHub Repository Beállítása
 
+**FONTOS**: Először frissítsd a `README.md` fájlban a placeholder értékeket:
+```markdown
+<!-- README.md-ben cseréld le: -->
+ORG_NAME  → a te GitHub szervezeted vagy username-ed
+REPO_NAME → a repository neve (pl. mbit-erp)
+
+Példa:
+[![Build Desktop App](https://github.com/mb-it-kft/mbit-erp/actions/workflows/build-desktop.yml/badge.svg)]...
+```
+
 ```bash
 # Repository inicializálása (ha még nincs)
 git init
@@ -17,6 +27,7 @@ git add .
 git commit -m "Initial commit - Mbit ERP Desktop"
 
 # GitHub repo létrehozása és remote hozzáadása
+# Cseréld le ORG_NAME/REPO_NAME-et a saját értékeiddel!
 git remote add origin https://github.com/ORG_NAME/REPO_NAME.git
 git push -u origin main
 ```
@@ -35,10 +46,10 @@ A GitHub repository Settings → Secrets and variables → Actions menüben add 
 
 **Windows Code Signing:**
 
-| Secret név | Leírás |
-|------------|--------|
-| `WINDOWS_CSC_LINK` | Base64 enkódolt `.p12` vagy `.pfx` certificate |
-| `WINDOWS_CSC_KEY_PASSWORD` | Certificate jelszó |
+| Secret név | Leírás | Használat a workflow-ban |
+|------------|--------|-----------------------|
+| `WINDOWS_CSC_LINK` | Base64 enkódolt `.p12` vagy `.pfx` certificate | `CSC_LINK` env változóként |
+| `WINDOWS_CSC_KEY_PASSWORD` | Certificate jelszó | `CSC_KEY_PASSWORD` env változóként |
 
 Generálás:
 ```bash
@@ -50,13 +61,13 @@ certutil -encode your-certificate.p12 certificate-base64.txt
 
 **macOS Code Signing:**
 
-| Secret név | Leírás |
-|------------|--------|
-| `MACOS_CSC_LINK` | Base64 enkódolt `.p12` certificate (Developer ID Application) |
-| `MACOS_CSC_KEY_PASSWORD` | Certificate jelszó |
-| `APPLE_ID` | Apple ID email (notarization-hez) |
-| `APPLE_ID_PASSWORD` | App-specific password |
-| `APPLE_TEAM_ID` | Apple Team ID |
+| Secret név | Leírás | Használat a workflow-ban |
+|------------|--------|-----------------------|
+| `MACOS_CSC_LINK` | Base64 enkódolt `.p12` certificate (Developer ID Application) | `CSC_LINK` env változóként |
+| `MACOS_CSC_KEY_PASSWORD` | Certificate jelszó | `CSC_KEY_PASSWORD` env változóként |
+| `APPLE_ID` | Apple ID email (notarization-hez) | `APPLE_ID` env változóként |
+| `APPLE_ID_PASSWORD` | App-specific password | `APPLE_ID_PASSWORD` env változóként |
+| `APPLE_TEAM_ID` | Apple Team ID | `APPLE_TEAM_ID` env változóként |
 
 Generálás:
 ```bash
@@ -340,15 +351,19 @@ Az alkalmazás automatikusan generálja:
 
 ## ✅ Checklist - Production Release Előtt
 
+- [ ] **README.md frissítve** - ORG_NAME/REPO_NAME placeholder-ek lecserélve valós értékekre
 - [ ] GitHub repository létrehozva és konfigurálva
 - [ ] GitHub Actions workflow tesztelve (legalább 1 sikeres build)
 - [ ] Code signing certificate-ek beszerzve és GitHub Secrets-be feltöltve (opcionális de ajánlott)
+  - Windows: WINDOWS_CSC_LINK, WINDOWS_CSC_KEY_PASSWORD
+  - macOS: MACOS_CSC_LINK, MACOS_CSC_KEY_PASSWORD, APPLE_ID, APPLE_ID_PASSWORD, APPLE_TEAM_ID
 - [ ] Windows installer lokálisan tesztelve
 - [ ] macOS installer lokálisan tesztelve
 - [ ] Release notes előkészítve
 - [ ] Verzió szám frissítve package.json-ban
 - [ ] Git tag létrehozva és pusholva
 - [ ] GitHub Release ellenőrizve és publikálva
+- [ ] Installer-ek letöltve és végfelhasználói eszközön tesztelve
 
 ---
 

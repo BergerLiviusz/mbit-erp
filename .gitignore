@@ -164,6 +164,8 @@ mbit-data/
 *.pem
 
 # Generated icons (electron-builder auto-generates from PNG)
+apps/desktop/resources/*.ico
+apps/desktop/resources/*.icns
 resources/*.ico
 resources/*.icns
 
