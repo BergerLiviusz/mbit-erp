@@ -24,6 +24,17 @@ The project utilizes a monorepo structure managed by Turborepo, encompassing a R
 - **UI/UX**: Frontend pages for Documents, Warehouses, Opportunities, Quotes, and System Settings, all with Hungarian UI, summary cards, data tables, and filtering capabilities.
 - **Deployment**: Configured for concurrent execution of both frontend (port 5000) and backend (port 3000) for seamless Replit deployment.
 
+## Recent Changes (November 7, 2025)
+**Sprint 4 - Production-Ready CRUD & OCR Implementation:**
+- ✅ **CRM Module Complete**: Account, Campaign, Ticket controllers with full CRUD, RBAC guards, audit logging, auto-generated identifiers
+- ✅ **File Upload System**: Multer middleware (50MB max), mimetype validation, path traversal protection via filename sanitization
+- ✅ **Document Upload**: Real file handling with StorageService integration, security hardening
+- ✅ **OCR Service**: Tesseract.js implementation with Hungarian language support, async processing, results persisted to Document.tartalom field
+- ✅ **Frontend CRUD Modals**: Reusable Modal & FileUpload components, 4 production-ready modals (Documents, Accounts, Campaigns, Tickets) with RBAC error handling (401/403/400/500)
+- ✅ **Database Schema**: Document.tartalom field added, CAMPAIGN/TICKET permissions added to enum, schema pushed to SQLite dev database
+- ✅ **Security Fixes**: Path traversal vulnerability resolved, RBAC guards on all CRM endpoints, proper error handling in frontend
+- ✅ **Health Endpoint**: Fixed to match frontend interface expectations (Settings/Rendszer section loads correctly)
+
 ## External Dependencies
 - **React 18**: Frontend library.
 - **Vite**: Frontend build tool.
