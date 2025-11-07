@@ -36,23 +36,14 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
-      - name: Install dependencies
+      - name: Install root dependencies
         run: npm ci
 
-      - name: Install desktop dependencies
+      - name: Install workspace dependencies
         run: |
-          cd apps/desktop
-          npm ci
-
-      - name: Install server dependencies
-        run: |
-          cd apps/server
-          npm ci
-
-      - name: Install web dependencies
-        run: |
-          cd apps/web
-          npm ci
+          npm ci --workspace=apps/server
+          npm ci --workspace=apps/web
+          npm ci --workspace=apps/desktop
 
       - name: Generate Prisma Client
         run: |
