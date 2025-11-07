@@ -8,6 +8,7 @@ import Settings from './pages/Settings';
 import Opportunities from './pages/Opportunities';
 import Quotes from './pages/Quotes';
 import Login from './pages/Login';
+import MbitLogo from './assets/logo.svg';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(
@@ -24,7 +25,10 @@ function App() {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-8">
-              <h1 className="text-xl font-bold">Mbit ERP</h1>
+              <Link to="/" className="flex items-center space-x-2">
+                <img src={MbitLogo} alt="Mbit ERP" className="h-8 w-8" />
+                <h1 className="text-xl font-bold">Mbit ERP</h1>
+              </Link>
               <div className="flex space-x-4">
                 <Link to="/" className="hover:bg-gray-800 px-3 py-2 rounded">
                   Főoldal
