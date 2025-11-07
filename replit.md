@@ -25,6 +25,14 @@ The project utilizes a monorepo structure managed by Turborepo, encompassing a R
 - **Deployment**: Configured for concurrent execution of both frontend (port 5000) and backend (port 3000) for seamless Replit deployment.
 
 ## Recent Changes (November 7, 2025)
+**Sprint 5 - Complete Modal Suite & OCR Integration:**
+- ✅ **API Proxy Migration**: All frontend pages now use `/api` relative paths (Documents, CRM, Opportunities, Quotes, Settings, Warehouses), eliminating CORS issues
+- ✅ **Opportunities Modal**: Full CRUD with név, accountId, szakasz, érték, valószínűség, zárás dátum fields; account dropdown; validation; RBAC error handling
+- ✅ **Quotes Modal**: Complex implementation with dynamic line items (itemId, mennyiség, egységár, kedvezmény), account/opportunity linking, auto-calculations, validation
+- ✅ **Warehouses Modal**: CRUD modal with azonosító, név, cím structure (irányítószám/település/utca), aktív toggle, matching backend API limitations
+- ✅ **OCR Functionality**: Backend endpoint POST `/dms/documents/:id/ocr`, frontend trigger button with expandable result panel, functional setState to prevent race conditions, user-visible error feedback (401/403/general)
+- ✅ **Settings/Rendszer Fix**: Resolved infinite loading bug with separate systemLoading/healthError states, proper error handling, retry UI, tab-switch refresh via useEffect
+
 **Sprint 4 - Production-Ready CRUD & OCR Implementation:**
 - ✅ **CRM Module Complete**: Account, Campaign, Ticket controllers with full CRUD, RBAC guards, audit logging, auto-generated identifiers
 - ✅ **File Upload System**: Multer middleware (50MB max), mimetype validation, path traversal protection via filename sanitization
@@ -33,7 +41,6 @@ The project utilizes a monorepo structure managed by Turborepo, encompassing a R
 - ✅ **Frontend CRUD Modals**: Reusable Modal & FileUpload components, 4 production-ready modals (Documents, Accounts, Campaigns, Tickets) with RBAC error handling (401/403/400/500)
 - ✅ **Database Schema**: Document.tartalom field added, CAMPAIGN/TICKET permissions added to enum, schema pushed to SQLite dev database
 - ✅ **Security Fixes**: Path traversal vulnerability resolved, RBAC guards on all CRM endpoints, proper error handling in frontend
-- ✅ **Health Endpoint**: Fixed to match frontend interface expectations (Settings/Rendszer section loads correctly)
 
 ## External Dependencies
 - **React 18**: Frontend library.
