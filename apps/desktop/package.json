@@ -3,14 +3,18 @@
   "version": "1.0.0",
   "private": true,
   "description": "Electron desktop application for Mbit ERP - on-premise capable",
-  "author": "MB-IT Kft.",
+  "author": {
+    "name": "MB-IT Kft.",
+    "email": "info@mb-it.hu"
+  },
+  "homepage": "https://mb-it.hu",
   "main": "dist-electron/main.js",
   "scripts": {
-    "prebuild": "npm run clean",
+    "prebuild": "npm run clean && find . -name '*.tsbuildinfo' -delete 2>/dev/null || true",
     "build": "npm run build:electron && npm run build:backend && npm run build:frontend",
     "build:electron": "tsc",
-    "build:backend": "cd ../server && npm run build",
-    "build:frontend": "cd ../web && cross-env ELECTRON_BUILD=true npm run build",
+    "build:backend": "cd ../server && rm -f tsconfig.tsbuildinfo && npm run build",
+    "build:frontend": "cd ../web && rm -f tsconfig.tsbuildinfo && cross-env ELECTRON_BUILD=true npm run build",
     "start": "electron .",
     "dev": "concurrently \"tsc -w\" \"wait-on dist-electron/main.js && electron .\"",
     "package": "npm run build && electron-builder",
@@ -45,14 +49,14 @@
         ]
       },
       {
-        "from": "../server/node_modules/.prisma",
+        "from": "../../node_modules/.prisma",
         "to": "backend/node_modules/.prisma",
         "filter": [
           "**/*"
         ]
       },
       {
-        "from": "../server/node_modules/@prisma",
+        "from": "../../node_modules/@prisma",
         "to": "backend/node_modules/@prisma",
         "filter": [
           "**/*"
@@ -143,6 +147,7 @@
       ],
       "icon": "resources/icon.png",
       "category": "Office",
+      "maintainer": "MB-IT Kft. <info@mb-it.hu>",
       "artifactName": "${productName}-${version}-${arch}.${ext}"
     }
   },
