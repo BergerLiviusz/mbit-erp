@@ -10,6 +10,7 @@ interface Document {
   fajlNev: string;
   fajlMeret: number;
   allapot: string;
+  tartalom?: string | null;
   ervenyessegKezdet?: string | null;
   ervenyessegVeg?: string | null;
   category?: {
@@ -56,6 +57,8 @@ export default function Documents() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
+  const [ocrLoading, setOcrLoading] = useState<Record<string, boolean>>({});
+  const [expandedDoc, setExpandedDoc] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     nev: '',
@@ -308,6 +311,55 @@ export default function Documents() {
     return documents.filter(d => d.allapot === allapot).length;
   };
 
+  const handleOcrTrigger = async (documentId: string) => {
+    setOcrLoading(prev => ({ ...prev, [documentId]: true }));
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/dms/documents/${documentId}/ocr`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorMsg = response.status === 401 
+          ? 'Nincs hitelesítve' 
+          : response.status === 403 
+            ? 'Nincs jogosultsága ehhez a művelethez'
+            : 'OCR feldolgozás indítása sikertelen';
+        setError(errorMsg);
+        setOcrLoading(prev => ({ ...prev, [documentId]: false }));
+        return;
+      }
+
+      setTimeout(async () => {
+        try {
+          const docResponse = await fetch(`${API_URL}/dms/documents/${documentId}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          
+          if (docResponse.ok) {
+            const updatedDoc = await docResponse.json();
+            setDocuments(docs => 
+              docs.map(d => d.id === documentId ? { ...d, tartalom: updatedDoc.tartalom } : d)
+            );
+            setExpandedDoc(documentId);
+          } else {
+            setError('Nem sikerült betölteni az OCR eredményt');
+          }
+        } catch (err) {
+          setError('Hiba történt az OCR eredmény lekérésekor');
+        }
+        setOcrLoading(prev => ({ ...prev, [documentId]: false }));
+      }, 3000);
+    } catch (error) {
+      console.error('OCR hiba:', error);
+      setError('Hiba történt az OCR feldolgozás során');
+      setOcrLoading(prev => ({ ...prev, [documentId]: false }));
+    }
+  };
+
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
@@ -383,38 +435,82 @@ export default function Documents() {
                   <th className="text-left p-4 font-medium text-gray-700">Állapot</th>
                   <th className="text-left p-4 font-medium text-gray-700">Érvényesség</th>
                   <th className="text-left p-4 font-medium text-gray-700">Létrehozva</th>
+                  <th className="text-left p-4 font-medium text-gray-700">Műveletek</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
                 {documents.map(doc => (
-                  <tr key={doc.id} className="hover:bg-gray-50 cursor-pointer">
-                    <td className="p-4">
-                      <div className="font-medium text-mbit-blue">{doc.iktatoSzam}</div>
-                      <div className="text-xs text-gray-500">{formatFileSize(doc.fajlMeret)}</div>
-                    </td>
-                    <td className="p-4">
-                      <div className="font-medium">{doc.nev}</div>
-                      <div className="text-xs text-gray-500">{doc.fajlNev}</div>
-                    </td>
-                    <td className="p-4">{getTipusBadge(doc.tipus)}</td>
-                    <td className="p-4 text-sm">
-                      {doc.category ? doc.category.nev : '-'}
-                    </td>
-                    <td className="p-4 text-sm">
-                      {doc.account ? doc.account.nev : '-'}
-                    </td>
-                    <td className="p-4">{getAllapotBadge(doc.allapot)}</td>
-                    <td className="p-4 text-sm">
-                      {doc.ervenyessegKezdet || doc.ervenyessegVeg ? (
-                        <div>
-                          {formatDate(doc.ervenyessegKezdet)} - {formatDate(doc.ervenyessegVeg)}
-                        </div>
-                      ) : (
-                        '-'
-                      )}
-                    </td>
-                    <td className="p-4 text-sm text-gray-500">{formatDate(doc.createdAt)}</td>
-                  </tr>
+                  <>
+                    <tr key={doc.id} className="hover:bg-gray-50">
+                      <td className="p-4">
+                        <div className="font-medium text-mbit-blue">{doc.iktatoSzam}</div>
+                        <div className="text-xs text-gray-500">{formatFileSize(doc.fajlMeret)}</div>
+                      </td>
+                      <td className="p-4">
+                        <div className="font-medium">{doc.nev}</div>
+                        <div className="text-xs text-gray-500">{doc.fajlNev}</div>
+                      </td>
+                      <td className="p-4">{getTipusBadge(doc.tipus)}</td>
+                      <td className="p-4 text-sm">
+                        {doc.category ? doc.category.nev : '-'}
+                      </td>
+                      <td className="p-4 text-sm">
+                        {doc.account ? doc.account.nev : '-'}
+                      </td>
+                      <td className="p-4">{getAllapotBadge(doc.allapot)}</td>
+                      <td className="p-4 text-sm">
+                        {doc.ervenyessegKezdet || doc.ervenyessegVeg ? (
+                          <div>
+                            {formatDate(doc.ervenyessegKezdet)} - {formatDate(doc.ervenyessegVeg)}
+                          </div>
+                        ) : (
+                          '-'
+                        )}
+                      </td>
+                      <td className="p-4 text-sm text-gray-500">{formatDate(doc.createdAt)}</td>
+                      <td className="p-4">
+                        {doc.fajlNev && (
+                          <button
+                            onClick={() => handleOcrTrigger(doc.id)}
+                            disabled={ocrLoading[doc.id]}
+                            className={`px-3 py-1 rounded text-sm ${
+                              ocrLoading[doc.id]
+                                ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
+                                : 'bg-mbit-blue text-white hover:bg-blue-600'
+                            }`}
+                          >
+                            {ocrLoading[doc.id] ? 'Feldolgozás...' : 'Szövegkinyerés'}
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                    {expandedDoc === doc.id && (
+                      <tr className="bg-gray-50">
+                        <td colSpan={9} className="p-4">
+                          <div className="border border-gray-200 rounded-lg bg-white p-4">
+                            <div className="flex justify-between items-center mb-3">
+                              <h3 className="font-semibold text-gray-800">OCR Eredmény</h3>
+                              <button
+                                onClick={() => setExpandedDoc(null)}
+                                className="text-gray-500 hover:text-gray-700 text-sm px-3 py-1 border border-gray-300 rounded"
+                              >
+                                Bezárás
+                              </button>
+                            </div>
+                            {doc.tartalom ? (
+                              <div className="bg-gray-100 p-3 rounded border border-gray-200 font-mono text-sm whitespace-pre-wrap max-h-96 overflow-y-auto">
+                                {doc.tartalom}
+                              </div>
+                            ) : (
+                              <div className="text-gray-500 italic text-center py-4">
+                                Még nincs OCR eredmény
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </>
                 ))}
               </tbody>
             </table>

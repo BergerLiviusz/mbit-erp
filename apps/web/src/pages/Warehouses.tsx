@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import Modal from '../components/Modal';
 
 interface Warehouse {
   id: string;
@@ -33,6 +34,19 @@ export default function Warehouses() {
   const [lowStockAlerts, setLowStockAlerts] = useState<LowStockAlert[]>([]);
   const [loading, setLoading] = useState(true);
   const [alertsLoading, setAlertsLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string>('');
+  const [success, setSuccess] = useState<string>('');
+
+  const [formData, setFormData] = useState({
+    nev: '',
+    azonosito: '',
+    iranyitoszam: '',
+    telepules: '',
+    utca: '',
+    aktiv: true,
+  });
 
   const API_URL = import.meta.env.VITE_API_URL || '/api';
 
@@ -83,11 +97,112 @@ export default function Warehouses() {
     return warehouses.filter(w => w.aktiv).length;
   };
 
+  const handleOpenModal = () => {
+    setError('');
+    setSuccess('');
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setFormData({
+      nev: '',
+      azonosito: '',
+      iranyitoszam: '',
+      telepules: '',
+      utca: '',
+      aktiv: true,
+    });
+    setError('');
+    setSuccess('');
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+
+    if (!formData.nev.trim()) {
+      setError('A név megadása kötelező');
+      return;
+    }
+
+    if (!formData.azonosito.trim()) {
+      setError('Az azonosító megadása kötelező');
+      return;
+    }
+
+    if (formData.iranyitoszam && !/^\d{4}$/.test(formData.iranyitoszam)) {
+      setError('Az irányítószám 4 számjegyből kell álljon');
+      return;
+    }
+
+    setSaving(true);
+
+    try {
+      const token = localStorage.getItem('token');
+
+      let cim = '';
+      if (formData.iranyitoszam || formData.telepules || formData.utca) {
+        const parts = [];
+        if (formData.iranyitoszam) parts.push(formData.iranyitoszam);
+        if (formData.telepules) parts.push(formData.telepules);
+        if (formData.utca) parts.push(formData.utca);
+        cim = parts.join(', ');
+      }
+
+      const warehouseData = {
+        nev: formData.nev,
+        azonosito: formData.azonosito,
+        cim: cim || undefined,
+        aktiv: formData.aktiv,
+      };
+
+      const response = await fetch(`${API_URL}/logistics/warehouses`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(warehouseData),
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Nincs hitelesítve. Kérem jelentkezzen be újra.');
+        } else if (response.status === 403) {
+          throw new Error('Nincs jogosultsága ehhez a művelethez.');
+        } else if (response.status === 400) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Hibás adatok.');
+        } else if (response.status >= 500) {
+          throw new Error('Szerver hiba. Kérem próbálja újra később.');
+        } else {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Hiba a raktár létrehozásakor');
+        }
+      }
+
+      setSuccess('Raktár sikeresen létrehozva!');
+      setTimeout(() => {
+        handleCloseModal();
+        loadWarehouses();
+      }, 1500);
+    } catch (err: any) {
+      setError(err.message || 'Hiba történt a mentés során');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-3xl font-bold">Raktárak</h1>
-        <button className="bg-mbit-blue text-white px-4 py-2 rounded hover:bg-blue-600">
+        <button 
+          onClick={handleOpenModal}
+          className="bg-mbit-blue text-white px-4 py-2 rounded hover:bg-blue-600"
+        >
           + Új raktár
         </button>
       </div>
@@ -229,6 +344,119 @@ export default function Warehouses() {
           )}
         </div>
       </div>
+
+      <Modal isOpen={isModalOpen} onClose={handleCloseModal} title="Új raktár" size="lg">
+        {error && (
+          <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+            {error}
+          </div>
+        )}
+        {success && (
+          <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded">
+            {success}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit}>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Név <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={formData.nev}
+                onChange={(e) => setFormData({ ...formData, nev: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Azonosító <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={formData.azonosito}
+                onChange={(e) => setFormData({ ...formData, azonosito: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Pl.: RKT-001"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Cím (opcionális)
+              </label>
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">Irányítószám</label>
+                  <input
+                    type="text"
+                    value={formData.iranyitoszam}
+                    onChange={(e) => setFormData({ ...formData, iranyitoszam: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="1234"
+                    maxLength={4}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">Település</label>
+                  <input
+                    type="text"
+                    value={formData.telepules}
+                    onChange={(e) => setFormData({ ...formData, telepules: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Budapest"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">Utca, házszám</label>
+                  <input
+                    type="text"
+                    value={formData.utca}
+                    onChange={(e) => setFormData({ ...formData, utca: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Fő utca 1."
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={formData.aktiv}
+                  onChange={(e) => setFormData({ ...formData, aktiv: e.target.checked })}
+                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                />
+                <span className="ml-2 text-sm text-gray-700">Aktív raktár</span>
+              </label>
+            </div>
+          </div>
+
+          <div className="mt-6 flex justify-end gap-3">
+            <button
+              type="button"
+              onClick={handleCloseModal}
+              className="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50"
+              disabled={saving}
+            >
+              Mégse
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 bg-mbit-blue text-white rounded hover:bg-blue-600 disabled:opacity-50"
+              disabled={saving}
+            >
+              {saving ? 'Mentés...' : 'Mentés'}
+            </button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

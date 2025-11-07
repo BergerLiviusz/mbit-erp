@@ -165,4 +165,32 @@ export class DocumentController {
       },
     };
   }
+
+  @Post(':id/ocr')
+  @Permissions(Permission.DOCUMENT_VIEW)
+  async triggerOcr(@Param('id') id: string, @Request() req: any) {
+    const document = await this.documentService.findOne(id);
+    
+    if (!document) {
+      throw new BadRequestException('Dokumentum nem található');
+    }
+
+    if (!document.fajlUtvonal) {
+      throw new BadRequestException('A dokumentumhoz nincs fájl feltöltve');
+    }
+
+    const job = await this.ocrService.createJob(id);
+    
+    await this.auditService.log({
+      userId: req.user?.id,
+      esemeny: 'ocr_trigger',
+      entitas: 'Document',
+      entitasId: id,
+    });
+
+    return {
+      message: 'OCR feldolgozás elindítva',
+      jobId: job.id,
+    };
+  }
 }

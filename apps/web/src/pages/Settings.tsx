@@ -24,14 +24,18 @@ export default function Settings() {
   const [settings, setSettings] = useState<SystemSetting[]>([]);
   const [health, setHealth] = useState<HealthStatus | null>(null);
   const [loading, setLoading] = useState(false);
+  const [systemLoading, setSystemLoading] = useState(false);
+  const [healthError, setHealthError] = useState<string>('');
   const [message, setMessage] = useState('');
 
   const API_URL = import.meta.env.VITE_API_URL || '/api';
 
   useEffect(() => {
     loadSettings();
-    loadHealth();
-  }, []);
+    if (activeTab === 'system') {
+      loadHealth();
+    }
+  }, [activeTab]);
 
   const loadSettings = async () => {
     try {
@@ -49,17 +53,29 @@ export default function Settings() {
   };
 
   const loadHealth = async () => {
+    setSystemLoading(true);
+    setHealthError('');
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(`${API_URL}/health/detailed`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+      
       if (response.ok) {
         const data = await response.json();
         setHealth(data);
+      } else if (response.status === 401) {
+        setHealthError('Nincs hitelesítve. Kérem jelentkezzen be újra.');
+      } else if (response.status === 403) {
+        setHealthError('Nincs jogosultsága a rendszerinformációk megtekintéséhez.');
+      } else {
+        setHealthError('Hiba a rendszerinformációk betöltésekor.');
       }
     } catch (error) {
       console.error('Hiba a rendszerinformációk betöltésekor:', error);
+      setHealthError('Nem sikerült kapcsolódni a szerverhez.');
+    } finally {
+      setSystemLoading(false);
     }
   };
 
@@ -202,8 +218,26 @@ export default function Settings() {
   };
 
   const renderSystemTab = () => {
+    if (systemLoading) {
+      return <div className="text-gray-500 text-center py-8">Betöltés...</div>;
+    }
+
+    if (healthError) {
+      return (
+        <div className="text-center py-8">
+          <div className="text-red-600 mb-4">{healthError}</div>
+          <button
+            onClick={loadHealth}
+            className="px-4 py-2 bg-mbit-blue text-white rounded hover:bg-blue-600"
+          >
+            Újrapróbálás
+          </button>
+        </div>
+      );
+    }
+
     if (!health) {
-      return <div className="text-gray-500">Betöltés...</div>;
+      return <div className="text-gray-500 text-center py-8">Nincs adat</div>;
     }
 
     return (

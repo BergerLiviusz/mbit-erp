@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import Modal from '../components/Modal';
 
 interface Opportunity {
   id: string;
@@ -15,6 +16,12 @@ interface Opportunity {
   createdAt: string;
 }
 
+interface Account {
+  id: string;
+  nev: string;
+  azonosito: string;
+}
+
 const SZAKASZOK = [
   { kod: 'uj', nev: 'Új', szin: 'bg-blue-100 text-blue-800' },
   { kod: 'kapcsolatfelvetel', nev: 'Kapcsolatfelvétel', szin: 'bg-purple-100 text-purple-800' },
@@ -28,12 +35,32 @@ export default function Opportunities() {
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedSzakasz, setSelectedSzakasz] = useState<string>('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string>('');
+  const [success, setSuccess] = useState<string>('');
+
+  const [formData, setFormData] = useState({
+    nev: '',
+    accountId: '',
+    szakasz: 'uj',
+    ertek: '',
+    valoszinuseg: '50',
+    zarvasDatum: '',
+  });
 
   const API_URL = import.meta.env.VITE_API_URL || '/api';
 
   useEffect(() => {
     loadOpportunities();
   }, [selectedSzakasz]);
+
+  useEffect(() => {
+    if (isModalOpen) {
+      loadAccounts();
+    }
+  }, [isModalOpen]);
 
   const loadOpportunities = async () => {
     setLoading(true);
@@ -55,6 +82,120 @@ export default function Opportunities() {
       console.error('Hiba a lehetőségek betöltésekor:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadAccounts = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/crm/accounts?skip=0&take=100`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setAccounts(data.data || []);
+      }
+    } catch (error) {
+      console.error('Hiba az ügyfelek betöltésekor:', error);
+    }
+  };
+
+  const handleOpenModal = () => {
+    setError('');
+    setSuccess('');
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setFormData({
+      nev: '',
+      accountId: '',
+      szakasz: 'uj',
+      ertek: '',
+      valoszinuseg: '50',
+      zarvasDatum: '',
+    });
+    setError('');
+    setSuccess('');
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+
+    if (!formData.nev.trim()) {
+      setError('A név megadása kötelező');
+      return;
+    }
+
+    if (!formData.accountId) {
+      setError('Az ügyfél kiválasztása kötelező');
+      return;
+    }
+
+    const ertekNum = parseFloat(formData.ertek);
+    if (isNaN(ertekNum) || ertekNum < 0) {
+      setError('Az érték nem lehet negatív');
+      return;
+    }
+
+    const valoszinusegNum = parseInt(formData.valoszinuseg);
+    if (isNaN(valoszinusegNum) || valoszinusegNum < 0 || valoszinusegNum > 100) {
+      setError('A valószínűség 0 és 100 között kell legyen');
+      return;
+    }
+
+    setSaving(true);
+
+    try {
+      const token = localStorage.getItem('token');
+
+      const opportunityData = {
+        nev: formData.nev,
+        accountId: formData.accountId,
+        szakasz: formData.szakasz,
+        ertek: ertekNum,
+        valoszinuseg: valoszinusegNum,
+        zarvasDatum: formData.zarvasDatum || undefined,
+      };
+
+      const response = await fetch(`${API_URL}/crm/opportunities`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(opportunityData),
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Nincs hitelesítve. Kérem jelentkezzen be újra.');
+        } else if (response.status === 403) {
+          throw new Error('Nincs jogosultsága ehhez a művelethez.');
+        } else if (response.status === 400) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Hibás adatok.');
+        } else if (response.status >= 500) {
+          throw new Error('Szerver hiba. Kérem próbálja újra később.');
+        } else {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Hiba a lehetőség létrehozásakor');
+        }
+      }
+
+      setSuccess('Lehetőség sikeresen létrehozva!');
+      setTimeout(() => {
+        handleCloseModal();
+        loadOpportunities();
+      }, 1500);
+    } catch (err: any) {
+      setError(err.message || 'Hiba történt a mentés során');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -91,7 +232,10 @@ export default function Opportunities() {
     <div>
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-3xl font-bold">Lehetőségek</h1>
-        <button className="bg-mbit-blue text-white px-4 py-2 rounded hover:bg-blue-600">
+        <button 
+          onClick={handleOpenModal}
+          className="bg-mbit-blue text-white px-4 py-2 rounded hover:bg-blue-600"
+        >
           + Új lehetőség
         </button>
       </div>
@@ -190,6 +334,131 @@ export default function Opportunities() {
           </table>
         )}
       </div>
+
+      <Modal isOpen={isModalOpen} onClose={handleCloseModal} title="Új lehetőség" size="lg">
+        {error && (
+          <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+            {error}
+          </div>
+        )}
+        {success && (
+          <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded">
+            {success}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit}>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Név <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={formData.nev}
+                onChange={(e) => setFormData({ ...formData, nev: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Ügyfél <span className="text-red-500">*</span>
+              </label>
+              <select
+                value={formData.accountId}
+                onChange={(e) => setFormData({ ...formData, accountId: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              >
+                <option value="">-- Válasszon --</option>
+                {accounts.map(a => (
+                  <option key={a.id} value={a.id}>{a.nev} ({a.azonosito})</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Szakasz <span className="text-red-500">*</span>
+              </label>
+              <select
+                value={formData.szakasz}
+                onChange={(e) => setFormData({ ...formData, szakasz: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              >
+                {SZAKASZOK.map(sz => (
+                  <option key={sz.kod} value={sz.kod}>{sz.nev}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Érték (HUF) <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={formData.ertek}
+                  onChange={(e) => setFormData({ ...formData, ertek: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Valószínűség (%) <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="1"
+                  value={formData.valoszinuseg}
+                  onChange={(e) => setFormData({ ...formData, valoszinuseg: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Tervezett zárás dátuma
+              </label>
+              <input
+                type="date"
+                value={formData.zarvasDatum}
+                onChange={(e) => setFormData({ ...formData, zarvasDatum: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          </div>
+
+          <div className="mt-6 flex justify-end gap-3">
+            <button
+              type="button"
+              onClick={handleCloseModal}
+              className="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50"
+              disabled={saving}
+            >
+              Mégse
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 bg-mbit-blue text-white rounded hover:bg-blue-600 disabled:opacity-50"
+              disabled={saving}
+            >
+              {saving ? 'Mentés...' : 'Mentés'}
+            </button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }
