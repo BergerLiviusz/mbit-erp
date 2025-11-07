@@ -50,7 +50,8 @@ A **teljes ERP rendszer** most elérhető **natív desktop alkalmazásként**:
 - **Teljes OCR támogatás** - Tesseract.js lokálisan
 
 📖 **[Desktop App Build Útmutató →](BUILD_DESKTOP.md)**  
-🚀 **[GitHub Actions CI/CD Setup →](GITHUB_ACTIONS_SETUP.md)**
+🚀 **[GitHub Actions CI/CD Setup →](GITHUB_ACTIONS_SETUP.md)**  
+📘 **[Felhasználói Útmutató (Telepítés és Használat) →](FELHASZNALOI_UTMUTATO.md)**
 
 **💾 Letöltés**: A legújabb installer-ek a [GitHub Releases](https://github.com/BergerLiviusz/mbit-erp/releases) oldalon érhetők el.
 
@@ -220,8 +221,16 @@ mbit-erp/
 
 ## 📚 Dokumentáció
 
-Minden dokumentáció **magyar nyelven** elérhető a `/docs` könyvtárban:
+Minden dokumentáció **magyar nyelven** érhető el:
 
+### 🚀 Gyors Kezdés
+| Dokumentum | Leírás |
+|-----------|--------|
+| **[📘 Felhasználói Útmutató](FELHASZNALOI_UTMUTATO.md)** | **Telepítés, első lépések, alapvető funkciók - NEM-TECHNIKAI felhasználóknak** |
+| [Desktop App Build](BUILD_DESKTOP.md) | Windows/macOS/Linux installer build útmutató |
+| [GitHub Actions CI/CD](GITHUB_ACTIONS_SETUP.md) | Automatikus build pipeline beállítása |
+
+### 📖 Részletes Dokumentáció
 | Dokumentum | Leírás |
 |-----------|--------|
 | [Telepítési és Üzemeltetői Kézikönyv](docs/Telepitesi_es_uzemeltetoi_kezikonyv.md) | Rendszer telepítés, konfiguráció, üzemeltetés |
