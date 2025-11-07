@@ -46,7 +46,8 @@ export class BackupScheduler implements OnModuleInit {
 
       this.logger.log('Backup schedules loaded from settings');
     } catch (error) {
-      this.logger.warn('Failed to load backup schedules:', error.message);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.warn('Failed to load backup schedules:', errorMessage);
       this.logger.log('Using default backup schedule');
       this.scheduleDailyBackup('0 2 * * *');
     }
