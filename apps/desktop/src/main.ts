@@ -80,13 +80,19 @@ async function startBackend(): Promise<void> {
 }
 
 function createWindow(): void {
+  const isDev = !app.isPackaged;
+  
+  const iconPath = isDev
+    ? path.join(__dirname, '..', 'resources', 'icon.png')
+    : path.join(process.resourcesPath, 'icon.png');
+
   mainWindow = new BrowserWindow({
     width: 1400,
     height: 900,
     minWidth: 1024,
     minHeight: 768,
     title: 'Mbit ERP',
-    icon: path.join(__dirname, '..', 'resources', 'icon.png'),
+    icon: iconPath,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -100,14 +106,12 @@ function createWindow(): void {
   mainWindow.once('ready-to-show', () => {
     mainWindow?.show();
   });
-
-  const isDev = !app.isPackaged;
   
   if (isDev) {
     mainWindow.loadURL('http://localhost:5000');
     mainWindow.webContents.openDevTools();
   } else {
-    const indexPath = path.join(__dirname, '..', 'frontend', 'index.html');
+    const indexPath = path.join(process.resourcesPath, 'frontend', 'index.html');
     mainWindow.loadFile(indexPath);
   }
 

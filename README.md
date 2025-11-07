@@ -30,11 +30,25 @@ Az **Mbit ERP** egy átfogó, moduláris vállalati alkalmazás, amely egyesíti
 
 - ✅ **100% Magyar nyelvű** felhasználói felület
 - 🏢 **On-premise képes** - minden adat a saját infrastruktúrán marad
-- 💻 **Cross-platform Desktop** alkalmazás (Windows, macOS, Linux)
-- 📱 **PWA támogatás** - offline működéssel
+- 💻 **Electron Desktop App** - Windows & macOS telepítők
+- 📦 **Egyszerű telepítés** - egy kattintásos installer
+- 📱 **PWA támogatás** - böngészőből is elérhető
 - 🔐 **GDPR compliant** - teljes adatvédelmi megfelelés
 - 📊 **Audit-ready** - részletes naplózás és riportálás
 - 🚀 **Gyors és modern** - React + NestJS + TypeScript
+
+### 🖥️ Desktop Alkalmazás
+
+A **teljes ERP rendszer** most elérhető **natív desktop alkalmazásként**:
+
+- **Windows** - `.exe` telepítő (NSIS) + portable verzió
+- **macOS** - `.dmg` telepítő (Intel + Apple Silicon)
+- **100% offline működés** - nincs internet szükséges
+- **Embedded backend** - NestJS szerver beépítve
+- **SQLite adatbázis** - helyi fájlban tárolva
+- **Teljes OCR támogatás** - Tesseract.js lokálisan
+
+📖 **[Desktop App Build Útmutató →](BUILD_DESKTOP.md)**
 
 ---
 

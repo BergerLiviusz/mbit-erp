@@ -25,6 +25,36 @@ The project utilizes a monorepo structure managed by Turborepo, encompassing a R
 - **Deployment**: Configured for concurrent execution of both frontend (port 5000) and backend (port 3000) for seamless Replit deployment.
 
 ## Recent Changes (November 7, 2025)
+**Sprint 8 - Electron Desktop Application:**
+- ✅ **Electron Desktop App Implementation**: Complete desktop application setup
+  - Electron main process with embedded NestJS backend
+  - Preload script for secure IPC communication
+  - Windows installer (NSIS + Portable)
+  - macOS installer (DMG for Intel + Apple Silicon)
+  - Linux support (AppImage + DEB)
+  - 100% on-premise capable - all data stored locally
+  - SQLite database in user data directory
+  - Embedded backend server (port 3000)
+  - Auto-generated app icons from Mbit logo
+- ✅ **Build Configuration**: electron-builder setup for multi-platform builds
+  - TypeScript compilation for Electron main process
+  - Backend bundling into resources
+  - Frontend build with Electron-specific base path
+  - Cross-platform build scripts (Windows/Mac/Linux)
+  - electron-builder configuration with proper file inclusion
+- ✅ **CI/CD Pipeline**: GitHub Actions automated builds
+  - Multi-OS build matrix (windows-latest, macos-latest)
+  - Automated artifact upload
+  - GitHub Releases integration on git tags
+  - Manual workflow dispatch option
+- ✅ **Documentation**: Comprehensive build and usage guides
+  - BUILD_DESKTOP.md - Complete build instructions
+  - apps/desktop/README.md - Architecture and configuration
+  - Updated main README.md with desktop app info
+  - Icon conversion instructions
+  - Code signing guidance
+
+## Recent Changes (November 7, 2025)
 **Sprint 7 - UX Improvements & Organization Management:**
 - ✅ **Logo Update**: Replaced header logo with official mbitvector.svg from attached_assets, properly aligned and sized (h-10 w-auto)
 - ✅ **Organization Data Management**: Complete implementation in Beállítások > Szervezet tab
