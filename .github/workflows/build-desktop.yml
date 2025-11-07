@@ -46,16 +46,6 @@ jobs:
         run: |
           cd apps/desktop
           npm run package:${{ matrix.platform }}
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Platform-specific Code Signing (opcionális)
-          # Explicit platform check: Windows only WINDOWS_CSC_LINK, macOS only MACOS_CSC_LINK
-          CSC_LINK: ${{ (matrix.os == 'windows-latest' && secrets.WINDOWS_CSC_LINK) || (matrix.os == 'macos-latest' && secrets.MACOS_CSC_LINK) || '' }}
-          CSC_KEY_PASSWORD: ${{ (matrix.os == 'windows-latest' && secrets.WINDOWS_CSC_KEY_PASSWORD) || (matrix.os == 'macos-latest' && secrets.MACOS_CSC_KEY_PASSWORD) || '' }}
-          # macOS Notarization (csak macOS-en használt, csak ha van APPLE_ID)
-          APPLE_ID: ${{ matrix.os == 'macos-latest' && secrets.APPLE_ID || '' }}
-          APPLE_ID_PASSWORD: ${{ matrix.os == 'macos-latest' && secrets.APPLE_ID_PASSWORD || '' }}
-          APPLE_TEAM_ID: ${{ matrix.os == 'macos-latest' && secrets.APPLE_TEAM_ID || '' }}
 
       - name: Upload artifacts (Windows)
         if: matrix.os == 'windows-latest'

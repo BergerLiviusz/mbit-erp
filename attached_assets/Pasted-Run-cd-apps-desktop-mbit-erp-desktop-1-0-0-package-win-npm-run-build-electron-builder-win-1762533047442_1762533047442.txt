@@ -1,0 +1,70 @@
+Run cd apps/desktop
+
+> @mbit-erp/desktop@1.0.0 package:win
+> npm run build && electron-builder --win --x64
+
+
+> @mbit-erp/desktop@1.0.0 prebuild
+> npm run clean
+
+
+> @mbit-erp/desktop@1.0.0 clean
+> rimraf dist-electron release
+
+
+> @mbit-erp/desktop@1.0.0 build
+> npm run build:electron && npm run build:backend && npm run build:frontend
+
+
+> @mbit-erp/desktop@1.0.0 build:electron
+> npx rimraf tsconfig.tsbuildinfo && tsc
+
+
+> @mbit-erp/desktop@1.0.0 build:backend
+> cd ../server && npx rimraf tsconfig.tsbuildinfo && npm run build
+
+
+> @mbit-erp/server@1.0.0 build
+> nest build
+
+
+> @mbit-erp/desktop@1.0.0 build:frontend
+> cd ../web && npx rimraf tsconfig.tsbuildinfo && cross-env ELECTRON_BUILD=true npm run build
+
+
+> @mbit-erp/web@1.0.0 build
+> tsc && vite build
+
+vite v5.4.21 building for production...
+transforming...
+✓ 142 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/registerSW.js                0.14 kB
+dist/manifest.webmanifest         0.29 kB
+dist/index.html                   0.59 kB │ gzip:  0.35 kB
+dist/assets/index-BS2ebifF.css   20.46 kB │ gzip:  4.40 kB
+dist/assets/index-W4mie_pU.js   340.25 kB │ gzip: 96.03 kB
+✓ built in 2.64s
+
+PWA v0.17.5
+mode      generateSW
+precache  5 entries (354.00 KiB)
+files generated
+  dist\sw.js
+  dist\workbox-1be04862.js
+  • electron-builder  version=24.13.3 os=10.0.26100
+  • artifacts will be published if draft release exists  reason=CI detected
+  • loaded configuration  file=package.json ("build" field)
+  • packaging       platform=win32 arch=x64 electron=28.3.3 appOutDir=release\win-unpacked
+  • downloading     url=https://github.com/electron/electron/releases/download/v28.3.3/electron-v28.3.3-win32-x64.zip size=108 MB parts=8
+  • downloaded      url=https://github.com/electron/electron/releases/download/v28.3.3/electron-v28.3.3-win32-x64.zip duration=620ms
+  ⨯ Env WIN_CSC_LINK is not correct, cannot resolve: D:\a\mbit-erp\mbit-erp\apps\desktop not a file
+npm error Lifecycle script `package:win` failed with error:
+npm error code 1
+npm error path D:\a\mbit-erp\mbit-erp\apps\desktop
+npm error workspace @mbit-erp/desktop@1.0.0
+npm error location D:\a\mbit-erp\mbit-erp\apps\desktop
+npm error command failed
+npm error command C:\Windows\system32\cmd.exe /d /s /c npm run build && electron-builder --win --x64
+Error: Process completed with exit code 1.

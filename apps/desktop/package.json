@@ -35,6 +35,7 @@
     "productName": "Mbit ERP",
     "copyright": "Copyright © 2025 MB-IT Kft.",
     "electronVersion": "28.3.3",
+    "publish": null,
     "directories": {
       "output": "release",
       "buildResources": "resources"
