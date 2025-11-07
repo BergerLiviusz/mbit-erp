@@ -79,20 +79,30 @@ base64 -i DeveloperID.p12 -o macos-cert-base64.txt
 
 #### 🔄 Platform-Specifikus Code Signing Működése
 
-A GitHub Actions workflow **automatikusan kiválasztja** a megfelelő certificate-et a build platformja alapján:
+A GitHub Actions workflow **automatikusan kiválasztja** a megfelelő certificate-et a build platformja alapján **explicit platform check-kel**:
 
 ```yaml
-# Windows build esetén:
-CSC_LINK = WINDOWS_CSC_LINK secret értéke
-CSC_KEY_PASSWORD = WINDOWS_CSC_KEY_PASSWORD secret értéke
+# Workflow conditional expression (csökkenő prioritás):
+CSC_LINK:
+  1. Ha matrix.os == 'windows-latest' → WINDOWS_CSC_LINK
+  2. Ha matrix.os == 'macos-latest' → MACOS_CSC_LINK
+  3. Egyébként → '' (empty string, unsigned build)
 
-# macOS build esetén:
-CSC_LINK = MACOS_CSC_LINK secret értéke
-CSC_KEY_PASSWORD = MACOS_CSC_KEY_PASSWORD secret értéke
-APPLE_ID, APPLE_ID_PASSWORD, APPLE_TEAM_ID = macOS notarization-höz
+# Gyakorlatban:
+# Windows build Windows secret-tel:
+CSC_LINK = "your-windows-cert-base64"
+CSC_KEY_PASSWORD = "your-windows-password"
+
+# macOS build macOS secret-tel:
+CSC_LINK = "your-macos-cert-base64"
+CSC_KEY_PASSWORD = "your-macos-password"
+APPLE_ID, APPLE_ID_PASSWORD, APPLE_TEAM_ID = macOS notarization
+
+# Windows build macOS secret-tel (vagy fordítva):
+CSC_LINK = '' (unsigned build - helyes viselkedés!)
 ```
 
-Ha egy secret nincs beállítva, az electron-builder automatikusan **unsigned** (aláíratlan) build-et készít figyelmeztetés nélkül.
+**Fontos**: Ha a **platform-specifikus** secret nincs beállítva (pl. Windows build, de nincs WINDOWS_CSC_LINK), az electron-builder automatikusan **unsigned** (aláíratlan) build-et készít, még akkor is, ha a **másik platform** secret-je be van állítva. Ez biztosítja hogy sosem használódik rossz certificate.
 
 ---
 
