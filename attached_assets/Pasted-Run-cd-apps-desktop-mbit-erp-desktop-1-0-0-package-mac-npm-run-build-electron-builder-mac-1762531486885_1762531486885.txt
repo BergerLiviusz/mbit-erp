@@ -1,0 +1,65 @@
+Run cd apps/desktop
+
+> @mbit-erp/desktop@1.0.0 package:mac
+> npm run build && electron-builder --mac
+
+
+> @mbit-erp/desktop@1.0.0 prebuild
+> npm run clean && npx rimraf "**/*.tsbuildinfo" tsconfig.tsbuildinfo
+
+
+> @mbit-erp/desktop@1.0.0 clean
+> rimraf dist-electron release
+
+
+> @mbit-erp/desktop@1.0.0 build
+> npm run build:electron && npm run build:backend && npm run build:frontend
+
+
+> @mbit-erp/desktop@1.0.0 build:electron
+> npx rimraf tsconfig.tsbuildinfo && tsc
+
+
+> @mbit-erp/desktop@1.0.0 build:backend
+> cd ../server && npx rimraf tsconfig.tsbuildinfo && npm run build
+
+
+> @mbit-erp/server@1.0.0 build
+> nest build
+
+src/main.ts:1:25 - error TS2307: Cannot find module 'dotenv' or its corresponding type declarations.
+
+Found 1 error(s).
+1 import * as dotenv from 'dotenv';
+
+                          ~~~~~~~~
+
+npm error Lifecycle script `build` failed with error:
+npm error code 1
+npm error path /Users/runner/work/mbit-erp/mbit-erp/apps/server
+npm error workspace @mbit-erp/server@1.0.0
+npm error location /Users/runner/work/mbit-erp/mbit-erp/apps/server
+npm error command failed
+npm error command sh -c nest build
+npm error Lifecycle script `build:backend` failed with error:
+npm error code 1
+npm error path /Users/runner/work/mbit-erp/mbit-erp/apps/desktop
+npm error workspace @mbit-erp/desktop@1.0.0
+npm error location /Users/runner/work/mbit-erp/mbit-erp/apps/desktop
+npm error command failed
+npm error command sh -c cd ../server && npx rimraf tsconfig.tsbuildinfo && npm run build
+npm error Lifecycle script `build` failed with error:
+npm error code 1
+npm error path /Users/runner/work/mbit-erp/mbit-erp/apps/desktop
+npm error workspace @mbit-erp/desktop@1.0.0
+npm error location /Users/runner/work/mbit-erp/mbit-erp/apps/desktop
+npm error command failed
+npm error command sh -c npm run build:electron && npm run build:backend && npm run build:frontend
+npm error Lifecycle script `package:mac` failed with error:
+npm error code 1
+npm error path /Users/runner/work/mbit-erp/mbit-erp/apps/desktop
+npm error workspace @mbit-erp/desktop@1.0.0
+npm error location /Users/runner/work/mbit-erp/mbit-erp/apps/desktop
+npm error command failed
+npm error command sh -c npm run build && electron-builder --mac
+Error: Process completed with exit code 1.

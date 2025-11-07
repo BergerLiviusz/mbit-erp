@@ -23,7 +23,6 @@
     "package:linux": "npm run build && electron-builder --linux",
     "package:all": "npm run build && electron-builder --win --mac --linux",
     "clean": "rimraf dist-electron release",
-    "postinstall": "cd ../server && npm install && cd ../web && npm install",
     "lint": "eslint src --ext ts",
     "test": "echo \"No tests yet\""
   },
