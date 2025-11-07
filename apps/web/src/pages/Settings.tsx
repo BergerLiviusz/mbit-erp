@@ -27,6 +27,7 @@ export default function Settings() {
   const [systemLoading, setSystemLoading] = useState(false);
   const [healthError, setHealthError] = useState<string>('');
   const [message, setMessage] = useState('');
+  const [orgData, setOrgData] = useState<Record<string, string>>({});
 
   const API_URL = import.meta.env.VITE_API_URL || '/api';
 
@@ -36,6 +37,19 @@ export default function Settings() {
       loadHealth();
     }
   }, [activeTab]);
+
+  useEffect(() => {
+    initializeDefaults();
+  }, []);
+
+  useEffect(() => {
+    const orgSettings = settings.filter(s => s.kategoria === 'organization');
+    const data: Record<string, string> = {};
+    orgSettings.forEach(s => {
+      data[s.kulcs] = s.ertek;
+    });
+    setOrgData(data);
+  }, [settings]);
 
   const loadSettings = async () => {
     try {
@@ -49,6 +63,18 @@ export default function Settings() {
       }
     } catch (error) {
       console.error('Hiba a beállítások betöltésekor:', error);
+    }
+  };
+
+  const initializeDefaults = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      await fetch(`${API_URL}/system/settings/initialize`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+    } catch (error) {
+      console.error('Hiba az alapértelmezett beállítások inicializálásakor:', error);
     }
   };
 
@@ -137,31 +163,102 @@ export default function Settings() {
     return settings.filter(s => s.kategoria === category);
   };
 
+  const handleOrgSave = async () => {
+    setLoading(true);
+    setMessage('');
+    try {
+      const token = localStorage.getItem('token');
+      const updates = Object.entries(orgData).map(([kulcs, ertek]) => ({
+        kulcs,
+        ertek,
+      }));
+
+      const results = await Promise.all(
+        updates.map(update => 
+          fetch(`${API_URL}/system/settings/${update.kulcs}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ ertek: update.ertek }),
+          })
+        )
+      );
+
+      const failedUpdates = results.filter(r => !r.ok);
+      
+      if (failedUpdates.length > 0) {
+        const firstFailed = failedUpdates[0];
+        if (firstFailed.status === 401) {
+          setMessage('Nincs hitelesítve. Kérem jelentkezzen be újra.');
+        } else if (firstFailed.status === 403) {
+          setMessage('Nincs jogosultsága a beállítások módosításához.');
+        } else {
+          setMessage(`Hiba a mentés során. ${failedUpdates.length} beállítás mentése sikertelen.`);
+        }
+      } else {
+        setMessage('Szervezeti adatok sikeresen mentve!');
+        await loadSettings();
+      }
+    } catch (error) {
+      setMessage('Hiba a mentés során.');
+      console.error(error);
+    } finally {
+      setLoading(false);
+      setTimeout(() => setMessage(''), 3000);
+    }
+  };
+
   const renderOrganizationTab = () => {
     const orgSettings = getSettingsByCategory('organization');
     
+    if (orgSettings.length === 0) {
+      return (
+        <div className="text-gray-500 text-center py-8">
+          <p>Betöltés...</p>
+        </div>
+      );
+    }
+    
     return (
-      <div className="space-y-4">
+      <div className="space-y-6">
         <h3 className="text-lg font-semibold mb-4">Szervezeti adatok</h3>
-        {orgSettings.map(setting => (
-          <div key={setting.id} className="flex flex-col">
-            <label className="text-sm font-medium text-gray-700 mb-1">
-              {setting.leiras}
-            </label>
-            <div className="flex gap-2">
+        <p className="text-sm text-gray-600 mb-6">
+          Adja meg a szervezet alapvető adatait. Ezek az információk megjelenhetnek dokumentumokon és egyéb helyeken.
+        </p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {orgSettings.map(setting => (
+            <div key={setting.id} className="flex flex-col">
+              <label className="text-sm font-medium text-gray-700 mb-2">
+                {setting.leiras}
+              </label>
               <input
                 type="text"
-                defaultValue={setting.ertek}
-                className="flex-1 border border-gray-300 rounded px-3 py-2"
-                onBlur={(e) => {
-                  if (e.target.value !== setting.ertek) {
-                    updateSetting(setting.kulcs, e.target.value);
-                  }
+                value={orgData[setting.kulcs] || setting.ertek || ''}
+                onChange={(e) => {
+                  setOrgData(prev => ({
+                    ...prev,
+                    [setting.kulcs]: e.target.value
+                  }));
                 }}
+                className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-mbit-blue"
+                placeholder={`Adja meg: ${setting.leiras.toLowerCase()}`}
               />
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
+
+        <div className="flex justify-end pt-4 border-t">
+          <button
+            onClick={handleOrgSave}
+            disabled={loading}
+            className="bg-mbit-blue text-white px-6 py-2 rounded hover:bg-blue-600 disabled:bg-gray-400"
+          >
+            {loading ? 'Mentés...' : 'Mentés'}
+          </button>
+        </div>
       </div>
     );
   };

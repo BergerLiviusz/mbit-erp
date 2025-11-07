@@ -59,6 +59,8 @@ export default function Documents() {
   const [success, setSuccess] = useState<string>('');
   const [ocrLoading, setOcrLoading] = useState<Record<string, boolean>>({});
   const [expandedDoc, setExpandedDoc] = useState<string | null>(null);
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
 
   const [formData, setFormData] = useState({
     nev: '',
@@ -120,6 +122,51 @@ export default function Documents() {
       }
     } catch (error) {
       console.error('Hiba a kategóriák betöltésekor:', error);
+    }
+  };
+
+  const createCategory = async () => {
+    if (!newCategoryName.trim()) {
+      setError('Kérem adja meg a kategória nevét!');
+      return;
+    }
+
+    setSaving(true);
+    setError('');
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/dms/categories`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          nev: newCategoryName.trim(),
+          leiras: '',
+        }),
+      });
+
+      if (response.ok) {
+        const newCategory = await response.json();
+        setSuccess('Kategória sikeresen létrehozva!');
+        setNewCategoryName('');
+        setIsCategoryModalOpen(false);
+        await loadCategories();
+        setFormData({ ...formData, categoryId: newCategory.id });
+        setTimeout(() => setSuccess(''), 3000);
+      } else if (response.status === 401) {
+        setError('Nincs hitelesítve. Kérem jelentkezzen be újra.');
+      } else if (response.status === 403) {
+        setError('Nincs jogosultsága új kategória létrehozásához.');
+      } else {
+        setError('Hiba a kategória létrehozásakor.');
+      }
+    } catch (error) {
+      setError('Hiba történt a kategória létrehozásakor.');
+      console.error(error);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -562,9 +609,21 @@ export default function Documents() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Kategória
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-sm font-medium text-gray-700">
+                  Kategória
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setIsCategoryModalOpen(true)}
+                  className="text-sm text-mbit-blue hover:text-blue-800 flex items-center gap-1"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  Új kategória
+                </button>
+              </div>
               <select
                 value={formData.categoryId}
                 onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
@@ -659,6 +718,59 @@ export default function Documents() {
             </button>
           </div>
         </form>
+      </Modal>
+
+      {/* Category Creation Modal */}
+      <Modal
+        isOpen={isCategoryModalOpen}
+        onClose={() => {
+          setIsCategoryModalOpen(false);
+          setNewCategoryName('');
+        }}
+        title="Új kategória hozzáadása"
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Kategória neve <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={newCategoryName}
+              onChange={(e) => setNewCategoryName(e.target.value)}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  createCategory();
+                }
+              }}
+              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="pl. Számlák, Szerződések, stb."
+              autoFocus
+            />
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4">
+            <button
+              type="button"
+              onClick={() => {
+                setIsCategoryModalOpen(false);
+                setNewCategoryName('');
+              }}
+              className="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50"
+              disabled={saving}
+            >
+              Mégse
+            </button>
+            <button
+              type="button"
+              onClick={createCategory}
+              className="px-4 py-2 bg-mbit-blue text-white rounded hover:bg-blue-600 disabled:opacity-50"
+              disabled={saving || !newCategoryName.trim()}
+            >
+              {saving ? 'Létrehozás...' : 'Létrehozás'}
+            </button>
+          </div>
+        </div>
       </Modal>
     </div>
   );

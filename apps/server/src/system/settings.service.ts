@@ -97,6 +97,20 @@ export class SystemSettingsService {
         leiras: 'Telefonszám',
       },
       {
+        kulcs: 'organization.registration_number',
+        ertek: '',
+        tipus: 'string',
+        kategoria: 'organization',
+        leiras: 'Cégjegyzékszám',
+      },
+      {
+        kulcs: 'organization.website',
+        ertek: '',
+        tipus: 'string',
+        kategoria: 'organization',
+        leiras: 'Weboldal',
+      },
+      {
         kulcs: 'numbering.quote.pattern',
         ertek: 'AJ-{YYYY}-{####}',
         tipus: 'string',

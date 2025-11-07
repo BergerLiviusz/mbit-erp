@@ -11,6 +11,38 @@ import Quotes from './pages/Quotes';
 import Login from './pages/Login';
 import MbitLogo from './assets/logo.svg';
 
+function DropdownMenu({ title, items }: { title: string; items: Array<{ to: string; label: string }> }) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <div 
+      className="relative"
+      onMouseEnter={() => setIsOpen(true)}
+      onMouseLeave={() => setIsOpen(false)}
+    >
+      <button className="hover:bg-gray-800 px-3 py-2 rounded flex items-center gap-1">
+        {title}
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      {isOpen && (
+        <div className="absolute top-full left-0 mt-1 bg-mbit-dark border border-gray-700 rounded shadow-lg min-w-[200px] z-50">
+          {items.map((item) => (
+            <Link
+              key={item.to}
+              to={item.to}
+              className="block px-4 py-2 hover:bg-gray-800 text-white"
+            >
+              {item.label}
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(
     () => !!localStorage.getItem('token')
@@ -33,24 +65,24 @@ function App() {
                 <Link to="/" className="hover:bg-gray-800 px-3 py-2 rounded">
                   Főoldal
                 </Link>
-                <Link to="/crm" className="hover:bg-gray-800 px-3 py-2 rounded">
-                  CRM
-                </Link>
-                <Link to="/opportunities" className="hover:bg-gray-800 px-3 py-2 rounded">
-                  Lehetőségek
-                </Link>
-                <Link to="/quotes" className="hover:bg-gray-800 px-3 py-2 rounded">
-                  Árajánlatok
-                </Link>
+                <DropdownMenu 
+                  title="Ügyfélkezelés"
+                  items={[
+                    { to: '/crm', label: 'Partnerek' },
+                    { to: '/opportunities', label: 'Lehetőségek' },
+                    { to: '/quotes', label: 'Árajánlatok' }
+                  ]}
+                />
                 <Link to="/documents" className="hover:bg-gray-800 px-3 py-2 rounded">
                   Dokumentumok
                 </Link>
-                <Link to="/warehouses" className="hover:bg-gray-800 px-3 py-2 rounded">
-                  Raktárak
-                </Link>
-                <Link to="/products" className="hover:bg-gray-800 px-3 py-2 rounded">
-                  Termékek
-                </Link>
+                <DropdownMenu 
+                  title="Logisztika"
+                  items={[
+                    { to: '/warehouses', label: 'Raktárak' },
+                    { to: '/products', label: 'Termékek' }
+                  ]}
+                />
                 <Link to="/settings" className="hover:bg-gray-800 px-3 py-2 rounded">
                   Beállítások
                 </Link>
