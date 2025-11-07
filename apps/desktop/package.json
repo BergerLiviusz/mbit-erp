@@ -14,7 +14,7 @@
   },
   "main": "dist-electron/main.js",
   "scripts": {
-    "prebuild": "npm run clean && npx rimraf \"**/*.tsbuildinfo\" tsconfig.tsbuildinfo",
+    "prebuild": "npm run clean",
     "build": "npm run build:electron && npm run build:backend && npm run build:frontend",
     "build:electron": "npx rimraf tsconfig.tsbuildinfo && tsc",
     "build:backend": "cd ../server && npx rimraf tsconfig.tsbuildinfo && npm run build",
