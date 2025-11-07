@@ -3,7 +3,10 @@ import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import path from 'path';
 
+const isElectronBuild = process.env.ELECTRON_BUILD === 'true';
+
 export default defineConfig({
+  base: isElectronBuild ? './' : '/',
   plugins: [
     react(),
     VitePWA({
@@ -36,9 +39,19 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    outDir: 'dist',
+    emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks: undefined,
+      },
+    },
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      '@assets': path.resolve(__dirname, './src/assets'),
     },
   },
 });

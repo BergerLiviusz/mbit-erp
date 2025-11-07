@@ -136,11 +136,14 @@ dist
 .turbo
 apps/desktop/out
 apps/desktop/dist
+apps/desktop/dist-electron
+apps/desktop/release
 apps/server/prisma/dev.db
 apps/server/prisma/dev.db-journal
 apps/server/uploads
 apps/server/backups
 apps/web/dist-pwa
+mbit-data/
 
 # Build artifacts
 *.msi
@@ -149,3 +152,9 @@ apps/web/dist-pwa
 *.exe
 *.deb
 *.rpm
+*.blockmap
+*.zip
+
+# Electron specific
+*.asar
+.webpack/
