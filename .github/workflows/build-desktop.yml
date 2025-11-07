@@ -65,10 +65,11 @@ jobs:
           npm run package:${{ matrix.platform }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Windows Code Signing (opcionális)
-          CSC_LINK: ${{ secrets.WINDOWS_CSC_LINK }}
-          CSC_KEY_PASSWORD: ${{ secrets.WINDOWS_CSC_KEY_PASSWORD }}
-          # macOS Code Signing (opcionális)
+          # Platform-specific Code Signing (opcionális)
+          # Windows használja WINDOWS_CSC_LINK-et, macOS MACOS_CSC_LINK-et
+          CSC_LINK: ${{ matrix.os == 'windows-latest' && secrets.WINDOWS_CSC_LINK || secrets.MACOS_CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ matrix.os == 'windows-latest' && secrets.WINDOWS_CSC_KEY_PASSWORD || secrets.MACOS_CSC_KEY_PASSWORD }}
+          # macOS Notarization (csak macOS-en használt)
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}

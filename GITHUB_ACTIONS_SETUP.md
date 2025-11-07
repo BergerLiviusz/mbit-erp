@@ -48,8 +48,8 @@ A GitHub repository Settings → Secrets and variables → Actions menüben add 
 
 | Secret név | Leírás | Használat a workflow-ban |
 |------------|--------|-----------------------|
-| `WINDOWS_CSC_LINK` | Base64 enkódolt `.p12` vagy `.pfx` certificate | `CSC_LINK` env változóként |
-| `WINDOWS_CSC_KEY_PASSWORD` | Certificate jelszó | `CSC_KEY_PASSWORD` env változóként |
+| `WINDOWS_CSC_LINK` | Base64 enkódolt `.p12` vagy `.pfx` certificate | `CSC_LINK` env változóként (csak Windows build-en) |
+| `WINDOWS_CSC_KEY_PASSWORD` | Certificate jelszó | `CSC_KEY_PASSWORD` env változóként (csak Windows build-en) |
 
 Generálás:
 ```bash
@@ -63,11 +63,11 @@ certutil -encode your-certificate.p12 certificate-base64.txt
 
 | Secret név | Leírás | Használat a workflow-ban |
 |------------|--------|-----------------------|
-| `MACOS_CSC_LINK` | Base64 enkódolt `.p12` certificate (Developer ID Application) | `CSC_LINK` env változóként |
-| `MACOS_CSC_KEY_PASSWORD` | Certificate jelszó | `CSC_KEY_PASSWORD` env változóként |
-| `APPLE_ID` | Apple ID email (notarization-hez) | `APPLE_ID` env változóként |
-| `APPLE_ID_PASSWORD` | App-specific password | `APPLE_ID_PASSWORD` env változóként |
-| `APPLE_TEAM_ID` | Apple Team ID | `APPLE_TEAM_ID` env változóként |
+| `MACOS_CSC_LINK` | Base64 enkódolt `.p12` certificate (Developer ID Application) | `CSC_LINK` env változóként (csak macOS build-en) |
+| `MACOS_CSC_KEY_PASSWORD` | Certificate jelszó | `CSC_KEY_PASSWORD` env változóként (csak macOS build-en) |
+| `APPLE_ID` | Apple ID email (notarization-hez) | `APPLE_ID` env változóként (csak macOS build-en) |
+| `APPLE_ID_PASSWORD` | App-specific password | `APPLE_ID_PASSWORD` env változóként (csak macOS build-en) |
+| `APPLE_TEAM_ID` | Apple Team ID | `APPLE_TEAM_ID` env változóként (csak macOS build-en) |
 
 Generálás:
 ```bash
@@ -76,6 +76,23 @@ base64 -i DeveloperID.p12 -o macos-cert-base64.txt
 ```
 
 **⚠️ Megjegyzés**: Code signing nélkül is működnek az installer-ek, de Windows/macOS biztonsági figyelmeztetést fog mutatni a felhasználóknak.
+
+#### 🔄 Platform-Specifikus Code Signing Működése
+
+A GitHub Actions workflow **automatikusan kiválasztja** a megfelelő certificate-et a build platformja alapján:
+
+```yaml
+# Windows build esetén:
+CSC_LINK = WINDOWS_CSC_LINK secret értéke
+CSC_KEY_PASSWORD = WINDOWS_CSC_KEY_PASSWORD secret értéke
+
+# macOS build esetén:
+CSC_LINK = MACOS_CSC_LINK secret értéke
+CSC_KEY_PASSWORD = MACOS_CSC_KEY_PASSWORD secret értéke
+APPLE_ID, APPLE_ID_PASSWORD, APPLE_TEAM_ID = macOS notarization-höz
+```
+
+Ha egy secret nincs beállítva, az electron-builder automatikusan **unsigned** (aláíratlan) build-et készít figyelmeztetés nélkül.
 
 ---
 
