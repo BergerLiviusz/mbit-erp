@@ -8,6 +8,10 @@
     "email": "info@mb-it.hu"
   },
   "homepage": "https://mb-it.hu",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BergerLiviusz/mbit-erp.git"
+  },
   "main": "dist-electron/main.js",
   "scripts": {
     "prebuild": "npm run clean && npx rimraf \"**/*.tsbuildinfo\" tsconfig.tsbuildinfo",

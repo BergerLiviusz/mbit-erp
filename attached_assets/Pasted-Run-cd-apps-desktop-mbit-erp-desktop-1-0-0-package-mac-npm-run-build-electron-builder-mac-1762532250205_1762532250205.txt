@@ -1,0 +1,86 @@
+Run cd apps/desktop
+
+> @mbit-erp/desktop@1.0.0 package:mac
+> npm run build && electron-builder --mac
+
+
+> @mbit-erp/desktop@1.0.0 prebuild
+> npm run clean && npx rimraf "**/*.tsbuildinfo" tsconfig.tsbuildinfo
+
+
+> @mbit-erp/desktop@1.0.0 clean
+> rimraf dist-electron release
+
+
+> @mbit-erp/desktop@1.0.0 build
+> npm run build:electron && npm run build:backend && npm run build:frontend
+
+
+> @mbit-erp/desktop@1.0.0 build:electron
+> npx rimraf tsconfig.tsbuildinfo && tsc
+
+
+> @mbit-erp/desktop@1.0.0 build:backend
+> cd ../server && npx rimraf tsconfig.tsbuildinfo && npm run build
+
+
+> @mbit-erp/server@1.0.0 build
+> nest build
+
+
+> @mbit-erp/desktop@1.0.0 build:frontend
+> cd ../web && npx rimraf tsconfig.tsbuildinfo && cross-env ELECTRON_BUILD=true npm run build
+
+
+> @mbit-erp/web@1.0.0 build
+> tsc && vite build
+
+vite v5.4.21 building for production...
+transforming...
+✓ 142 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/registerSW.js                0.14 kB
+dist/manifest.webmanifest         0.29 kB
+dist/index.html                   0.58 kB │ gzip:  0.34 kB
+dist/assets/index-BS2ebifF.css   20.46 kB │ gzip:  4.40 kB
+dist/assets/index-W4mie_pU.js   340.25 kB │ gzip: 96.03 kB
+✓ built in 2.07s
+
+PWA v0.17.5
+mode      generateSW
+precache  5 entries (353.98 KiB)
+files generated
+  dist/sw.js
+  dist/workbox-1be04862.js
+  • electron-builder  version=24.13.3 os=24.6.0
+  • artifacts will be published if draft release exists  reason=CI detected
+  • loaded configuration  file=package.json ("build" field)
+  • packaging       platform=darwin arch=x64 electron=28.3.3 appOutDir=release/mac
+  • downloading     url=https://github.com/electron/electron/releases/download/v28.3.3/electron-v28.3.3-darwin-x64.zip size=100 MB parts=6
+  • downloaded      url=https://github.com/electron/electron/releases/download/v28.3.3/electron-v28.3.3-darwin-x64.zip duration=3.442s
+  ⨯ Cannot detect repository by .git/config. Please specify "repository" in the package.json (https://docs.npmjs.com/files/package.json#repository).
+Please see https://electron.build/configuration/publish  failedTask=build stackTrace=Error: Cannot detect repository by .git/config. Please specify "repository" in the package.json (https://docs.npmjs.com/files/package.json#repository).
+Please see https://electron.build/configuration/publish
+    at getInfo (/Users/runner/work/mbit-erp/mbit-erp/node_modules/app-builder-lib/src/publish/PublishManager.ts:551:13)
+    at getResolvedPublishConfig (/Users/runner/work/mbit-erp/mbit-erp/node_modules/app-builder-lib/src/publish/PublishManager.ts:560:18)
+    at resolvePublishConfigurations (/Users/runner/work/mbit-erp/mbit-erp/node_modules/app-builder-lib/src/publish/PublishManager.ts:443:16)
+    at getPublishConfigs (/Users/runner/work/mbit-erp/mbit-erp/node_modules/app-builder-lib/src/publish/PublishManager.ts:417:10)
+    at getAppUpdatePublishConfiguration (/Users/runner/work/mbit-erp/mbit-erp/node_modules/app-builder-lib/src/publish/PublishManager.ts:249:73)
+    at /Users/runner/work/mbit-erp/mbit-erp/node_modules/app-builder-lib/src/publish/PublishManager.ts:118:29
+    at Packager.afterPack (/Users/runner/work/mbit-erp/mbit-erp/node_modules/app-builder-lib/src/packager.ts:546:7)
+    at MacPackager.doPack (/Users/runner/work/mbit-erp/mbit-erp/node_modules/app-builder-lib/src/platformPackager.ts:312:5)
+    at MacPackager.pack (/Users/runner/work/mbit-erp/mbit-erp/node_modules/app-builder-lib/src/macPackager.ts:198:9)
+    at Packager.doBuild (/Users/runner/work/mbit-erp/mbit-erp/node_modules/app-builder-lib/src/packager.ts:445:9)
+    at executeFinally (/Users/runner/work/mbit-erp/mbit-erp/node_modules/builder-util/src/promise.ts:12:14)
+    at Packager._build (/Users/runner/work/mbit-erp/mbit-erp/node_modules/app-builder-lib/src/packager.ts:379:31)
+    at Packager.build (/Users/runner/work/mbit-erp/mbit-erp/node_modules/app-builder-lib/src/packager.ts:340:12)
+    at executeFinally (/Users/runner/work/mbit-erp/mbit-erp/node_modules/builder-util/src/promise.ts:12:14)
+npm error Lifecycle script `package:mac` failed with error:
+npm error code 1
+npm error path /Users/runner/work/mbit-erp/mbit-erp/apps/desktop
+npm error workspace @mbit-erp/desktop@1.0.0
+npm error location /Users/runner/work/mbit-erp/mbit-erp/apps/desktop
+npm error command failed
+npm error command sh -c npm run build && electron-builder --mac
+Error: Process completed with exit code 1.

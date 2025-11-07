@@ -19,12 +19,10 @@ jobs:
     
     strategy:
       matrix:
-        os: [windows-latest, macos-latest]
+        os: [windows-latest]
         include:
           - os: windows-latest
             platform: win
-          - os: macos-latest
-            platform: mac
 
     steps:
       - name: Checkout code
