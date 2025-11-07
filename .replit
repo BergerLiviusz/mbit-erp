@@ -27,18 +27,19 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Desktop App Info"
+args = "Development Server"
 
 [[workflows.workflow]]
-name = "Desktop App Info"
+name = "Development Server"
 author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "/tmp/electron-info.sh"
+args = "npm run dev"
+waitForPort = 5000
 
 [workflows.workflow.metadata]
-outputType = "console"
+outputType = "webview"
 
 [[ports]]
 localPort = 3000
@@ -47,10 +48,6 @@ externalPort = 3000
 [[ports]]
 localPort = 5000
 externalPort = 80
-
-[[ports]]
-localPort = 33459
-externalPort = 3001
 
 [[ports]]
 localPort = 41845
