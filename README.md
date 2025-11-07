@@ -1,6 +1,7 @@
 # Mbit ERP
 ## Modular Vállalati Alkalmazás | Desktop & PWA | Magyar Nyelvű
 
+[![Build Desktop App](https://github.com/ORG_NAME/REPO_NAME/actions/workflows/build-desktop.yml/badge.svg)](https://github.com/ORG_NAME/REPO_NAME/actions/workflows/build-desktop.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Node Version](https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen)](package.json)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue)](https://www.typescriptlang.org/)
@@ -48,7 +49,10 @@ A **teljes ERP rendszer** most elérhető **natív desktop alkalmazásként**:
 - **SQLite adatbázis** - helyi fájlban tárolva
 - **Teljes OCR támogatás** - Tesseract.js lokálisan
 
-📖 **[Desktop App Build Útmutató →](BUILD_DESKTOP.md)**
+📖 **[Desktop App Build Útmutató →](BUILD_DESKTOP.md)**  
+🚀 **[GitHub Actions CI/CD Setup →](GITHUB_ACTIONS_SETUP.md)**
+
+**💾 Letöltés**: A legújabb installer-ek a [GitHub Releases](https://github.com/ORG_NAME/REPO_NAME/releases) oldalon érhetők el.
 
 ---
 

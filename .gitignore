@@ -155,6 +155,18 @@ mbit-data/
 *.blockmap
 *.zip
 
+# Code signing certificates (NEVER commit these!)
+*.p12
+*.pfx
+*.cer
+*.crt
+*.key
+*.pem
+
+# Generated icons (electron-builder auto-generates from PNG)
+resources/*.ico
+resources/*.icns
+
 # Electron specific
 *.asar
 .webpack/
