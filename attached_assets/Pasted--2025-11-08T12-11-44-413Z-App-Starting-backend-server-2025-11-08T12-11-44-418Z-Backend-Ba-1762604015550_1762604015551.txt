@@ -1,0 +1,70 @@
+
+[2025-11-08T12:11:44.413Z] [App] Starting backend server...
+[2025-11-08T12:11:44.418Z] [Backend] Backend path: C:\Users\LIVIUS~1\AppData\Local\Temp\35CAPXxp35XgQwNgtBnYplNJ3W7\resources\backend\main.js
+[2025-11-08T12:11:44.419Z] [Backend] Backend directory: C:\Users\LIVIUS~1\AppData\Local\Temp\35CAPXxp35XgQwNgtBnYplNJ3W7\resources\backend
+[2025-11-08T12:11:44.419Z] [Backend] Node modules path: C:\Users\LIVIUS~1\AppData\Local\Temp\35CAPXxp35XgQwNgtBnYplNJ3W7\resources\backend\node_modules
+[2025-11-08T12:11:44.420Z] [Backend] Resources path: C:\Users\LIVIUS~1\AppData\Local\Temp\35CAPXxp35XgQwNgtBnYplNJ3W7\resources
+[2025-11-08T12:11:44.437Z] [Backend] Using Electron bundled Node.js runtime via fork()
+[2025-11-08T12:11:44.438Z] [Backend] NODE_PATH set to: C:\Users\LIVIUS~1\AppData\Local\Temp\35CAPXxp35XgQwNgtBnYplNJ3W7\resources\backend\node_modules
+[2025-11-08T12:11:54.239Z] [Backend Error] node:internal/modules/cjs/loader:1087
+  throw err;
+  ^
+
+Error: Cannot find module 'es-object-atoms'
+Require stack:
+- C:\Users\LIVIUS~1\AppData\Local\Temp\35CAPXxp35XgQwNgtBnYplNJ3W7\resources\backend\node_modules\@nestjs\platform-express\node_modules\express\node_modules\qs\node_modules\side-channel\node_modules\side-channel-map\node_modules\get-intrinsic\index.js
+- C:\Users\LIVIUS~1\AppData\Local\Temp\35CAPXxp35XgQwNgtBnYplNJ3W7\resources\backend\node_modules\@nestjs\platform-express\node_modules\express\node_modules\qs\node_modules\side-channel\node_modules\side-channel-map\index.js
+- C:\Users\LIVIUS~1\AppData\Local\Temp\35CAPXxp35XgQwNgtBnYplNJ3W7\resources\backend\node_modules\@nestjs\platform-express\node_modules\express\node_modules\qs\node_modules\side-channel\index.js
+- C:\Users\LIVIUS~1\AppData\Local\Temp\35CAPXxp35XgQwNgtBnYplNJ3W7\resources\backend\node_modules\@nestjs\platform-express\node_modules\express\node_modules\qs\lib\stringify.js
+- C:\Users\LIVIUS~1\AppData\Local\Temp\35CAPXxp35XgQwNgtBnYplNJ3W7\resources\backend\node_modules\@nestjs\platform-express\node_modules\express\node_modules\qs\lib\index.js
+- C:\Users\LIVIUS~1\AppData\Local\Temp\35CAPXxp35XgQwNgtBnYplNJ3W7\resources\backend\node_modules\@nestjs\platform-express\node_modules\express\lib\middleware\query.js
+- C:\Users\LIVIUS~1\AppData\Local\Temp\35CAPXxp35XgQwNgtBnYplNJ3W7\resources\backend\node_modules\@nestjs\platform-express\node_modules\express\lib\application.js
+- C:\Users\LIVIUS~1\AppData\Local\Temp\35CAPXxp35XgQwNgtBnYplNJ3W7\resources\backend\node_modules\@nestjs\platform-express\node_modules\express\lib\express.js
+- C:\Users\LIVIUS~1\AppData\Local\Temp\35CAPXxp35XgQwNgtBnYplNJ3W7\resources\backend\node_modules\@nestjs\platform-express\node_modules\express\index.js
+- C:\Users\LIVIUS~1\AppData\Local\Temp\35CAPXxp35XgQwNgtBnYplNJ3W7\resources\backend\node_modules\@nestjs\platform-express\adapters\express-adapter.js
+- C:\Users\LIVIUS~1\AppData\Local\Temp\35CAPXxp35XgQwNgtBnYplNJ3W7\resources\backend\node_modules\@nestjs\platform-express\adapters\index.js
+- C:\Users\LIVIUS~1\AppData\Local\Temp\35CAPXxp35XgQwNgtBnYplNJ3W7\resources\backend\node_modules\@nestjs\platform-express\index.js
+- C:\Users\LIVIUS~1\AppData\Local\Temp\35CAPXxp35XgQwNgtBnYplNJ3W7\resources\backend\dms\document.controller.js
+- C:\Users\LIVIUS~1\AppData\Local\Temp\35CAPXxp35XgQwNgtBnYplNJ3W7\resources\backend\dms\dms.module.js
+- C:\Users\LIVIUS~1\AppData\Local\Temp\35CAPXxp35XgQwNgtBnYplNJ3W7\resources\backend\app.module.js
+- C:\Users\LIVIUS~1\AppData\Local\Temp\35CAPXxp35XgQwNgtBnYplNJ3W7\resources\backend\main.js
+    at Module._resolveFilename (node:internal/modules/cjs/loader:1084:15)
+    at Module._load (node:internal/modules/cjs/loader:929:27)
+    at c._load (node:electron/js2c/node_init:2:13672)
+    at Module.require (node:internal/modules/cjs/loader:1150:19)
+    at require (node:internal/modules/cjs/helpers:119:18)
+    at Object.<anonymous> (C:\Users\LIVIUS~1\AppData\Local\Temp\35CAPXxp35XgQwNgtBnYplNJ3W7\resources\backend\node_modules\@nestjs\platform-express\node_modules\express\node_modules\qs\node_modules\side-channel\node_modules\side-channel-map\node_modules\get-intrinsic\index.js:5:15)
+    at Module._compile (node:internal/modules/cjs/loader:1271:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1326:10)
+    at Module.load (node:internal/modules/cjs/loader:1126:32)
+    at Module._load (node:internal/modules/cjs/loader:967:12) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    'C:\\Users\\LIVIUS~1\\AppData\\Local\\Temp\\35CAPXxp35XgQwNgtBnYplNJ3W7\\resources\\backend\\node_modules\\@nestjs\\platform-express\\node_modules\\express\\node_modules\\qs\\node_modules\\side-channel\\node_modules\\side-channel-map\\node_modules\\get-intrinsic\\index.js',
+    'C:\\Users\\LIVIUS~1\\AppData\\Local\\Temp\\35CAPXxp35XgQwNgtBnYplNJ3W7\\resources\\backend\\node_modules\\@nestjs\\platform-express\\node_modules\\express\\node_modules\\qs\\node_modules\\side-channel\\node_modules\\side-channel-map\\index.js',
+    'C:\\Users\\LIVIUS~1\\AppData\\Local\\Temp\\35CAPXxp35XgQwNgtBnYplNJ3W7\\resources\\backend\\node_modules\\@nestjs\\platform-express\\node_modules\\express\\node_modules\\qs\\node_modules\\side-channel\\index.js',
+    'C:\\Users\\LIVIUS~1\\AppData\\Local\\Temp\\35CAPXxp35XgQwNgtBnYplNJ3W7\\resources\\backend\\node_modules\\@nestjs\\platform-express\\node_modules\\express\\node_modules\\qs\\lib\\stringify.js',
+    'C:\\Users\\LIVIUS~1\\AppData\\Local\\Temp\\35CAPXxp35XgQwNgtBnYplNJ3W7\\resources\\backend\\node_modules\\@nestjs\\platform-express\\node_modules\\express\\node_modules\\qs\\lib\\index.js',
+    'C:\\Users\\LIVIUS~1\\AppData\\Local\\Temp\\35CAPXxp35XgQwNgtBnYplNJ3W7\\resources\\backend\\node_modules\\@nestjs\\platform-express\\node_modules\\express\\lib\\middleware\\query.js',
+    'C:\\Users\\LIVIUS~1\\AppData\\Local\\Temp\\35CAPXxp35XgQwNgtBnYplNJ3W7\\resources\\backend\\node_modules\\@nestjs\\platform-express\\node_modules\\express\\lib\\application.js',
+    'C:\\Users\\LIVIUS~1\\AppData\\Local\\Temp\\35CAPXxp35XgQwNgtBnYplNJ3W7\\resources\\backend\\node_modules\\@nestjs\\platform-express\\node_modules\\express\\lib\\express.js',
+    'C:\\Users\\LIVIUS~1\\AppData\\Local\\Temp\\35CAPXxp35XgQwNgtBnYplNJ3W7\\resources\\backend\\node_modules\\@nestjs\\platform-express\\node_modules\\express\\index.js',
+    'C:\\Users\\LIVIUS~1\\AppData\\Local\\Temp\\35CAPXxp35XgQwNgtBnYplNJ3W7\\resources\\backend\\node_modules\\@nestjs\\platform-express\\adapters\\express-adapter.js',
+    'C:\\Users\\LIVIUS~1\\AppData\\Local\\Temp\\35CAPXxp35XgQwNgtBnYplNJ3W7\\resources\\backend\\node_modules\\@nestjs\\platform-express\\adapters\\index.js',
+    'C:\\Users\\LIVIUS~1\\AppData\\Local\\Temp\\35CAPXxp35XgQwNgtBnYplNJ3W7\\resources\\backend\\node_modules\\@nestjs\\platform-express\\index.js',
+    'C:\\Users\\LIVIUS~1\\AppData\\Local\\Temp\\35CAPXxp35XgQwNgtBnYplNJ3W7\\resources\\backend\\dms\\document.controller.js',
+    'C:\\Users\\LIVIUS~1\\AppData\\Local\\Temp\\35CAPXxp35XgQwNgtBnYplNJ3W7\\resources\\backend\\dms\\dms.module.js',
+    'C:\\Users\\LIVIUS~1\\AppData\\Local\\Temp\\35CAPXxp35XgQwNgtBnYplNJ3W7\\resources\\backend\\app.module.js',
+    'C:\\Users\\LIVIUS~1\\AppData\\Local\\Temp\\35CAPXxp35XgQwNgtBnYplNJ3W7\\resources\\backend\\main.js'
+  ]
+}
+
+[2025-11-08T12:11:54.241Z] [Backend Error] 
+Node.js v18.18.2
+
+[2025-11-08T12:11:54.259Z] [Backend] Process exited with code 1
+[2025-11-08T12:11:54.264Z] [App] FATAL ERROR: Failed to start backend: Backend process exited with code 1
+[2025-11-08T12:11:54.265Z] [App] Error stack: Error: Backend process exited with code 1
+    at ChildProcess.<anonymous> (C:\Users\LIVIUS~1\AppData\Local\Temp\35CAPXxp35XgQwNgtBnYplNJ3W7\resources\app.asar\dist-electron\main.js:223:24)
+    at ChildProcess.emit (node:events:517:28)
+    at ChildProcess._handle.onexit (node:internal/child_process:292:12)
