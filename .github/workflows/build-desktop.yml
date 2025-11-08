@@ -45,23 +45,28 @@ jobs:
           cd apps/server
           npm run build
 
-      - name: Install server dependencies in NESTED mode for packaging
+      - name: Install server dependencies in HOISTED mode for packaging
         shell: pwsh
         run: |
-          Write-Host "=== Installing server dependencies (production only, NESTED mode, real files) ==="
+          Write-Host "=== Installing server dependencies (production only, HOISTED mode, real files) ==="
           cd apps/server
           Remove-Item -Recurse -Force node_modules -ErrorAction SilentlyContinue
-          npm install --omit=dev --install-strategy=nested --install-links=false --workspaces=false
+          npm install --omit=dev --install-strategy=hoisted --install-links=false --workspaces=false
           
           Write-Host ""
           Write-Host "=== Generating Prisma Client for production ==="
           npx prisma generate
           
           Write-Host ""
-          Write-Host "=== Verifying dependencies are REAL FILES (not junctions/symlinks) ==="
+          Write-Host "=== Verifying critical dependencies exist with REAL FILES ==="
           
           if (-not (Test-Path "node_modules/dotenv")) {
             Write-Host "❌ ERROR: dotenv directory not found!"
+            exit 1
+          }
+          
+          if (-not (Test-Path "node_modules/dotenv/package.json")) {
+            Write-Host "❌ ERROR: dotenv/package.json not found (empty directory)!"
             exit 1
           }
           
@@ -72,10 +77,10 @@ jobs:
             exit 1
           }
           
-          Write-Host "✅ Top-level dotenv is REAL FILE"
+          Write-Host "✅ dotenv is REAL directory with files"
           
           Write-Host ""
-          Write-Host "=== Searching for ALL es-object-atoms instances (deep nested check) ==="
+          Write-Host "=== Verifying es-object-atoms has actual files (not empty directories) ==="
           $esInstances = Get-ChildItem -Path node_modules -Recurse -Filter "es-object-atoms" -Directory -ErrorAction SilentlyContinue
           
           if ($esInstances.Count -eq 0) {
@@ -85,16 +90,21 @@ jobs:
           
           Write-Host "Found $($esInstances.Count) instance(s) of es-object-atoms"
           
+          $emptyDirFound = $false
           $junctionFound = $false
           foreach ($instance in $esInstances) {
             $attrs = $instance.Attributes
             $relPath = $instance.FullName.Replace((Get-Location).Path, ".")
+            $pkgJson = Join-Path $instance.FullName "package.json"
             
             if ($attrs -match 'ReparsePoint') {
-              Write-Host "❌ JUNCTION FOUND: $relPath"
+              Write-Host "❌ JUNCTION: $relPath"
               $junctionFound = $true
+            } elseif (-not (Test-Path $pkgJson)) {
+              Write-Host "❌ EMPTY DIR (no package.json): $relPath"
+              $emptyDirFound = $true
             } else {
-              Write-Host "✅ REAL DIR: $relPath"
+              Write-Host "✅ REAL DIR WITH FILES: $relPath"
             }
           }
           
@@ -104,8 +114,14 @@ jobs:
             exit 1
           }
           
+          if ($emptyDirFound) {
+            Write-Host ""
+            Write-Host "❌ CRITICAL ERROR: Some es-object-atoms directories are EMPTY (no files)!"
+            exit 1
+          }
+          
           Write-Host ""
-          Write-Host "✅ All dependencies installed as REAL FILES (no junctions)"
+          Write-Host "✅ All dependencies installed as REAL FILES (no junctions, no empty dirs)"
           Write-Host ""
           Write-Host "=== Node modules size ==="
           $size = (Get-ChildItem node_modules -Recurse -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum).Sum / 1MB
@@ -152,7 +168,7 @@ jobs:
           }
           
           Write-Host ""
-          Write-Host "=== Deep verification: Checking ALL es-object-atoms instances in packaged build ==="
+          Write-Host "=== FILE-LEVEL verification: Checking es-object-atoms has actual files in packaged build ==="
           $packedEsInstances = Get-ChildItem -Path "$unpackedBackend/node_modules" -Recurse -Filter "es-object-atoms" -Directory -ErrorAction SilentlyContinue
           
           if ($packedEsInstances.Count -eq 0) {
@@ -163,26 +179,39 @@ jobs:
           Write-Host "Found $($packedEsInstances.Count) instance(s) of es-object-atoms in packaged build"
           
           $packedJunctionFound = $false
+          $packedEmptyDirFound = $false
           foreach ($instance in $packedEsInstances) {
             $attrs = $instance.Attributes
             $relPath = $instance.FullName.Replace((Get-Location).Path, ".")
+            $pkgJson = Join-Path $instance.FullName "package.json"
             
             if ($attrs -match 'ReparsePoint') {
-              Write-Host "❌ JUNCTION FOUND IN PACKAGE: $relPath"
+              Write-Host "❌ JUNCTION IN PACKAGE: $relPath"
               $packedJunctionFound = $true
+            } elseif (-not (Test-Path $pkgJson)) {
+              Write-Host "❌ EMPTY DIR IN PACKAGE (no package.json): $relPath"
+              Write-Host "   Path length: $($relPath.Length) chars"
+              $packedEmptyDirFound = $true
             } else {
-              Write-Host "✅ REAL DIR IN PACKAGE: $relPath"
+              Write-Host "✅ REAL DIR WITH FILES IN PACKAGE: $relPath"
             }
           }
           
           if ($packedJunctionFound) {
             Write-Host ""
-            Write-Host "❌ CRITICAL ERROR: Packaged build contains junctions! electron-builder failed to copy real files."
+            Write-Host "❌ CRITICAL ERROR: Packaged build contains junctions!"
+            exit 1
+          }
+          
+          if ($packedEmptyDirFound) {
+            Write-Host ""
+            Write-Host "❌ CRITICAL ERROR: Packaged build has EMPTY es-object-atoms directories!"
+            Write-Host "This means NSIS installer skipped files due to Windows path length limit (~260 chars)."
             exit 1
           }
           
           Write-Host ""
-          Write-Host "✅ Backend dependencies successfully bundled (all real files, no junctions)"
+          Write-Host "✅ Backend dependencies successfully bundled (all real files with content)"
           
           $nodeModulesSize = (Get-ChildItem "$unpackedBackend/node_modules" -Recurse -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum).Sum / 1MB
           Write-Host ("Backend node_modules size: {0:N2} MB" -f $nodeModulesSize)

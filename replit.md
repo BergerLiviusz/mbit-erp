@@ -103,13 +103,28 @@ The project utilizes a monorepo structure managed by Turborepo, encompassing a R
   - **Symptoms**: Native abort before any JS code executes → exit code null, no console output
   - **FIX**: Changed GitHub Actions to use Node 18.18.2 (matches Electron 28 embedded runtime)
   - Prisma query engine now generated with correct ABI version for packaged app
+- ✅ **Windows Path Length Limit Fix (v1.0.5e - FINAL SOLUTION)**:
+  - **NEW ISSUE**: Backend crashed with `Cannot find module 'es-object-atoms'` despite CI verification passing
+  - **CRITICAL ROOT CAUSE (architect debug)**: Windows path length limit (~260 chars) + NSIS installer silent file skip
+  - CI verification checked directories exist (not junctions) but didn't verify FILES inside directories
+  - Nested install strategy → es-object-atoms at 6-7 nesting levels → paths exceed 260 chars in `%LOCALAPPDATA%\Temp\...`
+  - NSIS installer silently created EMPTY directories without copying actual .js files
+  - CI runner (long-path support enabled) kept files → verification passed → packaged app missing files
+  - **Symptoms**: `Cannot find module 'es-object-atoms'` at runtime, directories exist but contain no files
+  - **FINAL FIX**: Switch to hoisted install strategy with `--install-links=false`
+  - `npm install --omit=dev --install-strategy=hoisted --install-links=false --workspaces=false`
+  - Hoisted mode keeps all packages at top-level → short paths → NSIS copies all files successfully
+  - `--install-links=false` prevents Windows junctions (still uses real files)
+  - **Enhanced verification**: Check package.json exists inside each dependency directory (proves files present, not empty dirs)
+  - Expected result: All dependencies at `node_modules/<package>` instead of deeply nested paths
 - ✅ **Architect Review Process**: Multi-iteration debugging with final approval
   - v1.0.0-v1.0.2: Symlink diagnosis (incorrect)
   - v1.0.3: Nested install (incomplete - still used hardlinks)
   - v1.0.4: Junction/hardlink root cause + `--install-links=false` (CORRECT for shallow deps)
   - v1.0.5a-b: npm dedupe attempts (FAILED - deleted production dependencies)
-  - v1.0.5 FINAL: Removed dedupe, single install command (CORRECT - architect confirmed)
+  - v1.0.5 FINAL: Removed dedupe, single install command (incomplete - nested paths too long)
   - v1.0.5c: Prisma .prisma directory packaging fix (architect confirmed)
   - v1.0.5d: Node ABI version mismatch fix (architect confirmed)
-  - Debug responsibility used for deep analysis (npm dedupe + Prisma packaging + Node ABI issues discovered)
+  - v1.0.5e: Windows path limit fix - hoisted install + file-level verification (architect confirmed)
+  - Debug responsibility used for deep analysis (npm dedupe + Prisma packaging + Node ABI + path length issues discovered)
   - PASS: All changes architect-approved - production ready
