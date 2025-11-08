@@ -128,8 +128,9 @@ The project utilizes a monorepo structure managed by Turborepo, encompassing a R
   - **FINAL FIX**: Startup cleanup hook in apps/desktop/src/main.ts
   - `cleanupLegacyNodeModules()` function recursively scans backend/node_modules
   - Finds nested node_modules subdirectories (depth > 0)
-  - Checks if directory is empty (no package.json file)
-  - Deletes empty nested directories before backend starts
+  - `isDirectoryEmpty()` helper recursively checks if directory contains ANY files at any depth
+  - Only deletes if entire directory tree is completely empty (no files anywhere)
+  - Preserves legitimate nested dependencies that contain actual files
   - Called in app.whenReady() BEFORE startBackend() → ensures clean state every launch
   - **Result**: Only hoisted dependency tree visible to Node.js, legacy files removed automatically
 - ✅ **Architect Review Process**: Multi-iteration debugging with final approval
@@ -141,6 +142,6 @@ The project utilizes a monorepo structure managed by Turborepo, encompassing a R
   - v1.0.5c: Prisma .prisma directory packaging fix (architect confirmed)
   - v1.0.5d: Node ABI version mismatch fix (architect confirmed)
   - v1.0.5e: Windows path limit fix - hoisted install + file-level verification (architect confirmed)
-  - v1.0.5f: Startup cleanup hook to remove legacy nested node_modules (architect pending)
+  - v1.0.5f: Startup cleanup hook to remove legacy nested node_modules (architect confirmed - PASS)
   - Debug responsibility used for deep analysis (npm dedupe + Prisma packaging + Node ABI + path length + legacy file persistence issues discovered)
   - PASS: All changes architect-approved - production ready
