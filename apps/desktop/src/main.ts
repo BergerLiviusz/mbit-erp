@@ -89,7 +89,7 @@ async function checkBackendHealth(): Promise<boolean> {
   return false;
 }
 
-async function waitForBackend(maxRetries = 30, checkTimeoutMs = 2000): Promise<void> {
+async function waitForBackend(maxRetries = 60, checkTimeoutMs = 2000): Promise<void> {
   const maxWaitSeconds = Math.ceil((maxRetries * checkTimeoutMs) / 1000);
   console.log(`[Backend] Waiting for backend to be ready (max ${maxWaitSeconds}s)...`);
   writeLog(`[Backend] Waiting for backend to be ready (max ${maxWaitSeconds}s)...`);
@@ -111,6 +111,8 @@ async function waitForBackend(maxRetries = 30, checkTimeoutMs = 2000): Promise<v
       console.log(msg);
       writeLog(msg);
     }
+    
+    await new Promise(resolve => setTimeout(resolve, checkTimeoutMs));
   }
   
   const errorMsg = `Backend failed to start after ${maxRetries} attempts (~${maxWaitSeconds}s)`;

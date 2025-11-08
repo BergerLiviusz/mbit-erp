@@ -41,3 +41,27 @@ The project employs a monorepo managed by Turborepo, featuring a React 18 fronte
 - **Archiver library**: ZIP compression.
 - **dotenv**: Environment variable management.
 - **Tesseract.js**: OCR functionality.
+
+## Desktop Application Packaging History
+
+### v1.0.7 - Backend Startup Timeout Fix (CRITICAL)
+- **Issue**: Backend successfully starts but frontend timeout-s before NestJS fully boots
+- **Analysis**: Windows backend initialization (Node fork + NestJS + Prisma) takes ~3-4 seconds
+- **CRITICAL BUG DISCOVERED**: waitForBackend() loop had NO DELAY between attempts!
+  - All 30 attempts executed in <1 second (not 60s as logged)
+  - Health check connection refused → attempt failed instantly
+  - Backend never had time to start before loop exhausted all attempts
+- **Fixes Applied**:
+  1. Added `await setTimeout(checkTimeoutMs)` delay between attempts (line 118)
+  2. Increased maxRetries from 30 to 60 (line 95)
+- **New behavior**: 60 attempts × 2s delay = 120s ACTUAL wait time
+- **Location**: `apps/desktop/src/main.ts` lines 95, 118
+- **Result**: Frontend now ACTUALLY waits 120s with real delays, giving backend time to boot and respond
+
+### v1.0.6 - NSIS Packaging Fix
+- **Issue**: NSIS Setup.exe does NOT embed extraResources (backend/, node_modules/)
+- **Root cause**: Known electron-builder NSIS bug - installers fail to include extraResources
+- **Immediate fix**: Create portable ZIP from win-unpacked directory (guaranteed working)
+- **Distribution**: Upload both Setup.exe (broken) and Portable.zip (working) as artifacts
+- **Size verification**: Warn if Setup.exe < 180 MB (proves resources missing)
+- **Result**: Users download Portable.zip, extract, and run "Mbit ERP.exe" directly
