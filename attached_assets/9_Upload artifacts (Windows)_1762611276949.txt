@@ -1,0 +1,41 @@
+﻿2025-11-08T14:08:41.8775203Z ##[group]Run actions/upload-artifact@v4
+2025-11-08T14:08:41.8775556Z with:
+2025-11-08T14:08:41.8775744Z   name: mbit-erp-windows-installer
+2025-11-08T14:08:41.8776083Z   path: apps/desktop/release/*.exe
+apps/desktop/release/*.msi
+
+2025-11-08T14:08:41.8776399Z   retention-days: 30
+2025-11-08T14:08:41.8776591Z   if-no-files-found: warn
+2025-11-08T14:08:41.8776800Z   compression-level: 6
+2025-11-08T14:08:41.8776986Z   overwrite: false
+2025-11-08T14:08:41.8777210Z   include-hidden-files: false
+2025-11-08T14:08:41.8777404Z ##[endgroup]
+2025-11-08T14:08:42.1770406Z With the provided path, there will be 1 file uploaded
+2025-11-08T14:08:42.1776747Z Artifact name is valid!
+2025-11-08T14:08:42.1780013Z Root directory input is valid!
+2025-11-08T14:08:42.3062753Z Beginning upload of artifact content to blob storage
+2025-11-08T14:08:42.9123495Z Uploaded bytes 8388608
+2025-11-08T14:08:43.2391884Z Uploaded bytes 16777216
+2025-11-08T14:08:43.4738583Z Uploaded bytes 25165824
+2025-11-08T14:08:43.7698048Z Uploaded bytes 33554432
+2025-11-08T14:08:44.1013734Z Uploaded bytes 41943040
+2025-11-08T14:08:44.4162308Z Uploaded bytes 50331648
+2025-11-08T14:08:44.7167604Z Uploaded bytes 58720256
+2025-11-08T14:08:44.9834251Z Uploaded bytes 67108864
+2025-11-08T14:08:45.3036125Z Uploaded bytes 75497472
+2025-11-08T14:08:45.5205491Z Uploaded bytes 83886080
+2025-11-08T14:08:45.9123731Z Uploaded bytes 92274688
+2025-11-08T14:08:46.2209859Z Uploaded bytes 100663296
+2025-11-08T14:08:46.4091315Z Uploaded bytes 109051904
+2025-11-08T14:08:46.7628262Z Uploaded bytes 117440512
+2025-11-08T14:08:47.1070184Z Uploaded bytes 125829120
+2025-11-08T14:08:47.2212976Z Uploaded bytes 134217728
+2025-11-08T14:08:47.5063917Z Uploaded bytes 142606336
+2025-11-08T14:08:47.8462558Z Uploaded bytes 150994944
+2025-11-08T14:08:47.9714035Z Uploaded bytes 153969336
+2025-11-08T14:08:47.9938822Z Finished uploading artifact content to blob storage!
+2025-11-08T14:08:47.9944192Z SHA256 digest of uploaded artifact zip is c9d2a9e13a6b6ebb144c85a7863b56e417430afda01602f999faf0748a698927
+2025-11-08T14:08:47.9947062Z Finalizing artifact upload
+2025-11-08T14:08:48.0940574Z Artifact mbit-erp-windows-installer.zip successfully finalized. Artifact ID 4507826122
+2025-11-08T14:08:48.0941665Z Artifact mbit-erp-windows-installer has been successfully uploaded! Final size is 153969336 bytes. Artifact ID is 4507826122
+2025-11-08T14:08:48.0957298Z Artifact download URL: https://github.com/BergerLiviusz/mbit-erp/actions/runs/19194056223/artifacts/4507826122

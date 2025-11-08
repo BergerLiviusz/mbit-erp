@@ -1,0 +1,74 @@
+﻿2025-11-08T14:06:53.1581432Z ##[group]Run cd apps/desktop
+2025-11-08T14:06:53.1581802Z [36;1mcd apps/desktop[0m
+2025-11-08T14:06:53.1582016Z [36;1mnpm run package:win[0m
+2025-11-08T14:06:53.1650066Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2025-11-08T14:06:53.1650386Z ##[endgroup]
+2025-11-08T14:06:54.5392986Z 
+2025-11-08T14:06:54.5393626Z > @mbit-erp/desktop@1.0.0 package:win
+2025-11-08T14:06:54.5394695Z > npm run build && electron-builder --win --x64
+2025-11-08T14:06:54.5395056Z 
+2025-11-08T14:06:55.6691670Z 
+2025-11-08T14:06:55.6692192Z > @mbit-erp/desktop@1.0.0 prebuild
+2025-11-08T14:06:55.6692505Z > npm run clean
+2025-11-08T14:06:55.6692619Z 
+2025-11-08T14:06:56.8301176Z 
+2025-11-08T14:06:56.8301722Z > @mbit-erp/desktop@1.0.0 clean
+2025-11-08T14:06:56.8302101Z > rimraf dist-electron release
+2025-11-08T14:06:56.8302268Z 
+2025-11-08T14:06:56.9803174Z 
+2025-11-08T14:06:56.9804230Z > @mbit-erp/desktop@1.0.0 build
+2025-11-08T14:06:56.9805036Z > npm run build:electron && npm run build:backend && npm run build:frontend
+2025-11-08T14:06:56.9805893Z 
+2025-11-08T14:06:58.0601888Z 
+2025-11-08T14:06:58.0602489Z > @mbit-erp/desktop@1.0.0 build:electron
+2025-11-08T14:06:58.0605354Z > npx rimraf tsconfig.tsbuildinfo && tsc
+2025-11-08T14:06:58.0605688Z 
+2025-11-08T14:07:02.0019601Z 
+2025-11-08T14:07:02.0020387Z > @mbit-erp/desktop@1.0.0 build:backend
+2025-11-08T14:07:02.0021263Z > cd ../server && npx rimraf tsconfig.tsbuildinfo && npm run build
+2025-11-08T14:07:02.0021679Z 
+2025-11-08T14:07:04.7115705Z 
+2025-11-08T14:07:04.7116304Z > @mbit-erp/server@1.0.0 build
+2025-11-08T14:07:04.7116698Z > nest build
+2025-11-08T14:07:04.7116860Z 
+2025-11-08T14:07:12.1839982Z 
+2025-11-08T14:07:12.1840487Z > @mbit-erp/desktop@1.0.0 build:frontend
+2025-11-08T14:07:12.1841517Z > cd ../web && npx rimraf tsconfig.tsbuildinfo && cross-env ELECTRON_BUILD=true npm run build
+2025-11-08T14:07:12.1842407Z 
+2025-11-08T14:07:15.1101751Z 
+2025-11-08T14:07:15.1102384Z > @mbit-erp/web@1.0.0 build
+2025-11-08T14:07:15.1102764Z > tsc && vite build
+2025-11-08T14:07:15.1102909Z 
+2025-11-08T14:07:20.5178574Z [36mvite v5.4.21 [32mbuilding for production...[36m[39m
+2025-11-08T14:07:20.5952721Z transforming...
+2025-11-08T14:07:22.8890639Z [32m✓[39m 142 modules transformed.
+2025-11-08T14:07:23.1327974Z rendering chunks...
+2025-11-08T14:07:23.1444262Z computing gzip size...
+2025-11-08T14:07:23.1579918Z [2mdist/[22m[32mregisterSW.js              [39m[1m[2m  0.14 kB[22m[1m[22m
+2025-11-08T14:07:23.1580761Z [2mdist/[22m[32mmanifest.webmanifest       [39m[1m[2m  0.29 kB[22m[1m[22m
+2025-11-08T14:07:23.1581509Z [2mdist/[22m[32mindex.html                 [39m[1m[2m  0.59 kB[22m[1m[22m[2m │ gzip:  0.34 kB[22m
+2025-11-08T14:07:23.1583915Z [2mdist/[22m[35massets/index-BS2ebifF.css  [39m[1m[2m 20.46 kB[22m[1m[22m[2m │ gzip:  4.39 kB[22m
+2025-11-08T14:07:23.1584779Z [2mdist/[22m[36massets/index-W4mie_pU.js   [39m[1m[2m340.25 kB[22m[1m[22m[2m │ gzip: 95.67 kB[22m
+2025-11-08T14:07:23.1588504Z [32m✓ built in 2.60s[39m
+2025-11-08T14:07:25.8460133Z 
+2025-11-08T14:07:25.8460876Z [36mPWA v0.17.5[39m
+2025-11-08T14:07:25.8461398Z mode      [35mgenerateSW[39m
+2025-11-08T14:07:25.8461997Z precache  [32m5 entries[39m [2m(354.00 KiB)[22m
+2025-11-08T14:07:25.8462433Z files generated
+2025-11-08T14:07:25.8462779Z   [2mdist\sw.js[22m
+2025-11-08T14:07:25.8463215Z   [2mdist\workbox-1be04862.js[22m
+2025-11-08T14:07:26.7515228Z   • electron-builder  version=24.13.3 os=10.0.26100
+2025-11-08T14:07:26.7523728Z   • artifacts will be published if draft release exists  reason=CI detected
+2025-11-08T14:07:26.7601420Z   • loaded configuration  file=package.json ("build" field)
+2025-11-08T14:07:27.0593400Z   • packaging       platform=win32 arch=x64 electron=28.3.3 appOutDir=release\win-unpacked
+2025-11-08T14:07:27.1673005Z   • downloading     url=https://github.com/electron/electron/releases/download/v28.3.3/electron-v28.3.3-win32-x64.zip size=108 MB parts=8
+2025-11-08T14:07:27.4277340Z   • downloaded      url=https://github.com/electron/electron/releases/download/v28.3.3/electron-v28.3.3-win32-x64.zip duration=354ms
+2025-11-08T14:07:34.7046201Z   • downloading     url=https://github.com/electron-userland/electron-builder-binaries/releases/download/winCodeSign-2.6.0/winCodeSign-2.6.0.7z size=5.6 MB parts=1
+2025-11-08T14:07:34.7464598Z   • downloaded      url=https://github.com/electron-userland/electron-builder-binaries/releases/download/winCodeSign-2.6.0/winCodeSign-2.6.0.7z duration=114ms
+2025-11-08T14:07:35.4356930Z   • building        target=nsis file=release\Mbit ERP-Setup-1.0.0.exe archs=x64 oneClick=false perMachine=false
+2025-11-08T14:07:35.5249727Z   • downloading     url=https://github.com/electron-userland/electron-builder-binaries/releases/download/nsis-3.0.4.1/nsis-3.0.4.1.7z size=1.3 MB parts=1
+2025-11-08T14:07:35.5495803Z   • downloaded      url=https://github.com/electron-userland/electron-builder-binaries/releases/download/nsis-3.0.4.1/nsis-3.0.4.1.7z duration=97ms
+2025-11-08T14:08:35.2631390Z   • downloading     url=https://github.com/electron-userland/electron-builder-binaries/releases/download/nsis-resources-3.4.1/nsis-resources-3.4.1.7z size=731 kB parts=1
+2025-11-08T14:08:35.2800615Z   • downloaded      url=https://github.com/electron-userland/electron-builder-binaries/releases/download/nsis-resources-3.4.1/nsis-resources-3.4.1.7z duration=105ms
+2025-11-08T14:08:38.4549886Z   • building block map  blockMapFile=release\Mbit ERP-Setup-1.0.0.exe.blockmap
+2025-11-08T14:08:39.6449542Z   • building        target=portable file=release\Mbit ERP-Setup-1.0.0.exe archs=x64

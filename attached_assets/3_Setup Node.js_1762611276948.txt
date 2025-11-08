@@ -1,0 +1,25 @@
+﻿2025-11-08T14:04:56.4653101Z ##[group]Run actions/setup-node@v4
+2025-11-08T14:04:56.4653447Z with:
+2025-11-08T14:04:56.4653628Z   node-version: 18.18.2
+2025-11-08T14:04:56.4653806Z   cache: npm
+2025-11-08T14:04:56.4653979Z   always-auth: false
+2025-11-08T14:04:56.4654183Z   check-latest: false
+2025-11-08T14:04:56.4654489Z   token: ***
+2025-11-08T14:04:56.4654650Z ##[endgroup]
+2025-11-08T14:04:56.7090492Z Attempting to download 18.18.2...
+2025-11-08T14:04:57.0792664Z Acquiring 18.18.2 - x64 from https://github.com/actions/node-versions/releases/download/18.18.2-6796085386/node-18.18.2-win32-x64.7z
+2025-11-08T14:04:57.3641775Z Extracting ...
+2025-11-08T14:04:59.7913502Z Adding to the cache ...
+2025-11-08T14:05:05.3035063Z ##[group]Environment details
+2025-11-08T14:05:06.5412703Z node: v18.18.2
+2025-11-08T14:05:06.5412942Z npm: 9.8.1
+2025-11-08T14:05:06.5413374Z yarn: 1.22.22
+2025-11-08T14:05:06.5414530Z ##[endgroup]
+2025-11-08T14:05:06.6195880Z [command]C:\Windows\system32\cmd.exe /D /S /C "C:\hostedtoolcache\windows\node\18.18.2\x64\npm.cmd config get cache"
+2025-11-08T14:05:07.5911814Z C:\npm\cache
+2025-11-08T14:05:07.8872773Z Cache hit for: node-cache-Windows-x64-npm-80b7446820e47debc2fa093a6d0ba4c4562b55ffb84fa6f536eaa184ee3c010c
+2025-11-08T14:05:08.9407645Z Received 160430214 of 160430214 (100.0%), 150.4 MBs/sec
+2025-11-08T14:05:08.9410876Z Cache Size: ~153 MB (160430214 B)
+2025-11-08T14:05:08.9491534Z [command]"C:\Program Files\Git\usr\bin\tar.exe" -xf D:/a/_temp/264f030f-7995-4c65-9f7b-1dd902bc23ec/cache.tzst -P -C D:/a/mbit-erp/mbit-erp --force-local --use-compress-program "zstd -d"
+2025-11-08T14:05:17.5921694Z Cache restored successfully
+2025-11-08T14:05:17.6025931Z Cache restored from key: node-cache-Windows-x64-npm-80b7446820e47debc2fa093a6d0ba4c4562b55ffb84fa6f536eaa184ee3c010c

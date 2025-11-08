@@ -1,0 +1,119 @@
+﻿2025-11-08T14:06:18.6597955Z ##[group]Run Write-Host "=== Installing server dependencies (production only, HOISTED mode, real files) ==="
+2025-11-08T14:06:18.6598776Z [36;1mWrite-Host "=== Installing server dependencies (production only, HOISTED mode, real files) ==="[0m
+2025-11-08T14:06:18.6599196Z [36;1mcd apps/server[0m
+2025-11-08T14:06:18.6599521Z [36;1mRemove-Item -Recurse -Force node_modules -ErrorAction SilentlyContinue[0m
+2025-11-08T14:06:18.6600051Z [36;1mnpm install --omit=dev --install-strategy=hoisted --install-links=false --workspaces=false[0m
+2025-11-08T14:06:18.6600438Z [36;1m[0m
+2025-11-08T14:06:18.6600588Z [36;1mWrite-Host ""[0m
+2025-11-08T14:06:18.6600861Z [36;1mWrite-Host "=== Generating Prisma Client for production ==="[0m
+2025-11-08T14:06:18.6601172Z [36;1mnpx prisma generate[0m
+2025-11-08T14:06:18.6601355Z [36;1m[0m
+2025-11-08T14:06:18.6601527Z [36;1mWrite-Host ""[0m
+2025-11-08T14:06:18.6601835Z [36;1mWrite-Host "=== Verifying critical dependencies exist with REAL FILES ==="[0m
+2025-11-08T14:06:18.6602186Z [36;1m[0m
+2025-11-08T14:06:18.6602373Z [36;1mif (-not (Test-Path "node_modules/dotenv")) {[0m
+2025-11-08T14:06:18.6602684Z [36;1m  Write-Host "❌ ERROR: dotenv directory not found!"[0m
+2025-11-08T14:06:18.6602947Z [36;1m  exit 1[0m
+2025-11-08T14:06:18.6603102Z [36;1m}[0m
+2025-11-08T14:06:18.6603241Z [36;1m[0m
+2025-11-08T14:06:18.6603457Z [36;1mif (-not (Test-Path "node_modules/dotenv/package.json")) {[0m
+2025-11-08T14:06:18.6603865Z [36;1m  Write-Host "❌ ERROR: dotenv/package.json not found (empty directory)!"[0m
+2025-11-08T14:06:18.6604206Z [36;1m  exit 1[0m
+2025-11-08T14:06:18.6604360Z [36;1m}[0m
+2025-11-08T14:06:18.6604496Z [36;1m[0m
+2025-11-08T14:06:18.6605025Z [36;1m$dotenvAttrs = (Get-Item "node_modules/dotenv").Attributes[0m
+2025-11-08T14:06:18.6605440Z [36;1mif ($dotenvAttrs -match 'ReparsePoint') {[0m
+2025-11-08T14:06:18.6606020Z [36;1m  Write-Host "❌ ERROR: dotenv is a Windows junction/reparse point!"[0m
+2025-11-08T14:06:18.6606369Z [36;1m  Write-Host "Attributes: $dotenvAttrs"[0m
+2025-11-08T14:06:18.6606618Z [36;1m  exit 1[0m
+2025-11-08T14:06:18.6606766Z [36;1m}[0m
+2025-11-08T14:06:18.6606912Z [36;1m[0m
+2025-11-08T14:06:18.6607124Z [36;1mWrite-Host "✅ dotenv is REAL directory with files"[0m
+2025-11-08T14:06:18.6607394Z [36;1m[0m
+2025-11-08T14:06:18.6607536Z [36;1mWrite-Host ""[0m
+2025-11-08T14:06:18.6607948Z [36;1mWrite-Host "=== Verifying es-object-atoms has actual files (not empty directories) ==="[0m
+2025-11-08T14:06:18.6608629Z [36;1m$esInstances = Get-ChildItem -Path node_modules -Recurse -Filter "es-object-atoms" -Directory -ErrorAction SilentlyContinue[0m
+2025-11-08T14:06:18.6609149Z [36;1m[0m
+2025-11-08T14:06:18.6609312Z [36;1mif ($esInstances.Count -eq 0) {[0m
+2025-11-08T14:06:18.6609649Z [36;1m  Write-Host "❌ ERROR: No es-object-atoms found anywhere in node_modules!"[0m
+2025-11-08T14:06:18.6609979Z [36;1m  exit 1[0m
+2025-11-08T14:06:18.6610129Z [36;1m}[0m
+2025-11-08T14:06:18.6610270Z [36;1m[0m
+2025-11-08T14:06:18.6610538Z [36;1mWrite-Host "Found $($esInstances.Count) instance(s) of es-object-atoms"[0m
+2025-11-08T14:06:18.6610866Z [36;1m[0m
+2025-11-08T14:06:18.6611013Z [36;1m$emptyDirFound = $false[0m
+2025-11-08T14:06:18.6611233Z [36;1m$junctionFound = $false[0m
+2025-11-08T14:06:18.6611462Z [36;1mforeach ($instance in $esInstances) {[0m
+2025-11-08T14:06:18.6611715Z [36;1m  $attrs = $instance.Attributes[0m
+2025-11-08T14:06:18.6612036Z [36;1m  $relPath = $instance.FullName.Replace((Get-Location).Path, ".")[0m
+2025-11-08T14:06:18.6612435Z [36;1m  $pkgJson = Join-Path $instance.FullName "package.json"[0m
+2025-11-08T14:06:18.6612723Z [36;1m  [0m
+2025-11-08T14:06:18.6612908Z [36;1m  if ($attrs -match 'ReparsePoint') {[0m
+2025-11-08T14:06:18.6613174Z [36;1m    Write-Host "❌ JUNCTION: $relPath"[0m
+2025-11-08T14:06:18.6613418Z [36;1m    $junctionFound = $true[0m
+2025-11-08T14:06:18.6613650Z [36;1m  } elseif (-not (Test-Path $pkgJson)) {[0m
+2025-11-08T14:06:18.6615546Z [36;1m    Write-Host "❌ EMPTY DIR (no package.json): $relPath"[0m
+2025-11-08T14:06:18.6615851Z [36;1m    $emptyDirFound = $true[0m
+2025-11-08T14:06:18.6616057Z [36;1m  } else {[0m
+2025-11-08T14:06:18.6616275Z [36;1m    Write-Host "✅ REAL DIR WITH FILES: $relPath"[0m
+2025-11-08T14:06:18.6616531Z [36;1m  }[0m
+2025-11-08T14:06:18.6616681Z [36;1m}[0m
+2025-11-08T14:06:18.6616831Z [36;1m[0m
+2025-11-08T14:06:18.6616995Z [36;1mif ($junctionFound) {[0m
+2025-11-08T14:06:18.6617199Z [36;1m  Write-Host ""[0m
+2025-11-08T14:06:18.6617508Z [36;1m  Write-Host "❌ CRITICAL ERROR: Some es-object-atoms instances are junctions!"[0m
+2025-11-08T14:06:18.6617851Z [36;1m  exit 1[0m
+2025-11-08T14:06:18.6618006Z [36;1m}[0m
+2025-11-08T14:06:18.6618139Z [36;1m[0m
+2025-11-08T14:06:18.6618294Z [36;1mif ($emptyDirFound) {[0m
+2025-11-08T14:06:18.6618512Z [36;1m  Write-Host ""[0m
+2025-11-08T14:06:18.6618848Z [36;1m  Write-Host "❌ CRITICAL ERROR: Some es-object-atoms directories are EMPTY (no files)!"[0m
+2025-11-08T14:06:18.6619225Z [36;1m  exit 1[0m
+2025-11-08T14:06:18.6619379Z [36;1m}[0m
+2025-11-08T14:06:18.6619515Z [36;1m[0m
+2025-11-08T14:06:18.6619654Z [36;1mWrite-Host ""[0m
+2025-11-08T14:06:18.6619998Z [36;1mWrite-Host "✅ All dependencies installed as REAL FILES (no junctions, no empty dirs)"[0m
+2025-11-08T14:06:18.6620371Z [36;1mWrite-Host ""[0m
+2025-11-08T14:06:18.6620573Z [36;1mWrite-Host "=== Node modules size ==="[0m
+2025-11-08T14:06:18.6621107Z [36;1m$size = (Get-ChildItem node_modules -Recurse -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum).Sum / 1MB[0m
+2025-11-08T14:06:18.6621641Z [36;1mWrite-Host ("{0:N2} MB" -f $size)[0m
+2025-11-08T14:06:18.6681790Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2025-11-08T14:06:18.6682118Z ##[endgroup]
+2025-11-08T14:06:19.3738496Z === Installing server dependencies (production only, HOISTED mode, real files) ===
+2025-11-08T14:06:40.3973989Z npm WARN deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+2025-11-08T14:06:40.4299045Z npm WARN deprecated npmlog@5.0.1: This package is no longer supported.
+2025-11-08T14:06:40.5433145Z npm WARN deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+2025-11-08T14:06:40.5662762Z npm WARN deprecated glob@8.1.0: Glob versions prior to v9 are no longer supported
+2025-11-08T14:06:40.5678889Z npm WARN deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+2025-11-08T14:06:40.6261061Z npm WARN deprecated are-we-there-yet@2.0.0: This package is no longer supported.
+2025-11-08T14:06:40.7749947Z npm WARN deprecated multer@1.4.5-lts.2: Multer 1.x is impacted by a number of vulnerabilities, which have been patched in 2.x. You should upgrade to the latest 2.x version.
+2025-11-08T14:06:40.9542613Z npm WARN deprecated gauge@3.0.2: This package is no longer supported.
+2025-11-08T14:06:48.5531068Z 
+2025-11-08T14:06:48.5531655Z added 296 packages, and audited 297 packages in 28s
+2025-11-08T14:06:48.5534038Z 
+2025-11-08T14:06:48.5534362Z 36 packages are looking for funding
+2025-11-08T14:06:48.5534813Z   run `npm fund` for details
+2025-11-08T14:06:48.5550258Z 
+2025-11-08T14:06:48.5550548Z found 0 vulnerabilities
+2025-11-08T14:06:48.6075660Z 
+2025-11-08T14:06:48.6082982Z === Generating Prisma Client for production ===
+2025-11-08T14:06:50.6264724Z Prisma schema loaded from prisma\schema.prisma
+2025-11-08T14:06:51.8644138Z 
+2025-11-08T14:06:51.8645091Z ✔ Generated Prisma Client (v5.22.0) to .\node_modules\@prisma\client in 527ms
+2025-11-08T14:06:51.8645407Z 
+2025-11-08T14:06:51.8645716Z Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+2025-11-08T14:06:51.8646064Z 
+2025-11-08T14:06:51.8646541Z Tip: Easily identify and fix slow SQL queries in your app. Optimize helps you enhance your visibility: https://pris.ly/--optimize
+2025-11-08T14:06:51.8647890Z 
+2025-11-08T14:06:52.0743475Z 
+2025-11-08T14:06:52.0750537Z === Verifying critical dependencies exist with REAL FILES ===
+2025-11-08T14:06:52.2186255Z ✅ dotenv is REAL directory with files
+2025-11-08T14:06:52.2192000Z 
+2025-11-08T14:06:52.2198554Z === Verifying es-object-atoms has actual files (not empty directories) ===
+2025-11-08T14:06:52.4665561Z Found 1 instance(s) of es-object-atoms
+2025-11-08T14:06:52.4862894Z ✅ REAL DIR WITH FILES: .\node_modules\es-object-atoms
+2025-11-08T14:06:52.4868459Z 
+2025-11-08T14:06:52.4874228Z ✅ All dependencies installed as REAL FILES (no junctions, no empty dirs)
+2025-11-08T14:06:52.4879199Z 
+2025-11-08T14:06:52.4884907Z === Node modules size ===
+2025-11-08T14:06:53.0907746Z 266.71 MB

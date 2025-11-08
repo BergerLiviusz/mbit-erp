@@ -1,0 +1,57 @@
+﻿2025-11-08T14:04:52.2524112Z ##[group]Run actions/checkout@v4
+2025-11-08T14:04:52.2525335Z with:
+2025-11-08T14:04:52.2525812Z   repository: BergerLiviusz/mbit-erp
+2025-11-08T14:04:52.2526623Z   token: ***
+2025-11-08T14:04:52.2527053Z   ssh-strict: true
+2025-11-08T14:04:52.2527480Z   ssh-user: git
+2025-11-08T14:04:52.2527935Z   persist-credentials: true
+2025-11-08T14:04:52.2528384Z   clean: true
+2025-11-08T14:04:52.2528749Z   sparse-checkout-cone-mode: true
+2025-11-08T14:04:52.2529204Z   fetch-depth: 1
+2025-11-08T14:04:52.2529572Z   fetch-tags: false
+2025-11-08T14:04:52.2529938Z   show-progress: true
+2025-11-08T14:04:52.2530311Z   lfs: false
+2025-11-08T14:04:52.2530655Z   submodules: false
+2025-11-08T14:04:52.2531017Z   set-safe-directory: true
+2025-11-08T14:04:52.2531625Z ##[endgroup]
+2025-11-08T14:04:52.4226415Z Syncing repository: BergerLiviusz/mbit-erp
+2025-11-08T14:04:52.4229051Z ##[group]Getting Git version info
+2025-11-08T14:04:52.4230044Z Working directory is 'D:\a\mbit-erp\mbit-erp'
+2025-11-08T14:04:52.5329616Z [command]"C:\Program Files\Git\bin\git.exe" version
+2025-11-08T14:04:52.9499923Z git version 2.51.2.windows.1
+2025-11-08T14:04:52.9560127Z ##[endgroup]
+2025-11-08T14:04:52.9588214Z Temporarily overriding HOME='D:\a\_temp\769b2d78-728f-4362-aab7-a091defbb036' before making global git config changes
+2025-11-08T14:04:52.9591725Z Adding repository directory to the temporary git global config as a safe directory
+2025-11-08T14:04:52.9602588Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\mbit-erp\mbit-erp
+2025-11-08T14:04:53.0242981Z Deleting the contents of 'D:\a\mbit-erp\mbit-erp'
+2025-11-08T14:04:53.0249591Z ##[group]Initializing the repository
+2025-11-08T14:04:53.0264011Z [command]"C:\Program Files\Git\bin\git.exe" init D:\a\mbit-erp\mbit-erp
+2025-11-08T14:04:53.0934528Z Initialized empty Git repository in D:/a/mbit-erp/mbit-erp/.git/
+2025-11-08T14:04:53.0990178Z [command]"C:\Program Files\Git\bin\git.exe" remote add origin https://github.com/BergerLiviusz/mbit-erp
+2025-11-08T14:04:53.1562063Z ##[endgroup]
+2025-11-08T14:04:53.1564073Z ##[group]Disabling automatic garbage collection
+2025-11-08T14:04:53.1566462Z [command]"C:\Program Files\Git\bin\git.exe" config --local gc.auto 0
+2025-11-08T14:04:53.1871663Z ##[endgroup]
+2025-11-08T14:04:53.1873809Z ##[group]Setting up auth
+2025-11-08T14:04:53.1885403Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+2025-11-08T14:04:53.2194356Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+2025-11-08T14:04:54.5982759Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2025-11-08T14:04:54.6300628Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+2025-11-08T14:04:55.1885604Z [command]"C:\Program Files\Git\bin\git.exe" config --local http.https://github.com/.extraheader "AUTHORIZATION: basic ***"
+2025-11-08T14:04:55.2207552Z ##[endgroup]
+2025-11-08T14:04:55.2208685Z ##[group]Fetching the repository
+2025-11-08T14:04:55.2223766Z [command]"C:\Program Files\Git\bin\git.exe" -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +af9ee52502d847b6a26ec44952625ddc3d0f2cb5:refs/remotes/origin/main
+2025-11-08T14:04:56.1090416Z From https://github.com/BergerLiviusz/mbit-erp
+2025-11-08T14:04:56.1091371Z  * [new ref]         af9ee52502d847b6a26ec44952625ddc3d0f2cb5 -> origin/main
+2025-11-08T14:04:56.1406403Z ##[endgroup]
+2025-11-08T14:04:56.1407663Z ##[group]Determining the checkout info
+2025-11-08T14:04:56.1409053Z ##[endgroup]
+2025-11-08T14:04:56.1425476Z [command]"C:\Program Files\Git\bin\git.exe" sparse-checkout disable
+2025-11-08T14:04:56.1896846Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset-all extensions.worktreeConfig
+2025-11-08T14:04:56.2201170Z ##[group]Checking out the ref
+2025-11-08T14:04:56.2211913Z [command]"C:\Program Files\Git\bin\git.exe" checkout --progress --force -B main refs/remotes/origin/main
+2025-11-08T14:04:56.3503221Z branch 'main' set up to track 'origin/main'.
+2025-11-08T14:04:56.3511320Z Switched to a new branch 'main'
+2025-11-08T14:04:56.3563635Z ##[endgroup]
+2025-11-08T14:04:56.3979691Z [command]"C:\Program Files\Git\bin\git.exe" log -1 --format=%H
+2025-11-08T14:04:56.4236430Z af9ee52502d847b6a26ec44952625ddc3d0f2cb5

@@ -1,0 +1,31 @@
+﻿2025-11-08T14:04:50.9273124Z Current runner version: '2.329.0'
+2025-11-08T14:04:50.9341237Z ##[group]Runner Image Provisioner
+2025-11-08T14:04:50.9342291Z Hosted Compute Agent
+2025-11-08T14:04:50.9343033Z Version: 20251016.436
+2025-11-08T14:04:50.9343910Z Commit: 8ab8ac8bfd662a3739dab9fe09456aba92132568
+2025-11-08T14:04:50.9344868Z Build Date: 2025-10-15T20:44:12Z
+2025-11-08T14:04:50.9345697Z ##[endgroup]
+2025-11-08T14:04:50.9346355Z ##[group]Operating System
+2025-11-08T14:04:50.9347179Z Microsoft Windows Server 2025
+2025-11-08T14:04:50.9348722Z 10.0.26100
+2025-11-08T14:04:50.9349434Z Datacenter
+2025-11-08T14:04:50.9350071Z ##[endgroup]
+2025-11-08T14:04:50.9350704Z ##[group]Runner Image
+2025-11-08T14:04:50.9351458Z Image: windows-2025
+2025-11-08T14:04:50.9352098Z Version: 20251102.77.1
+2025-11-08T14:04:50.9353685Z Included Software: https://github.com/actions/runner-images/blob/win25/20251102.77/images/windows/Windows2025-Readme.md
+2025-11-08T14:04:50.9355942Z Image Release: https://github.com/actions/runner-images/releases/tag/win25%2F20251102.77
+2025-11-08T14:04:50.9358096Z ##[endgroup]
+2025-11-08T14:04:50.9359512Z ##[group]GITHUB_TOKEN Permissions
+2025-11-08T14:04:50.9362311Z Contents: write
+2025-11-08T14:04:50.9363096Z Metadata: read
+2025-11-08T14:04:50.9363734Z ##[endgroup]
+2025-11-08T14:04:50.9366350Z Secret source: Actions
+2025-11-08T14:04:50.9367377Z Prepare workflow directory
+2025-11-08T14:04:50.9783255Z Prepare all required actions
+2025-11-08T14:04:50.9821976Z Getting action download info
+2025-11-08T14:04:51.2234994Z Download action repository 'actions/checkout@v4' (SHA:08eba0b27e820071cde6df949e0beb9ba4906955)
+2025-11-08T14:04:51.3652003Z Download action repository 'actions/setup-node@v4' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+2025-11-08T14:04:51.5349251Z Download action repository 'actions/upload-artifact@v4' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+2025-11-08T14:04:51.7511375Z Download action repository 'softprops/action-gh-release@v1' (SHA:de2c0eb89ae2a093876385947365aca7b0e5f844)
+2025-11-08T14:04:52.1187286Z Complete job name: build (windows-latest)
