@@ -1,0 +1,127 @@
+﻿2025-11-08T13:38:17.2716071Z ##[group]Run Write-Host "=== Installing server dependencies (production only, NESTED mode, real files) ==="
+2025-11-08T13:38:17.2716896Z [36;1mWrite-Host "=== Installing server dependencies (production only, NESTED mode, real files) ==="[0m
+2025-11-08T13:38:17.2717333Z [36;1mcd apps/server[0m
+2025-11-08T13:38:17.2717666Z [36;1mRemove-Item -Recurse -Force node_modules -ErrorAction SilentlyContinue[0m
+2025-11-08T13:38:17.2718179Z [36;1mnpm install --omit=dev --install-strategy=nested --install-links=false --workspaces=false[0m
+2025-11-08T13:38:17.2718570Z [36;1m[0m
+2025-11-08T13:38:17.2718731Z [36;1mWrite-Host ""[0m
+2025-11-08T13:38:17.2719012Z [36;1mWrite-Host "=== Generating Prisma Client for production ==="[0m
+2025-11-08T13:38:17.2719326Z [36;1mnpx prisma generate[0m
+2025-11-08T13:38:17.2719934Z [36;1m[0m
+2025-11-08T13:38:17.2720097Z [36;1mWrite-Host ""[0m
+2025-11-08T13:38:17.2720434Z [36;1mWrite-Host "=== Verifying dependencies are REAL FILES (not junctions/symlinks) ==="[0m
+2025-11-08T13:38:17.2720825Z [36;1m[0m
+2025-11-08T13:38:17.2721023Z [36;1mif (-not (Test-Path "node_modules/dotenv")) {[0m
+2025-11-08T13:38:17.2721334Z [36;1m  Write-Host "❌ ERROR: dotenv directory not found!"[0m
+2025-11-08T13:38:17.2721598Z [36;1m  exit 1[0m
+2025-11-08T13:38:17.2721745Z [36;1m}[0m
+2025-11-08T13:38:17.2721882Z [36;1m[0m
+2025-11-08T13:38:17.2722112Z [36;1m$dotenvAttrs = (Get-Item "node_modules/dotenv").Attributes[0m
+2025-11-08T13:38:17.2722440Z [36;1mif ($dotenvAttrs -match 'ReparsePoint') {[0m
+2025-11-08T13:38:17.2722788Z [36;1m  Write-Host "❌ ERROR: dotenv is a Windows junction/reparse point!"[0m
+2025-11-08T13:38:17.2723130Z [36;1m  Write-Host "Attributes: $dotenvAttrs"[0m
+2025-11-08T13:38:17.2723354Z [36;1m  exit 1[0m
+2025-11-08T13:38:17.2723733Z [36;1m}[0m
+2025-11-08T13:38:17.2723875Z [36;1m[0m
+2025-11-08T13:38:17.2724068Z [36;1mWrite-Host "✅ Top-level dotenv is REAL FILE"[0m
+2025-11-08T13:38:17.2724307Z [36;1m[0m
+2025-11-08T13:38:17.2724455Z [36;1mWrite-Host ""[0m
+2025-11-08T13:38:17.2724791Z [36;1mWrite-Host "=== Searching for ALL es-object-atoms instances (deep nested check) ==="[0m
+2025-11-08T13:38:17.2725433Z [36;1m$esInstances = Get-ChildItem -Path node_modules -Recurse -Filter "es-object-atoms" -Directory -ErrorAction SilentlyContinue[0m
+2025-11-08T13:38:17.2725915Z [36;1m[0m
+2025-11-08T13:38:17.2726081Z [36;1mif ($esInstances.Count -eq 0) {[0m
+2025-11-08T13:38:17.2726420Z [36;1m  Write-Host "❌ ERROR: No es-object-atoms found anywhere in node_modules!"[0m
+2025-11-08T13:38:17.2726855Z [36;1m  exit 1[0m
+2025-11-08T13:38:17.2727059Z [36;1m}[0m
+2025-11-08T13:38:17.2727200Z [36;1m[0m
+2025-11-08T13:38:17.2727459Z [36;1mWrite-Host "Found $($esInstances.Count) instance(s) of es-object-atoms"[0m
+2025-11-08T13:38:17.2727803Z [36;1m[0m
+2025-11-08T13:38:17.2727985Z [36;1m$junctionFound = $false[0m
+2025-11-08T13:38:17.2728225Z [36;1mforeach ($instance in $esInstances) {[0m
+2025-11-08T13:38:17.2728501Z [36;1m  $attrs = $instance.Attributes[0m
+2025-11-08T13:38:17.2728838Z [36;1m  $relPath = $instance.FullName.Replace((Get-Location).Path, ".")[0m
+2025-11-08T13:38:17.2729149Z [36;1m  [0m
+2025-11-08T13:38:17.2729326Z [36;1m  if ($attrs -match 'ReparsePoint') {[0m
+2025-11-08T13:38:17.2729599Z [36;1m    Write-Host "❌ JUNCTION FOUND: $relPath"[0m
+2025-11-08T13:38:17.2729853Z [36;1m    $junctionFound = $true[0m
+2025-11-08T13:38:17.2730063Z [36;1m  } else {[0m
+2025-11-08T13:38:17.2730244Z [36;1m    Write-Host "✅ REAL DIR: $relPath"[0m
+2025-11-08T13:38:17.2730476Z [36;1m  }[0m
+2025-11-08T13:38:17.2730625Z [36;1m}[0m
+2025-11-08T13:38:17.2730764Z [36;1m[0m
+2025-11-08T13:38:17.2730923Z [36;1mif ($junctionFound) {[0m
+2025-11-08T13:38:17.2731131Z [36;1m  Write-Host ""[0m
+2025-11-08T13:38:17.2731452Z [36;1m  Write-Host "❌ CRITICAL ERROR: Some es-object-atoms instances are junctions!"[0m
+2025-11-08T13:38:17.2731791Z [36;1m  exit 1[0m
+2025-11-08T13:38:17.2731944Z [36;1m}[0m
+2025-11-08T13:38:17.2733986Z [36;1m[0m
+2025-11-08T13:38:17.2734156Z [36;1mWrite-Host ""[0m
+2025-11-08T13:38:17.2734490Z [36;1mWrite-Host "✅ All dependencies installed as REAL FILES (no junctions)"[0m
+2025-11-08T13:38:17.2734843Z [36;1mWrite-Host ""[0m
+2025-11-08T13:38:17.2735069Z [36;1mWrite-Host "=== Node modules size ==="[0m
+2025-11-08T13:38:17.2735620Z [36;1m$size = (Get-ChildItem node_modules -Recurse -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum).Sum / 1MB[0m
+2025-11-08T13:38:17.2736141Z [36;1mWrite-Host ("{0:N2} MB" -f $size)[0m
+2025-11-08T13:38:17.2806952Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2025-11-08T13:38:17.2807279Z ##[endgroup]
+2025-11-08T13:38:18.0316618Z === Installing server dependencies (production only, NESTED mode, real files) ===
+2025-11-08T13:38:42.9565831Z npm WARN deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+2025-11-08T13:38:42.9620004Z npm WARN deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+2025-11-08T13:38:42.9867108Z npm WARN deprecated npmlog@5.0.1: This package is no longer supported.
+2025-11-08T13:38:43.1702438Z npm WARN deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+2025-11-08T13:38:43.2102386Z npm WARN deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+2025-11-08T13:38:43.2161625Z npm WARN deprecated glob@8.1.0: Glob versions prior to v9 are no longer supported
+2025-11-08T13:38:43.3035403Z npm WARN deprecated are-we-there-yet@2.0.0: This package is no longer supported.
+2025-11-08T13:38:43.4549736Z npm WARN deprecated multer@1.4.5-lts.2: Multer 1.x is impacted by a number of vulnerabilities, which have been patched in 2.x. You should upgrade to the latest 2.x version.
+2025-11-08T13:38:43.6558765Z npm WARN deprecated gauge@3.0.2: This package is no longer supported.
+2025-11-08T13:38:51.5990400Z npm WARN cleanup Failed to remove some directories [
+2025-11-08T13:38:51.5991021Z npm WARN cleanup   [
+2025-11-08T13:38:51.5993262Z npm WARN cleanup     'D:\\a\\mbit-erp\\mbit-erp\\apps\\server\\node_modules\\jest\\node_modules\\jest-cli\\node_modules\\jest-config\\node_modules\\jest-circus\\node_modules\\jest-runtime\\node_modules\\@jest\\transform\\node_modules\\babel-plugin-istanbul\\node_modules\\@istanbuljs\\load-nyc-config\\node_modules\\find-up',
+2025-11-08T13:38:51.5997523Z npm WARN cleanup     [Error: EPERM: operation not permitted, rmdir 'D:\a\mbit-erp\mbit-erp\apps\server\node_modules\jest\node_modules\jest-cli\node_modules\jest-config\node_modules\jest-circus\node_modules\jest-runtime\node_modules\@jest\transform\node_modules\babel-plugin-istanbul\node_modules\@istanbuljs\load-nyc-config\node_modules\find-up\node_modules\locate-path'] {
+2025-11-08T13:38:51.5999861Z npm WARN cleanup       errno: -4048,
+2025-11-08T13:38:51.6000305Z npm WARN cleanup       code: 'EPERM',
+2025-11-08T13:38:51.6000734Z npm WARN cleanup       syscall: 'rmdir',
+2025-11-08T13:38:51.6003342Z npm WARN cleanup       path: 'D:\\a\\mbit-erp\\mbit-erp\\apps\\server\\node_modules\\jest\\node_modules\\jest-cli\\node_modules\\jest-config\\node_modules\\jest-circus\\node_modules\\jest-runtime\\node_modules\\@jest\\transform\\node_modules\\babel-plugin-istanbul\\node_modules\\@istanbuljs\\load-nyc-config\\node_modules\\find-up\\node_modules\\locate-path'
+2025-11-08T13:38:51.6004862Z npm WARN cleanup     }
+2025-11-08T13:38:51.6005082Z npm WARN cleanup   ],
+2025-11-08T13:38:51.6005562Z npm WARN cleanup   [
+2025-11-08T13:38:51.6006649Z npm WARN cleanup     'D:\\a\\mbit-erp\\mbit-erp\\apps\\server\\node_modules\\jest\\node_modules\\jest-cli',
+2025-11-08T13:38:51.6008592Z npm WARN cleanup     [Error: EPERM: operation not permitted, rmdir 'D:\a\mbit-erp\mbit-erp\apps\server\node_modules\jest\node_modules\jest-cli\node_modules\jest-config\node_modules\jest-circus\node_modules\jest-runtime'] {
+2025-11-08T13:38:51.6011344Z npm WARN cleanup       errno: -4048,
+2025-11-08T13:38:51.6011861Z npm WARN cleanup       code: 'EPERM',
+2025-11-08T13:38:51.6012362Z npm WARN cleanup       syscall: 'rmdir',
+2025-11-08T13:38:51.6013831Z npm WARN cleanup       path: 'D:\\a\\mbit-erp\\mbit-erp\\apps\\server\\node_modules\\jest\\node_modules\\jest-cli\\node_modules\\jest-config\\node_modules\\jest-circus\\node_modules\\jest-runtime'
+2025-11-08T13:38:51.6015029Z npm WARN cleanup     }
+2025-11-08T13:38:51.6015365Z npm WARN cleanup   ]
+2025-11-08T13:38:51.6015697Z npm WARN cleanup ]
+2025-11-08T13:38:52.3424857Z 
+2025-11-08T13:38:52.3425596Z added 463 packages, and audited 464 packages in 33s
+2025-11-08T13:38:52.3427208Z 
+2025-11-08T13:38:52.3427697Z 36 packages are looking for funding
+2025-11-08T13:38:52.3428176Z   run `npm fund` for details
+2025-11-08T13:38:52.3442988Z 
+2025-11-08T13:38:52.3443304Z found 0 vulnerabilities
+2025-11-08T13:38:52.4025642Z 
+2025-11-08T13:38:52.4032365Z === Generating Prisma Client for production ===
+2025-11-08T13:38:54.3611029Z Prisma schema loaded from prisma\schema.prisma
+2025-11-08T13:38:55.5450490Z 
+2025-11-08T13:38:55.5451571Z ✔ Generated Prisma Client (v5.22.0) to .\node_modules\@prisma\client in 504ms
+2025-11-08T13:38:55.5451987Z 
+2025-11-08T13:38:55.5452395Z Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+2025-11-08T13:38:55.5452799Z 
+2025-11-08T13:38:55.5453403Z Tip: Want real-time updates to your database without manual polling? Discover how with Pulse: https://pris.ly/tip-0-pulse
+2025-11-08T13:38:55.5453959Z 
+2025-11-08T13:38:55.7550698Z 
+2025-11-08T13:38:55.7556756Z === Verifying dependencies are REAL FILES (not junctions/symlinks) ===
+2025-11-08T13:38:55.8404983Z ✅ Top-level dotenv is REAL FILE
+2025-11-08T13:38:55.8409657Z 
+2025-11-08T13:38:55.8415391Z === Searching for ALL es-object-atoms instances (deep nested check) ===
+2025-11-08T13:38:56.1586879Z Found 4 instance(s) of es-object-atoms
+2025-11-08T13:38:56.1863273Z ✅ REAL DIR: .\node_modules\@nestjs\platform-express\node_modules\body-parser\node_modules\qs\node_modules\side-channel\node_modules\side-channel-map\node_modules\get-intrinsic\node_modules\es-object-atoms
+2025-11-08T13:38:56.1870613Z ✅ REAL DIR: .\node_modules\@nestjs\platform-express\node_modules\body-parser\node_modules\qs\node_modules\side-channel\node_modules\side-channel-weakmap\node_modules\get-intrinsic\node_modules\es-object-atoms
+2025-11-08T13:38:56.1876814Z ✅ REAL DIR: .\node_modules\@nestjs\platform-express\node_modules\express\node_modules\qs\node_modules\side-channel\node_modules\side-channel-map\node_modules\get-intrinsic\node_modules\es-object-atoms
+2025-11-08T13:38:56.1885107Z ✅ REAL DIR: .\node_modules\@nestjs\platform-express\node_modules\express\node_modules\qs\node_modules\side-channel\node_modules\side-channel-weakmap\node_modules\get-intrinsic\node_modules\es-object-atoms
+2025-11-08T13:38:56.1889189Z 
+2025-11-08T13:38:56.1895273Z ✅ All dependencies installed as REAL FILES (no junctions)
+2025-11-08T13:38:56.1900182Z 
+2025-11-08T13:38:56.1905341Z === Node modules size ===
+2025-11-08T13:38:56.8546625Z 272.87 MB

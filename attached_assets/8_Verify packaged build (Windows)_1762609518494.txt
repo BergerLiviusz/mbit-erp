@@ -1,0 +1,110 @@
+﻿2025-11-08T13:40:49.2771230Z ##[group]Run Write-Host "=== Verifying Windows build output ==="
+2025-11-08T13:40:49.2771872Z [36;1mWrite-Host "=== Verifying Windows build output ==="[0m
+2025-11-08T13:40:49.2772221Z [36;1m[0m
+2025-11-08T13:40:49.2772416Z [36;1m$releaseDir = "apps/desktop/release"[0m
+2025-11-08T13:40:49.2772705Z [36;1mif (-not (Test-Path $releaseDir)) {[0m
+2025-11-08T13:40:49.2773000Z [36;1m  Write-Host "❌ ERROR: Release folder not found!"[0m
+2025-11-08T13:40:49.2773262Z [36;1m  exit 1[0m
+2025-11-08T13:40:49.2773424Z [36;1m}[0m
+2025-11-08T13:40:49.2773565Z [36;1m[0m
+2025-11-08T13:40:49.2773717Z [36;1mWrite-Host ""[0m
+2025-11-08T13:40:49.2773934Z [36;1mWrite-Host "=== Checking .exe files ==="[0m
+2025-11-08T13:40:49.2774284Z [36;1m$exeFiles = Get-ChildItem $releaseDir -Filter "*.exe" -Recurse[0m
+2025-11-08T13:40:49.2774608Z [36;1mforeach ($exe in $exeFiles) {[0m
+2025-11-08T13:40:49.2775091Z [36;1m  $sizeMB = $exe.Length / 1MB[0m
+2025-11-08T13:40:49.2775366Z [36;1m  Write-Host ("{0} - {1:N2} MB" -f $exe.Name, $sizeMB)[0m
+2025-11-08T13:40:49.2775657Z [36;1m}[0m
+2025-11-08T13:40:49.2775799Z [36;1m[0m
+2025-11-08T13:40:49.2775944Z [36;1mWrite-Host ""[0m
+2025-11-08T13:40:49.2776259Z [36;1mWrite-Host "=== CRITICAL: Verifying backend dependencies in packaged build ==="[0m
+2025-11-08T13:40:49.2776733Z [36;1m$unpackedBackend = "apps/desktop/release/win-unpacked/resources/backend"[0m
+2025-11-08T13:40:49.2777287Z [36;1m[0m
+2025-11-08T13:40:49.2777498Z [36;1mif (-not (Test-Path "$unpackedBackend/node_modules")) {[0m
+2025-11-08T13:40:49.2777919Z [36;1m  Write-Host "❌ CRITICAL ERROR: backend/node_modules not found in packaged build!"[0m
+2025-11-08T13:40:49.2778271Z [36;1m  exit 1[0m
+2025-11-08T13:40:49.2778427Z [36;1m}[0m
+2025-11-08T13:40:49.2778561Z [36;1m[0m
+2025-11-08T13:40:49.2778790Z [36;1mif (-not (Test-Path "$unpackedBackend/node_modules/dotenv")) {[0m
+2025-11-08T13:40:49.2779185Z [36;1m  Write-Host "❌ CRITICAL ERROR: dotenv not found in packaged build!"[0m
+2025-11-08T13:40:49.2779627Z [36;1m  Get-ChildItem "$unpackedBackend/node_modules/" | Select-Object -First 20[0m
+2025-11-08T13:40:49.2779960Z [36;1m  exit 1[0m
+2025-11-08T13:40:49.2780113Z [36;1m}[0m
+2025-11-08T13:40:49.2780245Z [36;1m[0m
+2025-11-08T13:40:49.2780393Z [36;1mWrite-Host ""[0m
+2025-11-08T13:40:49.2780761Z [36;1mWrite-Host "=== Deep verification: Checking ALL es-object-atoms instances in packaged build ==="[0m
+2025-11-08T13:40:49.2781522Z [36;1m$packedEsInstances = Get-ChildItem -Path "$unpackedBackend/node_modules" -Recurse -Filter "es-object-atoms" -Directory -ErrorAction SilentlyContinue[0m
+2025-11-08T13:40:49.2782129Z [36;1m[0m
+2025-11-08T13:40:49.2782309Z [36;1mif ($packedEsInstances.Count -eq 0) {[0m
+2025-11-08T13:40:49.2782676Z [36;1m  Write-Host "❌ CRITICAL ERROR: No es-object-atoms found in packaged build!"[0m
+2025-11-08T13:40:49.2783118Z [36;1m  exit 1[0m
+2025-11-08T13:40:49.2783278Z [36;1m}[0m
+2025-11-08T13:40:49.2783422Z [36;1m[0m
+2025-11-08T13:40:49.2783773Z [36;1mWrite-Host "Found $($packedEsInstances.Count) instance(s) of es-object-atoms in packaged build"[0m
+2025-11-08T13:40:49.2784165Z [36;1m[0m
+2025-11-08T13:40:49.2784336Z [36;1m$packedJunctionFound = $false[0m
+2025-11-08T13:40:49.2784690Z [36;1mforeach ($instance in $packedEsInstances) {[0m
+2025-11-08T13:40:49.2785181Z [36;1m  $attrs = $instance.Attributes[0m
+2025-11-08T13:40:49.2785529Z [36;1m  $relPath = $instance.FullName.Replace((Get-Location).Path, ".")[0m
+2025-11-08T13:40:49.2785833Z [36;1m  [0m
+2025-11-08T13:40:49.2786026Z [36;1m  if ($attrs -match 'ReparsePoint') {[0m
+2025-11-08T13:40:49.2786332Z [36;1m    Write-Host "❌ JUNCTION FOUND IN PACKAGE: $relPath"[0m
+2025-11-08T13:40:49.2786628Z [36;1m    $packedJunctionFound = $true[0m
+2025-11-08T13:40:49.2786961Z [36;1m  } else {[0m
+2025-11-08T13:40:49.2787186Z [36;1m    Write-Host "✅ REAL DIR IN PACKAGE: $relPath"[0m
+2025-11-08T13:40:49.2787559Z [36;1m  }[0m
+2025-11-08T13:40:49.2787718Z [36;1m}[0m
+2025-11-08T13:40:49.2789838Z [36;1m[0m
+2025-11-08T13:40:49.2790021Z [36;1mif ($packedJunctionFound) {[0m
+2025-11-08T13:40:49.2790269Z [36;1m  Write-Host ""[0m
+2025-11-08T13:40:49.2790703Z [36;1m  Write-Host "❌ CRITICAL ERROR: Packaged build contains junctions! electron-builder failed to copy real files."[0m
+2025-11-08T13:40:49.2791164Z [36;1m  exit 1[0m
+2025-11-08T13:40:49.2791328Z [36;1m}[0m
+2025-11-08T13:40:49.2791476Z [36;1m[0m
+2025-11-08T13:40:49.2791622Z [36;1mWrite-Host ""[0m
+2025-11-08T13:40:49.2792102Z [36;1mWrite-Host "✅ Backend dependencies successfully bundled (all real files, no junctions)"[0m
+2025-11-08T13:40:49.2792678Z [36;1m[0m
+2025-11-08T13:40:49.2793371Z [36;1m$nodeModulesSize = (Get-ChildItem "$unpackedBackend/node_modules" -Recurse -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum).Sum / 1MB[0m
+2025-11-08T13:40:49.2794793Z [36;1mWrite-Host ("Backend node_modules size: {0:N2} MB" -f $nodeModulesSize)[0m
+2025-11-08T13:40:49.2795123Z [36;1m[0m
+2025-11-08T13:40:49.2795291Z [36;1mWrite-Host ""[0m
+2025-11-08T13:40:49.2795523Z [36;1mWrite-Host "Sample packages in bundle:"[0m
+2025-11-08T13:40:49.2795904Z [36;1mGet-ChildItem "$unpackedBackend/node_modules/" | Select-Object -First 10[0m
+2025-11-08T13:40:49.2857631Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2025-11-08T13:40:49.2857964Z ##[endgroup]
+2025-11-08T13:40:49.6284730Z === Verifying Windows build output ===
+2025-11-08T13:40:49.6578806Z 
+2025-11-08T13:40:49.6585046Z === Checking .exe files ===
+2025-11-08T13:40:49.8296609Z Mbit ERP-Setup-1.0.0.exe - 148.47 MB
+2025-11-08T13:40:49.8302593Z Mbit ERP.exe - 168.67 MB
+2025-11-08T13:40:49.8308963Z elevate.exe - 0.10 MB
+2025-11-08T13:40:49.8315315Z schema-engine-windows.exe - 17.31 MB
+2025-11-08T13:40:49.8321227Z 
+2025-11-08T13:40:49.8327084Z === CRITICAL: Verifying backend dependencies in packaged build ===
+2025-11-08T13:40:49.8358858Z 
+2025-11-08T13:40:49.8366811Z === Deep verification: Checking ALL es-object-atoms instances in packaged build ===
+2025-11-08T13:40:50.0089672Z Found 4 instance(s) of es-object-atoms in packaged build
+2025-11-08T13:40:50.0207086Z ✅ REAL DIR IN PACKAGE: .\apps\desktop\release\win-unpacked\resources\backend\node_modules\@nestjs\platform-express\node_modules\body-parser\node_modules\qs\node_modules\side-channel\node_modules\side-channel-map\node_modules\get-intrinsic\node_modules\es-object-atoms
+2025-11-08T13:40:50.0217862Z ✅ REAL DIR IN PACKAGE: .\apps\desktop\release\win-unpacked\resources\backend\node_modules\@nestjs\platform-express\node_modules\body-parser\node_modules\qs\node_modules\side-channel\node_modules\side-channel-weakmap\node_modules\get-intrinsic\node_modules\es-object-atoms
+2025-11-08T13:40:50.0226635Z ✅ REAL DIR IN PACKAGE: .\apps\desktop\release\win-unpacked\resources\backend\node_modules\@nestjs\platform-express\node_modules\express\node_modules\qs\node_modules\side-channel\node_modules\side-channel-map\node_modules\get-intrinsic\node_modules\es-object-atoms
+2025-11-08T13:40:50.0233874Z ✅ REAL DIR IN PACKAGE: .\apps\desktop\release\win-unpacked\resources\backend\node_modules\@nestjs\platform-express\node_modules\express\node_modules\qs\node_modules\side-channel\node_modules\side-channel-weakmap\node_modules\get-intrinsic\node_modules\es-object-atoms
+2025-11-08T13:40:50.0238356Z 
+2025-11-08T13:40:50.0245200Z ✅ Backend dependencies successfully bundled (all real files, no junctions)
+2025-11-08T13:40:50.5801419Z Backend node_modules size: 266.07 MB
+2025-11-08T13:40:50.5807344Z 
+2025-11-08T13:40:50.5814220Z Sample packages in bundle:
+2025-11-08T13:40:50.7513951Z 
+2025-11-08T13:40:50.7751579Z     Directory: D:\a\mbit-erp\mbit-erp\apps\desktop\release\win-unpacked\resources\backend\node_modules
+2025-11-08T13:40:50.7752284Z 
+2025-11-08T13:40:50.7754664Z [32;1mMode   [0m[32;1m              LastWriteTime[0m [32;1;3m        Length[0m[32;1m Name[0m
+2025-11-08T13:40:50.7755523Z [32;1m----   [0m [32;1m             -------------[0m [32;1m        ------[0m [32;1m----[0m
+2025-11-08T13:40:51.0716763Z d----           11/8/2025  1:39 PM                [44;1m.cache[0m
+2025-11-08T13:40:51.0722805Z d----           11/8/2025  1:39 PM                [44;1m.prisma[0m
+2025-11-08T13:40:51.0726609Z d----           11/8/2025  1:39 PM                [44;1m@nestjs[0m
+2025-11-08T13:40:51.0730133Z d----           11/8/2025  1:39 PM                [44;1m@prisma[0m
+2025-11-08T13:40:51.0734676Z d----           11/8/2025  1:39 PM                [44;1m@types[0m
+2025-11-08T13:40:51.0738183Z d----           11/8/2025  1:39 PM                [44;1marchiver[0m
+2025-11-08T13:40:51.0742081Z d----           11/8/2025  1:39 PM                [44;1mbcrypt[0m
+2025-11-08T13:40:51.0745883Z d----           11/8/2025  1:39 PM                [44;1mclass-transformer[0m
+2025-11-08T13:40:51.0750539Z d----           11/8/2025  1:39 PM                [44;1mclass-validator[0m
+2025-11-08T13:40:51.0753649Z d----           11/8/2025  1:39 PM                [44;1mdotenv[0m
+2025-11-08T13:40:51.1243919Z 

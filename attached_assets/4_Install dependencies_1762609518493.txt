@@ -1,0 +1,57 @@
+﻿2025-11-08T13:37:17.4954033Z ##[group]Run npm ci
+2025-11-08T13:37:17.4954316Z [36;1mnpm ci[0m
+2025-11-08T13:37:17.5342979Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2025-11-08T13:37:17.5343318Z ##[endgroup]
+2025-11-08T13:37:28.2786656Z npm WARN EBADENGINE Unsupported engine {
+2025-11-08T13:37:28.2787444Z npm WARN EBADENGINE   package: 'mbit-erp@1.0.0',
+2025-11-08T13:37:28.2788202Z npm WARN EBADENGINE   required: { node: '>=20.0.0', npm: '>=10.0.0' },
+2025-11-08T13:37:28.2788988Z npm WARN EBADENGINE   current: { node: 'v18.18.2', npm: '9.8.1' }
+2025-11-08T13:37:28.2789518Z npm WARN EBADENGINE }
+2025-11-08T13:37:28.2857088Z npm WARN EBADENGINE Unsupported engine {
+2025-11-08T13:37:28.2858308Z npm WARN EBADENGINE   package: 'cross-env@10.1.0',
+2025-11-08T13:37:28.2859163Z npm WARN EBADENGINE   required: { node: '>=20' },
+2025-11-08T13:37:28.2860106Z npm WARN EBADENGINE   current: { node: 'v18.18.2', npm: '9.8.1' }
+2025-11-08T13:37:28.2860882Z npm WARN EBADENGINE }
+2025-11-08T13:37:35.7294906Z npm WARN deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+2025-11-08T13:37:35.8296738Z npm WARN deprecated npmlog@5.0.1: This package is no longer supported.
+2025-11-08T13:37:36.0210461Z npm WARN deprecated @humanwhocodes/config-array@0.13.0: Use @eslint/config-array instead
+2025-11-08T13:37:36.5134022Z npm WARN deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+2025-11-08T13:37:36.7286869Z npm WARN deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+2025-11-08T13:37:36.7297101Z npm WARN deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+2025-11-08T13:37:36.7304418Z npm WARN deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+2025-11-08T13:37:36.7340410Z npm WARN deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+2025-11-08T13:37:36.7342497Z npm WARN deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+2025-11-08T13:37:36.7347817Z npm WARN deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+2025-11-08T13:37:36.7349515Z npm WARN deprecated glob@8.1.0: Glob versions prior to v9 are no longer supported
+2025-11-08T13:37:36.7377717Z npm WARN deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+2025-11-08T13:37:37.1288755Z npm WARN deprecated are-we-there-yet@2.0.0: This package is no longer supported.
+2025-11-08T13:37:37.1367622Z npm WARN deprecated @humanwhocodes/object-schema@2.0.3: Use @eslint/object-schema instead
+2025-11-08T13:37:37.3829429Z npm WARN deprecated sourcemap-codec@1.4.8: Please use @jridgewell/sourcemap-codec instead
+2025-11-08T13:37:37.8130369Z npm WARN deprecated multer@1.4.5-lts.2: Multer 1.x is impacted by a number of vulnerabilities, which have been patched in 2.x. You should upgrade to the latest 2.x version.
+2025-11-08T13:37:38.6337443Z npm WARN deprecated boolean@3.2.0: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
+2025-11-08T13:37:38.7144779Z npm WARN deprecated gauge@3.0.2: This package is no longer supported.
+2025-11-08T13:37:39.0486921Z npm WARN deprecated source-map@0.8.0-beta.0: The work that was done in this beta branch won't be included in future versions
+2025-11-08T13:37:45.7717546Z npm WARN deprecated eslint@8.57.1: This version is no longer supported. Please see https://eslint.org/version-support for other options.
+2025-11-08T13:38:09.7280917Z npm WARN cleanup Failed to remove some directories [
+2025-11-08T13:38:09.7281449Z npm WARN cleanup   [
+2025-11-08T13:38:09.7282540Z npm WARN cleanup     'D:\\a\\mbit-erp\\mbit-erp\\node_modules\\dmg-license\\node_modules\\ajv',
+2025-11-08T13:38:09.7283981Z npm WARN cleanup     [Error: EPERM: operation not permitted, rmdir 'D:\a\mbit-erp\mbit-erp\node_modules\dmg-license\node_modules\ajv'] {
+2025-11-08T13:38:09.7284992Z npm WARN cleanup       errno: -4048,
+2025-11-08T13:38:09.7288454Z npm WARN cleanup       code: 'EPERM',
+2025-11-08T13:38:09.7288876Z npm WARN cleanup       syscall: 'rmdir',
+2025-11-08T13:38:09.7289707Z npm WARN cleanup       path: 'D:\\a\\mbit-erp\\mbit-erp\\node_modules\\dmg-license\\node_modules\\ajv'
+2025-11-08T13:38:09.7290676Z npm WARN cleanup     }
+2025-11-08T13:38:09.7291126Z npm WARN cleanup   ]
+2025-11-08T13:38:09.7291464Z npm WARN cleanup ]
+2025-11-08T13:38:10.0232522Z 
+2025-11-08T13:38:10.0233326Z added 1466 packages, and audited 1473 packages in 43s
+2025-11-08T13:38:10.0233986Z 
+2025-11-08T13:38:10.0235502Z 254 packages are looking for funding
+2025-11-08T13:38:10.0236400Z   run `npm fund` for details
+2025-11-08T13:38:10.0674518Z 
+2025-11-08T13:38:10.0675908Z 11 vulnerabilities (5 low, 6 moderate)
+2025-11-08T13:38:10.0676304Z 
+2025-11-08T13:38:10.0676680Z To address all issues (including breaking changes), run:
+2025-11-08T13:38:10.0677204Z   npm audit fix --force
+2025-11-08T13:38:10.0677733Z 
+2025-11-08T13:38:10.0677944Z Run `npm audit` for details.
