@@ -37,10 +37,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Install server dependencies explicitly
+      - name: Build server
         run: |
           cd apps/server
-          npm install --production=false
           npm run build
 
       - name: Generate Prisma Client
@@ -48,15 +47,30 @@ jobs:
           cd apps/server
           npx prisma generate
 
-      - name: Verify server build and dependencies
+      - name: Install server dependencies in NESTED mode for packaging
         shell: bash
         run: |
-          echo "Checking server dist folder..."
-          ls -la apps/server/dist || echo "Warning: dist folder not found"
-          echo "Checking server node_modules..."
-          ls -la apps/server/node_modules | head -20 || echo "Warning: node_modules not found"
-          echo "Checking for dotenv..."
-          ls -la apps/server/node_modules/dotenv || echo "ERROR: dotenv not found!"
+          echo "=== Installing server dependencies in NESTED mode (not symlinks) ==="
+          cd apps/server
+          rm -rf node_modules
+          npm install --omit=dev --install-strategy=nested --workspaces=false
+          echo ""
+          echo "=== Verifying dependencies are real files (not symlinks) ==="
+          if [ -L "node_modules/dotenv" ]; then
+            echo "❌ ERROR: dotenv is still a symlink!"
+            exit 1
+          fi
+          if [ ! -d "node_modules/dotenv" ]; then
+            echo "❌ ERROR: dotenv directory not found!"
+            exit 1
+          fi
+          echo "✅ Dependencies installed as real files (not symlinks)"
+          echo ""
+          echo "=== Node modules size ==="
+          du -sh node_modules
+          echo ""
+          echo "=== Sample package (dotenv) verification ==="
+          ls -la node_modules/dotenv
 
       - name: Build desktop app
         run: |
@@ -76,8 +90,36 @@ jobs:
           find apps/desktop/release -name "*.exe" -exec ls -lah {} \;
           
           echo ""
-          echo "=== Installer details ==="
+          echo "=== Installer sizes ==="
           du -sh apps/desktop/release/* || echo "Could not check sizes"
+          
+          echo ""
+          echo "=== CRITICAL: Verifying backend dependencies in packaged build ==="
+          UNPACKED_DIR="apps/desktop/release/win-unpacked/resources/backend"
+          
+          if [ ! -d "$UNPACKED_DIR/node_modules" ]; then
+            echo "❌ CRITICAL ERROR: backend/node_modules not found in packaged build!"
+            exit 1
+          fi
+          
+          if [ ! -d "$UNPACKED_DIR/node_modules/dotenv" ]; then
+            echo "❌ CRITICAL ERROR: dotenv not found in packaged build!"
+            ls -la "$UNPACKED_DIR/node_modules/" | head -20
+            exit 1
+          fi
+          
+          if [ -L "$UNPACKED_DIR/node_modules/dotenv" ]; then
+            echo "❌ CRITICAL ERROR: dotenv is a SYMLINK in packaged build!"
+            ls -la "$UNPACKED_DIR/node_modules/dotenv"
+            exit 1
+          fi
+          
+          echo "✅ Backend dependencies successfully bundled"
+          echo "Backend node_modules size:"
+          du -sh "$UNPACKED_DIR/node_modules"
+          echo ""
+          echo "Sample packages in bundle:"
+          ls -la "$UNPACKED_DIR/node_modules/" | head -10
 
       - name: Upload artifacts (Windows)
         if: matrix.os == 'windows-latest'

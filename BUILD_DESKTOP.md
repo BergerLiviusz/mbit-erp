@@ -100,7 +100,40 @@ npm run build:backend
 npm run build:frontend
 ```
 
-### 3. Windows Installer Készítése
+### 3. ⚠️ KRITIKUS: Backend Dependencies Nested Install
+
+**FONTOS**: A monorepo workspace-ek által használt **hoisted dependencies SYMLINK-eket** hoznak létre az `apps/server/node_modules`-ban, ami miatt a csomagolt alkalmazás **NEM fogja** tartalmazni a backend dependencies-eket.
+
+**Megoldás**: Telepítsd újra a server dependencies-eket **NESTED** módban (valódi fájlok, nem symlink-ek):
+
+```bash
+# Lépj be a server könyvtárba
+cd apps/server
+
+# Távolítsd el a symlink-eket
+rm -rf node_modules
+
+# Telepítsd újra NESTED módban (production dependencies)
+npm install --omit=dev --install-strategy=nested --workspaces=false
+
+# Ellenőrzés: dotenv létezik és NEM symlink
+ls -la node_modules/dotenv
+```
+
+**Ellenőrzés Windows-on:**
+```powershell
+cd apps\server
+Remove-Item -Recurse -Force node_modules
+npm install --omit=dev --install-strategy=nested --workspaces=false
+Get-Item node_modules\dotenv
+```
+
+**Mit várj:**
+- ✅ `node_modules/dotenv` **könyvtár** (NEM symlink)
+- ✅ `node_modules` mérete: ~100-150 MB
+- ❌ Ha csak pár MB, akkor még mindig symlink-eket használ!
+
+### 4. Windows Installer Készítése
 
 ```bash
 cd apps/desktop
@@ -111,7 +144,7 @@ npm run package:win
 - `release/Mbit-ERP-Setup-1.0.0.exe` - NSIS telepítő
 - `release/Mbit-ERP-1.0.0.exe` - Portable verzió
 
-**Méret:** ~150-200 MB (teljes app beágyazva)
+**Várt Méret:** ~200-300 MB (teljes app + backend dependencies)
 
 ### 4. Mac Installer Készítése
 
@@ -220,19 +253,35 @@ apps/desktop/
 
 **Probléma**: Backend indul, de azonnal összeomlik: `Error: Cannot find module 'dotenv'`
 
-**Ok**: 
-1. GitHub Actions nem telepítette a server dependencies-t
-2. Backend node_modules nem került be az installer-be
-3. Hiányzó NODE_PATH és cwd a forked process számára
+**Alapvető Ok (ROOT CAUSE)**: 
+npm workspaces (Turborepo) **hoisted dependencies** használata, ami **SYMLINK-eket** hoz létre az `apps/server/node_modules`-ban a root `node_modules`-ra mutatva. Amikor electron-builder csomagolja az alkalmazást, ezeket a symlink-eket **AS-IS** másolja, ami miatt a telepített alkalmazásban **törött hivatkozások** lesznek (mert a symlink-ek a package-n kívülre mutatnak).
 
-**Megoldás**: **JAVÍTVA v1.0.2+ VERZIÓTÓL!**
+**Példa a problémára:**
+```
+# A monorepo-ban (fejlesztés közben):
+apps/server/node_modules/dotenv → ../../node_modules/dotenv  ✅ Működik
+
+# A csomagolt alkalmazásban:
+resources/backend/node_modules/dotenv → ../../node_modules/dotenv  ❌ Nincs ilyen path!
+```
+
+**Megoldás**: **JAVÍTVA v1.0.3+ VERZIÓTÓL!**
 
 **GitHub Actions javítások:**
 ```yaml
-- Explicit server dependency install: npm install --production=false
-- Server build a desktop packaging előtt
-- Prisma client generation
-- Verification steps (dist, node_modules, dotenv létezésének ellenőrzése)
+# 1. Server build (hoisted dependencies használatával)
+- Build server code: npm run build
+
+# 2. NESTED install PACKAGING ELŐTT (valódi fájlok, nem symlink-ek!)
+- Remove symlinks: rm -rf apps/server/node_modules
+- Install nested: npm install --omit=dev --install-strategy=nested --workspaces=false
+
+# 3. Verification (symlink ellenőrzés!)
+- Check dotenv is NOT a symlink: if [ -L "node_modules/dotenv" ]
+- Verify dotenv exists as directory: if [ ! -d "node_modules/dotenv" ]
+
+# 4. Post-package verification
+- Verify packaged build contains real files in win-unpacked/resources/backend/node_modules
 ```
 
 **Runtime javítások (main.ts):**
@@ -244,9 +293,11 @@ apps/desktop/
 ```
 
 **Eredmény:**
-- ✅ Teljes backend dependency bundle (~100+ npm package)
+- ✅ Teljes backend dependency bundle **valódi fájlokkal** (~100-150 MB node_modules)
+- ✅ Installer mérete: 200-300 MB (vs. korábbi 83 MB)
 - ✅ Helyes module resolution a forked process-ben
 - ✅ Azonnali hibakeresés részletes log-okkal
+- ✅ CI/CD automatikus ellenőrzések (fail fast ha symlink-ek maradnak)
 
 **Naplófájl helye telepített alkalmazásban**:
 ```
