@@ -289,6 +289,16 @@ async function startBackend(): Promise<void> {
         return;
       }
       
+      // Verify Prisma client exists
+      const prismaClientPath = path.join(nodeModulesPath, '@prisma', 'client');
+      if (!fs.existsSync(prismaClientPath)) {
+        const errorMsg = `Prisma client not found at: ${prismaClientPath}. Run 'npx prisma generate' during build.`;
+        console.error(`[Backend Error] ${errorMsg}`);
+        writeLog(`[Backend Error] ${errorMsg}`);
+        reject(new Error(errorMsg));
+        return;
+      }
+      
       console.log('[Backend] Using Electron bundled Node.js runtime via fork()');
       console.log('[Backend] NODE_PATH set to:', env.NODE_PATH);
       writeLog('[Backend] Using Electron bundled Node.js runtime via fork()');
@@ -331,23 +341,43 @@ async function startBackend(): Promise<void> {
       reject(error);
     });
 
-    backendProcess.on('exit', (code) => {
-      const exitMsg = `[Backend] Process exited with code ${code}`;
+    // Track if backend has started successfully
+    let backendStarted = false;
+
+    backendProcess.on('exit', (code, signal) => {
+      const exitMsg = `[Backend] Process exited with code ${code}, signal ${signal}`;
       console.log(exitMsg);
       writeLog(exitMsg);
-      if (code !== 0 && code !== null) {
-        reject(new Error(`Backend process exited with code ${code}`));
+      
+      // If backend hasn't started yet and exits, it's a failure
+      if (!backendStarted) {
+        const errorMsg = code === null 
+          ? 'Backend process crashed or was killed during startup. Check logs for details.'
+          : `Backend process exited with code ${code} during startup. Check logs for details.`;
+        console.error(`[Backend Error] ${errorMsg}`);
+        writeLog(`[Backend Error] ${errorMsg}`);
+        // Only reject if we haven't already resolved/rejected
+        if (!backendStarted) {
+          reject(new Error(errorMsg));
+        }
+      } else if (code !== 0 && code !== null) {
+        // Backend was running but exited unexpectedly
+        console.warn(`[Backend Warning] Backend exited unexpectedly with code ${code}`);
+        writeLog(`[Backend Warning] Backend exited unexpectedly with code ${code}`);
       }
     });
 
     // Wait for backend to be healthy instead of fixed delay
     waitForBackend()
       .then(() => {
+        backendStarted = true;
         console.log('[Backend] Started successfully');
+        writeLog('[Backend] Started successfully - health check passed');
         resolve();
       })
       .catch((error) => {
         console.error('[Backend] Failed to become ready:', error);
+        writeLog(`[Backend] Failed to become ready: ${error.message}`);
         reject(error);
       });
   });

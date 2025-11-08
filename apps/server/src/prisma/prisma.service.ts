@@ -65,15 +65,67 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
   private async ensureSchema() {
     try {
       // Try to query a table to see if schema exists
-      await this.$queryRaw`SELECT 1 FROM felhasznalok LIMIT 1`.catch(() => {
-        throw new Error('Tables do not exist');
-      });
+      await this.$queryRaw`SELECT 1 FROM felhasznalok LIMIT 1`;
       this.logger.debug('Database schema already initialized');
-    } catch (error) {
-      // Tables don't exist - this is expected for new installations
-      // The seed service will handle initialization through Prisma operations
-      // which will create tables automatically when data is inserted
-      this.logger.log('🌱 New database detected - schema will be initialized by seed service');
+      return;
+    } catch (error: any) {
+      // Tables don't exist - need to create schema
+      this.logger.log('🌱 New database detected - initializing schema...');
+      
+      try {
+        // Use Prisma Migrate programmatically to push schema
+        const { execSync } = require('child_process');
+        const { join } = require('path');
+        
+        // In packaged Electron app, schema is in backend/prisma/schema.prisma
+        const isElectron = process.env.ELECTRON_RUN_AS_NODE === '1';
+        const schemaDir = isElectron 
+          ? join(process.resourcesPath || process.cwd(), 'backend', 'prisma')
+          : join(__dirname, '..', '..', 'prisma');
+        
+        const schemaPath = join(schemaDir, 'schema.prisma');
+        
+        // Check if schema file exists
+        if (!existsSync(schemaPath)) {
+          this.logger.error('Prisma schema file not found at:', schemaPath);
+          this.logger.error('Tried directory:', schemaDir);
+          throw new Error('Schema file not found');
+        }
+        
+        // Run prisma db push programmatically
+        // Use Prisma CLI directly from node_modules
+        const prismaCliPath = isElectron
+          ? join(process.resourcesPath || process.cwd(), 'backend', 'node_modules', '.bin', 'prisma')
+          : join(__dirname, '..', '..', '..', 'node_modules', '.bin', 'prisma');
+        
+        // Fallback to npx if direct path doesn't exist
+        const prismaCommand = existsSync(prismaCliPath) 
+          ? prismaCliPath 
+          : 'npx prisma';
+        
+        this.logger.log('Running prisma db push to create tables...');
+        this.logger.log('Schema path:', schemaPath);
+        this.logger.log('Working directory:', schemaDir);
+        this.logger.log('Prisma command:', prismaCommand);
+        
+        execSync(`${prismaCommand} db push --skip-generate --accept-data-loss`, {
+          cwd: schemaDir,
+          stdio: 'inherit',
+          env: { ...process.env },
+          shell: true,
+        });
+        this.logger.log('✅ Database schema created successfully');
+      } catch (pushError: any) {
+        this.logger.error('Failed to push schema:', pushError.message);
+        if (pushError.stdout) {
+          this.logger.error('stdout:', pushError.stdout.toString());
+        }
+        if (pushError.stderr) {
+          this.logger.error('stderr:', pushError.stderr.toString());
+        }
+        // Don't throw - let seed service try to handle it
+        // If schema doesn't exist, seed will fail gracefully
+      }
     }
   }
 

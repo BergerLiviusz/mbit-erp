@@ -31,32 +31,51 @@ import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
-  // Log environment info for debugging
-  console.log('🔍 Environment check:');
-  console.log(`  - ELECTRON_RUN_AS_NODE: ${process.env.ELECTRON_RUN_AS_NODE || 'not set'}`);
-  console.log(`  - DATABASE_URL: ${process.env.DATABASE_URL ? '***SET***' : 'NOT SET'}`);
-  console.log(`  - PORT: ${process.env.PORT || '3000 (default)'}`);
-  console.log(`  - NODE_ENV: ${process.env.NODE_ENV || 'not set'}`);
-  
-  const app = await NestFactory.create(AppModule);
-  
-  app.enableCors({
-    origin: ['http://localhost:5000', 'http://127.0.0.1:5000', 'http://0.0.0.0:5000'],
-    credentials: true,
-  });
-  
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      transform: true,
-    }),
-  );
+  try {
+    // Log environment info for debugging
+    console.log('🔍 Environment check:');
+    console.log(`  - ELECTRON_RUN_AS_NODE: ${process.env.ELECTRON_RUN_AS_NODE || 'not set'}`);
+    console.log(`  - DATABASE_URL: ${process.env.DATABASE_URL ? '***SET***' : 'NOT SET'}`);
+    console.log(`  - PORT: ${process.env.PORT || '3000 (default)'}`);
+    console.log(`  - NODE_ENV: ${process.env.NODE_ENV || 'not set'}`);
+    
+    const app = await NestFactory.create(AppModule);
+    
+    // CORS configuration: Allow Electron file:// origin and web origins
+    const allowedOrigins = isElectron 
+      ? true // Allow all origins in Electron (file:// protocol)
+      : ['http://localhost:5000', 'http://127.0.0.1:5000', 'http://0.0.0.0:5000'];
+    
+    app.enableCors({
+      origin: allowedOrigins,
+      credentials: true,
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization'],
+    });
+    
+    app.useGlobalPipes(
+      new ValidationPipe({
+        whitelist: true,
+        transform: true,
+      }),
+    );
 
-  const port = process.env.PORT || 3000;
-  const bindAddress = isElectron ? '127.0.0.1' : '0.0.0.0';
-  
-  await app.listen(port, bindAddress);
-  console.log(`🚀 Mbit ERP szerver fut: http://${bindAddress}:${port}`);
+    const port = process.env.PORT || 3000;
+    const bindAddress = isElectron ? '127.0.0.1' : '0.0.0.0';
+    
+    await app.listen(port, bindAddress);
+    console.log(`🚀 Mbit ERP szerver fut: http://${bindAddress}:${port}`);
+  } catch (error) {
+    console.error('❌ Fatal error during bootstrap:', error);
+    if (error instanceof Error) {
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+    }
+    process.exit(1);
+  }
 }
 
-bootstrap();
+bootstrap().catch((error) => {
+  console.error('❌ Unhandled error in bootstrap:', error);
+  process.exit(1);
+});

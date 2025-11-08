@@ -9,6 +9,7 @@ import Settings from './pages/Settings';
 import Opportunities from './pages/Opportunities';
 import Quotes from './pages/Quotes';
 import Login from './pages/Login';
+import { BackendStatus } from './components/BackendStatus';
 import MbitLogo from './assets/logo.svg';
 
 function DropdownMenu({ title, items }: { title: string; items: Array<{ to: string; label: string }> }) {
@@ -114,6 +115,7 @@ function App() {
       </nav>
 
       <main className="container mx-auto px-4 py-8">
+        {isElectron && <BackendStatus />}
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/crm" element={<CRM />} />
