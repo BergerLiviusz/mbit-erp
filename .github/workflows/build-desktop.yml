@@ -49,6 +49,7 @@ jobs:
           npx prisma generate
 
       - name: Verify server build and dependencies
+        shell: bash
         run: |
           echo "Checking server dist folder..."
           ls -la apps/server/dist || echo "Warning: dist folder not found"
