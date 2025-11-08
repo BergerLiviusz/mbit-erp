@@ -1,0 +1,24 @@
+﻿2025-11-08T13:23:12.5812907Z ##[group]Run actions/setup-node@v4
+2025-11-08T13:23:12.5813238Z with:
+2025-11-08T13:23:12.5813420Z   node-version: 20
+2025-11-08T13:23:12.5813597Z   cache: npm
+2025-11-08T13:23:12.5813819Z   always-auth: false
+2025-11-08T13:23:12.5814027Z   check-latest: false
+2025-11-08T13:23:12.5814334Z   token: ***
+2025-11-08T13:23:12.5814501Z ##[endgroup]
+2025-11-08T13:23:12.8247476Z Found in cache @ C:\hostedtoolcache\windows\node\20.19.5\x64
+2025-11-08T13:23:12.8262153Z ##[group]Environment details
+2025-11-08T13:23:20.5632995Z node: v20.19.5
+2025-11-08T13:23:20.5633364Z npm: 10.8.2
+2025-11-08T13:23:20.5633529Z yarn: 1.22.22
+2025-11-08T13:23:20.5635718Z ##[endgroup]
+2025-11-08T13:23:20.6516271Z [command]C:\Windows\system32\cmd.exe /D /S /C "C:\hostedtoolcache\windows\node\20.19.5\x64\npm.cmd config get cache"
+2025-11-08T13:23:21.3552462Z C:\npm\cache
+2025-11-08T13:23:21.9383436Z Cache hit for: node-cache-Windows-x64-npm-80b7446820e47debc2fa093a6d0ba4c4562b55ffb84fa6f536eaa184ee3c010c
+2025-11-08T13:23:23.1958985Z Received 29360128 of 160430214 (18.3%), 27.9 MBs/sec
+2025-11-08T13:23:24.1973727Z Received 130023424 of 160430214 (81.0%), 61.8 MBs/sec
+2025-11-08T13:23:24.8196045Z Received 160430214 of 160430214 (100.0%), 58.2 MBs/sec
+2025-11-08T13:23:24.8200499Z Cache Size: ~153 MB (160430214 B)
+2025-11-08T13:23:24.8290258Z [command]"C:\Program Files\Git\usr\bin\tar.exe" -xf D:/a/_temp/d0492c5a-306a-460c-8043-8883ea114102/cache.tzst -P -C D:/a/mbit-erp/mbit-erp --force-local --use-compress-program "zstd -d"
+2025-11-08T13:23:30.6728636Z Cache restored successfully
+2025-11-08T13:23:30.6853820Z Cache restored from key: node-cache-Windows-x64-npm-80b7446820e47debc2fa093a6d0ba4c4562b55ffb84fa6f536eaa184ee3c010c

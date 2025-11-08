@@ -1,0 +1,9 @@
+﻿2025-11-08T13:24:20.9821332Z ##[group]Run cd apps/server
+2025-11-08T13:24:20.9821675Z [36;1mcd apps/server[0m
+2025-11-08T13:24:20.9821893Z [36;1mnpm run build[0m
+2025-11-08T13:24:20.9880969Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2025-11-08T13:24:20.9881597Z ##[endgroup]
+2025-11-08T13:24:21.8433142Z 
+2025-11-08T13:24:21.8433691Z > @mbit-erp/server@1.0.0 build
+2025-11-08T13:24:21.8434019Z > nest build
+2025-11-08T13:24:21.8434136Z 

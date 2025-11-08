@@ -1,0 +1,47 @@
+﻿2025-11-08T13:23:30.7138161Z ##[group]Run npm ci
+2025-11-08T13:23:30.7138453Z [36;1mnpm ci[0m
+2025-11-08T13:23:30.7502428Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2025-11-08T13:23:30.7502801Z ##[endgroup]
+2025-11-08T13:23:50.3148218Z npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+2025-11-08T13:23:50.3980286Z npm warn deprecated npmlog@5.0.1: This package is no longer supported.
+2025-11-08T13:23:50.5712591Z npm warn deprecated @humanwhocodes/config-array@0.13.0: Use @eslint/config-array instead
+2025-11-08T13:23:51.0152740Z npm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+2025-11-08T13:23:51.1976746Z npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+2025-11-08T13:23:51.2016000Z npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+2025-11-08T13:23:51.2027492Z npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+2025-11-08T13:23:51.2037270Z npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+2025-11-08T13:23:51.2049323Z npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+2025-11-08T13:23:51.2087897Z npm warn deprecated glob@8.1.0: Glob versions prior to v9 are no longer supported
+2025-11-08T13:23:51.2094492Z npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+2025-11-08T13:23:51.2102907Z npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+2025-11-08T13:23:51.5294667Z npm warn deprecated are-we-there-yet@2.0.0: This package is no longer supported.
+2025-11-08T13:23:51.5353946Z npm warn deprecated @humanwhocodes/object-schema@2.0.3: Use @eslint/object-schema instead
+2025-11-08T13:23:51.8176193Z npm warn deprecated sourcemap-codec@1.4.8: Please use @jridgewell/sourcemap-codec instead
+2025-11-08T13:23:52.0692094Z npm warn deprecated multer@1.4.5-lts.2: Multer 1.x is impacted by a number of vulnerabilities, which have been patched in 2.x. You should upgrade to the latest 2.x version.
+2025-11-08T13:23:52.8969597Z npm warn deprecated boolean@3.2.0: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
+2025-11-08T13:23:52.9424297Z npm warn deprecated gauge@3.0.2: This package is no longer supported.
+2025-11-08T13:23:53.3320538Z npm warn deprecated source-map@0.8.0-beta.0: The work that was done in this beta branch won't be included in future versions
+2025-11-08T13:23:59.6187167Z npm warn deprecated eslint@8.57.1: This version is no longer supported. Please see https://eslint.org/version-support for other options.
+2025-11-08T13:24:19.4392119Z npm warn cleanup Failed to remove some directories [
+2025-11-08T13:24:19.4392732Z npm warn cleanup   [
+2025-11-08T13:24:19.4393374Z npm warn cleanup     'D:\\a\\mbit-erp\\mbit-erp\\node_modules\\dmg-license',
+2025-11-08T13:24:19.4394672Z npm warn cleanup     [Error: EPERM: operation not permitted, rmdir 'D:\a\mbit-erp\mbit-erp\node_modules\dmg-license\node_modules\ajv'] {
+2025-11-08T13:24:19.4395653Z npm warn cleanup       errno: -4048,
+2025-11-08T13:24:19.4396265Z npm warn cleanup       code: 'EPERM',
+2025-11-08T13:24:19.4396834Z npm warn cleanup       syscall: 'rmdir',
+2025-11-08T13:24:19.4397680Z npm warn cleanup       path: 'D:\\a\\mbit-erp\\mbit-erp\\node_modules\\dmg-license\\node_modules\\ajv'
+2025-11-08T13:24:19.4398692Z npm warn cleanup     }
+2025-11-08T13:24:19.4399051Z npm warn cleanup   ]
+2025-11-08T13:24:19.4399382Z npm warn cleanup ]
+2025-11-08T13:24:19.8364514Z 
+2025-11-08T13:24:19.8365886Z added 1466 packages, and audited 1473 packages in 41s
+2025-11-08T13:24:19.8366356Z 
+2025-11-08T13:24:19.8366614Z 254 packages are looking for funding
+2025-11-08T13:24:19.8367056Z   run `npm fund` for details
+2025-11-08T13:24:19.8806115Z 
+2025-11-08T13:24:19.8806720Z 11 vulnerabilities (5 low, 6 moderate)
+2025-11-08T13:24:19.8809512Z 
+2025-11-08T13:24:19.8809744Z To address all issues (including breaking changes), run:
+2025-11-08T13:24:19.8810223Z   npm audit fix --force
+2025-11-08T13:24:19.8810432Z 
+2025-11-08T13:24:19.8810590Z Run `npm audit` for details.

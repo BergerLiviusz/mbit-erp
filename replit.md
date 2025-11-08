@@ -95,6 +95,14 @@ The project utilizes a monorepo structure managed by Turborepo, encompassing a R
   - Prisma runtime unable to load query engine → native abort → exit code null, no console output
   - **FIX**: Added explicit extraResources entry to copy `.prisma` directory to packaged app
   - Prisma client generation moved AFTER production npm install (in same workflow step)
+- ✅ **Node ABI Version Mismatch Fix (v1.0.5d)**:
+  - **NEW ISSUE**: Backend still crashed after .prisma directory fix (verified present in packaged app)
+  - **DEEPER ROOT CAUSE (architect debug)**: Prisma native binaries compiled for wrong Node version
+  - GitHub Actions used Node 20.x → `prisma generate` created Node 20 ABI binaries
+  - Electron 28 embeds Node 18.18.2 → ABI mismatch when loading `.dll.node` files
+  - **Symptoms**: Native abort before any JS code executes → exit code null, no console output
+  - **FIX**: Changed GitHub Actions to use Node 18.18.2 (matches Electron 28 embedded runtime)
+  - Prisma query engine now generated with correct ABI version for packaged app
 - ✅ **Architect Review Process**: Multi-iteration debugging with final approval
   - v1.0.0-v1.0.2: Symlink diagnosis (incorrect)
   - v1.0.3: Nested install (incomplete - still used hardlinks)
@@ -102,5 +110,6 @@ The project utilizes a monorepo structure managed by Turborepo, encompassing a R
   - v1.0.5a-b: npm dedupe attempts (FAILED - deleted production dependencies)
   - v1.0.5 FINAL: Removed dedupe, single install command (CORRECT - architect confirmed)
   - v1.0.5c: Prisma .prisma directory packaging fix (architect confirmed)
-  - Debug responsibility used for deep analysis (npm dedupe + Prisma packaging issues discovered)
+  - v1.0.5d: Node ABI version mismatch fix (architect confirmed)
+  - Debug responsibility used for deep analysis (npm dedupe + Prisma packaging + Node ABI issues discovered)
   - PASS: All changes architect-approved - production ready
