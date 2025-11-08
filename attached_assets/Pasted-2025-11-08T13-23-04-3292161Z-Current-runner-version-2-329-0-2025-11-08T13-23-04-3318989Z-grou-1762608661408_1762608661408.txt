@@ -1,0 +1,580 @@
+2025-11-08T13:23:04.3292161Z Current runner version: '2.329.0'
+2025-11-08T13:23:04.3318989Z ##[group]Runner Image Provisioner
+2025-11-08T13:23:04.3319831Z Hosted Compute Agent
+2025-11-08T13:23:04.3320306Z Version: 20251016.436
+2025-11-08T13:23:04.3320851Z Commit: 8ab8ac8bfd662a3739dab9fe09456aba92132568
+2025-11-08T13:23:04.3321476Z Build Date: 2025-10-15T20:44:12Z
+2025-11-08T13:23:04.3322006Z ##[endgroup]
+2025-11-08T13:23:04.3322429Z ##[group]Operating System
+2025-11-08T13:23:04.3322979Z Microsoft Windows Server 2025
+2025-11-08T13:23:04.3323488Z 10.0.26100
+2025-11-08T13:23:04.3323937Z Datacenter
+2025-11-08T13:23:04.3324401Z ##[endgroup]
+2025-11-08T13:23:04.3324805Z ##[group]Runner Image
+2025-11-08T13:23:04.3325264Z Image: windows-2025
+2025-11-08T13:23:04.3325722Z Version: 20251102.77.1
+2025-11-08T13:23:04.3326653Z Included Software: https://github.com/actions/runner-images/blob/win25/20251102.77/images/windows/Windows2025-Readme.md
+2025-11-08T13:23:04.3328341Z Image Release: https://github.com/actions/runner-images/releases/tag/win25%2F20251102.77
+2025-11-08T13:23:04.3329263Z ##[endgroup]
+2025-11-08T13:23:04.3330191Z ##[group]GITHUB_TOKEN Permissions
+2025-11-08T13:23:04.3332518Z Contents: write
+2025-11-08T13:23:04.3333003Z Metadata: read
+2025-11-08T13:23:04.3333734Z ##[endgroup]
+2025-11-08T13:23:04.3336004Z Secret source: Actions
+2025-11-08T13:23:04.3336665Z Prepare workflow directory
+2025-11-08T13:23:04.3749525Z Prepare all required actions
+2025-11-08T13:23:04.3787774Z Getting action download info
+2025-11-08T13:23:04.7747800Z Download action repository 'actions/checkout@v4' (SHA:08eba0b27e820071cde6df949e0beb9ba4906955)
+2025-11-08T13:23:04.9012725Z Download action repository 'actions/setup-node@v4' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+2025-11-08T13:23:05.0707332Z Download action repository 'actions/upload-artifact@v4' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+2025-11-08T13:23:05.2903809Z Download action repository 'softprops/action-gh-release@v1' (SHA:de2c0eb89ae2a093876385947365aca7b0e5f844)
+2025-11-08T13:23:06.2829697Z Complete job name: build (windows-latest)
+2025-11-08T13:23:06.5389581Z ##[group]Run actions/checkout@v4
+2025-11-08T13:23:06.5391520Z with:
+2025-11-08T13:23:06.5392243Z   repository: BergerLiviusz/mbit-erp
+2025-11-08T13:23:06.5393534Z   token: ***
+2025-11-08T13:23:06.5394189Z   ssh-strict: true
+2025-11-08T13:23:06.5394880Z   ssh-user: git
+2025-11-08T13:23:06.5395593Z   persist-credentials: true
+2025-11-08T13:23:06.5396382Z   clean: true
+2025-11-08T13:23:06.5397097Z   sparse-checkout-cone-mode: true
+2025-11-08T13:23:06.5397973Z   fetch-depth: 1
+2025-11-08T13:23:06.5398676Z   fetch-tags: false
+2025-11-08T13:23:06.5399568Z   show-progress: true
+2025-11-08T13:23:06.5400331Z   lfs: false
+2025-11-08T13:23:06.5400980Z   submodules: false
+2025-11-08T13:23:06.5401809Z   set-safe-directory: true
+2025-11-08T13:23:06.5403044Z ##[endgroup]
+2025-11-08T13:23:06.7299848Z Syncing repository: BergerLiviusz/mbit-erp
+2025-11-08T13:23:06.7302708Z ##[group]Getting Git version info
+2025-11-08T13:23:06.7304391Z Working directory is 'D:\a\mbit-erp\mbit-erp'
+2025-11-08T13:23:06.8208616Z [command]"C:\Program Files\Git\bin\git.exe" version
+2025-11-08T13:23:07.5130797Z git version 2.51.2.windows.1
+2025-11-08T13:23:07.5191710Z ##[endgroup]
+2025-11-08T13:23:07.5216677Z Temporarily overriding HOME='D:\a\_temp\4047abf0-2bd1-4881-a70f-78a6352c6263' before making global git config changes
+2025-11-08T13:23:07.5218020Z Adding repository directory to the temporary git global config as a safe directory
+2025-11-08T13:23:07.5228150Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\mbit-erp\mbit-erp
+2025-11-08T13:23:07.5895700Z Deleting the contents of 'D:\a\mbit-erp\mbit-erp'
+2025-11-08T13:23:07.5902322Z ##[group]Initializing the repository
+2025-11-08T13:23:07.5912981Z [command]"C:\Program Files\Git\bin\git.exe" init D:\a\mbit-erp\mbit-erp
+2025-11-08T13:23:07.7094630Z Initialized empty Git repository in D:/a/mbit-erp/mbit-erp/.git/
+2025-11-08T13:23:07.7141633Z [command]"C:\Program Files\Git\bin\git.exe" remote add origin https://github.com/BergerLiviusz/mbit-erp
+2025-11-08T13:23:07.7822925Z ##[endgroup]
+2025-11-08T13:23:07.7823510Z ##[group]Disabling automatic garbage collection
+2025-11-08T13:23:07.7833249Z [command]"C:\Program Files\Git\bin\git.exe" config --local gc.auto 0
+2025-11-08T13:23:07.8168431Z ##[endgroup]
+2025-11-08T13:23:07.8168930Z ##[group]Setting up auth
+2025-11-08T13:23:07.8182705Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+2025-11-08T13:23:07.8503796Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+2025-11-08T13:23:09.8834398Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2025-11-08T13:23:09.9150001Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+2025-11-08T13:23:10.4479489Z [command]"C:\Program Files\Git\bin\git.exe" config --local http.https://github.com/.extraheader "AUTHORIZATION: basic ***"
+2025-11-08T13:23:10.4783183Z ##[endgroup]
+2025-11-08T13:23:10.4784032Z ##[group]Fetching the repository
+2025-11-08T13:23:10.4799092Z [command]"C:\Program Files\Git\bin\git.exe" -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +a80087052d36c30147f85865831e2642185f9aa9:refs/remotes/origin/main
+2025-11-08T13:23:12.1840286Z From https://github.com/BergerLiviusz/mbit-erp
+2025-11-08T13:23:12.1841011Z  * [new ref]         a80087052d36c30147f85865831e2642185f9aa9 -> origin/main
+2025-11-08T13:23:12.2213852Z ##[endgroup]
+2025-11-08T13:23:12.2214507Z ##[group]Determining the checkout info
+2025-11-08T13:23:12.2216362Z ##[endgroup]
+2025-11-08T13:23:12.2230373Z [command]"C:\Program Files\Git\bin\git.exe" sparse-checkout disable
+2025-11-08T13:23:12.2880820Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset-all extensions.worktreeConfig
+2025-11-08T13:23:12.3178222Z ##[group]Checking out the ref
+2025-11-08T13:23:12.3188895Z [command]"C:\Program Files\Git\bin\git.exe" checkout --progress --force -B main refs/remotes/origin/main
+2025-11-08T13:23:12.4493080Z branch 'main' set up to track 'origin/main'.
+2025-11-08T13:23:12.4500991Z Switched to a new branch 'main'
+2025-11-08T13:23:12.4540515Z ##[endgroup]
+2025-11-08T13:23:12.5141445Z [command]"C:\Program Files\Git\bin\git.exe" log -1 --format=%H
+2025-11-08T13:23:12.5406199Z a80087052d36c30147f85865831e2642185f9aa9
+2025-11-08T13:23:12.5812929Z ##[group]Run actions/setup-node@v4
+2025-11-08T13:23:12.5813241Z with:
+2025-11-08T13:23:12.5813424Z   node-version: 20
+2025-11-08T13:23:12.5813600Z   cache: npm
+2025-11-08T13:23:12.5813821Z   always-auth: false
+2025-11-08T13:23:12.5814029Z   check-latest: false
+2025-11-08T13:23:12.5814336Z   token: ***
+2025-11-08T13:23:12.5814503Z ##[endgroup]
+2025-11-08T13:23:12.8247499Z Found in cache @ C:\hostedtoolcache\windows\node\20.19.5\x64
+2025-11-08T13:23:12.8262160Z ##[group]Environment details
+2025-11-08T13:23:20.5633036Z node: v20.19.5
+2025-11-08T13:23:20.5633368Z npm: 10.8.2
+2025-11-08T13:23:20.5633532Z yarn: 1.22.22
+2025-11-08T13:23:20.5635731Z ##[endgroup]
+2025-11-08T13:23:20.6516313Z [command]C:\Windows\system32\cmd.exe /D /S /C "C:\hostedtoolcache\windows\node\20.19.5\x64\npm.cmd config get cache"
+2025-11-08T13:23:21.3552508Z C:\npm\cache
+2025-11-08T13:23:21.9383532Z Cache hit for: node-cache-Windows-x64-npm-80b7446820e47debc2fa093a6d0ba4c4562b55ffb84fa6f536eaa184ee3c010c
+2025-11-08T13:23:23.1959027Z Received 29360128 of 160430214 (18.3%), 27.9 MBs/sec
+2025-11-08T13:23:24.1973765Z Received 130023424 of 160430214 (81.0%), 61.8 MBs/sec
+2025-11-08T13:23:24.8196088Z Received 160430214 of 160430214 (100.0%), 58.2 MBs/sec
+2025-11-08T13:23:24.8200516Z Cache Size: ~153 MB (160430214 B)
+2025-11-08T13:23:24.8290278Z [command]"C:\Program Files\Git\usr\bin\tar.exe" -xf D:/a/_temp/d0492c5a-306a-460c-8043-8883ea114102/cache.tzst -P -C D:/a/mbit-erp/mbit-erp --force-local --use-compress-program "zstd -d"
+2025-11-08T13:23:30.6728674Z Cache restored successfully
+2025-11-08T13:23:30.6853846Z Cache restored from key: node-cache-Windows-x64-npm-80b7446820e47debc2fa093a6d0ba4c4562b55ffb84fa6f536eaa184ee3c010c
+2025-11-08T13:23:30.7138180Z ##[group]Run npm ci
+2025-11-08T13:23:30.7138456Z [36;1mnpm ci[0m
+2025-11-08T13:23:30.7502451Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2025-11-08T13:23:30.7502804Z ##[endgroup]
+2025-11-08T13:23:50.3148286Z npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+2025-11-08T13:23:50.3980336Z npm warn deprecated npmlog@5.0.1: This package is no longer supported.
+2025-11-08T13:23:50.5712641Z npm warn deprecated @humanwhocodes/config-array@0.13.0: Use @eslint/config-array instead
+2025-11-08T13:23:51.0152809Z npm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+2025-11-08T13:23:51.1976798Z npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+2025-11-08T13:23:51.2016129Z npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+2025-11-08T13:23:51.2027513Z npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+2025-11-08T13:23:51.2037288Z npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+2025-11-08T13:23:51.2049339Z npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+2025-11-08T13:23:51.2087916Z npm warn deprecated glob@8.1.0: Glob versions prior to v9 are no longer supported
+2025-11-08T13:23:51.2094511Z npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+2025-11-08T13:23:51.2102924Z npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+2025-11-08T13:23:51.5294712Z npm warn deprecated are-we-there-yet@2.0.0: This package is no longer supported.
+2025-11-08T13:23:51.5353980Z npm warn deprecated @humanwhocodes/object-schema@2.0.3: Use @eslint/object-schema instead
+2025-11-08T13:23:51.8176286Z npm warn deprecated sourcemap-codec@1.4.8: Please use @jridgewell/sourcemap-codec instead
+2025-11-08T13:23:52.0692135Z npm warn deprecated multer@1.4.5-lts.2: Multer 1.x is impacted by a number of vulnerabilities, which have been patched in 2.x. You should upgrade to the latest 2.x version.
+2025-11-08T13:23:52.8969645Z npm warn deprecated boolean@3.2.0: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
+2025-11-08T13:23:52.9424336Z npm warn deprecated gauge@3.0.2: This package is no longer supported.
+2025-11-08T13:23:53.3320591Z npm warn deprecated source-map@0.8.0-beta.0: The work that was done in this beta branch won't be included in future versions
+2025-11-08T13:23:59.6187216Z npm warn deprecated eslint@8.57.1: This version is no longer supported. Please see https://eslint.org/version-support for other options.
+2025-11-08T13:24:19.4392157Z npm warn cleanup Failed to remove some directories [
+2025-11-08T13:24:19.4392736Z npm warn cleanup   [
+2025-11-08T13:24:19.4393408Z npm warn cleanup     'D:\\a\\mbit-erp\\mbit-erp\\node_modules\\dmg-license',
+2025-11-08T13:24:19.4394679Z npm warn cleanup     [Error: EPERM: operation not permitted, rmdir 'D:\a\mbit-erp\mbit-erp\node_modules\dmg-license\node_modules\ajv'] {
+2025-11-08T13:24:19.4395668Z npm warn cleanup       errno: -4048,
+2025-11-08T13:24:19.4396273Z npm warn cleanup       code: 'EPERM',
+2025-11-08T13:24:19.4396838Z npm warn cleanup       syscall: 'rmdir',
+2025-11-08T13:24:19.4397684Z npm warn cleanup       path: 'D:\\a\\mbit-erp\\mbit-erp\\node_modules\\dmg-license\\node_modules\\ajv'
+2025-11-08T13:24:19.4398698Z npm warn cleanup     }
+2025-11-08T13:24:19.4399055Z npm warn cleanup   ]
+2025-11-08T13:24:19.4399385Z npm warn cleanup ]
+2025-11-08T13:24:19.8364559Z 
+2025-11-08T13:24:19.8365904Z added 1466 packages, and audited 1473 packages in 41s
+2025-11-08T13:24:19.8366362Z 
+2025-11-08T13:24:19.8366622Z 254 packages are looking for funding
+2025-11-08T13:24:19.8367062Z   run `npm fund` for details
+2025-11-08T13:24:19.8806155Z 
+2025-11-08T13:24:19.8809222Z 11 vulnerabilities (5 low, 6 moderate)
+2025-11-08T13:24:19.8809516Z 
+2025-11-08T13:24:19.8809747Z To address all issues (including breaking changes), run:
+2025-11-08T13:24:19.8810230Z   npm audit fix --force
+2025-11-08T13:24:19.8810434Z 
+2025-11-08T13:24:19.8810595Z Run `npm audit` for details.
+2025-11-08T13:24:20.9821353Z ##[group]Run cd apps/server
+2025-11-08T13:24:20.9821678Z [36;1mcd apps/server[0m
+2025-11-08T13:24:20.9821895Z [36;1mnpm run build[0m
+2025-11-08T13:24:20.9880983Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2025-11-08T13:24:20.9881603Z ##[endgroup]
+2025-11-08T13:24:21.8433186Z 
+2025-11-08T13:24:21.8433696Z > @mbit-erp/server@1.0.0 build
+2025-11-08T13:24:21.8434023Z > nest build
+2025-11-08T13:24:21.8434139Z 
+2025-11-08T13:24:26.3684429Z ##[group]Run Write-Host "=== Installing server dependencies (production only, NESTED mode, real files) ==="
+2025-11-08T13:24:26.3685243Z [36;1mWrite-Host "=== Installing server dependencies (production only, NESTED mode, real files) ==="[0m
+2025-11-08T13:24:26.3685691Z [36;1mcd apps/server[0m
+2025-11-08T13:24:26.3686036Z [36;1mRemove-Item -Recurse -Force node_modules -ErrorAction SilentlyContinue[0m
+2025-11-08T13:24:26.3686558Z [36;1mnpm install --omit=dev --install-strategy=nested --install-links=false --workspaces=false[0m
+2025-11-08T13:24:26.3686966Z [36;1m[0m
+2025-11-08T13:24:26.3687132Z [36;1mWrite-Host ""[0m
+2025-11-08T13:24:26.3687419Z [36;1mWrite-Host "=== Generating Prisma Client for production ==="[0m
+2025-11-08T13:24:26.3687760Z [36;1mnpx prisma generate[0m
+2025-11-08T13:24:26.3687959Z [36;1m[0m
+2025-11-08T13:24:26.3688111Z [36;1mWrite-Host ""[0m
+2025-11-08T13:24:26.3688497Z [36;1mWrite-Host "=== Verifying dependencies are REAL FILES (not junctions/symlinks) ==="[0m
+2025-11-08T13:24:26.3688864Z [36;1m[0m
+2025-11-08T13:24:26.3689069Z [36;1mif (-not (Test-Path "node_modules/dotenv")) {[0m
+2025-11-08T13:24:26.3689469Z [36;1m  Write-Host "❌ ERROR: dotenv directory not found!"[0m
+2025-11-08T13:24:26.3689790Z [36;1m  exit 1[0m
+2025-11-08T13:24:26.3689953Z [36;1m}[0m
+2025-11-08T13:24:26.3690102Z [36;1m[0m
+2025-11-08T13:24:26.3690340Z [36;1m$dotenvAttrs = (Get-Item "node_modules/dotenv").Attributes[0m
+2025-11-08T13:24:26.3690682Z [36;1mif ($dotenvAttrs -match 'ReparsePoint') {[0m
+2025-11-08T13:24:26.3691052Z [36;1m  Write-Host "❌ ERROR: dotenv is a Windows junction/reparse point!"[0m
+2025-11-08T13:24:26.3691464Z [36;1m  Write-Host "Attributes: $dotenvAttrs"[0m
+2025-11-08T13:24:26.3691771Z [36;1m  exit 1[0m
+2025-11-08T13:24:26.3692038Z [36;1m}[0m
+2025-11-08T13:24:26.3692198Z [36;1m[0m
+2025-11-08T13:24:26.3692401Z [36;1mWrite-Host "✅ Top-level dotenv is REAL FILE"[0m
+2025-11-08T13:24:26.3692644Z [36;1m[0m
+2025-11-08T13:24:26.3692805Z [36;1mWrite-Host ""[0m
+2025-11-08T13:24:26.3693144Z [36;1mWrite-Host "=== Searching for ALL es-object-atoms instances (deep nested check) ==="[0m
+2025-11-08T13:24:26.3693987Z [36;1m$esInstances = Get-ChildItem -Path node_modules -Recurse -Filter "es-object-atoms" -Directory -ErrorAction SilentlyContinue[0m
+2025-11-08T13:24:26.3694478Z [36;1m[0m
+2025-11-08T13:24:26.3694650Z [36;1mif ($esInstances.Count -eq 0) {[0m
+2025-11-08T13:24:26.3695143Z [36;1m  Write-Host "❌ ERROR: No es-object-atoms found anywhere in node_modules!"[0m
+2025-11-08T13:24:26.3695642Z [36;1m  exit 1[0m
+2025-11-08T13:24:26.3695828Z [36;1m}[0m
+2025-11-08T13:24:26.3695980Z [36;1m[0m
+2025-11-08T13:24:26.3696252Z [36;1mWrite-Host "Found $($esInstances.Count) instance(s) of es-object-atoms"[0m
+2025-11-08T13:24:26.3696807Z [36;1m[0m
+2025-11-08T13:24:26.3696968Z [36;1m$junctionFound = $false[0m
+2025-11-08T13:24:26.3697210Z [36;1mforeach ($instance in $esInstances) {[0m
+2025-11-08T13:24:26.3697470Z [36;1m  $attrs = $instance.Attributes[0m
+2025-11-08T13:24:26.3697810Z [36;1m  $relPath = $instance.FullName.Replace((Get-Location).Path, ".")[0m
+2025-11-08T13:24:26.3698111Z [36;1m  [0m
+2025-11-08T13:24:26.3698300Z [36;1m  if ($attrs -match 'ReparsePoint') {[0m
+2025-11-08T13:24:26.3698577Z [36;1m    Write-Host "❌ JUNCTION FOUND: $relPath"[0m
+2025-11-08T13:24:26.3698839Z [36;1m    $junctionFound = $true[0m
+2025-11-08T13:24:26.3699046Z [36;1m  } else {[0m
+2025-11-08T13:24:26.3699238Z [36;1m    Write-Host "✅ REAL DIR: $relPath"[0m
+2025-11-08T13:24:26.3699492Z [36;1m  }[0m
+2025-11-08T13:24:26.3699639Z [36;1m}[0m
+2025-11-08T13:24:26.3699789Z [36;1m[0m
+2025-11-08T13:24:26.3699950Z [36;1mif ($junctionFound) {[0m
+2025-11-08T13:24:26.3700161Z [36;1m  Write-Host ""[0m
+2025-11-08T13:24:26.3700482Z [36;1m  Write-Host "❌ CRITICAL ERROR: Some es-object-atoms instances are junctions!"[0m
+2025-11-08T13:24:26.3700828Z [36;1m  exit 1[0m
+2025-11-08T13:24:26.3702818Z [36;1m}[0m
+2025-11-08T13:24:26.3703036Z [36;1m[0m
+2025-11-08T13:24:26.3703210Z [36;1mWrite-Host ""[0m
+2025-11-08T13:24:26.3703548Z [36;1mWrite-Host "✅ All dependencies installed as REAL FILES (no junctions)"[0m
+2025-11-08T13:24:26.3703892Z [36;1mWrite-Host ""[0m
+2025-11-08T13:24:26.3704124Z [36;1mWrite-Host "=== Node modules size ==="[0m
+2025-11-08T13:24:26.3704673Z [36;1m$size = (Get-ChildItem node_modules -Recurse -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum).Sum / 1MB[0m
+2025-11-08T13:24:26.3705212Z [36;1mWrite-Host ("{0:N2} MB" -f $size)[0m
+2025-11-08T13:24:26.3764805Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2025-11-08T13:24:26.3765127Z ##[endgroup]
+2025-11-08T13:24:27.0364703Z === Installing server dependencies (production only, NESTED mode, real files) ===
+2025-11-08T13:25:06.7287464Z npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+2025-11-08T13:25:06.7342997Z npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+2025-11-08T13:25:06.7526712Z npm warn deprecated npmlog@5.0.1: This package is no longer supported.
+2025-11-08T13:25:06.9053537Z npm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+2025-11-08T13:25:06.9349209Z npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+2025-11-08T13:25:06.9367152Z npm warn deprecated glob@8.1.0: Glob versions prior to v9 are no longer supported
+2025-11-08T13:25:07.0257761Z npm warn deprecated are-we-there-yet@2.0.0: This package is no longer supported.
+2025-11-08T13:25:07.1518543Z npm warn deprecated multer@1.4.5-lts.2: Multer 1.x is impacted by a number of vulnerabilities, which have been patched in 2.x. You should upgrade to the latest 2.x version.
+2025-11-08T13:25:07.3693753Z npm warn deprecated gauge@3.0.2: This package is no longer supported.
+2025-11-08T13:25:14.5022398Z npm warn cleanup Failed to remove some directories [
+2025-11-08T13:25:14.5022960Z npm warn cleanup   [
+2025-11-08T13:25:14.5024916Z npm warn cleanup     'D:\\a\\mbit-erp\\mbit-erp\\apps\\server\\node_modules\\jest\\node_modules\\jest-cli\\node_modules\\jest-config\\node_modules\\jest-runner\\node_modules\\@jest\\transform\\node_modules\\babel-plugin-istanbul\\node_modules\\@istanbuljs\\load-nyc-config',
+2025-11-08T13:25:14.5028559Z npm warn cleanup     [Error: EPERM: operation not permitted, rmdir 'D:\a\mbit-erp\mbit-erp\apps\server\node_modules\jest\node_modules\jest-cli\node_modules\jest-config\node_modules\jest-runner\node_modules\@jest\transform\node_modules\babel-plugin-istanbul\node_modules\@istanbuljs\load-nyc-config\node_modules'] {
+2025-11-08T13:25:14.5032197Z npm warn cleanup       errno: -4048,
+2025-11-08T13:25:14.5032680Z npm warn cleanup       code: 'EPERM',
+2025-11-08T13:25:14.5033168Z npm warn cleanup       syscall: 'rmdir',
+2025-11-08T13:25:14.5035277Z npm warn cleanup       path: 'D:\\a\\mbit-erp\\mbit-erp\\apps\\server\\node_modules\\jest\\node_modules\\jest-cli\\node_modules\\jest-config\\node_modules\\jest-runner\\node_modules\\@jest\\transform\\node_modules\\babel-plugin-istanbul\\node_modules\\@istanbuljs\\load-nyc-config\\node_modules'
+2025-11-08T13:25:14.5036965Z npm warn cleanup     }
+2025-11-08T13:25:14.5037321Z npm warn cleanup   ],
+2025-11-08T13:25:14.5037939Z npm warn cleanup   [
+2025-11-08T13:25:14.5039714Z npm warn cleanup     'D:\\a\\mbit-erp\\mbit-erp\\apps\\server\\node_modules\\jest\\node_modules\\jest-cli\\node_modules\\jest-config\\node_modules\\jest-circus\\node_modules\\jest-runtime\\node_modules\\@jest\\transform\\node_modules\\babel-plugin-istanbul\\node_modules\\istanbul-lib-instrument',
+2025-11-08T13:25:14.5042510Z npm warn cleanup     [Error: EPERM: operation not permitted, rmdir 'D:\a\mbit-erp\mbit-erp\apps\server\node_modules\jest\node_modules\jest-cli\node_modules\jest-config\node_modules\jest-circus\node_modules\jest-runtime\node_modules\@jest\transform\node_modules\babel-plugin-istanbul\node_modules\istanbul-lib-instrument'] {
+2025-11-08T13:25:14.5043727Z npm warn cleanup       errno: -4048,
+2025-11-08T13:25:14.5044022Z npm warn cleanup       code: 'EPERM',
+2025-11-08T13:25:14.5044314Z npm warn cleanup       syscall: 'rmdir',
+2025-11-08T13:25:14.5045507Z npm warn cleanup       path: 'D:\\a\\mbit-erp\\mbit-erp\\apps\\server\\node_modules\\jest\\node_modules\\jest-cli\\node_modules\\jest-config\\node_modules\\jest-circus\\node_modules\\jest-runtime\\node_modules\\@jest\\transform\\node_modules\\babel-plugin-istanbul\\node_modules\\istanbul-lib-instrument'
+2025-11-08T13:25:14.5046457Z npm warn cleanup     }
+2025-11-08T13:25:14.5046665Z npm warn cleanup   ],
+2025-11-08T13:25:14.5046864Z npm warn cleanup   [
+2025-11-08T13:25:14.5047555Z npm warn cleanup     'D:\\a\\mbit-erp\\mbit-erp\\apps\\server\\node_modules\\jest\\node_modules\\@jest\\core\\node_modules\\@jest\\transform\\node_modules\\babel-plugin-istanbul',
+2025-11-08T13:25:14.5048827Z npm warn cleanup     [Error: EPERM: operation not permitted, rmdir 'D:\a\mbit-erp\mbit-erp\apps\server\node_modules\jest\node_modules\@jest\core\node_modules\@jest\transform\node_modules\babel-plugin-istanbul\node_modules'] {
+2025-11-08T13:25:14.5049607Z npm warn cleanup       errno: -4048,
+2025-11-08T13:25:14.5050316Z npm warn cleanup       code: 'EPERM',
+2025-11-08T13:25:14.5050602Z npm warn cleanup       syscall: 'rmdir',
+2025-11-08T13:25:14.5051408Z npm warn cleanup       path: 'D:\\a\\mbit-erp\\mbit-erp\\apps\\server\\node_modules\\jest\\node_modules\\@jest\\core\\node_modules\\@jest\\transform\\node_modules\\babel-plugin-istanbul\\node_modules'
+2025-11-08T13:25:14.5052055Z npm warn cleanup     }
+2025-11-08T13:25:14.5052254Z npm warn cleanup   ],
+2025-11-08T13:25:14.5052462Z npm warn cleanup   [
+2025-11-08T13:25:14.5053088Z npm warn cleanup     'D:\\a\\mbit-erp\\mbit-erp\\apps\\server\\node_modules\\jest\\node_modules\\jest-cli\\node_modules\\jest-config\\node_modules\\jest-runner',
+2025-11-08T13:25:14.5054261Z npm warn cleanup     [Error: EPERM: operation not permitted, rmdir 'D:\a\mbit-erp\mbit-erp\apps\server\node_modules\jest\node_modules\jest-cli\node_modules\jest-config\node_modules\jest-runner\node_modules\@jest'] {
+2025-11-08T13:25:14.5055007Z npm warn cleanup       errno: -4048,
+2025-11-08T13:25:14.5055270Z npm warn cleanup       code: 'EPERM',
+2025-11-08T13:25:14.5055545Z npm warn cleanup       syscall: 'rmdir',
+2025-11-08T13:25:14.5056318Z npm warn cleanup       path: 'D:\\a\\mbit-erp\\mbit-erp\\apps\\server\\node_modules\\jest\\node_modules\\jest-cli\\node_modules\\jest-config\\node_modules\\jest-runner\\node_modules\\@jest'
+2025-11-08T13:25:14.5057103Z npm warn cleanup     }
+2025-11-08T13:25:14.5057311Z npm warn cleanup   ],
+2025-11-08T13:25:14.5057503Z npm warn cleanup   [
+2025-11-08T13:25:14.5057965Z npm warn cleanup     'D:\\a\\mbit-erp\\mbit-erp\\apps\\server\\node_modules\\@typescript-eslint\\eslint-plugin',
+2025-11-08T13:25:14.5058947Z npm warn cleanup     [Error: EPERM: operation not permitted, rmdir 'D:\a\mbit-erp\mbit-erp\apps\server\node_modules\@typescript-eslint\eslint-plugin\node_modules\@typescript-eslint\utils'] {
+2025-11-08T13:25:14.5059679Z npm warn cleanup       errno: -4048,
+2025-11-08T13:25:14.5059941Z npm warn cleanup       code: 'EPERM',
+2025-11-08T13:25:14.5060204Z npm warn cleanup       syscall: 'rmdir',
+2025-11-08T13:25:14.5060890Z npm warn cleanup       path: 'D:\\a\\mbit-erp\\mbit-erp\\apps\\server\\node_modules\\@typescript-eslint\\eslint-plugin\\node_modules\\@typescript-eslint\\utils'
+2025-11-08T13:25:14.5061452Z npm warn cleanup     }
+2025-11-08T13:25:14.5061664Z npm warn cleanup   ],
+2025-11-08T13:25:14.5061852Z npm warn cleanup   [
+2025-11-08T13:25:14.5062575Z npm warn cleanup     'D:\\a\\mbit-erp\\mbit-erp\\apps\\server\\node_modules\\jest\\node_modules\\jest-cli\\node_modules\\jest-config\\node_modules\\jest-circus',
+2025-11-08T13:25:14.5063860Z npm warn cleanup     [Error: EPERM: operation not permitted, rmdir 'D:\a\mbit-erp\mbit-erp\apps\server\node_modules\jest\node_modules\jest-cli\node_modules\jest-config\node_modules\jest-circus\node_modules\jest-runtime\node_modules\@jest'] {
+2025-11-08T13:25:14.5064690Z npm warn cleanup       errno: -4048,
+2025-11-08T13:25:14.5064961Z npm warn cleanup       code: 'EPERM',
+2025-11-08T13:25:14.5065236Z npm warn cleanup       syscall: 'rmdir',
+2025-11-08T13:25:14.5066075Z npm warn cleanup       path: 'D:\\a\\mbit-erp\\mbit-erp\\apps\\server\\node_modules\\jest\\node_modules\\jest-cli\\node_modules\\jest-config\\node_modules\\jest-circus\\node_modules\\jest-runtime\\node_modules\\@jest'
+2025-11-08T13:25:14.5066761Z npm warn cleanup     }
+2025-11-08T13:25:14.5066960Z npm warn cleanup   ],
+2025-11-08T13:25:14.5067161Z npm warn cleanup   [
+2025-11-08T13:25:14.5069509Z npm warn cleanup     'D:\\a\\mbit-erp\\mbit-erp\\apps\\server\\node_modules\\jest\\node_modules\\jest-cli\\node_modules\\jest-config\\node_modules\\jest-circus\\node_modules\\jest-snapshot',
+2025-11-08T13:25:14.5071969Z npm warn cleanup     [Error: EPERM: operation not permitted, rmdir 'D:\a\mbit-erp\mbit-erp\apps\server\node_modules\jest\node_modules\jest-cli\node_modules\jest-config\node_modules\jest-circus\node_modules\jest-snapshot'] {
+2025-11-08T13:25:14.5073469Z npm warn cleanup       errno: -4048,
+2025-11-08T13:25:14.5073987Z npm warn cleanup       code: 'EPERM',
+2025-11-08T13:25:14.5074498Z npm warn cleanup       syscall: 'rmdir',
+2025-11-08T13:25:14.5075966Z npm warn cleanup       path: 'D:\\a\\mbit-erp\\mbit-erp\\apps\\server\\node_modules\\jest\\node_modules\\jest-cli\\node_modules\\jest-config\\node_modules\\jest-circus\\node_modules\\jest-snapshot'
+2025-11-08T13:25:14.5077197Z npm warn cleanup     }
+2025-11-08T13:25:14.5077557Z npm warn cleanup   ]
+2025-11-08T13:25:14.5077896Z npm warn cleanup ]
+2025-11-08T13:25:15.4208026Z 
+2025-11-08T13:25:15.4208516Z added 463 packages, and audited 464 packages in 48s
+2025-11-08T13:25:15.4208836Z 
+2025-11-08T13:25:15.4209699Z 36 packages are looking for funding
+2025-11-08T13:25:15.4209972Z   run `npm fund` for details
+2025-11-08T13:25:15.4222019Z 
+2025-11-08T13:25:15.4222201Z found 0 vulnerabilities
+2025-11-08T13:25:15.4671745Z 
+2025-11-08T13:25:15.4679241Z === Generating Prisma Client for production ===
+2025-11-08T13:25:16.7940144Z Prisma schema loaded from prisma\schema.prisma
+2025-11-08T13:25:17.8581407Z 
+2025-11-08T13:25:17.8582271Z ✔ Generated Prisma Client (v5.22.0) to .\node_modules\@prisma\client in 474ms
+2025-11-08T13:25:17.8582743Z 
+2025-11-08T13:25:17.8583076Z Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+2025-11-08T13:25:17.8583752Z 
+2025-11-08T13:25:17.8584289Z Tip: Easily identify and fix slow SQL queries in your app. Optimize helps you enhance your visibility: https://pris.ly/--optimize
+2025-11-08T13:25:17.8584786Z 
+2025-11-08T13:25:18.0774247Z 
+2025-11-08T13:25:18.0780092Z === Verifying dependencies are REAL FILES (not junctions/symlinks) ===
+2025-11-08T13:25:18.1333147Z ✅ Top-level dotenv is REAL FILE
+2025-11-08T13:25:18.1338293Z 
+2025-11-08T13:25:18.1344553Z === Searching for ALL es-object-atoms instances (deep nested check) ===
+2025-11-08T13:25:18.3752709Z Found 4 instance(s) of es-object-atoms
+2025-11-08T13:25:18.3843727Z ✅ REAL DIR: .\node_modules\@nestjs\platform-express\node_modules\body-parser\node_modules\qs\node_modules\side-channel\node_modules\side-channel-map\node_modules\get-intrinsic\node_modules\es-object-atoms
+2025-11-08T13:25:18.3850995Z ✅ REAL DIR: .\node_modules\@nestjs\platform-express\node_modules\body-parser\node_modules\qs\node_modules\side-channel\node_modules\side-channel-weakmap\node_modules\get-intrinsic\node_modules\es-object-atoms
+2025-11-08T13:25:18.3857991Z ✅ REAL DIR: .\node_modules\@nestjs\platform-express\node_modules\express\node_modules\qs\node_modules\side-channel\node_modules\side-channel-map\node_modules\get-intrinsic\node_modules\es-object-atoms
+2025-11-08T13:25:18.3864705Z ✅ REAL DIR: .\node_modules\@nestjs\platform-express\node_modules\express\node_modules\qs\node_modules\side-channel\node_modules\side-channel-weakmap\node_modules\get-intrinsic\node_modules\es-object-atoms
+2025-11-08T13:25:18.3869428Z 
+2025-11-08T13:25:18.3874993Z ✅ All dependencies installed as REAL FILES (no junctions)
+2025-11-08T13:25:18.3880356Z 
+2025-11-08T13:25:18.3886616Z === Node modules size ===
+2025-11-08T13:25:18.9813934Z 272.89 MB
+2025-11-08T13:25:19.0315625Z ##[group]Run cd apps/desktop
+2025-11-08T13:25:19.0315957Z [36;1mcd apps/desktop[0m
+2025-11-08T13:25:19.0316183Z [36;1mnpm run package:win[0m
+2025-11-08T13:25:19.0374852Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2025-11-08T13:25:19.0375178Z ##[endgroup]
+2025-11-08T13:25:19.7707851Z 
+2025-11-08T13:25:19.7708277Z > @mbit-erp/desktop@1.0.0 package:win
+2025-11-08T13:25:19.7708927Z > npm run build && electron-builder --win --x64
+2025-11-08T13:25:19.7709305Z 
+2025-11-08T13:25:20.1968726Z 
+2025-11-08T13:25:20.1969298Z > @mbit-erp/desktop@1.0.0 prebuild
+2025-11-08T13:25:20.1969739Z > npm run clean
+2025-11-08T13:25:20.1969901Z 
+2025-11-08T13:25:20.6136083Z 
+2025-11-08T13:25:20.6136637Z > @mbit-erp/desktop@1.0.0 clean
+2025-11-08T13:25:20.6137077Z > rimraf dist-electron release
+2025-11-08T13:25:20.6137273Z 
+2025-11-08T13:25:20.7520615Z 
+2025-11-08T13:25:20.7521146Z > @mbit-erp/desktop@1.0.0 build
+2025-11-08T13:25:20.7522001Z > npm run build:electron && npm run build:backend && npm run build:frontend
+2025-11-08T13:25:20.7522471Z 
+2025-11-08T13:25:21.1744698Z 
+2025-11-08T13:25:21.1745260Z > @mbit-erp/desktop@1.0.0 build:electron
+2025-11-08T13:25:21.1746138Z > npx rimraf tsconfig.tsbuildinfo && tsc
+2025-11-08T13:25:21.1746357Z 
+2025-11-08T13:25:23.7772172Z 
+2025-11-08T13:25:23.7772700Z > @mbit-erp/desktop@1.0.0 build:backend
+2025-11-08T13:25:23.7773290Z > cd ../server && npx rimraf tsconfig.tsbuildinfo && npm run build
+2025-11-08T13:25:23.7773557Z 
+2025-11-08T13:25:25.0922326Z 
+2025-11-08T13:25:25.0922927Z > @mbit-erp/server@1.0.0 build
+2025-11-08T13:25:25.0923469Z > nest build
+2025-11-08T13:25:25.0923620Z 
+2025-11-08T13:25:31.4009703Z 
+2025-11-08T13:25:31.4010469Z > @mbit-erp/desktop@1.0.0 build:frontend
+2025-11-08T13:25:31.4011557Z > cd ../web && npx rimraf tsconfig.tsbuildinfo && cross-env ELECTRON_BUILD=true npm run build
+2025-11-08T13:25:31.4012114Z 
+2025-11-08T13:25:32.9745695Z 
+2025-11-08T13:25:32.9746192Z > @mbit-erp/web@1.0.0 build
+2025-11-08T13:25:32.9746631Z > tsc && vite build
+2025-11-08T13:25:32.9746810Z 
+2025-11-08T13:25:38.5382513Z [36mvite v5.4.21 [32mbuilding for production...[36m[39m
+2025-11-08T13:25:38.6159172Z transforming...
+2025-11-08T13:25:41.0513796Z [32m✓[39m 142 modules transformed.
+2025-11-08T13:25:41.3151710Z rendering chunks...
+2025-11-08T13:25:41.3270778Z computing gzip size...
+2025-11-08T13:25:41.3392317Z [2mdist/[22m[32mregisterSW.js              [39m[1m[2m  0.14 kB[22m[1m[22m
+2025-11-08T13:25:41.3393556Z [2mdist/[22m[32mmanifest.webmanifest       [39m[1m[2m  0.29 kB[22m[1m[22m
+2025-11-08T13:25:41.3394808Z [2mdist/[22m[32mindex.html                 [39m[1m[2m  0.59 kB[22m[1m[22m[2m │ gzip:  0.35 kB[22m
+2025-11-08T13:25:41.3396632Z [2mdist/[22m[35massets/index-BS2ebifF.css  [39m[1m[2m 20.46 kB[22m[1m[22m[2m │ gzip:  4.40 kB[22m
+2025-11-08T13:25:41.3398135Z [2mdist/[22m[36massets/index-W4mie_pU.js   [39m[1m[2m340.25 kB[22m[1m[22m[2m │ gzip: 96.03 kB[22m
+2025-11-08T13:25:41.3402100Z [32m✓ built in 2.77s[39m
+2025-11-08T13:25:43.9666808Z 
+2025-11-08T13:25:43.9667718Z [36mPWA v0.17.5[39m
+2025-11-08T13:25:43.9668109Z mode      [35mgenerateSW[39m
+2025-11-08T13:25:43.9668655Z precache  [32m5 entries[39m [2m(354.00 KiB)[22m
+2025-11-08T13:25:43.9713770Z files generated
+2025-11-08T13:25:43.9714608Z   [2mdist\sw.js[22m
+2025-11-08T13:25:43.9715065Z   [2mdist\workbox-1be04862.js[22m
+2025-11-08T13:25:44.9794786Z   • electron-builder  version=24.13.3 os=10.0.26100
+2025-11-08T13:25:44.9801887Z   • artifacts will be published if draft release exists  reason=CI detected
+2025-11-08T13:25:44.9873530Z   • loaded configuration  file=package.json ("build" field)
+2025-11-08T13:25:45.2701410Z   • packaging       platform=win32 arch=x64 electron=28.3.3 appOutDir=release\win-unpacked
+2025-11-08T13:25:45.6343885Z   • downloading     url=https://github.com/electron/electron/releases/download/v28.3.3/electron-v28.3.3-win32-x64.zip size=108 MB parts=8
+2025-11-08T13:25:46.6877016Z   • downloaded      url=https://github.com/electron/electron/releases/download/v28.3.3/electron-v28.3.3-win32-x64.zip duration=1.399s
+2025-11-08T13:25:56.8856910Z   • downloading     url=https://github.com/electron-userland/electron-builder-binaries/releases/download/winCodeSign-2.6.0/winCodeSign-2.6.0.7z size=5.6 MB parts=1
+2025-11-08T13:25:56.9857005Z   • downloaded      url=https://github.com/electron-userland/electron-builder-binaries/releases/download/winCodeSign-2.6.0/winCodeSign-2.6.0.7z duration=370ms
+2025-11-08T13:25:59.6562213Z   • building        target=nsis file=release\Mbit ERP-Setup-1.0.0.exe archs=x64 oneClick=false perMachine=false
+2025-11-08T13:25:59.9210855Z   • downloading     url=https://github.com/electron-userland/electron-builder-binaries/releases/download/nsis-3.0.4.1/nsis-3.0.4.1.7z size=1.3 MB parts=1
+2025-11-08T13:25:59.9948777Z   • downloaded      url=https://github.com/electron-userland/electron-builder-binaries/releases/download/nsis-3.0.4.1/nsis-3.0.4.1.7z duration=321ms
+2025-11-08T13:27:15.3467931Z   • downloading     url=https://github.com/electron-userland/electron-builder-binaries/releases/download/nsis-resources-3.4.1/nsis-resources-3.4.1.7z size=731 kB parts=1
+2025-11-08T13:27:15.4130135Z   • downloaded      url=https://github.com/electron-userland/electron-builder-binaries/releases/download/nsis-resources-3.4.1/nsis-resources-3.4.1.7z duration=431ms
+2025-11-08T13:27:18.6087506Z   • building block map  blockMapFile=release\Mbit ERP-Setup-1.0.0.exe.blockmap
+2025-11-08T13:27:19.9161593Z   • building        target=portable file=release\Mbit ERP-Setup-1.0.0.exe archs=x64
+2025-11-08T13:27:21.2019067Z ##[group]Run Write-Host "=== Verifying Windows build output ==="
+2025-11-08T13:27:21.2019604Z [36;1mWrite-Host "=== Verifying Windows build output ==="[0m
+2025-11-08T13:27:21.2019894Z [36;1m[0m
+2025-11-08T13:27:21.2020092Z [36;1m$releaseDir = "apps/desktop/release"[0m
+2025-11-08T13:27:21.2020378Z [36;1mif (-not (Test-Path $releaseDir)) {[0m
+2025-11-08T13:27:21.2020693Z [36;1m  Write-Host "❌ ERROR: Release folder not found!"[0m
+2025-11-08T13:27:21.2020975Z [36;1m  exit 1[0m
+2025-11-08T13:27:21.2021139Z [36;1m}[0m
+2025-11-08T13:27:21.2022086Z [36;1m[0m
+2025-11-08T13:27:21.2022247Z [36;1mWrite-Host ""[0m
+2025-11-08T13:27:21.2022478Z [36;1mWrite-Host "=== Checking .exe files ==="[0m
+2025-11-08T13:27:21.2022832Z [36;1m$exeFiles = Get-ChildItem $releaseDir -Filter "*.exe" -Recurse[0m
+2025-11-08T13:27:21.2023159Z [36;1mforeach ($exe in $exeFiles) {[0m
+2025-11-08T13:27:21.2023396Z [36;1m  $sizeMB = $exe.Length / 1MB[0m
+2025-11-08T13:27:21.2023720Z [36;1m  Write-Host ("{0} - {1:N2} MB" -f $exe.Name, $sizeMB)[0m
+2025-11-08T13:27:21.2023983Z [36;1m}[0m
+2025-11-08T13:27:21.2024135Z [36;1m[0m
+2025-11-08T13:27:21.2024291Z [36;1mWrite-Host ""[0m
+2025-11-08T13:27:21.2024617Z [36;1mWrite-Host "=== CRITICAL: Verifying backend dependencies in packaged build ==="[0m
+2025-11-08T13:27:21.2025110Z [36;1m$unpackedBackend = "apps/desktop/release/win-unpacked/resources/backend"[0m
+2025-11-08T13:27:21.2025459Z [36;1m[0m
+2025-11-08T13:27:21.2025684Z [36;1mif (-not (Test-Path "$unpackedBackend/node_modules")) {[0m
+2025-11-08T13:27:21.2026125Z [36;1m  Write-Host "❌ CRITICAL ERROR: backend/node_modules not found in packaged build!"[0m
+2025-11-08T13:27:21.2026489Z [36;1m  exit 1[0m
+2025-11-08T13:27:21.2026648Z [36;1m}[0m
+2025-11-08T13:27:21.2027134Z [36;1m[0m
+2025-11-08T13:27:21.2027386Z [36;1mif (-not (Test-Path "$unpackedBackend/node_modules/dotenv")) {[0m
+2025-11-08T13:27:21.2027839Z [36;1m  Write-Host "❌ CRITICAL ERROR: dotenv not found in packaged build!"[0m
+2025-11-08T13:27:21.2028285Z [36;1m  Get-ChildItem "$unpackedBackend/node_modules/" | Select-Object -First 20[0m
+2025-11-08T13:27:21.2028632Z [36;1m  exit 1[0m
+2025-11-08T13:27:21.2028795Z [36;1m}[0m
+2025-11-08T13:27:21.2028944Z [36;1m[0m
+2025-11-08T13:27:21.2029095Z [36;1mWrite-Host ""[0m
+2025-11-08T13:27:21.2029477Z [36;1mWrite-Host "=== Deep verification: Checking ALL es-object-atoms instances in packaged build ==="[0m
+2025-11-08T13:27:21.2030261Z [36;1m$packedEsInstances = Get-ChildItem -Path "$unpackedBackend/node_modules" -Recurse -Filter "es-object-atoms" -Directory -ErrorAction SilentlyContinue[0m
+2025-11-08T13:27:21.2030836Z [36;1m[0m
+2025-11-08T13:27:21.2031025Z [36;1mif ($packedEsInstances.Count -eq 0) {[0m
+2025-11-08T13:27:21.2031398Z [36;1m  Write-Host "❌ CRITICAL ERROR: No es-object-atoms found in packaged build!"[0m
+2025-11-08T13:27:21.2031739Z [36;1m  exit 1[0m
+2025-11-08T13:27:21.2031889Z [36;1m}[0m
+2025-11-08T13:27:21.2032039Z [36;1m[0m
+2025-11-08T13:27:21.2032388Z [36;1mWrite-Host "Found $($packedEsInstances.Count) instance(s) of es-object-atoms in packaged build"[0m
+2025-11-08T13:27:21.2032780Z [36;1m[0m
+2025-11-08T13:27:21.2032950Z [36;1m$packedJunctionFound = $false[0m
+2025-11-08T13:27:21.2033226Z [36;1mforeach ($instance in $packedEsInstances) {[0m
+2025-11-08T13:27:21.2033505Z [36;1m  $attrs = $instance.Attributes[0m
+2025-11-08T13:27:21.2033830Z [36;1m  $relPath = $instance.FullName.Replace((Get-Location).Path, ".")[0m
+2025-11-08T13:27:21.2034137Z [36;1m  [0m
+2025-11-08T13:27:21.2034330Z [36;1m  if ($attrs -match 'ReparsePoint') {[0m
+2025-11-08T13:27:21.2034622Z [36;1m    Write-Host "❌ JUNCTION FOUND IN PACKAGE: $relPath"[0m
+2025-11-08T13:27:21.2034922Z [36;1m    $packedJunctionFound = $true[0m
+2025-11-08T13:27:21.2035152Z [36;1m  } else {[0m
+2025-11-08T13:27:21.2035371Z [36;1m    Write-Host "✅ REAL DIR IN PACKAGE: $relPath"[0m
+2025-11-08T13:27:21.2035632Z [36;1m  }[0m
+2025-11-08T13:27:21.2037738Z [36;1m}[0m
+2025-11-08T13:27:21.2037967Z [36;1m[0m
+2025-11-08T13:27:21.2038144Z [36;1mif ($packedJunctionFound) {[0m
+2025-11-08T13:27:21.2038393Z [36;1m  Write-Host ""[0m
+2025-11-08T13:27:21.2038851Z [36;1m  Write-Host "❌ CRITICAL ERROR: Packaged build contains junctions! electron-builder failed to copy real files."[0m
+2025-11-08T13:27:21.2039306Z [36;1m  exit 1[0m
+2025-11-08T13:27:21.2039473Z [36;1m}[0m
+2025-11-08T13:27:21.2039624Z [36;1m[0m
+2025-11-08T13:27:21.2039773Z [36;1mWrite-Host ""[0m
+2025-11-08T13:27:21.2040138Z [36;1mWrite-Host "✅ Backend dependencies successfully bundled (all real files, no junctions)"[0m
+2025-11-08T13:27:21.2040691Z [36;1m[0m
+2025-11-08T13:27:21.2041243Z [36;1m$nodeModulesSize = (Get-ChildItem "$unpackedBackend/node_modules" -Recurse -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum).Sum / 1MB[0m
+2025-11-08T13:27:21.2041956Z [36;1mWrite-Host ("Backend node_modules size: {0:N2} MB" -f $nodeModulesSize)[0m
+2025-11-08T13:27:21.2042300Z [36;1m[0m
+2025-11-08T13:27:21.2042458Z [36;1mWrite-Host ""[0m
+2025-11-08T13:27:21.2042683Z [36;1mWrite-Host "Sample packages in bundle:"[0m
+2025-11-08T13:27:21.2043067Z [36;1mGet-ChildItem "$unpackedBackend/node_modules/" | Select-Object -First 10[0m
+2025-11-08T13:27:21.2104076Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2025-11-08T13:27:21.2104402Z ##[endgroup]
+2025-11-08T13:27:21.5510115Z === Verifying Windows build output ===
+2025-11-08T13:27:21.5722752Z 
+2025-11-08T13:27:21.5729413Z === Checking .exe files ===
+2025-11-08T13:27:21.7609510Z Mbit ERP-Setup-1.0.0.exe - 148.47 MB
+2025-11-08T13:27:21.7615156Z Mbit ERP.exe - 168.67 MB
+2025-11-08T13:27:21.7622164Z elevate.exe - 0.10 MB
+2025-11-08T13:27:21.7628569Z schema-engine-windows.exe - 17.31 MB
+2025-11-08T13:27:21.7634155Z 
+2025-11-08T13:27:21.7641135Z === CRITICAL: Verifying backend dependencies in packaged build ===
+2025-11-08T13:27:21.7676053Z 
+2025-11-08T13:27:21.7683061Z === Deep verification: Checking ALL es-object-atoms instances in packaged build ===
+2025-11-08T13:27:21.9352098Z Found 4 instance(s) of es-object-atoms in packaged build
+2025-11-08T13:27:21.9461179Z ✅ REAL DIR IN PACKAGE: .\apps\desktop\release\win-unpacked\resources\backend\node_modules\@nestjs\platform-express\node_modules\body-parser\node_modules\qs\node_modules\side-channel\node_modules\side-channel-map\node_modules\get-intrinsic\node_modules\es-object-atoms
+2025-11-08T13:27:21.9473150Z ✅ REAL DIR IN PACKAGE: .\apps\desktop\release\win-unpacked\resources\backend\node_modules\@nestjs\platform-express\node_modules\body-parser\node_modules\qs\node_modules\side-channel\node_modules\side-channel-weakmap\node_modules\get-intrinsic\node_modules\es-object-atoms
+2025-11-08T13:27:21.9480424Z ✅ REAL DIR IN PACKAGE: .\apps\desktop\release\win-unpacked\resources\backend\node_modules\@nestjs\platform-express\node_modules\express\node_modules\qs\node_modules\side-channel\node_modules\side-channel-map\node_modules\get-intrinsic\node_modules\es-object-atoms
+2025-11-08T13:27:21.9487898Z ✅ REAL DIR IN PACKAGE: .\apps\desktop\release\win-unpacked\resources\backend\node_modules\@nestjs\platform-express\node_modules\express\node_modules\qs\node_modules\side-channel\node_modules\side-channel-weakmap\node_modules\get-intrinsic\node_modules\es-object-atoms
+2025-11-08T13:27:21.9490210Z 
+2025-11-08T13:27:21.9497546Z ✅ Backend dependencies successfully bundled (all real files, no junctions)
+2025-11-08T13:27:22.5259974Z Backend node_modules size: 266.08 MB
+2025-11-08T13:27:22.5265259Z 
+2025-11-08T13:27:22.5272009Z Sample packages in bundle:
+2025-11-08T13:27:22.5483279Z 
+2025-11-08T13:27:22.5491763Z     Directory: D:\a\mbit-erp\mbit-erp\apps\desktop\release\win-unpacked\resources\backend\node_modules
+2025-11-08T13:27:22.5492455Z 
+2025-11-08T13:27:22.5494599Z [32;1mMode   [0m[32;1m              LastWriteTime[0m [32;1;3m        Length[0m[32;1m Name[0m
+2025-11-08T13:27:22.5496855Z [32;1m----   [0m [32;1m             -------------[0m [32;1m        ------[0m [32;1m----[0m
+2025-11-08T13:27:22.5833285Z d----           11/8/2025  1:25 PM                [44;1m.cache[0m
+2025-11-08T13:27:22.5841402Z d----           11/8/2025  1:25 PM                [44;1m.prisma[0m
+2025-11-08T13:27:22.5845899Z d----           11/8/2025  1:25 PM                [44;1m@nestjs[0m
+2025-11-08T13:27:22.5849983Z d----           11/8/2025  1:25 PM                [44;1m@prisma[0m
+2025-11-08T13:27:22.5854408Z d----           11/8/2025  1:25 PM                [44;1m@types[0m
+2025-11-08T13:27:22.5858277Z d----           11/8/2025  1:25 PM                [44;1marchiver[0m
+2025-11-08T13:27:22.5862103Z d----           11/8/2025  1:25 PM                [44;1mbcrypt[0m
+2025-11-08T13:27:22.5866104Z d----           11/8/2025  1:25 PM                [44;1mclass-transformer[0m
+2025-11-08T13:27:22.5869879Z d----           11/8/2025  1:25 PM                [44;1mclass-validator[0m
+2025-11-08T13:27:22.5873907Z d----           11/8/2025  1:25 PM                [44;1mdotenv[0m
+2025-11-08T13:27:22.5940440Z 
+2025-11-08T13:27:22.6816671Z ##[group]Run actions/upload-artifact@v4
+2025-11-08T13:27:22.6817129Z with:
+2025-11-08T13:27:22.6817417Z   name: mbit-erp-windows-installer
+2025-11-08T13:27:22.6817965Z   path: apps/desktop/release/*.exe
+apps/desktop/release/*.msi
+
+2025-11-08T13:27:22.6818465Z   retention-days: 30
+2025-11-08T13:27:22.6818778Z   if-no-files-found: warn
+2025-11-08T13:27:22.6819108Z   compression-level: 6
+2025-11-08T13:27:22.6819401Z   overwrite: false
+2025-11-08T13:27:22.6819703Z   include-hidden-files: false
+2025-11-08T13:27:22.6820063Z ##[endgroup]
+2025-11-08T13:27:23.0208346Z With the provided path, there will be 1 file uploaded
+2025-11-08T13:27:23.0215827Z Artifact name is valid!
+2025-11-08T13:27:23.0218980Z Root directory input is valid!
+2025-11-08T13:27:23.2887268Z Beginning upload of artifact content to blob storage
+2025-11-08T13:27:24.6153233Z Uploaded bytes 8388608
+2025-11-08T13:27:25.0299792Z Uploaded bytes 16777216
+2025-11-08T13:27:25.1414790Z Uploaded bytes 25165824
+2025-11-08T13:27:25.3808851Z Uploaded bytes 33554432
+2025-11-08T13:27:25.4682837Z Uploaded bytes 41943040
+2025-11-08T13:27:25.5610071Z Uploaded bytes 50331648
+2025-11-08T13:27:25.7152443Z Uploaded bytes 58720256
+2025-11-08T13:27:25.9917887Z Uploaded bytes 67108864
+2025-11-08T13:27:26.3023557Z Uploaded bytes 75497472
+2025-11-08T13:27:26.5397862Z Uploaded bytes 83886080
+2025-11-08T13:27:26.9104484Z Uploaded bytes 92274688
+2025-11-08T13:27:27.1653356Z Uploaded bytes 100663296
+2025-11-08T13:27:27.4122431Z Uploaded bytes 109051904
+2025-11-08T13:27:27.7469581Z Uploaded bytes 117440512
+2025-11-08T13:27:27.9845021Z Uploaded bytes 125829120
+2025-11-08T13:27:28.2873214Z Uploaded bytes 134217728
+2025-11-08T13:27:28.5676770Z Uploaded bytes 142606336
+2025-11-08T13:27:28.8204222Z Uploaded bytes 150994944
+2025-11-08T13:27:29.0132237Z Uploaded bytes 154974475
+2025-11-08T13:27:29.0778112Z Finished uploading artifact content to blob storage!
+2025-11-08T13:27:29.0783076Z SHA256 digest of uploaded artifact zip is 2587c7237267ebdb8f541114978e0d61216c302262f0601987040c5987c98055
+2025-11-08T13:27:29.0785914Z Finalizing artifact upload
+2025-11-08T13:27:29.3163838Z Artifact mbit-erp-windows-installer.zip successfully finalized. Artifact ID 4507715082
+2025-11-08T13:27:29.3165367Z Artifact mbit-erp-windows-installer has been successfully uploaded! Final size is 154974475 bytes. Artifact ID is 4507715082
+2025-11-08T13:27:29.3185102Z Artifact download URL: https://github.com/BergerLiviusz/mbit-erp/actions/runs/19193632507/artifacts/4507715082
+2025-11-08T13:27:29.3523064Z Post job cleanup.
+2025-11-08T13:27:29.5597981Z Cache hit occurred on the primary key node-cache-Windows-x64-npm-80b7446820e47debc2fa093a6d0ba4c4562b55ffb84fa6f536eaa184ee3c010c, not saving cache.
+2025-11-08T13:27:29.5887877Z Post job cleanup.
+2025-11-08T13:27:29.8089344Z [command]"C:\Program Files\Git\bin\git.exe" version
+2025-11-08T13:27:29.8363781Z git version 2.51.2.windows.1
+2025-11-08T13:27:29.8439681Z Temporarily overriding HOME='D:\a\_temp\f592be12-59f6-41a4-aefc-1fd96a449d7e' before making global git config changes
+2025-11-08T13:27:29.8441070Z Adding repository directory to the temporary git global config as a safe directory
+2025-11-08T13:27:29.8452133Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\mbit-erp\mbit-erp
+2025-11-08T13:27:29.8787046Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+2025-11-08T13:27:29.9134841Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+2025-11-08T13:27:30.4501066Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2025-11-08T13:27:30.4766375Z http.https://github.com/.extraheader
+2025-11-08T13:27:30.4814784Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset-all http.https://github.com/.extraheader
+2025-11-08T13:27:30.5128950Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+2025-11-08T13:27:31.1041124Z Cleaning up orphan processes
