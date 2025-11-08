@@ -14784,3 +14784,819 @@ _**Agent (model composer-1, mode Agent)**_
 
 ---
 
+
+HashRouter fix worked. Investigating 500 errors: checking backend error handling and logging to identify the cause:
+
+
+---
+
+<tool-use data-tool-type="search" data-tool-name="codebase_search">
+<details>
+                <summary>Tool use: **codebase_search** • Searched codebase "How does NestJS handle 500 Internal Server Error exceptions and error logging?" • **15** results</summary>
+            
+| File | Lines |
+|------|-------|
+| `apps/server/src/main.ts` | L60-126 |
+| `apps/server/src/main.ts` | L44 |
+| `apps/server/src/main.ts` | L71-126 |
+| `apps/web/src/components/ErrorBoundary.tsx` | L11-73 |
+| `apps/server/src/main.ts` | L33-58 |
+| `apps/desktop/src/main.ts` | L491-551 |
+| `apps/desktop/src/main.ts` | L205-437 |
+| `apps/web/src/lib/api.ts` | L23-115 |
+| `apps/server/src/prisma/prisma.service.ts` | L137 |
+| `apps/web/src/lib/axios.ts` | L11-45 |
+| `apps/server/src/system/health.controller.ts` | L65 |
+| `apps/server/package.json` | L66 |
+| `apps/server/src/common/audit/audit.service.ts` | L12-178 |
+| `apps/server/src/audit/audit.service.ts` | L44 |
+| `apps/server/src/auth/auth.service.ts` | L74 |
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: apps/server/src/main.ts</summary>
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="grep" data-tool-name="grep">
+<details>
+<summary>Tool use: **grep** • Grep for "@Get.*accounts|@Get.*warehouses|@Get.*items|@Get.*documents" in "apps/server/src" • 0 matches</summary>
+
+Output mode: content
+
+
+_No matches found_
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="search" data-tool-name="codebase_search">
+<details>
+                <summary>Tool use: **codebase_search** • Searched codebase "Where are the CRM accounts controller endpoints defined and how do they query the database?" • **10** results</summary>
+            
+| File | Lines |
+|------|-------|
+| `apps/server/src/crm/account.controller.ts` | L62 |
+| `apps/server/src/crm/account.controller.ts` | L5-62 |
+| `apps/server/src/crm/account.service.ts` | L61 |
+| `apps/web/src/pages/CRM.tsx` | L6-860 |
+| `apps/server/src/crm/crm.module.ts` | L31 |
+| `apps/server/prisma/schema.prisma` | L108-172 |
+| `apps/server/src/crm/campaign.controller.ts` | L62 |
+| `apps/server/src/crm/campaign.controller.ts` | L5-62 |
+| `apps/server/src/crm/opportunity.controller.ts` | L80 |
+| `apps/server/src/logistics/item.controller.ts` | L48 |
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: apps/server/src/common/rbac/rbac.guard.ts</summary>
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="grep" data-tool-name="grep">
+<details>
+<summary>Tool use: **grep** • Grep for "@Controller.*crm|@Controller.*logistics|@Controller.*dms" in "apps/server/src" • 12 matches</summary>
+
+Output mode: content
+
+
+| File | Content | Line |
+|------|------|------|
+| `apps/server/src/logistics/warehouse.controller.ts` | `@Controller('logistics/warehouses')` | L17 |
+| `apps/server/src/logistics/stock.controller.ts` | `@Controller('logistics/stock')` | L4 |
+| `apps/server/src/logistics/purchase-order.controller.ts` | `@Controller('logistics/purchase-orders')` | L21 |
+| `apps/server/src/logistics/item.controller.ts` | `@Controller('logistics/items')` | L7 |
+| `apps/server/src/logistics/inventory.controller.ts` | `@Controller('logistics/inventory')` | L7 |
+| `apps/server/src/dms/document.controller.ts` | `@Controller('dms/documents')` | L12 |
+| `apps/server/src/dms/document-category.controller.ts` | `@Controller('dms/categories')` | L8 |
+| `apps/server/src/crm/ticket.controller.ts` | `@Controller('crm/tickets')` | L8 |
+| `apps/server/src/crm/quote.controller.ts` | `@Controller('crm/quotes')` | L17 |
+| `apps/server/src/crm/opportunity.controller.ts` | `@Controller('crm/opportunities')` | L17 |
+| `apps/server/src/crm/campaign.controller.ts` | `@Controller('crm/campaigns')` | L8 |
+| `apps/server/src/crm/account.controller.ts` | `@Controller('crm/accounts')` | L8 |
+
+
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+
+---
+
+
+Checking controllers and adding better error logging. Suspecting database or Prisma issues. Reviewing controllers and adding a global exception filter:
+
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: apps/server/src/crm/account.controller.ts</summary>
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: apps/server/src/logistics/item.controller.ts</summary>
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: apps/server/src/logistics/warehouse.controller.ts</summary>
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: apps/server/src/app.module.ts</summary>
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="search" data-tool-name="codebase_search">
+<details>
+                <summary>Tool use: **codebase_search** • Searched codebase "How does NestJS handle exceptions globally with exception filters?" • **14** results</summary>
+            
+| File | Lines |
+|------|-------|
+| `apps/server/src/main.ts` | L44 |
+| `apps/server/src/main.ts` | L60-126 |
+| `apps/server/src/common/rbac/rbac.guard.ts` | L5-104 |
+| `apps/server/src/main.ts` | L71-126 |
+| `apps/server/src/main.ts` | L33-58 |
+| `apps/server/src/app.module.ts` | L34 |
+| `apps/server/package.json` | L66 |
+| `apps/desktop/src/main.ts` | L491-551 |
+| `apps/server/src/common/rbac/rbac.guard.ts` | L104 |
+| `apps/server/src/prisma/prisma.service.ts` | L137 |
+| `apps/server/src/common/rbac/rbac.module.ts` | L15 |
+| `apps/server/src/auth/auth.service.ts` | L74 |
+| `apps/server/src/auth/jwt.strategy.ts` | L22 |
+| `apps/web/src/lib/axios.ts` | L11-45 |
+
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+Creating a global exception filter to log errors and identify the root cause:
+
+
+---
+
+<tool-use data-tool-type="write" data-tool-name="write">
+
+<details><summary>Tool use: **code_edit** • Edit file: apps/server/src/common/filters/http-exception.filter.ts</summary>
+
+**Chunk 1**
+Lines added: 61, lines removed: 1
+
+```diff
+@@ -1,1 +1,61 @@
+- 
++ import {
++   ExceptionFilter,
++   Catch,
++   ArgumentsHost,
++   HttpException,
++   HttpStatus,
++   Logger,
++ } from &#39;@nestjs/common&#39;;
++ import { Request, Response } from &#39;express&#39;;
++ 
++ @Catch()
++ export class AllExceptionsFilter implements ExceptionFilter {
++   private readonly logger = new Logger(AllExceptionsFilter.name);
++ 
++   catch(exception: unknown, host: ArgumentsHost) {
++     const ctx = host.switchToHttp();
++     const response = ctx.getResponse&lt;Response&gt;();
++     const request = ctx.getRequest&lt;Request&gt;();
++ 
++     const status =
++       exception instanceof HttpException
++         ? exception.getStatus()
++         : HttpStatus.INTERNAL_SERVER_ERROR;
++ 
++     const message =
++       exception instanceof HttpException
++         ? exception.getResponse()
++         : exception instanceof Error
++         ? exception.message
++         : &#39;Internal server error&#39;;
++ 
++     // Log the full error details
++     const errorDetails = {
++       statusCode: status,
++       timestamp: new Date().toISOString(),
++       path: request.url,
++       method: request.method,
++       message: typeof message === &#39;string&#39; ? message : (message as any).message || &#39;Unknown error&#39;,
++       error: exception instanceof Error ? exception.stack : String(exception),
++     };
++ 
++     // Always log errors to console (will be captured by Electron logs)
++     this.logger.error(
++       &#96;HTTP ${status} Error: ${request.method} ${request.url}&#96;,
++       exception instanceof Error ? exception.stack : String(exception),
++     );
++ 
++     // Log full details
++     console.error(&#39;=== EXCEPTION DETAILS ===&#39;);
++     console.error(JSON.stringify(errorDetails, null, 2));
++     console.error(&#39;========================&#39;);
++ 
++     response.status(status).json({
++       statusCode: status,
++       message: typeof message === &#39;string&#39; ? message : (message as any).message || &#39;Internal server error&#39;,
++       timestamp: new Date().toISOString(),
++       path: request.url,
++     });
++   }
++ }
++ 
+```
+
+</details>
+
+</tool-use>
+
+---
+
+<tool-use data-tool-type="write" data-tool-name="search_replace">
+
+<details><summary>Tool use: **code_edit** • Edit file: apps/server/src/main.ts</summary>
+
+**Chunk 1**
+Lines added: 1, lines removed: undefined
+
+```diff
+@@ -30,4 +30,5 @@
+  import { ValidationPipe } from &#39;@nestjs/common&#39;;
+  import { AppModule } from &#39;./app.module&#39;;
++ import { AllExceptionsFilter } from &#39;./common/filters/http-exception.filter&#39;;
+  
+  // Handle uncaught exceptions and unhandled rejections to prevent crashes
+```
+
+</details>
+
+</tool-use>
+
+---
+
+<tool-use data-tool-type="write" data-tool-name="search_replace">
+
+<details><summary>Tool use: **code_edit** • Edit file: apps/server/src/main.ts</summary>
+
+**Chunk 1**
+Lines added: 3, lines removed: undefined
+
+```diff
+@@ -81,4 +81,7 @@
+      
+      const app = await NestFactory.create(AppModule);
++     
++     // Add global exception filter for better error logging
++     app.useGlobalFilters(new AllExceptionsFilter());
+      
+      // CORS configuration: Allow Electron file:// origin and web origins
+```
+
+</details>
+
+</tool-use>
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: apps/server/src/common/audit/audit.service.ts</summary>
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: apps/server/src/crm/account.service.ts</summary>
+
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+Checking the Prisma schema to verify model definitions:
+
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: apps/server/prisma/schema.prisma</summary>
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="generic" data-tool-name="read_lints">
+<details>
+          <summary>Tool use: **read_lints** • Read lints for 2 files</summary>
+      
+Lint paths:
+
+- `apps/server/src/common/filters/http-exception.filter.ts`
+- `apps/server/src/main.ts`
+
+Lint results
+
+
+**No lint errors found**
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+Schema looks correct. The exception filter will log the actual errors. Wrapping service methods in try-catch to improve error handling:
+
+
+---
+
+<tool-use data-tool-type="write" data-tool-name="search_replace">
+
+<details><summary>Tool use: **code_edit** • Edit file: apps/server/src/crm/account.service.ts</summary>
+
+**Chunk 1**
+Lines added: 21, lines removed: 14
+
+```diff
+@@ -1,24 +1,31 @@
+- import { Injectable } from &#39;@nestjs/common&#39;;
++ import { Injectable, Logger } from &#39;@nestjs/common&#39;;
+  import { PrismaService } from &#39;../prisma/prisma.service&#39;;
+  
+  @Injectable()
+  export class AccountService {
++   private readonly logger = new Logger(AccountService.name);
++ 
+    constructor(private prisma: PrismaService) {}
+  
+    async findAll(skip = 0, take = 50) {
+-     const [total, items] = await Promise.all([
+-       this.prisma.account.count(),
+-       this.prisma.account.findMany({
+-         skip,
+-         take,
+-         include: {
+-           contacts: true,
+-           owner: { select: { id: true, nev: true, email: true } },
+-         },
+-         orderBy: { createdAt: &#39;desc&#39; },
+-       }),
+-     ]);
++     try {
++       const [total, items] = await Promise.all([
++         this.prisma.account.count(),
++         this.prisma.account.findMany({
++           skip,
++           take,
++           include: {
++             contacts: true,
++             owner: { select: { id: true, nev: true, email: true } },
++           },
++           orderBy: { createdAt: &#39;desc&#39; },
++         }),
++       ]);
+  
+-     return { total, items };
++       return { total, items };
++     } catch (error) {
++       this.logger.error(&#39;Error in findAll:&#39;, error);
++       throw error;
++     }
+    }
+  
+```
+
+</details>
+
+</tool-use>
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: apps/server/src/logistics/item.service.ts</summary>
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: apps/server/src/logistics/warehouse.service.ts</summary>
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: apps/server/src/dms/document.service.ts</summary>
+
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+Checking PrismaService to ensure the schema is pushed correctly:
+
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: apps/server/src/prisma/prisma.service.ts</summary>
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="bash" data-tool-name="run_terminal_cmd">
+<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git add -A && git commit -m "Add global exception filter and error logging for backend
+
+- Add AllExceptionsFilter to log all exceptions with full details
+- Add error logging to AccountService.findAll
+- This will help identify root cause of 500 errors
+
+The filter logs:
+- HTTP status code
+- Request path and method
+- Full error message and stack trace
+- Timestamp
+
+All errors are logged to console (captured by Electron logs)"</summary>
+
+```bash
+cd /Users/liviuszberger/mbit-erp && git add -A && git commit -m "Add global exception filter and error logging for backend
+
+- Add AllExceptionsFilter to log all exceptions with full details
+- Add error logging to AccountService.findAll
+- This will help identify root cause of 500 errors
+
+The filter logs:
+- HTTP status code
+- Request path and method
+- Full error message and stack trace
+- Timestamp
+
+All errors are logged to console (captured by Electron logs)"
+```
+
+```
+[feature/remove-auth-for-desktop ec7853d] Add global exception filter and error logging for backend
+ 4 files changed, 792 insertions(+), 15 deletions(-)
+ create mode 100644 apps/server/src/common/filters/http-exception.filter.ts
+
+```
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="bash" data-tool-name="run_terminal_cmd">
+<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git push origin feature/remove-auth-for-desktop</summary>
+
+```bash
+cd /Users/liviuszberger/mbit-erp && git push origin feature/remove-auth-for-desktop
+```
+
+```
+To https://github.com/BergerLiviusz/mbit-erp.git
+   18a25bd..ec7853d  feature/remove-auth-for-desktop -&gt; feature/remove-auth-for-desktop
+
+```
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+Added an exception filter to log errors. Suspecting the database schema isn't initialized. Checking the build process to ensure Prisma client is generated:
+
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: apps/desktop/package.json</summary>
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="grep" data-tool-name="grep">
+<details>
+<summary>Tool use: **grep** • Grep for "build:backend|prisma generate" in "apps/desktop/package.json" • 2 matches</summary>
+
+Output mode: content
+
+
+| File | Content | Line |
+|------|------|------|
+| `apps/desktop/package.json` | `"build": "npm run build:electron && npm run build:backend && npm run build:frontend",` | L18 |
+| `apps/desktop/package.json` | `"build:backend": "cd ../server && npx rimraf tsconfig.tsbuildinfo && npm run build && npx prisma generate && npx rimraf node_modules && npm install --omit=dev --install-strategy=hoisted --install-links=false --workspaces=false",` | L20 |
+
+
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+Build process generates the Prisma client. The exception filter should reveal the actual errors. Summary:
+
+## Summary
+
+Added error logging to diagnose the 500 errors:
+
+### Changes Made:
+
+1. **Global Exception Filter** (`apps/server/src/common/filters/http-exception.filter.ts`):
+   - Logs all exceptions with full details
+   - Logs HTTP status, path, method, error message, and stack trace
+   - Errors are logged to console (captured by Electron logs)
+
+2. **Enhanced AccountService Error Logging**:
+   - Added try-catch with Logger in `findAll` method
+   - Logs errors before rethrowing
+
+### Next Steps:
+
+After CI completes and you test the new build:
+
+1. Check the backend logs — the exception filter will log detailed error information
+2. Look for:
+   - Database connection errors
+   - Missing table errors (e.g., "no such table: ugyfelek")
+   - Prisma client generation issues
+   - Schema push failures
+
+The logs should show the root cause. Common issues:
+- Database tables don't exist (schema not pushed)
+- Prisma client not generated correctly
+- Database file path issues
+
+Once you have the logs, share them and I can fix the root cause. The exception filter will provide the details needed to identify the issue.
+
+---
+
+_**User (2025-11-08 16:55Z)**_
+
+okay now where can i find the backend logs? do i just look at the debugger?
+
+---
+
+_**Agent (model composer-1, mode Ask)**_
+
+
+
+---
+
+
+Checking where backend logs are written in the Electron app:
+
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: apps/desktop/src/main.ts</summary>
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="grep" data-tool-name="grep">
+<details>
+<summary>Tool use: **grep** • Grep for "writeLog|getLogFilePath|logs" in "apps/desktop/src/main.ts" • 65 matches</summary>
+
+Output mode: content
+
+
+| File | Content | Line |
+|------|------|------|
+| `apps/desktop/src/main.ts` | `path.join(dataPath, 'data', 'logs'),` | L21 |
+| `apps/desktop/src/main.ts` | `function getLogFilePath(): string \{` | L31 |
+| `apps/desktop/src/main.ts` | `return path.join(getUserDataPath(), 'data', 'logs', 'app.log');` | L32 |
+| `apps/desktop/src/main.ts` | `function writeLog(message: string): void \{` | L35 |
+| `apps/desktop/src/main.ts` | `const logPath = getLogFilePath();` | L39 |
+| `apps/desktop/src/main.ts` | `writeLog(`[Health Check] Backend is ready on $\{successfulHost.host\}`);` | L85 |
+| `apps/desktop/src/main.ts` | `writeLog(`[Backend] Waiting for backend to be ready (max $\{maxWaitSeconds\}s)...`);` | L95 |
+| `apps/desktop/src/main.ts` | `writeLog(msg);` | L104 |
+| `apps/desktop/src/main.ts` | `writeLog(msg);` | L112 |
+| `apps/desktop/src/main.ts` | `writeLog(`[Backend] ERROR: $\{errorMsg\}`);` | L119 |
+| `apps/desktop/src/main.ts` | `writeLog('[Cleanup] Checking for legacy nested node_modules directories...');` | L128 |
+| `apps/desktop/src/main.ts` | `writeLog('[Cleanup] Backend node_modules not found, skipping cleanup');` | L132 |
+| `apps/desktop/src/main.ts` | `writeLog(`[Cleanup] Removing empty nested node_modules: $\{fullPath\}`);` | L175 |
+| `apps/desktop/src/main.ts` | `writeLog(`[Cleanup] Failed to remove $\{fullPath\}: $\{err\}`);` | L180 |
+| `apps/desktop/src/main.ts` | `writeLog(`[Cleanup] Failed to process $\{dir\}: $\{err\}`);` | L189 |
+| `apps/desktop/src/main.ts` | `writeLog(`[Cleanup] ✓ Removed $\{cleanedCount\} legacy nested node_modules director$\{cleanedCount === 1 ? 'y' : 'ies'\}`);` | L197 |
+| `apps/desktop/src/main.ts` | `writeLog('[Cleanup] ✓ No legacy nested node_modules found');` | L200 |
+| `apps/desktop/src/main.ts` | `writeLog(`[Backend] Environment: PORT=$\{env.PORT\}, DATA_DIR=$\{env.DATA_DIR\}, DATABASE_URL=file:***$\{path.basename(dbPath)\}`);` | L247 |
+| `apps/desktop/src/main.ts` | `writeLog(`[Backend] Backend path: $\{backendPath\}`);` | L265 |
+| `apps/desktop/src/main.ts` | `writeLog(`[Backend] Backend directory: $\{backendDir\}`);` | L266 |
+| `apps/desktop/src/main.ts` | `writeLog(`[Backend] Node modules path: $\{nodeModulesPath\}`);` | L267 |
+| `apps/desktop/src/main.ts` | `writeLog(`[Backend] Resources path: $\{process.resourcesPath\}`);` | L268 |
+| `apps/desktop/src/main.ts` | `writeLog(`[Backend Error] $\{errorMsg\}`);` | L273 |
+| `apps/desktop/src/main.ts` | `writeLog(`[Backend Error] $\{errorMsg\}`);` | L281 |
+| `apps/desktop/src/main.ts` | `writeLog(`[Backend Error] $\{errorMsg\}`);` | L290 |
+| `apps/desktop/src/main.ts` | `writeLog(`[Backend Error] $\{errorMsg\}`);` | L300 |
+| `apps/desktop/src/main.ts` | `writeLog('[Backend] Using Electron bundled Node.js runtime via fork()');` | L307 |
+| `apps/desktop/src/main.ts` | `writeLog(`[Backend] NODE_PATH set to: $\{env.NODE_PATH\}`);` | L308 |
+| `apps/desktop/src/main.ts` | `writeLog(`[Backend Error] $\{errorMsg\}`);` | L322 |
+| `apps/desktop/src/main.ts` | `writeLog(`[Backend] $\{message\}`);` | L330 |
+| `apps/desktop/src/main.ts` | `writeLog(`[Backend Error] $\{message\}`);` | L336 |
+| `apps/desktop/src/main.ts` | `writeLog(`[Backend] Health check: PID $\{backendProcess.pid\} is alive`);` | L352 |
+| `apps/desktop/src/main.ts` | `writeLog(`[Backend] Health check failed: PID $\{backendProcess.pid\} may be dead`);` | L355 |
+| `apps/desktop/src/main.ts` | `writeLog(errorMsg);` | L373 |
+| `apps/desktop/src/main.ts` | `writeLog(`[Backend] Error stack: $\{error.stack\}`);` | L374 |
+| `apps/desktop/src/main.ts` | `writeLog(exitMsg);` | L390 |
+| `apps/desktop/src/main.ts` | `writeLog(`[Backend] Exit details: code=$\{code\}, signal=$\{signal\}, pid=$\{backendProcess?.pid\}`);` | L391 |
+| `apps/desktop/src/main.ts` | `? 'Backend process crashed or was killed during startup. Check logs for details.'` | L396 |
+| `apps/desktop/src/main.ts` | `: `Backend process exited with code $\{code\} during startup. Check logs for details.`;` | L397 |
+| `apps/desktop/src/main.ts` | `writeLog(`[Backend Error] $\{errorMsg\}`);` | L399 |
+| `apps/desktop/src/main.ts` | `writeLog(`[Backend Error] $\{errorMsg\}`);` | L410 |
+| `apps/desktop/src/main.ts` | `writeLog('[Backend] Attempting to restart backend...');` | L415 |
+| `apps/desktop/src/main.ts` | `writeLog(`[Backend] Failed to restart: $\{restartError.message\}`);` | L418 |
+| `apps/desktop/src/main.ts` | `writeLog('[Backend] Started successfully - health check passed');` | L429 |
+| `apps/desktop/src/main.ts` | `writeLog(`[Backend] Failed to become ready: $\{error.message\}`);` | L434 |
+| `apps/desktop/src/main.ts` | `writeLog('[Window] Window closed event fired');` | L478 |
+| `apps/desktop/src/main.ts` | `writeLog('[Window] Window close event fired');` | L484 |
+| `apps/desktop/src/main.ts` | `writeLog('[App] Starting Mbit ERP Desktop...');` | L499 |
+| `apps/desktop/src/main.ts` | `writeLog(`[App] User Data Path: $\{getUserDataPath()\}`);` | L500 |
+| `apps/desktop/src/main.ts` | `writeLog(`[App] Platform: $\{process.platform\}`);` | L501 |
+| `apps/desktop/src/main.ts` | `writeLog(`[App] Electron version: $\{process.versions.electron\}`);` | L502 |
+| `apps/desktop/src/main.ts` | `writeLog(`[App] Node version: $\{process.versions.node\}`);` | L503 |
+| `apps/desktop/src/main.ts` | `writeLog(`[App] Packaged: $\{app.isPackaged\}`);` | L504 |
+| `apps/desktop/src/main.ts` | `writeLog('[App] Starting backend server...');` | L512 |
+| `apps/desktop/src/main.ts` | `writeLog('[App] Backend ready, creating window...');` | L515 |
+| `apps/desktop/src/main.ts` | `writeLog(`[App] Backend process PID: $\{backendProcess?.pid\}`);` | L520 |
+| `apps/desktop/src/main.ts` | `const logPath = getLogFilePath();` | L525 |
+| `apps/desktop/src/main.ts` | `writeLog(`[App] FATAL ERROR: Failed to start backend: $\{errorMessage\}`);` | L527 |
+| `apps/desktop/src/main.ts` | `writeLog(`[App] Error stack: $\{error.stack\}`);` | L529 |
+| `apps/desktop/src/main.ts` | `writeLog('[App] Stopping backend process gracefully...');` | L557 |
+| `apps/desktop/src/main.ts` | `writeLog(`[App] Backend process PID: $\{backendProcess.pid\}`);` | L558 |
+| `apps/desktop/src/main.ts` | `writeLog('[App] Forcing backend process termination...');` | L567 |
+| `apps/desktop/src/main.ts` | `writeLog('[App] stopBackend called but backendProcess is null or already killed');` | L573 |
+| `apps/desktop/src/main.ts` | `writeLog('[App] window-all-closed event fired');` | L579 |
+| `apps/desktop/src/main.ts` | `writeLog('[App] before-quit event fired');` | L589 |
+
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="search" data-tool-name="codebase_search">
+<details>
+                <summary>Tool use: **codebase_search** • Searched codebase "Where are backend logs written in Electron desktop app?" • **12** results</summary>
+            
+| File | Lines |
+|------|-------|
+| `apps/desktop/src/main.ts` | L491-551 |
+| `apps/desktop/src/main.ts` | L30-89 |
+| `apps/desktop/src/main.ts` | L205-437 |
+| `apps/desktop/src/main.ts` | L14-43 |
+| `apps/desktop/src/main.ts` | L122-437 |
+| `apps/desktop/README.md` | L102 |
+| `apps/desktop/src/main.ts` | L8-32 |
+| `apps/desktop/src/main.ts` | L28 |
+| `apps/desktop/src/main.ts` | L495-584 |
+| `apps/desktop/src/main.ts` | L207-489 |
+| `apps/desktop/src/main.ts` | L553-598 |
+| `apps/desktop/src/main.ts` | L576-598 |
+
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+Backend logs are written to a file. Here's where to find them:
+
+## Log File Location
+
+The backend logs are written to:
+
+**Windows:**
+```
+%APPDATA%\Mbit-ERP\data\logs\app.log
+```
+Or:
+```
+C:\Users\<YourUsername>\AppData\Roaming\Mbit-ERP\data\logs\app.log
+```
+
+**macOS:**
+```
+~/Library/Application Support/Mbit-ERP/data/logs/app.log
+```
+
+**Linux:**
+```
+~/.config/Mbit-ERP/data/logs/app.log
+```
+
+## How to Access the Logs
+
+1. Open the file directly:
+   - Navigate to the path above
+   - Open `app.log` in any text editor
+
+2. From Windows Explorer:
+   - Press `Win + R`
+   - Type: `%APPDATA%\Mbit-ERP\data\logs`
+   - Press Enter
+   - Open `app.log`
+
+3. The log file contains:
+   - Backend startup messages
+   - Backend stdout/stderr output
+   - All console.log/console.error from the backend
+   - Exception details from the exception filter
+
+## What to Look For
+
+After testing the app and seeing 500 errors, check the log file for:
+- `=== EXCEPTION DETAILS ===` sections (from the exception filter)
+- Database errors (e.g., "no such table: ugyfelek")
+- Prisma errors
+- Schema initialization messages
+
+The exception filter logs full error details including stack traces, which should help identify the root cause of the 500 errors.
+
+Share the relevant error sections from the log file and I can help fix the issues.
+
+---
+

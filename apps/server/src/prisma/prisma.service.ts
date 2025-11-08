@@ -95,26 +95,46 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
           throw new Error('Schema file not found');
         }
         
-        // Run prisma db push programmatically
-        // Use Prisma CLI directly from node_modules
-        const prismaCliPath = isElectron && resourcesPath
-          ? join(resourcesPath, 'backend', 'node_modules', '.bin', 'prisma')
-          : join(__dirname, '..', '..', '..', 'node_modules', '.bin', 'prisma');
+        // Find Prisma CLI - use Node.js (process.execPath) to execute it directly
+        // This works in Electron because process.execPath points to Electron's bundled Node.js
+        const nodeModulesDir = isElectron && resourcesPath
+          ? join(resourcesPath, 'backend', 'node_modules')
+          : join(__dirname, '..', '..', 'node_modules');
         
-        // Fallback to npx if direct path doesn't exist
-        const prismaCommand = existsSync(prismaCliPath) 
-          ? prismaCliPath 
-          : 'npx prisma';
+        // Prisma CLI JavaScript file location
+        const prismaCliJs = join(nodeModulesDir, 'prisma', 'build', 'index.js');
+        
+        if (!existsSync(prismaCliJs)) {
+          this.logger.error('Prisma CLI not found at:', prismaCliJs);
+          throw new Error('Prisma CLI not found in node_modules');
+        }
         
         this.logger.log('Running prisma db push to create tables...');
         this.logger.log('Schema path:', schemaPath);
         this.logger.log('Working directory:', schemaDir);
-        this.logger.log('Prisma command:', prismaCommand);
+        this.logger.log('Prisma CLI:', prismaCliJs);
+        this.logger.log('Node executable:', process.execPath);
         
-        execSync(`${prismaCommand} db push --skip-generate --accept-data-loss`, {
+        // Use Electron's bundled Node.js to execute Prisma CLI directly
+        // Escape paths for Windows
+        const escapedPrismaCli = prismaCliJs.replace(/\\/g, '/');
+        const escapedExecPath = process.execPath.replace(/\\/g, '/');
+        
+        // Set DATABASE_URL in environment for Prisma CLI
+        const env = {
+          ...process.env,
+          DATABASE_URL: process.env.DATABASE_URL,
+        };
+        
+        // Execute: node prisma/build/index.js db push --skip-generate --accept-data-loss
+        const command = `"${process.execPath}" "${prismaCliJs}" db push --skip-generate --accept-data-loss`;
+        
+        this.logger.log('Executing command:', command);
+        
+        execSync(command, {
           cwd: schemaDir,
           stdio: 'inherit',
-          env: { ...process.env },
+          env,
           shell: true,
         });
         this.logger.log('✅ Database schema created successfully');
@@ -126,9 +146,35 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
         if (pushError.stderr) {
           this.logger.error('stderr:', pushError.stderr.toString());
         }
-        // Don't throw - let seed service try to handle it
-        // If schema doesn't exist, seed will fail gracefully
+        // Try alternative: use Prisma's programmatic API
+        this.logger.log('Attempting alternative schema push method...');
+        try {
+          await this.pushSchemaProgrammatically();
+        } catch (altError: any) {
+          this.logger.error('Alternative schema push also failed:', altError.message);
+          // Don't throw - let seed service try to handle it
+          // If schema doesn't exist, seed will fail gracefully
+        }
       }
+    }
+  }
+
+  private async pushSchemaProgrammatically() {
+    // Use Prisma's programmatic API via require
+    try {
+      const prismaPackagePath = process.env.ELECTRON_RUN_AS_NODE === '1' && (process as any).resourcesPath
+        ? join((process as any).resourcesPath, 'backend', 'node_modules', 'prisma')
+        : join(__dirname, '..', '..', '..', 'node_modules', 'prisma');
+      
+      // Dynamically require Prisma CLI
+      const prismaCli = require(prismaPackagePath);
+      
+      // Execute db push programmatically
+      await prismaCli.main(['db', 'push', '--skip-generate', '--accept-data-loss']);
+      this.logger.log('✅ Database schema created successfully (programmatic method)');
+    } catch (error: any) {
+      this.logger.error('Programmatic schema push failed:', error.message);
+      throw error;
     }
   }
 
