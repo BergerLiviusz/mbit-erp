@@ -118,6 +118,88 @@ async function waitForBackend(maxRetries = 30, checkTimeoutMs = 2000): Promise<v
   throw new Error(errorMsg);
 }
 
+function cleanupLegacyNodeModules(): void {
+  if (app.isPackaged) {
+    const backendNodeModules = path.join(process.resourcesPath, 'backend', 'node_modules');
+    
+    console.log('[Cleanup] Checking for legacy nested node_modules directories...');
+    writeLog('[Cleanup] Checking for legacy nested node_modules directories...');
+    
+    if (!fs.existsSync(backendNodeModules)) {
+      console.log('[Cleanup] Backend node_modules not found, skipping cleanup');
+      writeLog('[Cleanup] Backend node_modules not found, skipping cleanup');
+      return;
+    }
+    
+    let cleanedCount = 0;
+    
+    const isDirectoryEmpty = (dirPath: string): boolean => {
+      try {
+        const entries = fs.readdirSync(dirPath);
+        if (entries.length === 0) return true;
+        
+        for (const entry of entries) {
+          const fullPath = path.join(dirPath, entry);
+          const stats = fs.statSync(fullPath);
+          
+          if (stats.isFile()) return false;
+          
+          if (stats.isDirectory()) {
+            if (!isDirectoryEmpty(fullPath)) return false;
+          }
+        }
+        
+        return true;
+      } catch (err) {
+        return false;
+      }
+    };
+    
+    const findAndCleanNestedNodeModules = (dir: string, depth: number = 0): void => {
+      if (depth > 10) return;
+      
+      try {
+        const entries = fs.readdirSync(dir, { withFileTypes: true });
+        
+        for (const entry of entries) {
+          if (!entry.isDirectory()) continue;
+          
+          const fullPath = path.join(dir, entry.name);
+          
+          if (entry.name === 'node_modules' && depth > 0) {
+            if (isDirectoryEmpty(fullPath)) {
+              try {
+                console.log(`[Cleanup] Removing empty nested node_modules: ${fullPath}`);
+                writeLog(`[Cleanup] Removing empty nested node_modules: ${fullPath}`);
+                fs.rmSync(fullPath, { recursive: true, force: true });
+                cleanedCount++;
+              } catch (err) {
+                console.warn(`[Cleanup] Failed to remove ${fullPath}:`, err);
+                writeLog(`[Cleanup] Failed to remove ${fullPath}: ${err}`);
+              }
+            }
+          } else {
+            findAndCleanNestedNodeModules(fullPath, depth + 1);
+          }
+        }
+      } catch (err) {
+        console.warn(`[Cleanup] Failed to process ${dir}:`, err);
+        writeLog(`[Cleanup] Failed to process ${dir}: ${err}`);
+      }
+    };
+    
+    findAndCleanNestedNodeModules(backendNodeModules);
+    
+    if (cleanedCount > 0) {
+      console.log(`[Cleanup] ✓ Removed ${cleanedCount} legacy nested node_modules director${cleanedCount === 1 ? 'y' : 'ies'}`);
+      writeLog(`[Cleanup] ✓ Removed ${cleanedCount} legacy nested node_modules director${cleanedCount === 1 ? 'y' : 'ies'}`);
+    } else {
+      console.log('[Cleanup] ✓ No legacy nested node_modules found');
+      writeLog('[Cleanup] ✓ No legacy nested node_modules found');
+    }
+  }
+}
+
 async function startBackend(): Promise<void> {
   return new Promise((resolve, reject) => {
     const isDev = !app.isPackaged;
@@ -308,6 +390,8 @@ app.whenReady().then(async () => {
   writeLog(`[App] Packaged: ${app.isPackaged}`);
   
   ensureDataDirectories();
+  
+  cleanupLegacyNodeModules();
   
   try {
     console.log('[App] Starting backend server...');

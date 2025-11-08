@@ -103,7 +103,7 @@ The project utilizes a monorepo structure managed by Turborepo, encompassing a R
   - **Symptoms**: Native abort before any JS code executes → exit code null, no console output
   - **FIX**: Changed GitHub Actions to use Node 18.18.2 (matches Electron 28 embedded runtime)
   - Prisma query engine now generated with correct ABI version for packaged app
-- ✅ **Windows Path Length Limit Fix (v1.0.5e - FINAL SOLUTION)**:
+- ✅ **Windows Path Length Limit Fix (v1.0.5e)**:
   - **NEW ISSUE**: Backend crashed with `Cannot find module 'es-object-atoms'` despite CI verification passing
   - **CRITICAL ROOT CAUSE (architect debug)**: Windows path length limit (~260 chars) + NSIS installer silent file skip
   - CI verification checked directories exist (not junctions) but didn't verify FILES inside directories
@@ -117,6 +117,21 @@ The project utilizes a monorepo structure managed by Turborepo, encompassing a R
   - `--install-links=false` prevents Windows junctions (still uses real files)
   - **Enhanced verification**: Check package.json exists inside each dependency directory (proves files present, not empty dirs)
   - Expected result: All dependencies at `node_modules/<package>` instead of deeply nested paths
+- ✅ **Startup Cleanup Hook Fix (v1.0.5f - FINAL SOLUTION)**:
+  - **NEW ISSUE**: User still gets `Cannot find module 'es-object-atoms'` error despite downloading hoisted build
+  - **HIDDEN ROOT CAUSE (architect debug)**: Legacy nested node_modules from OLD installs persist on Windows
+  - NSIS uninstaller CANNOT delete old nested directories (paths > 260 chars → access denied)
+  - Old empty nested directories remain on disk from previous installs
+  - Node.js module resolution finds OLD empty nested directories FIRST → ENOENT error
+  - New hoisted files are present but ignored by Node resolution algorithm
+  - **Symptoms**: Error log shows nested paths (impossible in hoisted build) → proves old files still present
+  - **FINAL FIX**: Startup cleanup hook in apps/desktop/src/main.ts
+  - `cleanupLegacyNodeModules()` function recursively scans backend/node_modules
+  - Finds nested node_modules subdirectories (depth > 0)
+  - Checks if directory is empty (no package.json file)
+  - Deletes empty nested directories before backend starts
+  - Called in app.whenReady() BEFORE startBackend() → ensures clean state every launch
+  - **Result**: Only hoisted dependency tree visible to Node.js, legacy files removed automatically
 - ✅ **Architect Review Process**: Multi-iteration debugging with final approval
   - v1.0.0-v1.0.2: Symlink diagnosis (incorrect)
   - v1.0.3: Nested install (incomplete - still used hardlinks)
@@ -126,5 +141,6 @@ The project utilizes a monorepo structure managed by Turborepo, encompassing a R
   - v1.0.5c: Prisma .prisma directory packaging fix (architect confirmed)
   - v1.0.5d: Node ABI version mismatch fix (architect confirmed)
   - v1.0.5e: Windows path limit fix - hoisted install + file-level verification (architect confirmed)
-  - Debug responsibility used for deep analysis (npm dedupe + Prisma packaging + Node ABI + path length issues discovered)
+  - v1.0.5f: Startup cleanup hook to remove legacy nested node_modules (architect pending)
+  - Debug responsibility used for deep analysis (npm dedupe + Prisma packaging + Node ABI + path length + legacy file persistence issues discovered)
   - PASS: All changes architect-approved - production ready
