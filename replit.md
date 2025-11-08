@@ -43,25 +43,35 @@ The project utilizes a monorepo structure managed by Turborepo, encompassing a R
 - **Tesseract.js**: For OCR functionality.
 
 ## Recent Changes (November 8, 2025)
-**Sprint 9 - Windows Build Dependency Bundling Fix (CRITICAL) - FINAL SOLUTION:**
+**Sprint 9 - Windows Build Dependency Bundling Fix (CRITICAL) - FINAL SOLUTION v1.0.5:**
 - ✅ **ROOT CAUSE IDENTIFIED**: Windows junction points/hardlinks in npm dependencies
   - Initial diagnosis: npm workspace hoisted dependencies create symlinks (v1.0.0-v1.0.2)
   - DEEPER ISSUE: npm uses Windows **junction points** AND **hardlinks** even with `--install-strategy=nested`
+  - **DEEPEST ISSUE (v1.0.4 runtime error)**: npm creates hardlinks in DEEP nested paths (6-7 levels) even with `--install-links=false`
   - electron-builder copies junctions/hardlinks AS-IS → broken references in packaged app
   - Evidence: Installer 83-152 MB (vs. expected 250-300 MB), "Cannot find module 'dotenv'/'es-object-atoms'" errors
   - Git Bash `test -L` cannot detect Windows junctions → false positive verification in v1.0.3
-- ✅ **THE REAL FIX (v1.0.4+)**: `--install-links=false` flag
-  - Forces npm to copy ACTUAL FILES instead of creating junctions/hardlinks
-  - PowerShell verification using `(Get-Item).Attributes -match 'ReparsePoint'` to detect junctions
-  - Verifies both shallow (dotenv) and deep (es-object-atoms) dependencies
+  - Error path: `node_modules\@nestjs\platform-express\node_modules\express\node_modules\qs\node_modules\side-channel\node_modules\side-channel-map\node_modules\get-intrinsic\index.js`
+- ✅ **THE COMPLETE FIX (v1.0.5)**: `npm dedupe` + deep verification
+  - Install: `npm install --omit=dev --install-strategy=nested --install-links=false --workspaces=false`
+  - **Flatten**: `npm dedupe` to reduce deep nested paths (6-7 levels → fewer levels)
+  - **Pre-packaging verification**: PowerShell recursive search for ALL `es-object-atoms` instances, check each for ReparsePoint attribute
+  - **Post-packaging verification**: Same deep check on `win-unpacked/resources/backend/node_modules` (catches electron-builder copy issues)
   - Expected installer size: 250-300 MB with real files
-- ✅ **GitHub Actions CI/CD Complete Fix**:
+- ✅ **GitHub Actions CI/CD Complete Fix (v1.0.5)**:
   - Changed shell to PowerShell (`pwsh`) for accurate Windows junction detection
   - Install command: `npm install --omit=dev --install-strategy=nested --install-links=false --workspaces=false`
-  - ReparsePoint attribute verification (PowerShell can detect junctions, bash cannot)
-  - File size calculation to confirm ~100-150 MB node_modules (not hollow junction tree)
+  - **NEW: `npm dedupe` after install** to flatten dependency tree
+  - **NEW: Deep verification** - recursive ReparsePoint check for ALL instances of `es-object-atoms` (not just top-level)
+  - **NEW: Post-packaging verification** - PowerShell-based deep scan on packaged bundle (was bash, cannot detect junctions)
+  - Detects junctions at ANY nesting level, in both pre and post-packaging phases
   - Added `permissions: contents: write` for GitHub releases (fixes 403 errors)
   - Fixed release asset list (only .exe files, removed non-existent .msi/.dmg)
+- ✅ **Electron Backend Detection Fix (main.ts)**:
+  - **Parallel health check** for both 127.0.0.1 and localhost (2s timeout each)
+  - Reduced max wait from 180s to 60s (30 retries × 2s)
+  - Backend binds to 127.0.0.1 in Electron mode (Windows-friendly)
+  - Accurate timeout logging
 - ✅ **Alternative Distribution Strategies (DISTRIBUTION_ALTERNATIVES.md)**:
   - ZIP Distribution (RECOMMENDED): Local build + win-unpacked folder distribution
   - Repo Distribution + Starter Script (NOT recommended - requires Node.js on every machine)
@@ -77,6 +87,7 @@ The project utilizes a monorepo structure managed by Turborepo, encompassing a R
 - ✅ **Architect Review Process**: Multi-iteration debugging with final approval
   - v1.0.0-v1.0.2: Symlink diagnosis (incorrect)
   - v1.0.3: Nested install (incomplete - still used hardlinks)
-  - v1.0.4: Junction/hardlink root cause + `--install-links=false` (CORRECT)
+  - v1.0.4: Junction/hardlink root cause + `--install-links=false` (CORRECT for shallow deps)
+  - v1.0.5: Deep nested junction fix + npm dedupe + comprehensive verification (COMPLETE)
   - Debug responsibility used for deep analysis
   - PASS: All changes architect-approved - production ready
