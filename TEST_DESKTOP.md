@@ -11,13 +11,16 @@ npm run test:desktop
 
 This will:
 1. Build all components (electron, backend, frontend)
-2. Create the packaged directory structure (like CI does)
-3. Output location: `apps/desktop/dist/`
+2. Generate Prisma client (needed for database)
+3. Create the packaged directory structure (like CI does)
+4. Output location: `apps/desktop/release/`
 
 Then run the app:
-- **macOS**: `open apps/desktop/dist/mac-*/Mbit\ ERP.app`
-- **Windows**: `apps/desktop/dist/win-unpacked/Mbit\ ERP.exe`
-- **Linux**: `apps/desktop/dist/linux-unpacked/mbit-erp`
+- **macOS**: `open apps/desktop/release/mac-arm64/Mbit\ ERP.app`
+- **Windows**: `apps/desktop/release/win-unpacked/Mbit\ ERP.exe`
+- **Linux**: `apps/desktop/release/linux-unpacked/mbit-erp`
+
+Or just double-click the `.app` file in Finder (macOS).
 
 ## Alternative: Use the shell script
 
