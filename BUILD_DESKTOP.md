@@ -201,20 +201,52 @@ apps/desktop/
 
 ## 🔧 Gyakori Problémák
 
-### ⚠️ KRITIKUS: Backend Indítási Hiba Windows-on (`spawn node ENOENT`)
+### ⚠️ KRITIKUS: Backend Indítási Hibák Windows-on
 
-**Probléma**: Telepített Windows alkalmazás nem indul, hibát ír: "spawn node ENOENT"
+#### **1. "spawn node ENOENT" hiba**
 
-**Ok**: A korábbi verziók `spawn('node', ...)` hívással keresték a rendszer Node.js-t, ami nincsen telepítve a végfelhasználóknál.
+**Probléma**: Telepített alkalmazás nem indul, hibát ír: "spawn node ENOENT"
 
-**Megoldás**: **AUTOMATIKUSAN JAVÍTVA v1.0.1+ VERZIÓTÓL!**
+**Ok**: Korábbi verziók `spawn('node', ...)` hívással keresték a rendszer Node.js-t.
 
-Az alkalmazás most már Electron beépített Node.js futtatókörnyezetét használja `fork()` API-val:
-- ✅ `child_process.fork()` használata `spawn()` helyett
+**Megoldás**: **JAVÍTVA v1.0.2+ VERZIÓTÓL!**
+- ✅ `child_process.fork()` API használata Electron beépített Node.js-ével
 - ✅ `ELECTRON_RUN_AS_NODE=1` környezeti változó
-- ✅ Nincs szükség rendszerszintű Node.js telepítésre
-- ✅ Teljes standalone működés minden backend dependency-vel
-- ✅ Részletes hibanapló automatikusan mentődik
+- ✅ Nincs szükség külső Node.js telepítésre
+
+---
+
+#### **2. "Cannot find module 'dotenv'" hiba**
+
+**Probléma**: Backend indul, de azonnal összeomlik: `Error: Cannot find module 'dotenv'`
+
+**Ok**: 
+1. GitHub Actions nem telepítette a server dependencies-t
+2. Backend node_modules nem került be az installer-be
+3. Hiányzó NODE_PATH és cwd a forked process számára
+
+**Megoldás**: **JAVÍTVA v1.0.2+ VERZIÓTÓL!**
+
+**GitHub Actions javítások:**
+```yaml
+- Explicit server dependency install: npm install --production=false
+- Server build a desktop packaging előtt
+- Prisma client generation
+- Verification steps (dist, node_modules, dotenv létezésének ellenőrzése)
+```
+
+**Runtime javítások (main.ts):**
+```typescript
+- NODE_PATH: backend/node_modules path
+- cwd: backend directory (helyes working directory)
+- Pre-flight checks: node_modules és dotenv létezésének ellenőrzése
+- Részletes hibanapló minden ellenőrzésről
+```
+
+**Eredmény:**
+- ✅ Teljes backend dependency bundle (~100+ npm package)
+- ✅ Helyes module resolution a forked process-ben
+- ✅ Azonnali hibakeresés részletes log-okkal
 
 **Naplófájl helye telepített alkalmazásban**:
 ```
