@@ -59,17 +59,19 @@ export default function CRM() {
   const { data: accounts, isLoading: accountsLoading, error: accountsError } = useQuery({
     queryKey: ['accounts'],
     queryFn: async () => {
-      const response = await axios.get('/api/crm/accounts');
-      return response.data;
-    },
-    enabled: activeTab === 'accounts',
-    onError: (error: any) => {
-      if (isElectron) {
-        import('../components/DebugPanel').then(module => {
-          module.addLog('error', 'CRM: Failed to load accounts', { error: error.message, stack: error.stack });
-        }).catch(() => {});
+      try {
+        const response = await axios.get('/api/crm/accounts');
+        return response.data;
+      } catch (error: any) {
+        if (isElectron) {
+          import('../components/DebugPanel').then(module => {
+            module.addLog('error', 'CRM: Failed to load accounts', { error: error.message, stack: error.stack });
+          }).catch(() => {});
+        }
+        throw error;
       }
     },
+    enabled: activeTab === 'accounts',
   });
 
   const { data: campaigns, isLoading: campaignsLoading } = useQuery({
@@ -353,7 +355,7 @@ export default function CRM() {
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
             }`}
           >
-            Ügyfelek ({accounts?.total || 0})
+            Ügyfelek ({(accounts as any)?.total || 0})
           </button>
           <button
             onClick={() => setActiveTab('campaigns')}
@@ -383,8 +385,16 @@ export default function CRM() {
           <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
             <h2 className="text-lg font-semibold">Ügyfélnyilvántartás</h2>
           </div>
+          {accountsError && (
+            <div className="p-4 bg-red-50 border-l-4 border-red-500">
+              <p className="text-red-700 font-semibold">Hiba az adatok betöltésekor</p>
+              <p className="text-red-600 text-sm mt-1">{(accountsError as any)?.message || 'Ismeretlen hiba'}</p>
+            </div>
+          )}
           {accountsLoading ? (
             <div className="p-6">Betöltés...</div>
+          ) : (accounts as any)?.items?.length === 0 ? (
+            <div className="p-6 text-gray-500">Nincs megjeleníthető ügyfél.</div>
           ) : (
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
@@ -397,7 +407,7 @@ export default function CRM() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {accounts?.items?.map((account: any) => (
+                {(accounts as any)?.items?.map((account: any) => (
                   <tr key={account.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {account.azonosito}
