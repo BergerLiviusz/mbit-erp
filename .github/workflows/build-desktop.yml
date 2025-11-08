@@ -37,15 +37,46 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Install server dependencies explicitly
+        run: |
+          cd apps/server
+          npm install --production=false
+          npm run build
+
       - name: Generate Prisma Client
         run: |
           cd apps/server
           npx prisma generate
 
+      - name: Verify server build and dependencies
+        run: |
+          echo "Checking server dist folder..."
+          ls -la apps/server/dist || echo "Warning: dist folder not found"
+          echo "Checking server node_modules..."
+          ls -la apps/server/node_modules | head -20 || echo "Warning: node_modules not found"
+          echo "Checking for dotenv..."
+          ls -la apps/server/node_modules/dotenv || echo "ERROR: dotenv not found!"
+
       - name: Build desktop app
         run: |
           cd apps/desktop
           npm run package:${{ matrix.platform }}
+
+      - name: Verify packaged build (Windows)
+        if: matrix.os == 'windows-latest'
+        shell: bash
+        run: |
+          echo "=== Verifying Windows build output ==="
+          echo "Checking release folder..."
+          ls -lah apps/desktop/release/ || echo "Release folder not found"
+          
+          echo ""
+          echo "=== Checking .exe files ==="
+          find apps/desktop/release -name "*.exe" -exec ls -lah {} \;
+          
+          echo ""
+          echo "=== Installer details ==="
+          du -sh apps/desktop/release/* || echo "Could not check sizes"
 
       - name: Upload artifacts (Windows)
         if: matrix.os == 'windows-latest'

@@ -106,6 +106,10 @@ async function startBackend(): Promise<void> {
     const isDev = !app.isPackaged;
     const dataPath = getUserDataPath();
     
+    const backendNodeModulesPath = isDev 
+      ? path.join(__dirname, '..', '..', 'server', 'node_modules')
+      : path.join(process.resourcesPath, 'backend', 'node_modules');
+    
     const env = {
       ...process.env,
       PORT: String(BACKEND_PORT),
@@ -114,6 +118,7 @@ async function startBackend(): Promise<void> {
       NODE_ENV: isDev ? 'development' : 'production',
       JWT_SECRET: process.env.JWT_SECRET || 'mbit-erp-default-secret-change-in-production',
       ELECTRON_RUN_AS_NODE: '1',
+      NODE_PATH: backendNodeModulesPath,
     };
 
     if (isDev) {
@@ -125,10 +130,16 @@ async function startBackend(): Promise<void> {
       });
     } else {
       const backendPath = path.join(process.resourcesPath, 'backend', 'main.js');
+      const backendDir = path.join(process.resourcesPath, 'backend');
+      const nodeModulesPath = path.join(backendDir, 'node_modules');
       
       console.log('[Backend] Backend path:', backendPath);
+      console.log('[Backend] Backend directory:', backendDir);
+      console.log('[Backend] Node modules path:', nodeModulesPath);
       console.log('[Backend] Resources path:', process.resourcesPath);
       writeLog(`[Backend] Backend path: ${backendPath}`);
+      writeLog(`[Backend] Backend directory: ${backendDir}`);
+      writeLog(`[Backend] Node modules path: ${nodeModulesPath}`);
       writeLog(`[Backend] Resources path: ${process.resourcesPath}`);
       
       if (!fs.existsSync(backendPath)) {
@@ -139,10 +150,30 @@ async function startBackend(): Promise<void> {
         return;
       }
       
+      if (!fs.existsSync(nodeModulesPath)) {
+        const errorMsg = `Backend node_modules not found at: ${nodeModulesPath}`;
+        console.error(`[Backend Error] ${errorMsg}`);
+        writeLog(`[Backend Error] ${errorMsg}`);
+        reject(new Error(errorMsg));
+        return;
+      }
+      
+      const dotenvPath = path.join(nodeModulesPath, 'dotenv');
+      if (!fs.existsSync(dotenvPath)) {
+        const errorMsg = `Critical dependency 'dotenv' not found at: ${dotenvPath}`;
+        console.error(`[Backend Error] ${errorMsg}`);
+        writeLog(`[Backend Error] ${errorMsg}`);
+        reject(new Error(errorMsg));
+        return;
+      }
+      
       console.log('[Backend] Using Electron bundled Node.js runtime via fork()');
+      console.log('[Backend] NODE_PATH set to:', env.NODE_PATH);
       writeLog('[Backend] Using Electron bundled Node.js runtime via fork()');
+      writeLog(`[Backend] NODE_PATH set to: ${env.NODE_PATH}`);
       
       backendProcess = fork(backendPath, [], {
+        cwd: backendDir,
         env,
         stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
         execPath: process.execPath,
