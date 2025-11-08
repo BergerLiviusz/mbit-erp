@@ -233,6 +233,16 @@ async function startBackend(): Promise<void> {
       NODE_PATH: backendNodeModulesPath,
     };
 
+    // Log environment setup (without sensitive data)
+    console.log('[Backend] Environment configuration:');
+    console.log(`[Backend]   - PORT: ${env.PORT}`);
+    console.log(`[Backend]   - DATA_DIR: ${env.DATA_DIR}`);
+    console.log(`[Backend]   - DATABASE_URL: file:***${path.basename(dbPath)}`);
+    console.log(`[Backend]   - NODE_ENV: ${env.NODE_ENV}`);
+    console.log(`[Backend]   - ELECTRON_RUN_AS_NODE: ${env.ELECTRON_RUN_AS_NODE}`);
+    console.log(`[Backend]   - NODE_PATH: ${env.NODE_PATH}`);
+    writeLog(`[Backend] Environment: PORT=${env.PORT}, DATA_DIR=${env.DATA_DIR}, DATABASE_URL=file:***${path.basename(dbPath)}`);
+
     if (isDev) {
       const { spawn } = require('child_process');
       backendProcess = spawn('npm', ['run', 'start:dev'], {

@@ -49,7 +49,10 @@
         "from": "../server/dist",
         "to": "backend",
         "filter": [
-          "**/*"
+          "**/*",
+          "!**/.env",
+          "!**/.env.*",
+          "!**/*.env"
         ]
       },
       {
