@@ -13,10 +13,8 @@ const queryClient = new QueryClient({
       refetchOnWindowFocus: false,
       retry: 2,
       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-      onError: (error) => {
-        // Log errors but don't crash the app
-        console.error('React Query error:', error);
-      },
+      // Errors are handled in components via error states
+      // React Query v5 doesn't support onError in defaultOptions
     },
   },
 });
