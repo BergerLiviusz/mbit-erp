@@ -360,10 +360,23 @@ async function startBackend(): Promise<void> {
         if (!backendStarted) {
           reject(new Error(errorMsg));
         }
-      } else if (code !== 0 && code !== null) {
-        // Backend was running but exited unexpectedly
-        console.warn(`[Backend Warning] Backend exited unexpectedly with code ${code}`);
-        writeLog(`[Backend Warning] Backend exited unexpectedly with code ${code}`);
+      } else {
+        // Backend was running but exited - this is unexpected!
+        const errorMsg = signal === 'SIGTERM'
+          ? 'Backend process was terminated unexpectedly. It may have crashed or been killed by the system.'
+          : `Backend process exited unexpectedly with code ${code}, signal ${signal}`;
+        console.error(`[Backend Error] ${errorMsg}`);
+        writeLog(`[Backend Error] ${errorMsg}`);
+        
+        // Try to restart the backend if it was running
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          console.log('[Backend] Attempting to restart backend...');
+          writeLog('[Backend] Attempting to restart backend...');
+          startBackend().catch((restartError) => {
+            console.error('[Backend] Failed to restart:', restartError);
+            writeLog(`[Backend] Failed to restart: ${restartError.message}`);
+          });
+        }
       }
     });
 
