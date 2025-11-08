@@ -22,8 +22,9 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
     // Ensure directory exists before Prisma tries to connect
     if (datasourceUrl?.startsWith('file:')) {
       const dbPath = datasourceUrl.replace('file:', '');
-      // Ensure directory exists
-      const dbDir = dbPath.substring(0, dbPath.lastIndexOf('/') || dbPath.lastIndexOf('\\'));
+      // Ensure directory exists - handle both forward and backslashes
+      const lastSlash = Math.max(dbPath.lastIndexOf('/'), dbPath.lastIndexOf('\\'));
+      const dbDir = lastSlash > 0 ? dbPath.substring(0, lastSlash) : '';
       if (dbDir && !existsSync(dbDir)) {
         const fs = require('fs');
         fs.mkdirSync(dbDir, { recursive: true });

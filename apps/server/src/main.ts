@@ -46,16 +46,25 @@ process.on('unhandledRejection', (reason, promise) => {
 
 // Handle termination signals gracefully
 process.on('SIGTERM', () => {
+  console.error('⚠️ Received SIGTERM signal - shutting down gracefully...');
   console.log('⚠️ Received SIGTERM signal - shutting down gracefully...');
+  // Flush stdout/stderr to ensure logs are captured
+  process.stdout.write('⚠️ SIGTERM handler called\n');
+  process.stderr.write('⚠️ SIGTERM handler called\n');
   // Give time for cleanup
   setTimeout(() => {
+    console.log('⚠️ Exiting after SIGTERM...');
     process.exit(0);
   }, 1000);
 });
 
 process.on('SIGINT', () => {
+  console.error('⚠️ Received SIGINT signal - shutting down gracefully...');
   console.log('⚠️ Received SIGINT signal - shutting down gracefully...');
+  process.stdout.write('⚠️ SIGINT handler called\n');
+  process.stderr.write('⚠️ SIGINT handler called\n');
   setTimeout(() => {
+    console.log('⚠️ Exiting after SIGINT...');
     process.exit(0);
   }, 1000);
 });

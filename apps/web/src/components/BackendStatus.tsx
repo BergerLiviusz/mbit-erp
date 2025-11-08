@@ -8,8 +8,9 @@ export function BackendStatus() {
   useEffect(() => {
     const checkBackend = async () => {
       try {
+        // Use relative path - axios baseURL will handle it
         const response = await axios.get('/health');
-        if (response.status === 200) {
+        if (response.status === 200 && response.data?.status === 'ok') {
           setStatus('connected');
           setError('');
         } else {
@@ -20,11 +21,13 @@ export function BackendStatus() {
         setStatus('disconnected');
         if (err.code === 'ECONNREFUSED') {
           setError('Backend szerver nem elérhető. Ellenőrizze, hogy fut-e a backend.');
-        } else if (err.message?.includes('Network Error')) {
+        } else if (err.message?.includes('Network Error') || err.code === 'ERR_NETWORK') {
           setError('Hálózati hiba: Nem lehet csatlakozni a backend szerverhez.');
         } else {
           setError(`Hiba: ${err.message || 'Ismeretlen hiba'}`);
         }
+        // Log detailed error for debugging
+        console.error('[BackendStatus] Health check failed:', err);
       }
     };
 
@@ -52,6 +55,11 @@ export function BackendStatus() {
     );
   }
 
-  return null; // Don't show anything when connected
+  // Show connected status briefly, then hide
+  return (
+    <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-2 rounded mb-4 text-sm">
+      ✅ Backend csatlakoztatva
+    </div>
+  );
 }
 

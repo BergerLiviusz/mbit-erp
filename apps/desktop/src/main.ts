@@ -202,6 +202,9 @@ function cleanupLegacyNodeModules(): void {
   }
 }
 
+// Health check interval for backend process monitoring
+let backendHealthCheckInterval: NodeJS.Timeout | null = null;
+
 async function startBackend(): Promise<void> {
   return new Promise((resolve, reject) => {
     const isDev = !app.isPackaged;
@@ -333,6 +336,37 @@ async function startBackend(): Promise<void> {
       writeLog(`[Backend Error] ${message}`);
     });
 
+    // Monitor backend process health periodically
+    if (backendProcess) {
+      // Clear any existing health check
+      if (backendHealthCheckInterval) {
+        clearInterval(backendHealthCheckInterval);
+      }
+      
+      backendHealthCheckInterval = setInterval(() => {
+        if (backendProcess && !backendProcess.killed) {
+          // Check if process is still alive by checking if it responds to signal 0
+          try {
+            process.kill(backendProcess.pid!, 0); // Signal 0 just checks if process exists
+            console.log(`[Backend] Health check: PID ${backendProcess.pid} is alive`);
+            writeLog(`[Backend] Health check: PID ${backendProcess.pid} is alive`);
+          } catch (err) {
+            console.warn(`[Backend] Health check failed: PID ${backendProcess.pid} may be dead`);
+            writeLog(`[Backend] Health check failed: PID ${backendProcess.pid} may be dead`);
+            if (backendHealthCheckInterval) {
+              clearInterval(backendHealthCheckInterval);
+              backendHealthCheckInterval = null;
+            }
+          }
+        } else {
+          if (backendHealthCheckInterval) {
+            clearInterval(backendHealthCheckInterval);
+            backendHealthCheckInterval = null;
+          }
+        }
+      }, 10000); // Check every 10 seconds
+    }
+
     backendProcess.on('error', (error) => {
       const errorMsg = `[Backend] Process error: ${error.message}`;
       console.error(errorMsg);
@@ -345,9 +379,16 @@ async function startBackend(): Promise<void> {
     let backendStarted = false;
 
     backendProcess.on('exit', (code, signal) => {
+      // Clear health check interval
+      if (backendHealthCheckInterval) {
+        clearInterval(backendHealthCheckInterval);
+        backendHealthCheckInterval = null;
+      }
+      
       const exitMsg = `[Backend] Process exited with code ${code}, signal ${signal}`;
       console.log(exitMsg);
       writeLog(exitMsg);
+      writeLog(`[Backend] Exit details: code=${code}, signal=${signal}, pid=${backendProcess?.pid}`);
       
       // If backend hasn't started yet and exits, it's a failure
       if (!backendStarted) {
@@ -473,6 +514,10 @@ app.whenReady().then(async () => {
     console.log('[App] Backend ready, creating window...');
     writeLog('[App] Backend ready, creating window...');
     createWindow();
+    
+    // Keep backend process reference alive
+    console.log('[App] Backend process PID:', backendProcess?.pid);
+    writeLog(`[App] Backend process PID: ${backendProcess?.pid}`);
   } catch (error) {
     console.error('[App] Failed to start backend:', error);
     
@@ -509,6 +554,8 @@ app.whenReady().then(async () => {
 function stopBackend(): void {
   if (backendProcess && !backendProcess.killed) {
     console.log('[App] Stopping backend process gracefully...');
+    writeLog('[App] Stopping backend process gracefully...');
+    writeLog(`[App] Backend process PID: ${backendProcess.pid}`);
     
     // Send SIGTERM for graceful shutdown
     backendProcess.kill('SIGTERM');
@@ -517,9 +564,13 @@ function stopBackend(): void {
     setTimeout(() => {
       if (backendProcess && !backendProcess.killed) {
         console.log('[App] Forcing backend process termination...');
+        writeLog('[App] Forcing backend process termination...');
         backendProcess.kill('SIGKILL');
       }
     }, 5000);
+  } else {
+    console.log('[App] stopBackend called but backendProcess is null or already killed');
+    writeLog('[App] stopBackend called but backendProcess is null or already killed');
   }
 }
 
