@@ -13,6 +13,9 @@ on:
       - master
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ${{ matrix.os }}
@@ -48,29 +51,48 @@ jobs:
           npx prisma generate
 
       - name: Install server dependencies in NESTED mode for packaging
-        shell: bash
+        shell: pwsh
         run: |
-          echo "=== Installing server dependencies in NESTED mode (not symlinks) ==="
+          Write-Host "=== Installing server dependencies in NESTED mode (real files, no junctions) ==="
           cd apps/server
-          rm -rf node_modules
-          npm install --omit=dev --install-strategy=nested --workspaces=false
-          echo ""
-          echo "=== Verifying dependencies are real files (not symlinks) ==="
-          if [ -L "node_modules/dotenv" ]; then
-            echo "❌ ERROR: dotenv is still a symlink!"
+          Remove-Item -Recurse -Force node_modules -ErrorAction SilentlyContinue
+          npm install --omit=dev --install-strategy=nested --install-links=false --workspaces=false
+          
+          Write-Host ""
+          Write-Host "=== Verifying dependencies are REAL FILES (not junctions/symlinks) ==="
+          
+          if (-not (Test-Path "node_modules/dotenv")) {
+            Write-Host "❌ ERROR: dotenv directory not found!"
             exit 1
-          fi
-          if [ ! -d "node_modules/dotenv" ]; then
-            echo "❌ ERROR: dotenv directory not found!"
+          }
+          
+          $dotenvAttrs = (Get-Item "node_modules/dotenv").Attributes
+          if ($dotenvAttrs -match 'ReparsePoint') {
+            Write-Host "❌ ERROR: dotenv is a Windows junction/reparse point!"
+            Write-Host "Attributes: $dotenvAttrs"
             exit 1
-          fi
-          echo "✅ Dependencies installed as real files (not symlinks)"
-          echo ""
-          echo "=== Node modules size ==="
-          du -sh node_modules
-          echo ""
-          echo "=== Sample package (dotenv) verification ==="
-          ls -la node_modules/dotenv
+          }
+          
+          if (-not (Test-Path "node_modules/es-object-atoms")) {
+            Write-Host "❌ ERROR: es-object-atoms not found (nested dependency test)!"
+            exit 1
+          }
+          
+          $esAttrs = (Get-Item "node_modules/es-object-atoms").Attributes
+          if ($esAttrs -match 'ReparsePoint') {
+            Write-Host "❌ ERROR: es-object-atoms is a Windows junction!"
+            exit 1
+          }
+          
+          Write-Host "✅ Dependencies installed as REAL FILES (not junctions)"
+          Write-Host ""
+          Write-Host "=== Node modules size ==="
+          $size = (Get-ChildItem node_modules -Recurse | Measure-Object -Property Length -Sum).Sum / 1MB
+          Write-Host ("{0:N2} MB" -f $size)
+          Write-Host ""
+          Write-Host "=== Sample packages verification ==="
+          Get-ChildItem node_modules/dotenv | Select-Object -First 5
+          Get-ChildItem node_modules/es-object-atoms | Select-Object -First 5
 
       - name: Build desktop app
         run: |
@@ -146,8 +168,6 @@ jobs:
         with:
           files: |
             apps/desktop/release/*.exe
-            apps/desktop/release/*.msi
-            apps/desktop/release/*.dmg
           draft: false
           prerelease: false
         env:

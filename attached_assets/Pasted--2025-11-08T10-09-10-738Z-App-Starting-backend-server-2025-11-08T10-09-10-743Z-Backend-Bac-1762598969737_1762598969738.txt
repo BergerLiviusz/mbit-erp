@@ -1,0 +1,229 @@
+[2025-11-08T10:09:10.738Z] [App] Starting backend server...
+[2025-11-08T10:09:10.743Z] [Backend] Backend path: C:\Users\LIVIUS~1\AppData\Local\Temp\35BvIt46YW5ODLnMZT4zdy4ToKx\resources\backend\main.js
+[2025-11-08T10:09:10.744Z] [Backend] Resources path: C:\Users\LIVIUS~1\AppData\Local\Temp\35BvIt46YW5ODLnMZT4zdy4ToKx\resources
+[2025-11-08T10:09:10.745Z] [Backend] Using Electron bundled Node.js runtime via fork()
+[2025-11-08T10:09:11.477Z] [Backend Error] node:internal/modules/cjs/loader:1087
+  throw err;
+  ^
+
+Error: Cannot find module 'dotenv'
+Require stack:
+- C:\Users\LIVIUS~1\AppData\Local\Temp\35BvIt46YW5ODLnMZT4zdy4ToKx\resources\backend\main.js
+    at Module._resolveFilename (node:internal/modules/cjs/loader:1084:15)
+    at Module._load (node:internal/modules/cjs/loader:929:27)
+    at c._load (node:electron/js2c/node_init:2:13672)
+    at Module.require (node:internal/modules/cjs/loader:1150:19)
+    at require (node:internal/modules/cjs/helpers:119:18)
+    at Object.<anonymous> (C:\Users\LIVIUS~1\AppData\Local\Temp\35BvIt46YW5ODLnMZT4zdy4ToKx\resources\backend\main.js:36:29)
+    at Module._compile (node:internal/modules/cjs/loader:1271:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1326:10)
+    at Module.load (node:internal/modules/cjs/loader:1126:32)
+    at Module._load (node:internal/modules/cjs/loader:967:12) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    'C:\\Users\\LIVIUS~1\\AppData\\Local\\Temp\\35BvIt46YW5ODLnMZT4zdy4ToKx\\resources\\backend\\main.js'
+  ]
+}
+
+[2025-11-08T10:09:11.479Z] [Backend Error] 
+Node.js v18.18.2
+
+[2025-11-08T10:09:11.490Z] [Backend] Process exited with code 1
+[2025-11-08T10:09:11.568Z] [App] FATAL ERROR: Failed to start backend: Backend process exited with code 1
+[2025-11-08T10:09:11.569Z] [App] Error stack: Error: Backend process exited with code 1
+    at ChildProcess.<anonymous> (C:\Users\LIVIUS~1\AppData\Local\Temp\35BvIt46YW5ODLnMZT4zdy4ToKx\resources\app.asar\dist-electron\main.js:195:24)
+    at ChildProcess.emit (node:events:517:28)
+    at ChildProcess._handle.onexit (node:internal/child_process:292:12)
+[2025-11-08T10:09:33.514Z] [App] Starting Mbit ERP Desktop...
+[2025-11-08T10:09:33.516Z] [App] User Data Path: C:\Users\liviuszberger\AppData\Roaming\@mbit-erp/desktop
+[2025-11-08T10:09:33.516Z] [App] Platform: win32
+[2025-11-08T10:09:33.516Z] [App] Electron version: 28.3.3
+[2025-11-08T10:09:33.517Z] [App] Node version: 18.18.2
+[2025-11-08T10:09:33.518Z] [App] Packaged: true
+[2025-11-08T10:09:33.519Z] [App] Starting backend server...
+[2025-11-08T10:09:33.521Z] [Backend] Backend path: C:\Users\LIVIUS~1\AppData\Local\Temp\35BvIt46YW5ODLnMZT4zdy4ToKx\resources\backend\main.js
+[2025-11-08T10:09:33.521Z] [Backend] Resources path: C:\Users\LIVIUS~1\AppData\Local\Temp\35BvIt46YW5ODLnMZT4zdy4ToKx\resources
+[2025-11-08T10:09:33.521Z] [Backend] Using Electron bundled Node.js runtime via fork()
+[2025-11-08T10:09:33.695Z] [Backend Error] node:internal/modules/cjs/loader:1087
+  throw err;
+  ^
+
+Error: Cannot find module 'dotenv'
+Require stack:
+- C:\Users\LIVIUS~1\AppData\Local\Temp\35BvIt46YW5ODLnMZT4zdy4ToKx\resources\backend\main.js
+    at Module._resolveFilename (node:internal/modules/cjs/loader:1084:15)
+    at Module._load (node:internal/modules/cjs/loader:929:27)
+    at c._load (node:electron/js2c/node_init:2:13672)
+    at Module.require (node:internal/modules/cjs/loader:1150:19)
+    at require (node:internal/modules/cjs/helpers:119:18)
+    at Object.<anonymous> (C:\Users\LIVIUS~1\AppData\Local\Temp\35BvIt46YW5ODLnMZT4zdy4ToKx\resources\backend\main.js:36:29)
+    at Module._compile (node:internal/modules/cjs/loader:1271:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1326:10)
+    at Module.load (node:internal/modules/cjs/loader:1126:32)
+    at Module._load (node:internal/modules/cjs/loader:967:12) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    'C:\\Users\\LIVIUS~1\\AppData\\Local\\Temp\\35BvIt46YW5ODLnMZT4zdy4ToKx\\resources\\backend\\main.js'
+  ]
+}
+
+Node.js v18.18.2
+
+[2025-11-08T10:09:33.703Z] [Backend] Process exited with code 1
+[2025-11-08T10:09:33.706Z] [App] FATAL ERROR: Failed to start backend: Backend process exited with code 1
+[2025-11-08T10:09:33.706Z] [App] Error stack: Error: Backend process exited with code 1
+    at ChildProcess.<anonymous> (C:\Users\LIVIUS~1\AppData\Local\Temp\35BvIt46YW5ODLnMZT4zdy4ToKx\resources\app.asar\dist-electron\main.js:195:24)
+    at ChildProcess.emit (node:events:517:28)
+    at ChildProcess._handle.onexit (node:internal/child_process:292:12)
+[2025-11-08T10:10:55.870Z] [App] Starting Mbit ERP Desktop...
+[2025-11-08T10:10:55.873Z] [App] User Data Path: C:\Users\liviuszberger\AppData\Roaming\@mbit-erp/desktop
+[2025-11-08T10:10:55.873Z] [App] Platform: win32
+[2025-11-08T10:10:55.873Z] [App] Electron version: 28.3.3
+[2025-11-08T10:10:55.874Z] [App] Node version: 18.18.2
+[2025-11-08T10:10:55.874Z] [App] Packaged: true
+[2025-11-08T10:10:55.875Z] [App] Starting backend server...
+[2025-11-08T10:10:55.876Z] [Backend] Backend path: C:\Users\LIVIUS~1\AppData\Local\Temp\35BvIt46YW5ODLnMZT4zdy4ToKx\resources\backend\main.js
+[2025-11-08T10:10:55.876Z] [Backend] Resources path: C:\Users\LIVIUS~1\AppData\Local\Temp\35BvIt46YW5ODLnMZT4zdy4ToKx\resources
+[2025-11-08T10:10:55.877Z] [Backend] Using Electron bundled Node.js runtime via fork()
+[2025-11-08T10:10:56.043Z] [Backend Error] node:internal/modules/cjs/loader:1087
+  throw err;
+  ^
+
+Error: Cannot find module 'dotenv'
+Require stack:
+- C:\Users\LIVIUS~1\AppData\Local\Temp\35BvIt46YW5ODLnMZT4zdy4ToKx\resources\backend\main.js
+    at Module._resolveFilename (node:internal/modules/cjs/loader:1084:15)
+    at Module._load (node:internal/modules/cjs/loader:929:27)
+    at c._load (node:electron/js2c/node_init:2:13672)
+    at Module.require (node:internal/modules/cjs/loader:1150:19)
+    at require (node:internal/modules/cjs/helpers:119:18)
+    at Object.<anonymous> (C:\Users\LIVIUS~1\AppData\Local\Temp\35BvIt46YW5ODLnMZT4zdy4ToKx\resources\backend\main.js:36:29)
+    at Module._compile (node:internal/modules/cjs/loader:1271:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1326:10)
+    at Module.load (node:internal/modules/cjs/loader:1126:32)
+    at Module._load (node:internal/modules/cjs/loader:967:12) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    'C:\\Users\\LIVIUS~1\\AppData\\Local\\Temp\\35BvIt46YW5ODLnMZT4zdy4ToKx\\resources\\backend\\main.js'
+  ]
+}
+
+Node.js v18.18.2
+
+[2025-11-08T10:10:56.049Z] [Backend] Process exited with code 1
+[2025-11-08T10:10:56.051Z] [App] FATAL ERROR: Failed to start backend: Backend process exited with code 1
+[2025-11-08T10:10:56.051Z] [App] Error stack: Error: Backend process exited with code 1
+    at ChildProcess.<anonymous> (C:\Users\LIVIUS~1\AppData\Local\Temp\35BvIt46YW5ODLnMZT4zdy4ToKx\resources\app.asar\dist-electron\main.js:195:24)
+    at ChildProcess.emit (node:events:517:28)
+    at ChildProcess._handle.onexit (node:internal/child_process:292:12)
+[2025-11-08T10:23:01.572Z] [App] Starting Mbit ERP Desktop...
+[2025-11-08T10:23:01.589Z] [App] User Data Path: C:\Users\liviuszberger\AppData\Roaming\@mbit-erp/desktop
+[2025-11-08T10:23:01.589Z] [App] Platform: win32
+[2025-11-08T10:23:01.590Z] [App] Electron version: 28.3.3
+[2025-11-08T10:23:01.591Z] [App] Node version: 18.18.2
+[2025-11-08T10:23:01.592Z] [App] Packaged: true
+[2025-11-08T10:23:01.593Z] [App] Starting backend server...
+[2025-11-08T10:23:01.597Z] [Backend] Backend path: C:\Users\LIVIUS~1\AppData\Local\Temp\35BxH1dE81ugRPbcaM1Nac2oK3A\resources\backend\main.js
+[2025-11-08T10:23:01.597Z] [Backend] Backend directory: C:\Users\LIVIUS~1\AppData\Local\Temp\35BxH1dE81ugRPbcaM1Nac2oK3A\resources\backend
+[2025-11-08T10:23:01.597Z] [Backend] Node modules path: C:\Users\LIVIUS~1\AppData\Local\Temp\35BxH1dE81ugRPbcaM1Nac2oK3A\resources\backend\node_modules
+[2025-11-08T10:23:01.598Z] [Backend] Resources path: C:\Users\LIVIUS~1\AppData\Local\Temp\35BxH1dE81ugRPbcaM1Nac2oK3A\resources
+[2025-11-08T10:23:01.612Z] [Backend Error] Critical dependency 'dotenv' not found at: C:\Users\LIVIUS~1\AppData\Local\Temp\35BxH1dE81ugRPbcaM1Nac2oK3A\resources\backend\node_modules\dotenv
+[2025-11-08T10:23:01.642Z] [App] FATAL ERROR: Failed to start backend: Critical dependency 'dotenv' not found at: C:\Users\LIVIUS~1\AppData\Local\Temp\35BxH1dE81ugRPbcaM1Nac2oK3A\resources\backend\node_modules\dotenv
+[2025-11-08T10:23:01.644Z] [App] Error stack: Error: Critical dependency 'dotenv' not found at: C:\Users\LIVIUS~1\AppData\Local\Temp\35BxH1dE81ugRPbcaM1Nac2oK3A\resources\backend\node_modules\dotenv
+    at C:\Users\LIVIUS~1\AppData\Local\Temp\35BxH1dE81ugRPbcaM1Nac2oK3A\resources\app.asar\dist-electron\main.js:179:24
+    at new Promise (<anonymous>)
+    at startBackend (C:\Users\LIVIUS~1\AppData\Local\Temp\35BxH1dE81ugRPbcaM1Nac2oK3A\resources\app.asar\dist-electron\main.js:124:12)
+    at C:\Users\LIVIUS~1\AppData\Local\Temp\35BxH1dE81ugRPbcaM1Nac2oK3A\resources\app.asar\dist-electron\main.js:293:15
+[2025-11-08T10:28:12.207Z] [App] Starting Mbit ERP Desktop...
+[2025-11-08T10:28:12.225Z] [App] User Data Path: C:\Users\liviuszberger\AppData\Roaming\@mbit-erp/desktop
+[2025-11-08T10:28:12.225Z] [App] Platform: win32
+[2025-11-08T10:28:12.225Z] [App] Electron version: 28.3.3
+[2025-11-08T10:28:12.226Z] [App] Node version: 18.18.2
+[2025-11-08T10:28:12.228Z] [App] Packaged: true
+[2025-11-08T10:28:12.229Z] [App] Starting backend server...
+[2025-11-08T10:28:12.233Z] [Backend] Backend path: C:\Users\LIVIUS~1\AppData\Local\Temp\35BxKYW1eDWAMy8uxCvvUvy0F7x\resources\backend\main.js
+[2025-11-08T10:28:12.233Z] [Backend] Backend directory: C:\Users\LIVIUS~1\AppData\Local\Temp\35BxKYW1eDWAMy8uxCvvUvy0F7x\resources\backend
+[2025-11-08T10:28:12.234Z] [Backend] Node modules path: C:\Users\LIVIUS~1\AppData\Local\Temp\35BxKYW1eDWAMy8uxCvvUvy0F7x\resources\backend\node_modules
+[2025-11-08T10:28:12.234Z] [Backend] Resources path: C:\Users\LIVIUS~1\AppData\Local\Temp\35BxKYW1eDWAMy8uxCvvUvy0F7x\resources
+[2025-11-08T10:28:12.250Z] [Backend Error] Critical dependency 'dotenv' not found at: C:\Users\LIVIUS~1\AppData\Local\Temp\35BxKYW1eDWAMy8uxCvvUvy0F7x\resources\backend\node_modules\dotenv
+[2025-11-08T10:28:12.294Z] [App] FATAL ERROR: Failed to start backend: Critical dependency 'dotenv' not found at: C:\Users\LIVIUS~1\AppData\Local\Temp\35BxKYW1eDWAMy8uxCvvUvy0F7x\resources\backend\node_modules\dotenv
+[2025-11-08T10:28:12.296Z] [App] Error stack: Error: Critical dependency 'dotenv' not found at: C:\Users\LIVIUS~1\AppData\Local\Temp\35BxKYW1eDWAMy8uxCvvUvy0F7x\resources\backend\node_modules\dotenv
+    at C:\Users\LIVIUS~1\AppData\Local\Temp\35BxKYW1eDWAMy8uxCvvUvy0F7x\resources\app.asar\dist-electron\main.js:179:24
+    at new Promise (<anonymous>)
+    at startBackend (C:\Users\LIVIUS~1\AppData\Local\Temp\35BxKYW1eDWAMy8uxCvvUvy0F7x\resources\app.asar\dist-electron\main.js:124:12)
+    at C:\Users\LIVIUS~1\AppData\Local\Temp\35BxKYW1eDWAMy8uxCvvUvy0F7x\resources\app.asar\dist-electron\main.js:293:15
+[2025-11-08T10:44:46.721Z] [App] Starting Mbit ERP Desktop...
+[2025-11-08T10:44:46.739Z] [App] User Data Path: C:\Users\liviuszberger\AppData\Roaming\@mbit-erp/desktop
+[2025-11-08T10:44:46.739Z] [App] Platform: win32
+[2025-11-08T10:44:46.739Z] [App] Electron version: 28.3.3
+[2025-11-08T10:44:46.740Z] [App] Node version: 18.18.2
+[2025-11-08T10:44:46.741Z] [App] Packaged: true
+[2025-11-08T10:44:46.742Z] [App] Starting backend server...
+[2025-11-08T10:44:46.745Z] [Backend] Backend path: C:\Users\LIVIUS~1\AppData\Local\Temp\35BzE3KHh4nbclTfhQgHikWIqSB\resources\backend\main.js
+[2025-11-08T10:44:46.746Z] [Backend] Backend directory: C:\Users\LIVIUS~1\AppData\Local\Temp\35BzE3KHh4nbclTfhQgHikWIqSB\resources\backend
+[2025-11-08T10:44:46.746Z] [Backend] Node modules path: C:\Users\LIVIUS~1\AppData\Local\Temp\35BzE3KHh4nbclTfhQgHikWIqSB\resources\backend\node_modules
+[2025-11-08T10:44:46.747Z] [Backend] Resources path: C:\Users\LIVIUS~1\AppData\Local\Temp\35BzE3KHh4nbclTfhQgHikWIqSB\resources
+[2025-11-08T10:44:46.762Z] [Backend] Using Electron bundled Node.js runtime via fork()
+[2025-11-08T10:44:46.765Z] [Backend] NODE_PATH set to: C:\Users\LIVIUS~1\AppData\Local\Temp\35BzE3KHh4nbclTfhQgHikWIqSB\resources\backend\node_modules
+[2025-11-08T10:44:57.679Z] [Backend Error] node:internal/modules/cjs/loader:1087
+  throw err;
+  ^
+
+Error: Cannot find module 'es-object-atoms'
+Require stack:
+- C:\Users\LIVIUS~1\AppData\Local\Temp\35BzE3KHh4nbclTfhQgHikWIqSB\resources\backend\node_modules\@nestjs\platform-express\node_modules\express\node_modules\qs\node_modules\side-channel\node_modules\side-channel-map\node_modules\get-intrinsic\index.js
+- C:\Users\LIVIUS~1\AppData\Local\Temp\35BzE3KHh4nbclTfhQgHikWIqSB\resources\backend\node_modules\@nestjs\platform-express\node_modules\express\node_modules\qs\node_modules\side-channel\node_modules\side-channel-map\index.js
+- C:\Users\LIVIUS~1\AppData\Local\Temp\35BzE3KHh4nbclTfhQgHikWIqSB\resources\backend\node_modules\@nestjs\platform-express\node_modules\express\node_modules\qs\node_modules\side-channel\index.js
+- C:\Users\LIVIUS~1\AppData\Local\Temp\35BzE3KHh4nbclTfhQgHikWIqSB\resources\backend\node_modules\@nestjs\platform-express\node_modules\express\node_modules\qs\lib\stringify.js
+- C:\Users\LIVIUS~1\AppData\Local\Temp\35BzE3KHh4nbclTfhQgHikWIqSB\resources\backend\node_modules\@nestjs\platform-express\node_modules\express\node_modules\qs\lib\index.js
+- C:\Users\LIVIUS~1\AppData\Local\Temp\35BzE3KHh4nbclTfhQgHikWIqSB\resources\backend\node_modules\@nestjs\platform-express\node_modules\express\lib\middleware\query.js
+- C:\Users\LIVIUS~1\AppData\Local\Temp\35BzE3KHh4nbclTfhQgHikWIqSB\resources\backend\node_modules\@nestjs\platform-express\node_modules\express\lib\application.js
+- C:\Users\LIVIUS~1\AppData\Local\Temp\35BzE3KHh4nbclTfhQgHikWIqSB\resources\backend\node_modules\@nestjs\platform-express\node_modules\express\lib\express.js
+- C:\Users\LIVIUS~1\AppData\Local\Temp\35BzE3KHh4nbclTfhQgHikWIqSB\resources\backend\node_modules\@nestjs\platform-express\node_modules\express\index.js
+- C:\Users\LIVIUS~1\AppData\Local\Temp\35BzE3KHh4nbclTfhQgHikWIqSB\resources\backend\node_modules\@nestjs\platform-express\adapters\express-adapter.js
+- C:\Users\LIVIUS~1\AppData\Local\Temp\35BzE3KHh4nbclTfhQgHikWIqSB\resources\backend\node_modules\@nestjs\platform-express\adapters\index.js
+- C:\Users\LIVIUS~1\AppData\Local\Temp\35BzE3KHh4nbclTfhQgHikWIqSB\resources\backend\node_modules\@nestjs\platform-express\index.js
+- C:\Users\LIVIUS~1\AppData\Local\Temp\35BzE3KHh4nbclTfhQgHikWIqSB\resources\backend\dms\document.controller.js
+- C:\Users\LIVIUS~1\AppData\Local\Temp\35BzE3KHh4nbclTfhQgHikWIqSB\resources\backend\dms\dms.module.js
+- C:\Users\LIVIUS~1\AppData\Local\Temp\35BzE3KHh4nbclTfhQgHikWIqSB\resources\backend\app.module.js
+- C:\Users\LIVIUS~1\AppData\Local\Temp\35BzE3KHh4nbclTfhQgHikWIqSB\resources\backend\main.js
+    at Module._resolveFilename (node:internal/modules/cjs/loader:1084:15)
+    at Module._load (node:internal/modules/cjs/loader:929:27)
+    at c._load (node:electron/js2c/node_init:2:13672)
+    at Module.require (node:internal/modules/cjs/loader:1150:19)
+    at require (node:internal/modules/cjs/helpers:119:18)
+    at Object.<anonymous> (C:\Users\LIVIUS~1\AppData\Local\Temp\35BzE3KHh4nbclTfhQgHikWIqSB\resources\backend\node_modules\@nestjs\platform-express\node_modules\express\node_modules\qs\node_modules\side-channel\node_modules\side-channel-map\node_modules\get-intrinsic\index.js:5:15)
+    at Module._compile (node:internal/modules/cjs/loader:1271:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1326:10)
+    at Module.load (node:internal/modules/cjs/loader:1126:32)
+    at Module._load (node:internal/modules/cjs/loader:967:12) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    'C:\\Users\\LIVIUS~1\\AppData\\Local\\Temp\\35BzE3KHh4nbclTfhQgHikWIqSB\\resources\\backend\\node_modules\\@nestjs\\platform-express\\node_modules\\express\\node_modules\\qs\\node_modules\\side-channel\\node_modules\\side-channel-map\\node_modules\\get-intrinsic\\index.js',
+    'C:\\Users\\LIVIUS~1\\AppData\\Local\\Temp\\35BzE3KHh4nbclTfhQgHikWIqSB\\resources\\backend\\node_modules\\@nestjs\\platform-express\\node_modules\\express\\node_modules\\qs\\node_modules\\side-channel\\node_modules\\side-channel-map\\index.js',
+    'C:\\Users\\LIVIUS~1\\AppData\\Local\\Temp\\35BzE3KHh4nbclTfhQgHikWIqSB\\resources\\backend\\node_modules\\@nestjs\\platform-express\\node_modules\\express\\node_modules\\qs\\node_modules\\side-channel\\index.js',
+    'C:\\Users\\LIVIUS~1\\AppData\\Local\\Temp\\35BzE3KHh4nbclTfhQgHikWIqSB\\resources\\backend\\node_modules\\@nestjs\\platform-express\\node_modules\\express\\node_modules\\qs\\lib\\stringify.js',
+    'C:\\Users\\LIVIUS~1\\AppData\\Local\\Temp\\35BzE3KHh4nbclTfhQgHikWIqSB\\resources\\backend\\node_modules\\@nestjs\\platform-express\\node_modules\\express\\node_modules\\qs\\lib\\index.js',
+    'C:\\Users\\LIVIUS~1\\AppData\\Local\\Temp\\35BzE3KHh4nbclTfhQgHikWIqSB\\resources\\backend\\node_modules\\@nestjs\\platform-express\\node_modules\\express\\lib\\middleware\\query.js',
+    'C:\\Users\\LIVIUS~1\\AppData\\Local\\Temp\\35BzE3KHh4nbclTfhQgHikWIqSB\\resources\\backend\\node_modules\\@nestjs\\platform-express\\node_modules\\express\\lib\\application.js',
+    'C:\\Users\\LIVIUS~1\\AppData\\Local\\Temp\\35BzE3KHh4nbclTfhQgHikWIqSB\\resources\\backend\\node_modules\\@nestjs\\platform-express\\node_modules\\express\\lib\\express.js',
+    'C:\\Users\\LIVIUS~1\\AppData\\Local\\Temp\\35BzE3KHh4nbclTfhQgHikWIqSB\\resources\\backend\\node_modules\\@nestjs\\platform-express\\node_modules\\express\\index.js',
+    'C:\\Users\\LIVIUS~1\\AppData\\Local\\Temp\\35BzE3KHh4nbclTfhQgHikWIqSB\\resources\\backend\\node_modules\\@nestjs\\platform-express\\adapters\\express-adapter.js',
+    'C:\\Users\\LIVIUS~1\\AppData\\Local\\Temp\\35BzE3KHh4nbclTfhQgHikWIqSB\\resources\\backend\\node_modules\\@nestjs\\platform-express\\adapters\\index.js',
+    'C:\\Users\\LIVIUS~1\\AppData\\Local\\Temp\\35BzE3KHh4nbclTfhQgHikWIqSB\\resources\\backend\\node_modules\\@nestjs\\platform-express\\index.js',
+    'C:\\Users\\LIVIUS~1\\AppData\\Local\\Temp\\35BzE3KHh4nbclTfhQgHikWIqSB\\resources\\backend\\dms\\document.controller.js',
+    'C:\\Users\\LIVIUS~1\\AppData\\Local\\Temp\\35BzE3KHh4nbclTfhQgHikWIqSB\\resources\\backend\\dms\\dms.module.js',
+    'C:\\Users\\LIVIUS~1\\AppData\\Local\\Temp\\35BzE3KHh4nbclTfhQgHikWIqSB\\resources\\backend\\app.module.js',
+    'C:\\Users\\LIVIUS~1\\AppData\\Local\\Temp\\35BzE3KHh4nbclTfhQgHikWIqSB\\resources\\backend\\main.js'
+  ]
+}
+
+[2025-11-08T10:44:57.689Z] [Backend Error] 
+Node.js v18.18.2
+
+[2025-11-08T10:44:57.787Z] [Backend] Process exited with code 1
+[2025-11-08T10:44:57.795Z] [App] FATAL ERROR: Failed to start backend: Backend process exited with code 1
+[2025-11-08T10:44:57.796Z] [App] Error stack: Error: Backend process exited with code 1
+    at ChildProcess.<anonymous> (C:\Users\LIVIUS~1\AppData\Local\Temp\35BzE3KHh4nbclTfhQgHikWIqSB\resources\app.asar\dist-electron\main.js:223:24)
+    at ChildProcess.emit (node:events:517:28)
+    at ChildProcess._handle.onexit (node:internal/child_process:292:12)

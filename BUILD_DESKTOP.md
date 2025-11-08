@@ -100,38 +100,58 @@ npm run build:backend
 npm run build:frontend
 ```
 
-### 3. ⚠️ KRITIKUS: Backend Dependencies Nested Install
+### 3. ⚠️ KRITIKUS: Backend Dependencies Nested Install (VALÓDI FÁJLOK!)
 
-**FONTOS**: A monorepo workspace-ek által használt **hoisted dependencies SYMLINK-eket** hoznak létre az `apps/server/node_modules`-ban, ami miatt a csomagolt alkalmazás **NEM fogja** tartalmazni a backend dependencies-eket.
+**FONTOS**: A monorepo workspace-ek **hoisted dependencies**-t és Windows **junction point**-okat használnak, ami miatt a csomagolt alkalmazás **NEM fogja** tartalmazni a backend dependencies-eket.
 
-**Megoldás**: Telepítsd újra a server dependencies-eket **NESTED** módban (valódi fájlok, nem symlink-ek):
+**Két probléma:**
+1. **Symlink/junction-ök** az `apps/server/node_modules`-ban
+2. **Windows hardlink-ek** még nested install esetén is (alapértelmezett npm viselkedés)
+
+**Megoldás**: `--install-links=false` flag használata a **VALÓDI FÁJLOK** másolásához:
 
 ```bash
 # Lépj be a server könyvtárba
 cd apps/server
 
-# Távolítsd el a symlink-eket
+# Távolítsd el a symlink-eket/junction-öket
 rm -rf node_modules
 
-# Telepítsd újra NESTED módban (production dependencies)
-npm install --omit=dev --install-strategy=nested --workspaces=false
+# Telepítsd újra NESTED módban (production dependencies, VALÓDI FÁJLOK!)
+npm install --omit=dev --install-strategy=nested --install-links=false --workspaces=false
 
 # Ellenőrzés: dotenv létezik és NEM symlink
 ls -la node_modules/dotenv
 ```
 
-**Ellenőrzés Windows-on:**
+**Ellenőrzés Windows-on (AJÁNLOTT - PONTOSABB):**
 ```powershell
 cd apps\server
-Remove-Item -Recurse -Force node_modules
-npm install --omit=dev --install-strategy=nested --workspaces=false
-Get-Item node_modules\dotenv
+Remove-Item -Recurse -Force node_modules -ErrorAction SilentlyContinue
+
+# KRITIKUS FLAG: --install-links=false
+npm install --omit=dev --install-strategy=nested --install-links=false --workspaces=false
+
+# Ellenőrzés: dotenv NEM junction/reparse point
+$dotenvAttrs = (Get-Item "node_modules\dotenv").Attributes
+if ($dotenvAttrs -match 'ReparsePoint') {
+    Write-Host "HIBA: Még mindig junction!"
+} else {
+    Write-Host "OK: Valódi fájlok"
+}
+
+# Méret ellenőrzése
+$size = (Get-ChildItem node_modules -Recurse | Measure-Object -Property Length -Sum).Sum / 1MB
+Write-Host ("Node modules mérete: {0:N2} MB" -f $size)
 ```
 
 **Mit várj:**
-- ✅ `node_modules/dotenv` **könyvtár** (NEM symlink)
-- ✅ `node_modules` mérete: ~100-150 MB
-- ❌ Ha csak pár MB, akkor még mindig symlink-eket használ!
+- ✅ `node_modules/dotenv` **könyvtár** (NEM symlink/junction)
+- ✅ `Attributes` **NEM tartalmazza** a `ReparsePoint`-ot
+- ✅ `node_modules` mérete: **~100-150 MB**
+- ❌ Ha csak pár MB, akkor még mindig junction-öket használ!
+
+**FIGYELEM**: Git Bash `test -L` **NEM LÁTJA** a Windows junction-öket! Mindig PowerShell-t használj ellenőrzésre!
 
 ### 4. Windows Installer Készítése
 
@@ -249,39 +269,56 @@ apps/desktop/
 
 ---
 
-#### **2. "Cannot find module 'dotenv'" hiba**
+#### **2. "Cannot find module 'dotenv'" és "Cannot find module 'es-object-atoms'" hibák**
 
-**Probléma**: Backend indul, de azonnal összeomlik: `Error: Cannot find module 'dotenv'`
+**Probléma**: Backend indul, de azonnal összeomlik modul hiány miatt
 
 **Alapvető Ok (ROOT CAUSE)**: 
-npm workspaces (Turborepo) **hoisted dependencies** használata, ami **SYMLINK-eket** hoz létre az `apps/server/node_modules`-ban a root `node_modules`-ra mutatva. Amikor electron-builder csomagolja az alkalmazást, ezeket a symlink-eket **AS-IS** másolja, ami miatt a telepített alkalmazásban **törött hivatkozások** lesznek (mert a symlink-ek a package-n kívülre mutatnak).
+npm workspaces (Turborepo) **hoisted dependencies** + Windows **junction point/hardlink** rendszer:
+
+1. **Hoisting**: npm a dependencies-eket a root `node_modules`-ba helyezi
+2. **Junction-ök**: `apps/server/node_modules` **junction point**-okat tartalmaz
+3. **Nested install** is használ **hardlink-eket** alapértelmezetten (még `--install-strategy=nested` esetén is!)
+4. **electron-builder**: Junction/hardlink-eket másol AS-IS
+5. **Packaged app**: Junction-ök törött hivatkozások lesznek (vissza mutatnak a build runner temp path-ra)
 
 **Példa a problémára:**
 ```
 # A monorepo-ban (fejlesztés közben):
-apps/server/node_modules/dotenv → ../../node_modules/dotenv  ✅ Működik
+apps/server/node_modules/dotenv → [junction] → ../../node_modules/dotenv  ✅ Működik
+
+# Nested install-lal (alapértelmezett):
+apps/server/node_modules/dotenv → [hardlink] → global npm cache  ✅ Működik build-kor
 
 # A csomagolt alkalmazásban:
-resources/backend/node_modules/dotenv → ../../node_modules/dotenv  ❌ Nincs ilyen path!
+resources/backend/node_modules/dotenv → [junction] → C:\actions-runner\...\node_modules\dotenv  ❌ Törött!
 ```
 
-**Megoldás**: **JAVÍTVA v1.0.3+ VERZIÓTÓL!**
+**Miért NEM működött a korábbi nested install?**
+- `npm install --install-strategy=nested` **alapértelmezetten hardlink/junction-öket** használ
+- Git Bash `test -L` **NEM LÁTJA** a Windows junction-öket → false positive verification
+- Installer ~150 MB (üres junction tree, nem ~250 MB valódi fájlokkal)
+
+**Megoldás**: **JAVÍTVA v1.0.4+ VERZIÓTÓL!**
 
 **GitHub Actions javítások:**
 ```yaml
 # 1. Server build (hoisted dependencies használatával)
 - Build server code: npm run build
 
-# 2. NESTED install PACKAGING ELŐTT (valódi fájlok, nem symlink-ek!)
-- Remove symlinks: rm -rf apps/server/node_modules
-- Install nested: npm install --omit=dev --install-strategy=nested --workspaces=false
+# 2. NESTED install PACKAGING ELŐTT (VALÓDI FÁJLOK, nem junction/hardlink!)
+- Remove junctions: Remove-Item -Recurse -Force node_modules
+- Install nested: npm install --omit=dev --install-strategy=nested --install-links=false --workspaces=false
+  ⚠️ KRITIKUS FLAG: --install-links=false (másolja a fájlokat, ne hardlink!)
 
-# 3. Verification (symlink ellenőrzés!)
-- Check dotenv is NOT a symlink: if [ -L "node_modules/dotenv" ]
-- Verify dotenv exists as directory: if [ ! -d "node_modules/dotenv" ]
+# 3. Verification (PowerShell - LÁTJA a junction-öket!)
+- Check dotenv: (Get-Item "node_modules\dotenv").Attributes -notmatch 'ReparsePoint'
+- Check es-object-atoms: (Get-Item "node_modules\es-object-atoms").Attributes -notmatch 'ReparsePoint'
+- Verify size: node_modules ~100-150 MB (nem pár MB!)
 
 # 4. Post-package verification
 - Verify packaged build contains real files in win-unpacked/resources/backend/node_modules
+- Check multiple packages (dotenv, es-object-atoms, @nestjs/core)
 ```
 
 **Runtime javítások (main.ts):**
@@ -294,10 +331,12 @@ resources/backend/node_modules/dotenv → ../../node_modules/dotenv  ❌ Nincs i
 
 **Eredmény:**
 - ✅ Teljes backend dependency bundle **valódi fájlokkal** (~100-150 MB node_modules)
-- ✅ Installer mérete: 200-300 MB (vs. korábbi 83 MB)
+- ✅ Installer mérete: **250-300 MB** (vs. korábbi 83-152 MB)
+- ✅ **Nincs junction/hardlink/symlink** - tiszta fájl másolatok
+- ✅ PowerShell verification **LÁTJA** a Windows junction-öket
 - ✅ Helyes module resolution a forked process-ben
 - ✅ Azonnali hibakeresés részletes log-okkal
-- ✅ CI/CD automatikus ellenőrzések (fail fast ha symlink-ek maradnak)
+- ✅ CI/CD automatikus ellenőrzések (fail fast ha junction-ök maradnak)
 
 **Naplófájl helye telepített alkalmazásban**:
 ```
