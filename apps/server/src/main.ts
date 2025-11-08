@@ -30,6 +30,36 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 
+// Handle uncaught exceptions and unhandled rejections to prevent crashes
+process.on('uncaughtException', (error) => {
+  console.error('❌ Uncaught Exception:', error);
+  console.error('Stack:', error.stack);
+  // Don't exit immediately - log and try to continue
+  // The error might be recoverable
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Unhandled Rejection at:', promise);
+  console.error('Reason:', reason);
+  // Don't exit - log and continue
+});
+
+// Handle termination signals gracefully
+process.on('SIGTERM', () => {
+  console.log('⚠️ Received SIGTERM signal - shutting down gracefully...');
+  // Give time for cleanup
+  setTimeout(() => {
+    process.exit(0);
+  }, 1000);
+});
+
+process.on('SIGINT', () => {
+  console.log('⚠️ Received SIGINT signal - shutting down gracefully...');
+  setTimeout(() => {
+    process.exit(0);
+  }, 1000);
+});
+
 async function bootstrap() {
   try {
     // Log environment info for debugging
@@ -77,5 +107,12 @@ async function bootstrap() {
 
 bootstrap().catch((error) => {
   console.error('❌ Unhandled error in bootstrap:', error);
-  process.exit(1);
+  if (error instanceof Error) {
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
+  }
+  // Don't exit immediately - wait a bit to see if it recovers
+  setTimeout(() => {
+    process.exit(1);
+  }, 5000);
 });

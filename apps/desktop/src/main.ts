@@ -433,7 +433,14 @@ function createWindow(): void {
   }
 
   mainWindow.on('closed', () => {
+    console.log('[Window] Window closed event fired');
+    writeLog('[Window] Window closed event fired');
     mainWindow = null;
+  });
+
+  mainWindow.on('close', (event) => {
+    console.log('[Window] Window close event fired');
+    writeLog('[Window] Window close event fired');
   });
 }
 
@@ -517,6 +524,8 @@ function stopBackend(): void {
 }
 
 app.on('window-all-closed', () => {
+  console.log('[App] window-all-closed event fired');
+  writeLog('[App] window-all-closed event fired');
   stopBackend();
   
   if (process.platform !== 'darwin') {
@@ -525,6 +534,8 @@ app.on('window-all-closed', () => {
 });
 
 app.on('before-quit', (event) => {
+  console.log('[App] before-quit event fired');
+  writeLog('[App] before-quit event fired');
   if (backendProcess && !backendProcess.killed) {
     event.preventDefault();
     stopBackend();
