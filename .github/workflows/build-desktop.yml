@@ -59,6 +59,10 @@ jobs:
           npm install --omit=dev --install-strategy=nested --install-links=false --workspaces=false
           
           Write-Host ""
+          Write-Host "=== Running npm dedupe to flatten deep nested dependencies ==="
+          npm dedupe
+          
+          Write-Host ""
           Write-Host "=== Verifying dependencies are REAL FILES (not junctions/symlinks) ==="
           
           if (-not (Test-Path "node_modules/dotenv")) {
@@ -73,26 +77,44 @@ jobs:
             exit 1
           }
           
-          if (-not (Test-Path "node_modules/es-object-atoms")) {
-            Write-Host "❌ ERROR: es-object-atoms not found (nested dependency test)!"
+          Write-Host "✅ Top-level dotenv is REAL FILE"
+          
+          Write-Host ""
+          Write-Host "=== Searching for ALL es-object-atoms instances (deep nested check) ==="
+          $esInstances = Get-ChildItem -Path node_modules -Recurse -Filter "es-object-atoms" -Directory -ErrorAction SilentlyContinue
+          
+          if ($esInstances.Count -eq 0) {
+            Write-Host "❌ ERROR: No es-object-atoms found anywhere in node_modules!"
             exit 1
           }
           
-          $esAttrs = (Get-Item "node_modules/es-object-atoms").Attributes
-          if ($esAttrs -match 'ReparsePoint') {
-            Write-Host "❌ ERROR: es-object-atoms is a Windows junction!"
+          Write-Host "Found $($esInstances.Count) instance(s) of es-object-atoms"
+          
+          $junctionFound = $false
+          foreach ($instance in $esInstances) {
+            $attrs = $instance.Attributes
+            $relPath = $instance.FullName.Replace((Get-Location).Path, ".")
+            
+            if ($attrs -match 'ReparsePoint') {
+              Write-Host "❌ JUNCTION FOUND: $relPath"
+              $junctionFound = $true
+            } else {
+              Write-Host "✅ REAL DIR: $relPath"
+            }
+          }
+          
+          if ($junctionFound) {
+            Write-Host ""
+            Write-Host "❌ CRITICAL ERROR: Some es-object-atoms instances are junctions!"
             exit 1
           }
           
-          Write-Host "✅ Dependencies installed as REAL FILES (not junctions)"
+          Write-Host ""
+          Write-Host "✅ All dependencies installed as REAL FILES (no junctions)"
           Write-Host ""
           Write-Host "=== Node modules size ==="
-          $size = (Get-ChildItem node_modules -Recurse | Measure-Object -Property Length -Sum).Sum / 1MB
+          $size = (Get-ChildItem node_modules -Recurse -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum).Sum / 1MB
           Write-Host ("{0:N2} MB" -f $size)
-          Write-Host ""
-          Write-Host "=== Sample packages verification ==="
-          Get-ChildItem node_modules/dotenv | Select-Object -First 5
-          Get-ChildItem node_modules/es-object-atoms | Select-Object -First 5
 
       - name: Build desktop app
         run: |
