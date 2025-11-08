@@ -1,17 +1,10 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
+import axios from '../lib/axios';
 import { useState } from 'react';
 import Modal from '../components/Modal';
 
-const API_URL = import.meta.env.VITE_API_URL || '/api';
-
-const getAuthHeaders = () => {
-  const token = localStorage.getItem('token');
-  return {
-    Authorization: `Bearer ${token}`,
-    'Content-Type': 'application/json',
-  };
-};
+const isElectron = !!(window as any).electron || (navigator.userAgent.includes('Electron'));
+const API_URL = isElectron ? 'http://localhost:3000' : '/api';
 
 export default function CRM() {
   const [activeTab, setActiveTab] = useState<'accounts' | 'campaigns' | 'tickets'>('accounts');
@@ -57,9 +50,7 @@ export default function CRM() {
   const { data: accounts, isLoading: accountsLoading } = useQuery({
     queryKey: ['accounts'],
     queryFn: async () => {
-      const response = await axios.get(`${API_URL}/crm/accounts`, {
-        headers: getAuthHeaders(),
-      });
+      const response = await axios.get('/api/crm/accounts');
       return response.data;
     },
     enabled: activeTab === 'accounts',
@@ -68,9 +59,7 @@ export default function CRM() {
   const { data: campaigns, isLoading: campaignsLoading } = useQuery({
     queryKey: ['campaigns'],
     queryFn: async () => {
-      const response = await axios.get(`${API_URL}/crm/campaigns`, {
-        headers: getAuthHeaders(),
-      });
+      const response = await axios.get('/api/crm/campaigns');
       return response.data;
     },
     enabled: activeTab === 'campaigns',
@@ -79,9 +68,7 @@ export default function CRM() {
   const { data: tickets, isLoading: ticketsLoading } = useQuery({
     queryKey: ['tickets'],
     queryFn: async () => {
-      const response = await axios.get(`${API_URL}/crm/tickets`, {
-        headers: getAuthHeaders(),
-      });
+      const response = await axios.get('/api/crm/tickets');
       return response.data;
     },
     enabled: activeTab === 'tickets',
@@ -90,9 +77,7 @@ export default function CRM() {
   const { data: accountsForSelect } = useQuery({
     queryKey: ['accountsForSelect'],
     queryFn: async () => {
-      const response = await axios.get(`${API_URL}/crm/accounts?skip=0&take=100`, {
-        headers: getAuthHeaders(),
-      });
+      const response = await axios.get('/api/crm/accounts?skip=0&take=100');
       return response.data;
     },
     enabled: isTicketModalOpen,
