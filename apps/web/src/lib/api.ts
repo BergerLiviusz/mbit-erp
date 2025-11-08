@@ -35,9 +35,53 @@ export async function apiFetch(url: string, options?: RequestInit): Promise<Resp
     }
   }
   
-  return fetch(finalUrl, {
-    ...options,
-    headers,
-  });
+  // Enhanced logging for debugging
+  if (isElectron) {
+    console.log('[apiFetch] Request:', {
+      originalUrl: url,
+      finalUrl,
+      method: options?.method || 'GET',
+      isElectron,
+    });
+  }
+  
+  try {
+    const response = await fetch(finalUrl, {
+      ...options,
+      headers,
+    });
+    
+    if (isElectron) {
+      console.log('[apiFetch] Response:', {
+        url: finalUrl,
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+      });
+    }
+    
+    // Log error responses
+    if (!response.ok && isElectron) {
+      const errorText = await response.clone().text().catch(() => 'Unable to read error');
+      console.error('[apiFetch] Error response:', {
+        url: finalUrl,
+        status: response.status,
+        statusText: response.statusText,
+        body: errorText.substring(0, 200), // First 200 chars
+      });
+    }
+    
+    return response;
+  } catch (error: any) {
+    if (isElectron) {
+      console.error('[apiFetch] Fetch error:', {
+        url: finalUrl,
+        error: error.message,
+        code: error.code,
+        stack: error.stack,
+      });
+    }
+    throw error;
+  }
 }
 
