@@ -88,11 +88,19 @@ The project utilizes a monorepo structure managed by Turborepo, encompassing a R
   - **Why npm dedupe fails**: Incompatibility with nested install strategy
   - Updated expected installer size: 250-300 MB
   - Clear warning about npm's default hardlink behavior
+- ✅ **Prisma Packaging Fix (v1.0.5c)**:
+  - **NEW ISSUE**: Backend crashed immediately with no stdout/stderr output
+  - **ROOT CAUSE (architect debug)**: electron-builder glob `"**/*"` does NOT match dotfile paths
+  - `node_modules/.prisma/client/` with native query engine binaries (e.g., `query_engine-windows.dll.node`) was MISSING from packaged app
+  - Prisma runtime unable to load query engine → native abort → exit code null, no console output
+  - **FIX**: Added explicit extraResources entry to copy `.prisma` directory to packaged app
+  - Prisma client generation moved AFTER production npm install (in same workflow step)
 - ✅ **Architect Review Process**: Multi-iteration debugging with final approval
   - v1.0.0-v1.0.2: Symlink diagnosis (incorrect)
   - v1.0.3: Nested install (incomplete - still used hardlinks)
   - v1.0.4: Junction/hardlink root cause + `--install-links=false` (CORRECT for shallow deps)
   - v1.0.5a-b: npm dedupe attempts (FAILED - deleted production dependencies)
   - v1.0.5 FINAL: Removed dedupe, single install command (CORRECT - architect confirmed)
-  - Debug responsibility used for deep analysis (npm dedupe incompatibility discovered)
+  - v1.0.5c: Prisma .prisma directory packaging fix (architect confirmed)
+  - Debug responsibility used for deep analysis (npm dedupe + Prisma packaging issues discovered)
   - PASS: All changes architect-approved - production ready
