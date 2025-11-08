@@ -29,6 +29,7 @@ if (!isElectron) {
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
+import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 
 // Handle uncaught exceptions and unhandled rejections to prevent crashes
 process.on('uncaughtException', (error) => {
@@ -79,6 +80,9 @@ async function bootstrap() {
     console.log(`  - NODE_ENV: ${process.env.NODE_ENV || 'not set'}`);
     
     const app = await NestFactory.create(AppModule);
+    
+    // Add global exception filter for better error logging
+    app.useGlobalFilters(new AllExceptionsFilter());
     
     // CORS configuration: Allow Electron file:// origin and web origins
     const allowedOrigins = isElectron 
