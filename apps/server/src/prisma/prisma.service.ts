@@ -79,8 +79,10 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
         
         // In packaged Electron app, schema is in backend/prisma/schema.prisma
         const isElectron = process.env.ELECTRON_RUN_AS_NODE === '1';
-        const schemaDir = isElectron 
-          ? join(process.resourcesPath || process.cwd(), 'backend', 'prisma')
+        // process.resourcesPath is Electron-specific, cast to any to access it
+        const resourcesPath = (process as any).resourcesPath;
+        const schemaDir = isElectron && resourcesPath
+          ? join(resourcesPath, 'backend', 'prisma')
           : join(__dirname, '..', '..', 'prisma');
         
         const schemaPath = join(schemaDir, 'schema.prisma');
@@ -94,8 +96,8 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
         
         // Run prisma db push programmatically
         // Use Prisma CLI directly from node_modules
-        const prismaCliPath = isElectron
-          ? join(process.resourcesPath || process.cwd(), 'backend', 'node_modules', '.bin', 'prisma')
+        const prismaCliPath = isElectron && resourcesPath
+          ? join(resourcesPath, 'backend', 'node_modules', '.bin', 'prisma')
           : join(__dirname, '..', '..', '..', 'node_modules', '.bin', 'prisma');
         
         // Fallback to npx if direct path doesn't exist
