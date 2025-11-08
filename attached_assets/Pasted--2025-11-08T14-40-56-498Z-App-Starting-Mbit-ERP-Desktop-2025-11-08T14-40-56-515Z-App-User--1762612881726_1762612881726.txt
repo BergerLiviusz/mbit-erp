@@ -1,0 +1,28 @@
+[2025-11-08T14:40:56.498Z] [App] Starting Mbit ERP Desktop...
+[2025-11-08T14:40:56.515Z] [App] User Data Path: C:\Users\liviuszberger\AppData\Roaming\@mbit-erp/desktop
+[2025-11-08T14:40:56.516Z] [App] Platform: win32
+[2025-11-08T14:40:56.516Z] [App] Electron version: 28.3.3
+[2025-11-08T14:40:56.517Z] [App] Node version: 18.18.2
+[2025-11-08T14:40:56.518Z] [App] Packaged: true
+[2025-11-08T14:40:56.520Z] [Cleanup] Checking for legacy nested node_modules directories...
+[2025-11-08T14:40:56.747Z] [Cleanup] ✓ No legacy nested node_modules found
+[2025-11-08T14:40:56.752Z] [App] Starting backend server...
+[2025-11-08T14:40:56.763Z] [Backend] Backend path: C:\Users\LIVIUS~1\AppData\Local\Temp\35CSiN8ClqFiAxSggt1RNcfRE9o\resources\backend\main.js
+[2025-11-08T14:40:56.764Z] [Backend] Backend directory: C:\Users\LIVIUS~1\AppData\Local\Temp\35CSiN8ClqFiAxSggt1RNcfRE9o\resources\backend
+[2025-11-08T14:40:56.765Z] [Backend] Node modules path: C:\Users\LIVIUS~1\AppData\Local\Temp\35CSiN8ClqFiAxSggt1RNcfRE9o\resources\backend\node_modules
+[2025-11-08T14:40:56.765Z] [Backend] Resources path: C:\Users\LIVIUS~1\AppData\Local\Temp\35CSiN8ClqFiAxSggt1RNcfRE9o\resources
+[2025-11-08T14:40:56.767Z] [Backend] Using Electron bundled Node.js runtime via fork()
+[2025-11-08T14:40:56.768Z] [Backend] NODE_PATH set to: C:\Users\LIVIUS~1\AppData\Local\Temp\35CSiN8ClqFiAxSggt1RNcfRE9o\resources\backend\node_modules
+[2025-11-08T14:40:56.834Z] [Backend] Waiting for backend to be ready (max 60s)...
+[2025-11-08T14:40:57.100Z] [Backend] Still waiting... (attempt 5/30, 10s elapsed)
+[2025-11-08T14:40:57.144Z] [Backend] Still waiting... (attempt 10/30, 20s elapsed)
+[2025-11-08T14:40:57.155Z] [Backend] Still waiting... (attempt 15/30, 30s elapsed)
+[2025-11-08T14:40:57.173Z] [Backend] Still waiting... (attempt 20/30, 40s elapsed)
+[2025-11-08T14:40:57.184Z] [Backend] Still waiting... (attempt 25/30, 50s elapsed)
+[2025-11-08T14:40:57.195Z] [Backend] Still waiting... (attempt 30/30, 60s elapsed)
+[2025-11-08T14:40:57.196Z] [Backend] ERROR: Backend failed to start after 30 attempts (~60s)
+[2025-11-08T14:40:57.201Z] [App] FATAL ERROR: Failed to start backend: Backend failed to start after 30 attempts (~60s)
+[2025-11-08T14:40:57.201Z] [App] Error stack: Error: Backend failed to start after 30 attempts (~60s)
+    at waitForBackend (C:\Users\LIVIUS~1\AppData\Local\Temp\35CSiN8ClqFiAxSggt1RNcfRE9o\resources\app.asar\dist-electron\main.js:135:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+[2025-11-08T14:40:59.671Z] [Backend] Process exited with code null
