@@ -1,0 +1,108 @@
+[2025-11-08T13:43:17.105Z] [App] Starting Mbit ERP Desktop...
+[2025-11-08T13:43:17.119Z] [App] User Data Path: C:\Users\liviuszberger\AppData\Roaming\@mbit-erp/desktop
+[2025-11-08T13:43:17.120Z] [App] Platform: win32
+[2025-11-08T13:43:17.120Z] [App] Electron version: 28.3.3
+[2025-11-08T13:43:17.121Z] [App] Node version: 18.18.2
+[2025-11-08T13:43:17.122Z] [App] Packaged: true
+[2025-11-08T13:43:17.124Z] [App] Starting backend server...
+[2025-11-08T13:43:17.128Z] [Backend] Backend path: C:\Users\LIVIUS~1\AppData\Local\Temp\35CLkIFHD6IVlULbui0HgoCBpyg\resources\backend\main.js
+[2025-11-08T13:43:17.128Z] [Backend] Backend directory: C:\Users\LIVIUS~1\AppData\Local\Temp\35CLkIFHD6IVlULbui0HgoCBpyg\resources\backend
+[2025-11-08T13:43:17.128Z] [Backend] Node modules path: C:\Users\LIVIUS~1\AppData\Local\Temp\35CLkIFHD6IVlULbui0HgoCBpyg\resources\backend\node_modules
+[2025-11-08T13:43:17.129Z] [Backend] Resources path: C:\Users\LIVIUS~1\AppData\Local\Temp\35CLkIFHD6IVlULbui0HgoCBpyg\resources
+[2025-11-08T13:43:17.143Z] [Backend] Using Electron bundled Node.js runtime via fork()
+[2025-11-08T13:43:17.146Z] [Backend] NODE_PATH set to: C:\Users\LIVIUS~1\AppData\Local\Temp\35CLkIFHD6IVlULbui0HgoCBpyg\resources\backend\node_modules
+[2025-11-08T13:43:17.206Z] [Backend] Waiting for backend to be ready (max 60s)...
+[2025-11-08T13:43:17.501Z] [Backend] Still waiting... (attempt 5/30, 10s elapsed)
+[2025-11-08T13:43:17.520Z] [Backend] Still waiting... (attempt 10/30, 20s elapsed)
+[2025-11-08T13:43:17.538Z] [Backend] Still waiting... (attempt 15/30, 30s elapsed)
+[2025-11-08T13:43:17.555Z] [Backend] Still waiting... (attempt 20/30, 40s elapsed)
+[2025-11-08T13:43:17.569Z] [Backend] Still waiting... (attempt 25/30, 50s elapsed)
+[2025-11-08T13:43:17.595Z] [Backend] Still waiting... (attempt 30/30, 60s elapsed)
+[2025-11-08T13:43:17.595Z] [Backend] ERROR: Backend failed to start after 30 attempts (~60s)
+[2025-11-08T13:43:17.600Z] [App] FATAL ERROR: Failed to start backend: Backend failed to start after 30 attempts (~60s)
+[2025-11-08T13:43:17.601Z] [App] Error stack: Error: Backend failed to start after 30 attempts (~60s)
+    at waitForBackend (C:\Users\LIVIUS~1\AppData\Local\Temp\35CLkIFHD6IVlULbui0HgoCBpyg\resources\app.asar\dist-electron\main.js:135:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+[2025-11-08T13:43:23.384Z] [Backend Error] node:internal/modules/cjs/loader:1087
+  throw err;
+  ^
+
+Error: Cannot find module 'es-object-atoms'
+Require stack:
+- C:\Users\LIVIUS~1\AppData\Local\Temp\35CLkIFHD6IVlULbui0HgoCBpyg\resources\backend\node_modules\@nestjs\platform-express\node_modules\express\node_modules\qs\node_modules\side-channel\node_modules\side-channel-map\node_modules\get-intrinsic\index.js
+- C:\Users\LIVIUS~1\AppData\Local\Temp\35CLkIFHD6IVlULbui0HgoCBpyg\resources\backend\node_modules\@nestjs\platform-express\node_modules\express\node_modules\qs\node_modules\side-channel\node_modules\side-channel-map\index.js
+- C:\Users\LIVIUS~1\AppData\Local\Temp\35CLkIFHD6IVlULbui0HgoCBpyg\resources\backend\node_modules\@nestjs\platform-express\node_modules\express\node_modules\qs\node_modules\side-channel\index.js
+- C:\Users\LIVIUS~1\AppData\Local\Temp\35CLkIFHD6IVlULbui0HgoCBpyg\resources\backend\node_modules\@nestjs\platform-express\node_modules\express\node_modules\qs\lib\stringify.js
+- C:\Users\LIVIUS~1\AppData\Local\Temp\35CLkIFHD6IVlULbui0HgoCBpyg\resources\backend\node_modules\@nestjs\platform-express\node_modules\express\node_modules\qs\lib\index.js
+- C:\Users\LIVIUS~1\AppData\Local\Temp\35CLkIFHD6IVlULbui0HgoCBpyg\resources\backend\node_modules\@nestjs\platform-express\node_modules\express\lib\middleware\query.js
+- C:\Users\LIVIUS~1\AppData\Local\Temp\35CLkIFHD6IVlULbui0HgoCBpyg\resources\backend\node_modules\@nestjs\platform-express\node_modules\express\lib\application.js
+- C:\Users\LIVIUS~1\AppData\Local\Temp\35CLkIFHD6IVlULbui0HgoCBpyg\resources\backend\node_modules\@nestjs\platform-express\node_modules\express\lib\express.js
+- C:\Users\LIVIUS~1\AppData\Local\Temp\35CLkIFHD6IVlULbui0HgoCBpyg\resources\backend\node_modules\@nestjs\platform-express\node_modules\express\index.js
+- C:\Users\LIVIUS~1\AppData\Local\Temp\35CLkIFHD6IVlULbui0HgoCBpyg\resources\backend\node_modules\@nestjs\platform-express\adapters\express-adapter.js
+- C:\Users\LIVIUS~1\AppData\Local\Temp\35CLkIFHD6IVlULbui0HgoCBpyg\resources\backend\node_modules\@nestjs\platform-express\adapters\index.js
+- C:\Users\LIVIUS~1\AppData\Local\Temp\35CLkIFHD6IVlULbui0HgoCBpyg\resources\backend\node_modules\@nestjs\platform-express\index.js
+- C:\Users\LIVIUS~1\AppData\Local\Temp\35CLkIFHD6IVlULbui0HgoCBpyg\resources\backend\dms\document.controller.js
+- C:\Users\LIVIUS~1\AppData\Local\Temp\35CLkIFHD6IVlULbui0HgoCBpyg\resources\backend\dms\dms.module.js
+- C:\Users\LIVIUS~1\AppData\Local\Temp\35CLkIFHD6IVlULbui0HgoCBpyg\resources\backend\app.module.js
+- C:\Users\LIVIUS~1\AppData\Local\Temp\35CLkIFHD6IVlULbui0HgoCBpyg\resources\backend\main.js
+    at Module._resolveFilename (node:internal/modules/cjs/loader:1084:15)
+    at Module._load (node:internal/modules/cjs/loader:929:27)
+    at c._load (node:electron/js2c/node_init:2:13672)
+    at Module.require (node:internal/modules/cjs/loader:1150:19)
+    at require (node:internal/modules/cjs/helpers:119:18)
+    at Object.<anonymous> (C:\Users\LIVIUS~1\AppData\Local\Temp\35CLkIFHD6IVlULbui0HgoCBpyg\resources\backend\node_modules\@nestjs\platform-express\node_modules\express\node_modules\qs\node_modules\side-channel\node_modules\side-channel-map\node_modules\get-intrinsic\index.js:5:15)
+    at Module._compile (node:internal/modules/cjs/loader:1271:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1326:10)
+    at Module.load (node:internal/modules/cjs/loader:1126:32)
+    at Module._load (node:internal/modules/cjs/loader:967:12) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    'C:\\Users\\LIVIUS~1\\AppData\\Local\\Temp\\35CLkIFHD6IVlULbui0HgoCBpyg\\resources\\backend\\node_modules\\@nestjs\\platform-express\\node_modules\\express\\node_modules\\qs\\node_modules\\side-channel\\node_modules\\side-channel-map\\node_modules\\get-intrinsic\\index.js',
+    'C:\\Users\\LIVIUS~1\\AppData\\Local\\Temp\\35CLkIFHD6IVlULbui0HgoCBpyg\\resources\\backend\\node_modules\\@nestjs\\platform-express\\node_modules\\express\\node_modules\\qs\\node_modules\\side-channel\\node_modules\\side-channel-map\\index.js',
+    'C:\\Users\\LIVIUS~1\\AppData\\Local\\Temp\\35CLkIFHD6IVlULbui0HgoCBpyg\\resources\\backend\\node_modules\\@nestjs\\platform-express\\node_modules\\express\\node_modules\\qs\\node_modules\\side-channel\\index.js',
+    'C:\\Users\\LIVIUS~1\\AppData\\Local\\Temp\\35CLkIFHD6IVlULbui0HgoCBpyg\\resources\\backend\\node_modules\\@nestjs\\platform-express\\node_modules\\express\\node_modules\\qs\\lib\\stringify.js',
+    'C:\\Users\\LIVIUS~1\\AppData\\Local\\Temp\\35CLkIFHD6IVlULbui0HgoCBpyg\\resources\\backend\\node_modules\\@nestjs\\platform-express\\node_modules\\express\\node_modules\\qs\\lib\\index.js',
+    'C:\\Users\\LIVIUS~1\\AppData\\Local\\Temp\\35CLkIFHD6IVlULbui0HgoCBpyg\\resources\\backend\\node_modules\\@nestjs\\platform-express\\node_modules\\express\\lib\\middleware\\query.js',
+    'C:\\Users\\LIVIUS~1\\AppData\\Local\\Temp\\35CLkIFHD6IVlULbui0HgoCBpyg\\resources\\backend\\node_modules\\@nestjs\\platform-express\\node_modules\\express\\lib\\application.js',
+    'C:\\Users\\LIVIUS~1\\AppData\\Local\\Temp\\35CLkIFHD6IVlULbui0HgoCBpyg\\resources\\backend\\node_modules\\@nestjs\\platform-express\\node_modules\\express\\lib\\express.js',
+    'C:\\Users\\LIVIUS~1\\AppData\\Local\\Temp\\35CLkIFHD6IVlULbui0HgoCBpyg\\resources\\backend\\node_modules\\@nestjs\\platform-express\\node_modules\\express\\index.js',
+    'C:\\Users\\LIVIUS~1\\AppData\\Local\\Temp\\35CLkIFHD6IVlULbui0HgoCBpyg\\resources\\backend\\node_modules\\@nestjs\\platform-express\\adapters\\express-adapter.js',
+    'C:\\Users\\LIVIUS~1\\AppData\\Local\\Temp\\35CLkIFHD6IVlULbui0HgoCBpyg\\resources\\backend\\node_modules\\@nestjs\\platform-express\\adapters\\index.js',
+    'C:\\Users\\LIVIUS~1\\AppData\\Local\\Temp\\35CLkIFHD6IVlULbui0HgoCBpyg\\resources\\backend\\node_modules\\@nestjs\\platform-express\\index.js',
+    'C:\\Users\\LIVIUS~1\\AppData\\Local\\Temp\\35CLkIFHD6IVlULbui0HgoCBpyg\\resources\\backend\\dms\\document.controller.js',
+    'C:\\Users\\LIVIUS~1\\AppData\\Local\\Temp\\35CLkIFHD6IVlULbui0HgoCBpyg\\resources\\backend\\dms\\dms.module.js',
+    'C:\\Users\\LIVIUS~1\\AppData\\Local\\Temp\\35CLkIFHD6IVlULbui0HgoCBpyg\\resources\\backend\\app.module.js',
+    'C:\\Users\\LIVIUS~1\\AppData\\Local\\Temp\\35CLkIFHD6IVlULbui0HgoCBpyg\\resources\\backend\\main.js'
+  ]
+}
+
+[2025-11-08T13:43:23.386Z] [Backend Error] 
+Node.js v18.18.2
+
+[2025-11-08T13:43:23.406Z] [Backend] Process exited with code 1
+[2025-11-08T14:11:21.621Z] [App] Starting Mbit ERP Desktop...
+[2025-11-08T14:11:21.639Z] [App] User Data Path: C:\Users\liviuszberger\AppData\Roaming\@mbit-erp/desktop
+[2025-11-08T14:11:21.639Z] [App] Platform: win32
+[2025-11-08T14:11:21.640Z] [App] Electron version: 28.3.3
+[2025-11-08T14:11:21.640Z] [App] Node version: 18.18.2
+[2025-11-08T14:11:21.642Z] [App] Packaged: true
+[2025-11-08T14:11:21.643Z] [App] Starting backend server...
+[2025-11-08T14:11:21.646Z] [Backend] Backend path: C:\Users\LIVIUS~1\AppData\Local\Temp\35CP8IVjUw7IdtdzJfydg060oLo\resources\backend\main.js
+[2025-11-08T14:11:21.647Z] [Backend] Backend directory: C:\Users\LIVIUS~1\AppData\Local\Temp\35CP8IVjUw7IdtdzJfydg060oLo\resources\backend
+[2025-11-08T14:11:21.647Z] [Backend] Node modules path: C:\Users\LIVIUS~1\AppData\Local\Temp\35CP8IVjUw7IdtdzJfydg060oLo\resources\backend\node_modules
+[2025-11-08T14:11:21.648Z] [Backend] Resources path: C:\Users\LIVIUS~1\AppData\Local\Temp\35CP8IVjUw7IdtdzJfydg060oLo\resources
+[2025-11-08T14:11:21.662Z] [Backend] Using Electron bundled Node.js runtime via fork()
+[2025-11-08T14:11:21.663Z] [Backend] NODE_PATH set to: C:\Users\LIVIUS~1\AppData\Local\Temp\35CP8IVjUw7IdtdzJfydg060oLo\resources\backend\node_modules
+[2025-11-08T14:11:21.711Z] [Backend] Waiting for backend to be ready (max 60s)...
+[2025-11-08T14:11:21.913Z] [Backend] Still waiting... (attempt 5/30, 10s elapsed)
+[2025-11-08T14:11:21.941Z] [Backend] Still waiting... (attempt 10/30, 20s elapsed)
+[2025-11-08T14:11:21.952Z] [Backend] Still waiting... (attempt 15/30, 30s elapsed)
+[2025-11-08T14:11:21.987Z] [Backend] Still waiting... (attempt 20/30, 40s elapsed)
+[2025-11-08T14:11:22.020Z] [Backend] Still waiting... (attempt 25/30, 50s elapsed)
+[2025-11-08T14:11:22.075Z] [Backend] Still waiting... (attempt 30/30, 60s elapsed)
+[2025-11-08T14:11:22.076Z] [Backend] ERROR: Backend failed to start after 30 attempts (~60s)
+[2025-11-08T14:11:22.085Z] [App] FATAL ERROR: Failed to start backend: Backend failed to start after 30 attempts (~60s)
+[2025-11-08T14:11:22.086Z] [App] Error stack: Error: Backend failed to start after 30 attempts (~60s)
+    at waitForBackend (C:\Users\LIVIUS~1\AppData\Local\Temp\35CP8IVjUw7IdtdzJfydg060oLo\resources\app.asar\dist-electron\main.js:135:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+[2025-11-08T14:11:26.699Z] [Backend] Process exited with code null
