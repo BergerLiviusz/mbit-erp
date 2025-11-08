@@ -1,12 +1,23 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from '../lib/axios';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Modal from '../components/Modal';
 import { apiFetch } from '../lib/api';
+
+const isElectron = !!(window as any).electron || (navigator.userAgent.includes('Electron'));
 
 export default function CRM() {
   const [activeTab, setActiveTab] = useState<'accounts' | 'campaigns' | 'tickets'>('accounts');
   const queryClient = useQueryClient();
+  
+  // Log component mount
+  useEffect(() => {
+    if (isElectron) {
+      import('../components/DebugPanel').then(module => {
+        module.addLog('info', 'CRM component mounted', { activeTab });
+      }).catch(() => {});
+    }
+  }, []);
 
   const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
   const [isCampaignModalOpen, setIsCampaignModalOpen] = useState(false);
@@ -45,13 +56,20 @@ export default function CRM() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  const { data: accounts, isLoading: accountsLoading } = useQuery({
+  const { data: accounts, isLoading: accountsLoading, error: accountsError } = useQuery({
     queryKey: ['accounts'],
     queryFn: async () => {
       const response = await axios.get('/api/crm/accounts');
       return response.data;
     },
     enabled: activeTab === 'accounts',
+    onError: (error: any) => {
+      if (isElectron) {
+        import('../components/DebugPanel').then(module => {
+          module.addLog('error', 'CRM: Failed to load accounts', { error: error.message, stack: error.stack });
+        }).catch(() => {});
+      }
+    },
   });
 
   const { data: campaigns, isLoading: campaignsLoading } = useQuery({
