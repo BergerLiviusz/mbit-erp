@@ -44,11 +44,21 @@ function DropdownMenu({ title, items }: { title: string; items: Array<{ to: stri
 }
 
 function App() {
+  // Check if running in Electron desktop mode
+  const isElectron = !!(window as any).electron || (navigator.userAgent.includes('Electron'));
+  
   const [isAuthenticated, setIsAuthenticated] = useState(
-    () => !!localStorage.getItem('token')
+    () => {
+      // In Electron desktop mode, always consider authenticated (auth is bypassed on backend)
+      if (isElectron) {
+        return true;
+      }
+      return !!localStorage.getItem('token');
+    }
   );
 
-  if (!isAuthenticated) {
+  // Skip login screen in Electron desktop mode
+  if (!isAuthenticated && !isElectron) {
     return <Login onLogin={() => setIsAuthenticated(true)} />;
   }
 
@@ -88,15 +98,17 @@ function App() {
                 </Link>
               </div>
             </div>
-            <button
-              onClick={() => {
-                localStorage.removeItem('token');
-                setIsAuthenticated(false);
-              }}
-              className="hover:bg-gray-800 px-4 py-2 rounded"
-            >
-              Kijelentkezés
-            </button>
+            {!isElectron && (
+              <button
+                onClick={() => {
+                  localStorage.removeItem('token');
+                  setIsAuthenticated(false);
+                }}
+                className="hover:bg-gray-800 px-4 py-2 rounded"
+              >
+                Kijelentkezés
+              </button>
+            )}
           </div>
         </div>
       </nav>

@@ -15,6 +15,21 @@ export class RbacGuard extends AuthGuard('jwt') implements CanActivate {
   }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    // Bypass authentication completely when running in Electron desktop mode
+    // This allows the desktop app to work without requiring user login
+    const isElectronDesktop = process.env.ELECTRON_RUN_AS_NODE === '1';
+    if (isElectronDesktop) {
+      // Create a mock user object for Electron desktop mode
+      const request = context.switchToHttp().getRequest();
+      request.user = {
+        id: 'electron-desktop-user',
+        userId: 'electron-desktop-user',
+        email: 'desktop@mbit.local',
+        roles: ['Admin', 'User'],
+      };
+      return true;
+    }
+
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
       context.getClass(),
