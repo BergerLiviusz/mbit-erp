@@ -12337,28 +12337,115 @@ Adding enhanced logging and requesting debugging info. Please share:
 
 ---
 
-<tool-use data-tool-type="unknown" data-tool-name="search_replace">
+<tool-use data-tool-type="write" data-tool-name="search_replace">
+
+<details><summary>Tool use: **code_edit** • Edit file: apps/web/src/lib/api.ts</summary>
+
+**Chunk 1**
+Lines added: 49, lines removed: 5
+
+```diff
+@@ -36,9 +36,53 @@
+    }
+    
+-   return fetch(finalUrl, {
+-     ...options,
+-     headers,
+-   });
+- }
++   // Enhanced logging for debugging
++   if (isElectron) {
++     console.log(&#39;[apiFetch] Request:&#39;, {
++       originalUrl: url,
++       finalUrl,
++       method: options?.method || &#39;GET&#39;,
++       isElectron,
++     });
++   }
++   
++   try {
++     const response = await fetch(finalUrl, {
++       ...options,
++       headers,
++     });
++     
++     if (isElectron) {
++       console.log(&#39;[apiFetch] Response:&#39;, {
++         url: finalUrl,
++         status: response.status,
++         statusText: response.statusText,
++         ok: response.ok,
++       });
++     }
++     
++     // Log error responses
++     if (!response.ok &amp;&amp; isElectron) {
++       const errorText = await response.clone().text().catch(() =&gt; &#39;Unable to read error&#39;);
++       console.error(&#39;[apiFetch] Error response:&#39;, {
++         url: finalUrl,
++         status: response.status,
++         statusText: response.statusText,
++         body: errorText.substring(0, 200), // First 200 chars
++       });
++     }
++     
++     return response;
++   } catch (error: any) {
++     if (isElectron) {
++       console.error(&#39;[apiFetch] Fetch error:&#39;, {
++         url: finalUrl,
++         error: error.message,
++         code: error.code,
++         stack: error.stack,
++       });
++     }
++     throw error;
++   }
++ }
+  
+  
+```
+
+</details>
+
+</tool-use>
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: apps/web/src/pages/CRM.tsx</summary>
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: apps/web/src/pages/CRM.tsx</summary>
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="grep" data-tool-name="grep">
 <details>
-<summary>Tool use: **search_replace**</summary>
+<summary>Tool use: **grep** • Grep for "isLoading|error|data" in "apps/web/src/pages/CRM.tsx" • 9 matches</summary>
+
+Output mode: content
 
 
-Parameters:
-
-```json
-{
-  &quot;relativeWorkspacePath&quot;: &quot;apps/web/src/lib/api.ts&quot;
-}
-```
-Additional data:
-
-```json
-{
-  &quot;codeblockId&quot;: &quot;628e6a40-d4d4-43a3-9ad2-081ffe3b6130&quot;
-}
-```
-User decision: **accepted**
-
-Status: **loading**
+| File | Content | Line |
+|------|------|------|
+| `apps/web/src/pages/CRM.tsx` | `const [error, setError] = useState('');` | L45 |
+| `apps/web/src/pages/CRM.tsx` | `const \{ data: accounts, isLoading: accountsLoading \} = useQuery(\{` | L48 |
+| `apps/web/src/pages/CRM.tsx` | `return response.data;` | L52 |
+| `apps/web/src/pages/CRM.tsx` | `const \{ data: campaigns, isLoading: campaignsLoading \} = useQuery(\{` | L57 |
+| `apps/web/src/pages/CRM.tsx` | `return response.data;` | L61 |
+| `apps/web/src/pages/CRM.tsx` | `const \{ data: tickets, isLoading: ticketsLoading \} = useQuery(\{` | L66 |
+| `apps/web/src/pages/CRM.tsx` | `return response.data;` | L70 |
+| `apps/web/src/pages/CRM.tsx` | `const \{ data: accountsForSelect \} = useQuery(\{` | L75 |
+| `apps/web/src/pages/CRM.tsx` | `return response.data;` | L79 |
 
 
 </details>
@@ -12367,6 +12454,184 @@ Status: **loading**
 ---
 
 
+
+---
+
+
+Checking how CRM renders content and adding better error handling:
+
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: apps/web/src/pages/CRM.tsx</summary>
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="grep" data-tool-name="grep">
+<details>
+<summary>Tool use: **grep** • Grep for "return \(|if \(isLoading|if \(error|if \(data" in "apps/web/src/pages/CRM.tsx" • 1 match</summary>
+
+Output mode: content
+
+
+| File | Content | Line |
+|------|------|------|
+| `apps/web/src/pages/CRM.tsx` | `return (` | L298 |
+
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: apps/web/src/pages/CRM.tsx</summary>
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: apps/web/src/pages/CRM.tsx</summary>
+
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+Checking how CRM renders content:
+
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: apps/web/src/pages/CRM.tsx</summary>
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: apps/web/src/pages/CRM.tsx</summary>
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="generic" data-tool-name="read_lints">
+<details>
+          <summary>Tool use: **read_lints** • Read lints for 1 file</summary>
+      
+Lint paths:
+
+- `apps/web/src/lib/api.ts`
+
+Lint results
+
+
+**No lint errors found**
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="bash" data-tool-name="run_terminal_cmd">
+<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git add -A && git commit -m "Add enhanced logging to apiFetch for debugging white screen issue
+
+- Log all API requests with original and final URLs
+- Log response status and errors
+- Log fetch errors with details
+- This will help identify why pages show white screens in Electron"</summary>
+
+```bash
+cd /Users/liviuszberger/mbit-erp && git add -A && git commit -m "Add enhanced logging to apiFetch for debugging white screen issue
+
+- Log all API requests with original and final URLs
+- Log response status and errors
+- Log fetch errors with details
+- This will help identify why pages show white screens in Electron"
+```
+
+```
+[feature/remove-auth-for-desktop 5952d55] Add enhanced logging to apiFetch for debugging white screen issue
+ 2 files changed, 920 insertions(+), 4 deletions(-)
+
+```
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="bash" data-tool-name="run_terminal_cmd">
+<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git push origin feature/remove-auth-for-desktop</summary>
+
+```bash
+cd /Users/liviuszberger/mbit-erp && git push origin feature/remove-auth-for-desktop
+```
+
+```
+To https://github.com/BergerLiviusz/mbit-erp.git
+   6bc864f..5952d55  feature/remove-auth-for-desktop -&gt; feature/remove-auth-for-desktop
+
+```
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+Added enhanced logging to `apiFetch`. After CI builds, please share:
+
+## Debugging information needed
+
+1. Open Developer Tools (F12 or right-click → Inspect)
+2. Console tab:
+   - Look for `[apiFetch]` logs
+   - Check for red error messages
+   - Copy any errors you see
+3. Network tab:
+   - Filter by "Fetch/XHR"
+   - Click on failed requests (red)
+   - Share:
+     - Request URL
+     - Status code (e.g., 404, 500, CORS error)
+     - Response body (if any)
+4. Visual check:
+   - Does the page header/title show? (e.g., "CRM - Ügyfélkapcsolat Kezelés")
+   - Is it completely white, or is there a header but no content?
+   - Does the "Backend csatlakoztatva" badge show?
+
+## What the logging will show
+
+The enhanced logging will output:
+- `[apiFetch] Request:` — shows original URL, final URL, method
+- `[apiFetch] Response:` — shows status code and whether it succeeded
+- `[apiFetch] Error response:` — shows error details if the request failed
+- `[apiFetch] Fetch error:` — shows network errors (CORS, connection refused, etc.)
+
+This will help identify:
+- Whether API calls are being made
+- What URLs are being called
+- Whether requests are failing and why
+- If it's a CORS issue, authentication issue, or something else
+
+After CI completes, test the app and share the console logs and network tab details.
 
 ---
 

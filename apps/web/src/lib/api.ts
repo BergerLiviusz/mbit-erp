@@ -7,6 +7,17 @@ const isElectron = !!(window as any).electron || (navigator.userAgent.includes('
 
 export const API_URL = isElectron ? 'http://localhost:3000' : (import.meta.env.VITE_API_URL || '/api');
 
+// Import debug panel for logging
+let addLog: ((type: 'info' | 'error' | 'warning' | 'success', message: string, details?: any) => void) | null = null;
+if (isElectron) {
+  // Dynamic import to avoid circular dependencies
+  import('../components/DebugPanel').then(module => {
+    addLog = module.addLog;
+  }).catch(() => {
+    // DebugPanel not available, use console only
+  });
+}
+
 /**
  * Fetch wrapper that handles Electron mode automatically
  * Strips /api prefix in Electron mode since backend doesn't use it
@@ -37,12 +48,16 @@ export async function apiFetch(url: string, options?: RequestInit): Promise<Resp
   
   // Enhanced logging for debugging
   if (isElectron) {
-    console.log('[apiFetch] Request:', {
+    const logData = {
       originalUrl: url,
       finalUrl,
       method: options?.method || 'GET',
       isElectron,
-    });
+    };
+    console.log('[apiFetch] Request:', logData);
+    if (addLog) {
+      addLog('info', `API Request: ${options?.method || 'GET'} ${url}`, logData);
+    }
   }
   
   try {
@@ -52,34 +67,49 @@ export async function apiFetch(url: string, options?: RequestInit): Promise<Resp
     });
     
     if (isElectron) {
-      console.log('[apiFetch] Response:', {
+      const responseData = {
         url: finalUrl,
         status: response.status,
         statusText: response.statusText,
         ok: response.ok,
-      });
+      };
+      console.log('[apiFetch] Response:', responseData);
+      
+      if (response.ok && addLog) {
+        addLog('success', `API Success: ${response.status} ${url}`, responseData);
+      } else if (!response.ok && addLog) {
+        addLog('warning', `API Warning: ${response.status} ${url}`, responseData);
+      }
     }
     
     // Log error responses
     if (!response.ok && isElectron) {
       const errorText = await response.clone().text().catch(() => 'Unable to read error');
-      console.error('[apiFetch] Error response:', {
+      const errorData = {
         url: finalUrl,
         status: response.status,
         statusText: response.statusText,
         body: errorText.substring(0, 200), // First 200 chars
-      });
+      };
+      console.error('[apiFetch] Error response:', errorData);
+      if (addLog) {
+        addLog('error', `API Error: ${response.status} ${response.statusText} - ${url}`, errorData);
+      }
     }
     
     return response;
   } catch (error: any) {
     if (isElectron) {
-      console.error('[apiFetch] Fetch error:', {
+      const errorData = {
         url: finalUrl,
         error: error.message,
         code: error.code,
         stack: error.stack,
-      });
+      };
+      console.error('[apiFetch] Fetch error:', errorData);
+      if (addLog) {
+        addLog('error', `Network Error: ${error.message} - ${url}`, errorData);
+      }
     }
     throw error;
   }

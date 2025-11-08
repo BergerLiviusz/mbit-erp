@@ -1,5 +1,7 @@
 import { Component, ErrorInfo, ReactNode } from 'react';
 
+const isElectron = !!(window as any).electron || (navigator.userAgent.includes('Electron'));
+
 interface Props {
   children: ReactNode;
 }
@@ -21,6 +23,19 @@ export class ErrorBoundary extends Component<Props, State> {
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('Uncaught error:', error, errorInfo);
+    
+    // Log to debug panel if available
+    if (isElectron) {
+      import('./DebugPanel').then(module => {
+        module.addLog('error', `React Error: ${error.message}`, {
+          error: error.toString(),
+          stack: error.stack,
+          componentStack: errorInfo.componentStack,
+        });
+      }).catch(() => {
+        // DebugPanel not available
+      });
+    }
   }
 
   public render() {

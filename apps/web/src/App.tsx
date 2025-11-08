@@ -10,6 +10,7 @@ import Opportunities from './pages/Opportunities';
 import Quotes from './pages/Quotes';
 import Login from './pages/Login';
 import { BackendStatus } from './components/BackendStatus';
+import { DebugPanel } from './components/DebugPanel';
 import MbitLogo from './assets/logo.svg';
 
 function DropdownMenu({ title, items }: { title: string; items: Array<{ to: string; label: string }> }) {
@@ -116,6 +117,7 @@ function App() {
 
       <main className="container mx-auto px-4 py-8">
         {isElectron && <BackendStatus />}
+        {isElectron && <DebugPanel />}
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/crm" element={<CRM />} />
