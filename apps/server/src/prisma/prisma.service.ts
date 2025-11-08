@@ -19,6 +19,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
     
     // For Electron desktop mode, ensure the database file path is properly formatted
     // Prisma SQLite expects forward slashes even on Windows
+    // Ensure directory exists before Prisma tries to connect
     if (datasourceUrl?.startsWith('file:')) {
       const dbPath = datasourceUrl.replace('file:', '');
       // Ensure directory exists
@@ -26,10 +27,12 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
       if (dbDir && !existsSync(dbDir)) {
         const fs = require('fs');
         fs.mkdirSync(dbDir, { recursive: true });
-        this.logger.log(`Created database directory: ${dbDir}`);
+        // Can't use this.logger here, super() not called yet
+        console.log(`[PrismaService] Created database directory: ${dbDir}`);
       }
     }
     
+    // super() must be called before accessing 'this'
     super({
       datasources: {
         db: {
