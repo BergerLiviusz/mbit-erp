@@ -45,11 +45,6 @@ jobs:
           cd apps/server
           npm run build
 
-      - name: Generate Prisma Client
-        run: |
-          cd apps/server
-          npx prisma generate
-
       - name: Install server dependencies in NESTED mode for packaging
         shell: pwsh
         run: |
@@ -57,6 +52,10 @@ jobs:
           cd apps/server
           Remove-Item -Recurse -Force node_modules -ErrorAction SilentlyContinue
           npm install --omit=dev --install-strategy=nested --install-links=false --workspaces=false
+          
+          Write-Host ""
+          Write-Host "=== Generating Prisma Client for production ==="
+          npx prisma generate
           
           Write-Host ""
           Write-Host "=== Verifying dependencies are REAL FILES (not junctions/symlinks) ==="
