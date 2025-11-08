@@ -41,3 +41,42 @@ The project utilizes a monorepo structure managed by Turborepo, encompassing a R
 - **Archiver library**: For ZIP compression during backups.
 - **dotenv**: For environment variable management.
 - **Tesseract.js**: For OCR functionality.
+
+## Recent Changes (November 8, 2025)
+**Sprint 9 - Windows Build Dependency Bundling Fix (CRITICAL) - FINAL SOLUTION:**
+- ✅ **ROOT CAUSE IDENTIFIED**: Windows junction points/hardlinks in npm dependencies
+  - Initial diagnosis: npm workspace hoisted dependencies create symlinks (v1.0.0-v1.0.2)
+  - DEEPER ISSUE: npm uses Windows **junction points** AND **hardlinks** even with `--install-strategy=nested`
+  - electron-builder copies junctions/hardlinks AS-IS → broken references in packaged app
+  - Evidence: Installer 83-152 MB (vs. expected 250-300 MB), "Cannot find module 'dotenv'/'es-object-atoms'" errors
+  - Git Bash `test -L` cannot detect Windows junctions → false positive verification in v1.0.3
+- ✅ **THE REAL FIX (v1.0.4+)**: `--install-links=false` flag
+  - Forces npm to copy ACTUAL FILES instead of creating junctions/hardlinks
+  - PowerShell verification using `(Get-Item).Attributes -match 'ReparsePoint'` to detect junctions
+  - Verifies both shallow (dotenv) and deep (es-object-atoms) dependencies
+  - Expected installer size: 250-300 MB with real files
+- ✅ **GitHub Actions CI/CD Complete Fix**:
+  - Changed shell to PowerShell (`pwsh`) for accurate Windows junction detection
+  - Install command: `npm install --omit=dev --install-strategy=nested --install-links=false --workspaces=false`
+  - ReparsePoint attribute verification (PowerShell can detect junctions, bash cannot)
+  - File size calculation to confirm ~100-150 MB node_modules (not hollow junction tree)
+  - Added `permissions: contents: write` for GitHub releases (fixes 403 errors)
+  - Fixed release asset list (only .exe files, removed non-existent .msi/.dmg)
+- ✅ **Alternative Distribution Strategies (DISTRIBUTION_ALTERNATIVES.md)**:
+  - ZIP Distribution (RECOMMENDED): Local build + win-unpacked folder distribution
+  - Repo Distribution + Starter Script (NOT recommended - requires Node.js on every machine)
+  - Configurable Storage Paths UI implementation guide
+  - Comparison table with operational trade-offs
+  - Step-by-step PowerShell verification for local builds
+- ✅ **Documentation Updates (BUILD_DESKTOP.md)**:
+  - Detailed junction/hardlink explanation with visual examples
+  - PowerShell verification scripts with ReparsePoint checks
+  - Why Git Bash verification failed (cannot detect Windows junctions)
+  - Updated expected installer size: 250-300 MB
+  - Clear warning about npm's default hardlink behavior
+- ✅ **Architect Review Process**: Multi-iteration debugging with final approval
+  - v1.0.0-v1.0.2: Symlink diagnosis (incorrect)
+  - v1.0.3: Nested install (incomplete - still used hardlinks)
+  - v1.0.4: Junction/hardlink root cause + `--install-links=false` (CORRECT)
+  - Debug responsibility used for deep analysis
+  - PASS: All changes architect-approved - production ready
