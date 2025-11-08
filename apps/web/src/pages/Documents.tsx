@@ -108,7 +108,6 @@ export default function Documents() {
 
   const loadCategories = async () => {
     try {
-      const token = localStorage.getItem('token');
       const response = await apiFetch(`/dms/categories?skip=0&take=100`, {
         
       });
@@ -131,12 +130,10 @@ export default function Documents() {
     setSaving(true);
     setError('');
     try {
-      const token = localStorage.getItem('token');
       const response = await apiFetch(`/dms/categories`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           nev: newCategoryName.trim(),
@@ -169,7 +166,6 @@ export default function Documents() {
 
   const loadAccounts = async () => {
     try {
-      const token = localStorage.getItem('token');
       const response = await apiFetch(`/crm/accounts?skip=0&take=100`, {
         
       });
@@ -237,7 +233,6 @@ export default function Documents() {
     setSaving(true);
 
     try {
-      const token = localStorage.getItem('token');
 
       const documentData = {
         nev: formData.nev,
@@ -256,7 +251,6 @@ export default function Documents() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(documentData),
       });
@@ -285,7 +279,6 @@ export default function Documents() {
       const uploadResponse = await apiFetch(`/dms/documents/${createdDocument.id}/upload`, {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${token}`,
         },
         body: uploadFormData,
       });
@@ -358,11 +351,9 @@ export default function Documents() {
   const handleOcrTrigger = async (documentId: string) => {
     setOcrLoading(prev => ({ ...prev, [documentId]: true }));
     try {
-      const token = localStorage.getItem('token');
       const response = await apiFetch(`/dms/documents/${documentId}/ocr`, {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${token}`,
         },
       });
 

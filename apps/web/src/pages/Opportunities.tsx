@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import Modal from '../components/Modal';
+import { apiFetch } from '../lib/api';
 
 interface Opportunity {
   id: string;
@@ -83,7 +84,6 @@ export default function Opportunities() {
 
   const loadAccounts = async () => {
     try {
-      const token = localStorage.getItem('token');
       const response = await apiFetch('/crm/accounts?skip=0&take=100');
 
       if (response.ok) {
@@ -145,7 +145,6 @@ export default function Opportunities() {
     setSaving(true);
 
     try {
-      const token = localStorage.getItem('token');
 
       const opportunityData = {
         nev: formData.nev,

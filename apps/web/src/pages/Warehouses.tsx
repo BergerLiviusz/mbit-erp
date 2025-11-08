@@ -58,7 +58,6 @@ export default function Warehouses() {
   const loadWarehouses = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
       const response = await apiFetch(`/logistics/warehouses?skip=0&take=100`, {
         
       });
@@ -77,7 +76,6 @@ export default function Warehouses() {
   const loadLowStockAlerts = async () => {
     setAlertsLoading(true);
     try {
-      const token = localStorage.getItem('token');
       const response = await apiFetch(`/logistics/inventory/alerts`, {
         
       });
@@ -140,7 +138,6 @@ export default function Warehouses() {
     setSaving(true);
 
     try {
-      const token = localStorage.getItem('token');
 
       let cim = '';
       if (formData.iranyitoszam || formData.telepules || formData.utca) {
@@ -162,7 +159,6 @@ export default function Warehouses() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(warehouseData),
       });

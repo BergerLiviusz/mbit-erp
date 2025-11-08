@@ -137,7 +137,6 @@ export default function Quotes() {
 
   const loadItems = async () => {
     try {
-      const token = localStorage.getItem('token');
       const response = await apiFetch('/logistics/items?skip=0&take=100');
 
       if (response.ok) {
@@ -252,7 +251,6 @@ export default function Quotes() {
     setSaving(true);
 
     try {
-      const token = localStorage.getItem('token');
 
       const quoteData = {
         accountId: formData.accountId,

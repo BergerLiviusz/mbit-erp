@@ -2,7 +2,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from '../lib/axios';
 import { useState } from 'react';
 import Modal from '../components/Modal';
-import { API_URL, apiFetch } from '../lib/api';
+import { apiFetch } from '../lib/api';
 
 export default function CRM() {
   const [activeTab, setActiveTab] = useState<'accounts' | 'campaigns' | 'tickets'>('accounts');
@@ -149,12 +149,10 @@ export default function CRM() {
     setSaving(true);
 
     try {
-      const token = localStorage.getItem('token');
       const response = await apiFetch('/crm/accounts', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(accountFormData),
       });
@@ -207,12 +205,10 @@ export default function CRM() {
         befejezesDatum: campaignFormData.befejezesDatum || undefined,
       };
 
-      const token = localStorage.getItem('token');
       const response = await apiFetch('/crm/campaigns', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(dataToSend),
       });
@@ -263,12 +259,10 @@ export default function CRM() {
         accountId: ticketFormData.accountId || undefined,
       };
 
-      const token = localStorage.getItem('token');
       const response = await apiFetch('/crm/tickets', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(dataToSend),
       });

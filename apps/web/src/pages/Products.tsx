@@ -128,7 +128,6 @@ export default function Products() {
     setSaving(true);
 
     try {
-      const token = localStorage.getItem('token');
 
       const productData = {
         nev: formData.nev,
@@ -145,7 +144,6 @@ export default function Products() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(productData),
       });

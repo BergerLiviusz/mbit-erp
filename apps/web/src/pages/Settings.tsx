@@ -53,7 +53,6 @@ export default function Settings() {
 
   const loadSettings = async () => {
     try {
-      const token = localStorage.getItem('token');
       const response = await apiFetch(`/system/settings`, {
         
       });
@@ -68,7 +67,6 @@ export default function Settings() {
 
   const initializeDefaults = async () => {
     try {
-      const token = localStorage.getItem('token');
       await apiFetch(`/system/settings/initialize`, {
         method: 'POST',
         
@@ -82,7 +80,6 @@ export default function Settings() {
     setSystemLoading(true);
     setHealthError('');
     try {
-      const token = localStorage.getItem('token');
       const response = await apiFetch(`/health/detailed`, {
         
       });
@@ -109,12 +106,10 @@ export default function Settings() {
     setLoading(true);
     setMessage('');
     try {
-      const token = localStorage.getItem('token');
       const response = await apiFetch(`/system/settings/${kulcs}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ ertek }),
       });
@@ -138,7 +133,6 @@ export default function Settings() {
     setLoading(true);
     setMessage('');
     try {
-      const token = localStorage.getItem('token');
       const response = await apiFetch(`/system/diagnostics/backup/now`, {
         method: 'POST',
         
@@ -167,7 +161,6 @@ export default function Settings() {
     setLoading(true);
     setMessage('');
     try {
-      const token = localStorage.getItem('token');
       const updates = Object.entries(orgData).map(([kulcs, ertek]) => ({
         kulcs,
         ertek,
@@ -179,7 +172,6 @@ export default function Settings() {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`,
             },
             body: JSON.stringify({ ertek: update.ertek }),
           })
