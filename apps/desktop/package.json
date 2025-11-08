@@ -17,7 +17,7 @@
     "prebuild": "npm run clean",
     "build": "npm run build:electron && npm run build:backend && npm run build:frontend",
     "build:electron": "npx rimraf tsconfig.tsbuildinfo && tsc",
-    "build:backend": "cd ../server && npx rimraf tsconfig.tsbuildinfo && npm run build && npx prisma generate",
+    "build:backend": "cd ../server && npx rimraf tsconfig.tsbuildinfo && npm run build && npx prisma generate && rm -rf node_modules && npm install --omit=dev --install-strategy=hoisted --install-links=false --workspaces=false",
     "build:frontend": "cd ../web && npx rimraf tsconfig.tsbuildinfo && cross-env ELECTRON_BUILD=true npm run build",
     "start": "electron .",
     "start:packaged": "electron-builder --dir && electron dist/mac-arm64/Mbit ERP.app/Contents/MacOS/Mbit\\ ERP || electron dist/win-unpacked/Mbit\\ ERP.exe || electron dist/linux-unpacked/mbit-erp",
