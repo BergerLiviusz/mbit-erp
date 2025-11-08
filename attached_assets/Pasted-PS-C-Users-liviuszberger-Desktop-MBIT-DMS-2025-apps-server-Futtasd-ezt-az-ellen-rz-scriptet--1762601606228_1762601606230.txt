@@ -1,0 +1,265 @@
+PS C:\Users\liviuszberger\Desktop\MBIT-DMS-2025\apps\server> # Futtasd ezt az ellenőrző scriptet:
+>> $dotenvAttrs = (Get-Item "node_modules\dotenv").Attributes
+>> if ($dotenvAttrs -match 'ReparsePoint') {
+>>     Write-Host "❌ HIBA: Még mindig junction!" -ForegroundColor Red
+>> } else {
+>>     Write-Host "✅ OK: Valódi fájlok!" -ForegroundColor Green
+>>     $size = (Get-ChildItem node_modules -Recurse | Measure-Object -Property Length -Sum).Sum / 1MB
+>>     Write-Host ("📦 Node_modules: {0:N2} MB" -f $size) -ForegroundColor Cyan
+>> }
+✅ OK: Valódi fájlok!
+Get-ChildItem : Could not find a part of the path 'C:\Users\liviuszberger\Desktop\MBIT-DMS-2025\apps\server\node_module
+s\@nestjs\platform-express\node_modules\body-parser\node_modules\qs\node_modules\side-channel\node_modules\side-channel
+-map\node_modules\call-bound\node_modules\call-bind-apply-helpers\.github'.
+At line:7 char:14
++     $size = (Get-ChildItem node_modules -Recurse | Measure-Object -Pr ...
++              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ReadError: (C:\Users\livius...helpers\.github:String) [Get-ChildItem], DirectoryNotFound
+   Exception
+    + FullyQualifiedErrorId : DirIOError,Microsoft.PowerShell.Commands.GetChildItemCommand
+
+Get-ChildItem : Could not find a part of the path 'C:\Users\liviuszberger\Desktop\MBIT-DMS-2025\apps\server\node_module
+s\@nestjs\platform-express\node_modules\body-parser\node_modules\qs\node_modules\side-channel\node_modules\side-channel
+-map\node_modules\call-bound\node_modules\call-bind-apply-helpers\node_modules'.
+At line:7 char:14
++     $size = (Get-ChildItem node_modules -Recurse | Measure-Object -Pr ...
++              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ReadError: (C:\Users\livius...rs\node_modules:String) [Get-ChildItem], DirectoryNotFound
+   Exception
+    + FullyQualifiedErrorId : DirIOError,Microsoft.PowerShell.Commands.GetChildItemCommand
+
+Get-ChildItem : Could not find a part of the path 'C:\Users\liviuszberger\Desktop\MBIT-DMS-2025\apps\server\node_module
+s\@nestjs\platform-express\node_modules\body-parser\node_modules\qs\node_modules\side-channel\node_modules\side-channel
+-map\node_modules\get-intrinsic\node_modules\call-bind-apply-helpers\.github'.
+At line:7 char:14
++     $size = (Get-ChildItem node_modules -Recurse | Measure-Object -Pr ...
++              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ReadError: (C:\Users\livius...helpers\.github:String) [Get-ChildItem], DirectoryNotFound
+   Exception
+    + FullyQualifiedErrorId : DirIOError,Microsoft.PowerShell.Commands.GetChildItemCommand
+
+Get-ChildItem : Could not find a part of the path 'C:\Users\liviuszberger\Desktop\MBIT-DMS-2025\apps\server\node_module
+s\@nestjs\platform-express\node_modules\body-parser\node_modules\qs\node_modules\side-channel\node_modules\side-channel
+-map\node_modules\get-intrinsic\node_modules\call-bind-apply-helpers\test'.
+At line:7 char:14
++     $size = (Get-ChildItem node_modules -Recurse | Measure-Object -Pr ...
++              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ReadError: (C:\Users\livius...ly-helpers\test:String) [Get-ChildItem], DirectoryNotFound
+   Exception
+    + FullyQualifiedErrorId : DirIOError,Microsoft.PowerShell.Commands.GetChildItemCommand
+
+Get-ChildItem : Could not find a part of the path 'C:\Users\liviuszberger\Desktop\MBIT-DMS-2025\apps\server\node_module
+s\@nestjs\platform-express\node_modules\body-parser\node_modules\qs\node_modules\side-channel\node_modules\side-channel
+-map\node_modules\get-intrinsic\node_modules\es-define-property\.github'.
+At line:7 char:14
++     $size = (Get-ChildItem node_modules -Recurse | Measure-Object -Pr ...
++              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ReadError: (C:\Users\livius...roperty\.github:String) [Get-ChildItem], DirectoryNotFound
+   Exception
+    + FullyQualifiedErrorId : DirIOError,Microsoft.PowerShell.Commands.GetChildItemCommand
+
+Get-ChildItem : Could not find a part of the path 'C:\Users\liviuszberger\Desktop\MBIT-DMS-2025\apps\server\node_module
+s\@nestjs\platform-express\node_modules\body-parser\node_modules\qs\node_modules\side-channel\node_modules\side-channel
+-map\node_modules\get-intrinsic\node_modules\get-proto\node_modules\dunder-proto'.
+At line:7 char:14
++     $size = (Get-ChildItem node_modules -Recurse | Measure-Object -Pr ...
++              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ReadError: (C:\Users\livius...es\dunder-proto:String) [Get-ChildItem], DirectoryNotFound
+   Exception
+    + FullyQualifiedErrorId : DirIOError,Microsoft.PowerShell.Commands.GetChildItemCommand
+
+Get-ChildItem : Could not find a part of the path 'C:\Users\liviuszberger\Desktop\MBIT-DMS-2025\apps\server\node_module
+s\@nestjs\platform-express\node_modules\body-parser\node_modules\qs\node_modules\side-channel\node_modules\side-channel
+-weakmap\node_modules\call-bound\node_modules\call-bind-apply-helpers\.github'.
+At line:7 char:14
++     $size = (Get-ChildItem node_modules -Recurse | Measure-Object -Pr ...
++              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ReadError: (C:\Users\livius...helpers\.github:String) [Get-ChildItem], DirectoryNotFound
+   Exception
+    + FullyQualifiedErrorId : DirIOError,Microsoft.PowerShell.Commands.GetChildItemCommand
+
+Get-ChildItem : Could not find a part of the path 'C:\Users\liviuszberger\Desktop\MBIT-DMS-2025\apps\server\node_module
+s\@nestjs\platform-express\node_modules\body-parser\node_modules\qs\node_modules\side-channel\node_modules\side-channel
+-weakmap\node_modules\call-bound\node_modules\call-bind-apply-helpers\node_modules'.
+At line:7 char:14
++     $size = (Get-ChildItem node_modules -Recurse | Measure-Object -Pr ...
++              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ReadError: (C:\Users\livius...rs\node_modules:String) [Get-ChildItem], DirectoryNotFound
+   Exception
+    + FullyQualifiedErrorId : DirIOError,Microsoft.PowerShell.Commands.GetChildItemCommand
+
+Get-ChildItem : Could not find a part of the path 'C:\Users\liviuszberger\Desktop\MBIT-DMS-2025\apps\server\node_module
+s\@nestjs\platform-express\node_modules\body-parser\node_modules\qs\node_modules\side-channel\node_modules\side-channel
+-weakmap\node_modules\call-bound\node_modules\call-bind-apply-helpers\test'.
+At line:7 char:14
++     $size = (Get-ChildItem node_modules -Recurse | Measure-Object -Pr ...
++              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ReadError: (C:\Users\livius...ly-helpers\test:String) [Get-ChildItem], DirectoryNotFound
+   Exception
+    + FullyQualifiedErrorId : DirIOError,Microsoft.PowerShell.Commands.GetChildItemCommand
+
+Get-ChildItem : Could not find a part of the path 'C:\Users\liviuszberger\Desktop\MBIT-DMS-2025\apps\server\node_module
+s\@nestjs\platform-express\node_modules\body-parser\node_modules\qs\node_modules\side-channel\node_modules\side-channel
+-weakmap\node_modules\get-intrinsic\node_modules\call-bind-apply-helpers'.
+At line:7 char:14
++     $size = (Get-ChildItem node_modules -Recurse | Measure-Object -Pr ...
++              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ReadError: (C:\Users\livius...d-apply-helpers:String) [Get-ChildItem], DirectoryNotFound
+   Exception
+    + FullyQualifiedErrorId : DirIOError,Microsoft.PowerShell.Commands.GetChildItemCommand
+
+Get-ChildItem : Could not find a part of the path 'C:\Users\liviuszberger\Desktop\MBIT-DMS-2025\apps\server\node_module
+s\@nestjs\platform-express\node_modules\body-parser\node_modules\qs\node_modules\side-channel\node_modules\side-channel
+-weakmap\node_modules\get-intrinsic\node_modules\es-define-property\.github'.
+At line:7 char:14
++     $size = (Get-ChildItem node_modules -Recurse | Measure-Object -Pr ...
++              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ReadError: (C:\Users\livius...roperty\.github:String) [Get-ChildItem], DirectoryNotFound
+   Exception
+    + FullyQualifiedErrorId : DirIOError,Microsoft.PowerShell.Commands.GetChildItemCommand
+
+Get-ChildItem : Could not find a part of the path 'C:\Users\liviuszberger\Desktop\MBIT-DMS-2025\apps\server\node_module
+s\@nestjs\platform-express\node_modules\body-parser\node_modules\qs\node_modules\side-channel\node_modules\side-channel
+-weakmap\node_modules\get-intrinsic\node_modules\es-define-property\test'.
+At line:7 char:14
++     $size = (Get-ChildItem node_modules -Recurse | Measure-Object -Pr ...
++              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ReadError: (C:\Users\livius...e-property\test:String) [Get-ChildItem], DirectoryNotFound
+   Exception
+    + FullyQualifiedErrorId : DirIOError,Microsoft.PowerShell.Commands.GetChildItemCommand
+
+Get-ChildItem : Could not find a part of the path 'C:\Users\liviuszberger\Desktop\MBIT-DMS-2025\apps\server\node_module
+s\@nestjs\platform-express\node_modules\body-parser\node_modules\qs\node_modules\side-channel\node_modules\side-channel
+-weakmap\node_modules\get-intrinsic\node_modules\es-object-atoms\.github'.
+At line:7 char:14
++     $size = (Get-ChildItem node_modules -Recurse | Measure-Object -Pr ...
++              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ReadError: (C:\Users\livius...t-atoms\.github:String) [Get-ChildItem], DirectoryNotFound
+   Exception
+    + FullyQualifiedErrorId : DirIOError,Microsoft.PowerShell.Commands.GetChildItemCommand
+
+Get-ChildItem : Could not find a part of the path 'C:\Users\liviuszberger\Desktop\MBIT-DMS-2025\apps\server\node_module
+s\@nestjs\platform-express\node_modules\body-parser\node_modules\qs\node_modules\side-channel\node_modules\side-channel
+-weakmap\node_modules\get-intrinsic\node_modules\get-proto\node_modules'.
+At line:7 char:14
++     $size = (Get-ChildItem node_modules -Recurse | Measure-Object -Pr ...
++              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ReadError: (C:\Users\livius...to\node_modules:String) [Get-ChildItem], DirectoryNotFound
+   Exception
+    + FullyQualifiedErrorId : DirIOError,Microsoft.PowerShell.Commands.GetChildItemCommand
+
+Get-ChildItem : Could not find a part of the path 'C:\Users\liviuszberger\Desktop\MBIT-DMS-2025\apps\server\node_module
+s\@nestjs\platform-express\node_modules\body-parser\node_modules\qs\node_modules\side-channel\node_modules\side-channel
+-weakmap\node_modules\get-intrinsic\node_modules\has-symbols\test\shams'.
+At line:7 char:14
++     $size = (Get-ChildItem node_modules -Recurse | Measure-Object -Pr ...
++              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ReadError: (C:\Users\livius...bols\test\shams:String) [Get-ChildItem], DirectoryNotFound
+   Exception
+    + FullyQualifiedErrorId : DirIOError,Microsoft.PowerShell.Commands.GetChildItemCommand
+
+Get-ChildItem : Could not find a part of the path 'C:\Users\liviuszberger\Desktop\MBIT-DMS-2025\apps\server\node_module
+s\@nestjs\platform-express\node_modules\body-parser\node_modules\qs\node_modules\side-channel\node_modules\side-channel
+-weakmap\node_modules\get-intrinsic\node_modules\math-intrinsics\.github'.
+At line:7 char:14
++     $size = (Get-ChildItem node_modules -Recurse | Measure-Object -Pr ...
++              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ReadError: (C:\Users\livius...rinsics\.github:String) [Get-ChildItem], DirectoryNotFound
+   Exception
+    + FullyQualifiedErrorId : DirIOError,Microsoft.PowerShell.Commands.GetChildItemCommand
+
+Get-ChildItem : Could not find a part of the path 'C:\Users\liviuszberger\Desktop\MBIT-DMS-2025\apps\server\node_module
+s\@nestjs\platform-express\node_modules\body-parser\node_modules\qs\node_modules\side-channel\node_modules\side-channel
+-weakmap\node_modules\get-intrinsic\node_modules\math-intrinsics\constants'.
+At line:7 char:14
++     $size = (Get-ChildItem node_modules -Recurse | Measure-Object -Pr ...
++              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ReadError: (C:\Users\livius...nsics\constants:String) [Get-ChildItem], DirectoryNotFound
+   Exception
+    + FullyQualifiedErrorId : DirIOError,Microsoft.PowerShell.Commands.GetChildItemCommand
+
+Get-ChildItem : Could not find a part of the path 'C:\Users\liviuszberger\Desktop\MBIT-DMS-2025\apps\server\node_module
+s\@nestjs\platform-express\node_modules\express\node_modules\qs\node_modules\side-channel\node_modules\side-channel-map
+\node_modules\call-bound\node_modules\call-bind-apply-helpers\node_modules'.
+At line:7 char:14
++     $size = (Get-ChildItem node_modules -Recurse | Measure-Object -Pr ...
++              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ReadError: (C:\Users\livius...rs\node_modules:String) [Get-ChildItem], DirectoryNotFound
+   Exception
+    + FullyQualifiedErrorId : DirIOError,Microsoft.PowerShell.Commands.GetChildItemCommand
+
+Get-ChildItem : Could not find a part of the path 'C:\Users\liviuszberger\Desktop\MBIT-DMS-2025\apps\server\node_module
+s\@nestjs\platform-express\node_modules\express\node_modules\qs\node_modules\side-channel\node_modules\side-channel-map
+\node_modules\get-intrinsic\node_modules\call-bind-apply-helpers\.github'.
+At line:7 char:14
++     $size = (Get-ChildItem node_modules -Recurse | Measure-Object -Pr ...
++              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ReadError: (C:\Users\livius...helpers\.github:String) [Get-ChildItem], DirectoryNotFound
+   Exception
+    + FullyQualifiedErrorId : DirIOError,Microsoft.PowerShell.Commands.GetChildItemCommand
+
+Get-ChildItem : Could not find a part of the path 'C:\Users\liviuszberger\Desktop\MBIT-DMS-2025\apps\server\node_module
+s\@nestjs\platform-express\node_modules\express\node_modules\qs\node_modules\side-channel\node_modules\side-channel-map
+\node_modules\get-intrinsic\node_modules\get-proto\node_modules\dunder-proto'.
+At line:7 char:14
++     $size = (Get-ChildItem node_modules -Recurse | Measure-Object -Pr ...
++              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ReadError: (C:\Users\livius...es\dunder-proto:String) [Get-ChildItem], DirectoryNotFound
+   Exception
+    + FullyQualifiedErrorId : DirIOError,Microsoft.PowerShell.Commands.GetChildItemCommand
+
+Get-ChildItem : Could not find a part of the path 'C:\Users\liviuszberger\Desktop\MBIT-DMS-2025\apps\server\node_module
+s\@nestjs\platform-express\node_modules\express\node_modules\qs\node_modules\side-channel\node_modules\side-channel-wea
+kmap\node_modules\call-bound\node_modules\call-bind-apply-helpers\.github'.
+At line:7 char:14
++     $size = (Get-ChildItem node_modules -Recurse | Measure-Object -Pr ...
++              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ReadError: (C:\Users\livius...helpers\.github:String) [Get-ChildItem], DirectoryNotFound
+   Exception
+    + FullyQualifiedErrorId : DirIOError,Microsoft.PowerShell.Commands.GetChildItemCommand
+
+Get-ChildItem : Could not find a part of the path 'C:\Users\liviuszberger\Desktop\MBIT-DMS-2025\apps\server\node_module
+s\@nestjs\platform-express\node_modules\express\node_modules\qs\node_modules\side-channel\node_modules\side-channel-wea
+kmap\node_modules\call-bound\node_modules\call-bind-apply-helpers\node_modules'.
+At line:7 char:14
++     $size = (Get-ChildItem node_modules -Recurse | Measure-Object -Pr ...
++              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ReadError: (C:\Users\livius...rs\node_modules:String) [Get-ChildItem], DirectoryNotFound
+   Exception
+    + FullyQualifiedErrorId : DirIOError,Microsoft.PowerShell.Commands.GetChildItemCommand
+
+Get-ChildItem : Could not find a part of the path 'C:\Users\liviuszberger\Desktop\MBIT-DMS-2025\apps\server\node_module
+s\@nestjs\platform-express\node_modules\express\node_modules\qs\node_modules\side-channel\node_modules\side-channel-wea
+kmap\node_modules\get-intrinsic\node_modules\call-bind-apply-helpers\.github'.
+At line:7 char:14
++     $size = (Get-ChildItem node_modules -Recurse | Measure-Object -Pr ...
++              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ReadError: (C:\Users\livius...helpers\.github:String) [Get-ChildItem], DirectoryNotFound
+   Exception
+    + FullyQualifiedErrorId : DirIOError,Microsoft.PowerShell.Commands.GetChildItemCommand
+
+Get-ChildItem : Could not find a part of the path 'C:\Users\liviuszberger\Desktop\MBIT-DMS-2025\apps\server\node_module
+s\@nestjs\platform-express\node_modules\express\node_modules\qs\node_modules\side-channel\node_modules\side-channel-wea
+kmap\node_modules\get-intrinsic\node_modules\call-bind-apply-helpers\test'.
+At line:7 char:14
++     $size = (Get-ChildItem node_modules -Recurse | Measure-Object -Pr ...
++              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ReadError: (C:\Users\livius...ly-helpers\test:String) [Get-ChildItem], DirectoryNotFound
+   Exception
+    + FullyQualifiedErrorId : DirIOError,Microsoft.PowerShell.Commands.GetChildItemCommand
+
+Get-ChildItem : Could not find a part of the path 'C:\Users\liviuszberger\Desktop\MBIT-DMS-2025\apps\server\node_module
+s\@nestjs\platform-express\node_modules\express\node_modules\qs\node_modules\side-channel\node_modules\side-channel-wea
+kmap\node_modules\get-intrinsic\node_modules\es-define-property\.github'.
+At line:7 char:14
++     $size = (Get-ChildItem node_modules -Recurse | Measure-Object -Pr ...
++              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ReadError: (C:\Users\livius...roperty\.github:String) [Get-ChildItem], DirectoryNotFound
+   Exception
+    + FullyQualifiedErrorId : DirIOError,Microsoft.PowerShell.Commands.GetChildItemCommand
+
+Get-ChildItem : Could not find a part of the path 'C:\Users\liviuszberger\Desktop\MBIT-DMS-2025\apps\server\node_module
+s\@nestjs\platform-express\node_modules\express\node_modules\qs\node_modules\side-channel\node_modules\side-channel-wea
+kmap\node_modules\get-intrinsic\node_modules\get-proto\node_modules\dunder-proto'.
+At line:7 char:14
++     $size = (Get-ChildItem node_modul

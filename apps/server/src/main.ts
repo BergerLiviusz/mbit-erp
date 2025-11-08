@@ -25,7 +25,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   
   app.enableCors({
-    origin: ['http://localhost:5000', 'http://0.0.0.0:5000'],
+    origin: ['http://localhost:5000', 'http://127.0.0.1:5000', 'http://0.0.0.0:5000'],
     credentials: true,
   });
   
@@ -37,8 +37,11 @@ async function bootstrap() {
   );
 
   const port = process.env.PORT || 3000;
-  await app.listen(port, '0.0.0.0');
-  console.log(`🚀 Mbit ERP szerver fut: http://0.0.0.0:${port}`);
+  const isElectron = process.env.ELECTRON_RUN_AS_NODE === '1';
+  const bindAddress = isElectron ? '127.0.0.1' : '0.0.0.0';
+  
+  await app.listen(port, bindAddress);
+  console.log(`🚀 Mbit ERP szerver fut: http://${bindAddress}:${port}`);
 }
 
 bootstrap();

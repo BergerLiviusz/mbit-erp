@@ -44,61 +44,78 @@ function writeLog(message: string): void {
 }
 
 async function checkBackendHealth(): Promise<boolean> {
-  return new Promise((resolve) => {
-    const options = {
-      hostname: 'localhost',
-      port: BACKEND_PORT,
-      path: '/health',
-      method: 'GET',
-      timeout: 2000,
-    };
+  const hostsToTry = ['127.0.0.1', 'localhost'];
+  
+  const checkHost = (hostname: string): Promise<{ success: boolean; host: string }> => {
+    return new Promise((resolve) => {
+      const options = {
+        hostname,
+        port: BACKEND_PORT,
+        path: '/health',
+        method: 'GET',
+        timeout: 2000,
+      };
 
-    const req = http.request(options, (res) => {
-      if (res.statusCode === 200) {
-        console.log('[Health Check] Backend is ready ✓');
-        resolve(true);
-      } else {
-        console.log(`[Health Check] Backend returned status ${res.statusCode}`);
-        resolve(false);
-      }
+      const req = http.request(options, (res) => {
+        if (res.statusCode === 200) {
+          resolve({ success: true, host: hostname });
+        } else {
+          resolve({ success: false, host: hostname });
+        }
+      });
+
+      req.on('error', () => {
+        resolve({ success: false, host: hostname });
+      });
+
+      req.on('timeout', () => {
+        req.destroy();
+        resolve({ success: false, host: hostname });
+      });
+
+      req.end();
     });
-
-    req.on('error', () => {
-      // Silent fail - backend not ready yet
-      resolve(false);
-    });
-
-    req.on('timeout', () => {
-      req.destroy();
-      resolve(false);
-    });
-
-    req.end();
-  });
+  };
+  
+  const results = await Promise.all(hostsToTry.map(checkHost));
+  const successfulHost = results.find(r => r.success);
+  
+  if (successfulHost) {
+    console.log(`[Health Check] Backend is ready on ${successfulHost.host} ✓`);
+    writeLog(`[Health Check] Backend is ready on ${successfulHost.host}`);
+    return true;
+  }
+  
+  return false;
 }
 
-async function waitForBackend(maxRetries = 30, intervalMs = 1000): Promise<void> {
-  console.log('[Backend] Waiting for backend to be ready...');
+async function waitForBackend(maxRetries = 30, checkTimeoutMs = 2000): Promise<void> {
+  const maxWaitSeconds = Math.ceil((maxRetries * checkTimeoutMs) / 1000);
+  console.log(`[Backend] Waiting for backend to be ready (max ${maxWaitSeconds}s)...`);
+  writeLog(`[Backend] Waiting for backend to be ready (max ${maxWaitSeconds}s)...`);
   
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     const isHealthy = await checkBackendHealth();
     
     if (isHealthy) {
-      console.log(`[Backend] ✓ Ready after ${attempt} attempt(s) (~${attempt}s)`);
+      const elapsed = Math.ceil((attempt * checkTimeoutMs) / 1000);
+      const msg = `[Backend] ✓ Ready after ${attempt} attempt(s) (~${elapsed}s)`;
+      console.log(msg);
+      writeLog(msg);
       return;
     }
     
-    // Log progress every 5 attempts to avoid spam
     if (attempt % 5 === 0) {
-      console.log(`[Backend] Still waiting... (attempt ${attempt}/${maxRetries})`);
-    }
-    
-    if (attempt < maxRetries) {
-      await new Promise(resolve => setTimeout(resolve, intervalMs));
+      const elapsed = Math.ceil((attempt * checkTimeoutMs) / 1000);
+      const msg = `[Backend] Still waiting... (attempt ${attempt}/${maxRetries}, ${elapsed}s elapsed)`;
+      console.log(msg);
+      writeLog(msg);
     }
   }
   
-  throw new Error(`Backend failed to start after ${maxRetries} attempts (~${maxRetries}s)`);
+  const errorMsg = `Backend failed to start after ${maxRetries} attempts (~${maxWaitSeconds}s)`;
+  writeLog(`[Backend] ERROR: ${errorMsg}`);
+  throw new Error(errorMsg);
 }
 
 async function startBackend(): Promise<void> {
