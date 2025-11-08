@@ -53,14 +53,18 @@ jobs:
       - name: Install server dependencies in NESTED mode for packaging
         shell: pwsh
         run: |
-          Write-Host "=== Installing server dependencies in NESTED mode (real files, no junctions) ==="
+          Write-Host "=== Step 1: Installing ALL dependencies (dev+prod) in NESTED mode ==="
           cd apps/server
           Remove-Item -Recurse -Force node_modules -ErrorAction SilentlyContinue
-          npm install --omit=dev --install-strategy=nested --install-links=false --workspaces=false
+          npm install --install-strategy=nested --install-links=false --workspaces=false
           
           Write-Host ""
-          Write-Host "=== Running npm dedupe to flatten deep nested dependencies ==="
+          Write-Host "=== Step 2: Running npm dedupe to flatten deep nested dependencies ==="
           npm dedupe
+          
+          Write-Host ""
+          Write-Host "=== Step 3: Removing dev dependencies (production-only cleanup) ==="
+          npm prune --production
           
           Write-Host ""
           Write-Host "=== Verifying dependencies are REAL FILES (not junctions/symlinks) ==="

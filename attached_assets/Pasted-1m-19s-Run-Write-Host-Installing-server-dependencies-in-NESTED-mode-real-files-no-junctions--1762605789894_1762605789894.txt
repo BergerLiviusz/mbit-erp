@@ -1,0 +1,84 @@
+1m 19s
+Run Write-Host "=== Installing server dependencies in NESTED mode (real files, no junctions) ==="
+  
+=== Installing server dependencies in NESTED mode (real files, no junctions) ===
+npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+npm warn deprecated npmlog@5.0.1: This package is no longer supported.
+npm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+npm warn deprecated glob@8.1.0: Glob versions prior to v9 are no longer supported
+npm warn deprecated are-we-there-yet@2.0.0: This package is no longer supported.
+npm warn deprecated multer@1.4.5-lts.2: Multer 1.x is impacted by a number of vulnerabilities, which have been patched in 2.x. You should upgrade to the latest 2.x version.
+npm warn deprecated gauge@3.0.2: This package is no longer supported.
+npm warn cleanup Failed to remove some directories [
+npm warn cleanup   [
+npm warn cleanup     'D:\\a\\mbit-erp\\mbit-erp\\apps\\server\\node_modules\\jest\\node_modules\\jest-cli\\node_modules\\jest-config\\node_modules\\jest-circus\\node_modules\\jest-runtime\\node_modules\\@jest\\transform\\node_modules\\babel-plugin-istanbul\\node_modules\\@istanbuljs\\load-nyc-config\\node_modules\\find-up\\node_modules\\locate-path',
+npm warn cleanup     [Error: EPERM: operation not permitted, rmdir 'D:\a\mbit-erp\mbit-erp\apps\server\node_modules\jest\node_modules\jest-cli\node_modules\jest-config\node_modules\jest-circus\node_modules\jest-runtime\node_modules\@jest\transform\node_modules\babel-plugin-istanbul\node_modules\@istanbuljs\load-nyc-config\node_modules\find-up\node_modules\locate-path'] {
+npm warn cleanup       errno: -4048,
+npm warn cleanup       code: 'EPERM',
+npm warn cleanup       syscall: 'rmdir',
+npm warn cleanup       path: 'D:\\a\\mbit-erp\\mbit-erp\\apps\\server\\node_modules\\jest\\node_modules\\jest-cli\\node_modules\\jest-config\\node_modules\\jest-circus\\node_modules\\jest-runtime\\node_modules\\@jest\\transform\\node_modules\\babel-plugin-istanbul\\node_modules\\@istanbuljs\\load-nyc-config\\node_modules\\find-up\\node_modules\\locate-path'
+npm warn cleanup     }
+npm warn cleanup   ],
+npm warn cleanup   [
+npm warn cleanup     'D:\\a\\mbit-erp\\mbit-erp\\apps\\server\\node_modules\\jest\\node_modules\\jest-cli\\node_modules\\jest-config\\node_modules\\jest-circus\\node_modules\\jest-runtime\\node_modules\\@jest\\transform\\node_modules\\babel-plugin-istanbul\\node_modules\\istanbul-lib-instrument',
+npm warn cleanup     [Error: EPERM: operation not permitted, rmdir 'D:\a\mbit-erp\mbit-erp\apps\server\node_modules\jest\node_modules\jest-cli\node_modules\jest-config\node_modules\jest-circus\node_modules\jest-runtime\node_modules\@jest\transform\node_modules\babel-plugin-istanbul\node_modules\istanbul-lib-instrument'] {
+npm warn cleanup       errno: -4048,
+npm warn cleanup       code: 'EPERM',
+npm warn cleanup       syscall: 'rmdir',
+npm warn cleanup       path: 'D:\\a\\mbit-erp\\mbit-erp\\apps\\server\\node_modules\\jest\\node_modules\\jest-cli\\node_modules\\jest-config\\node_modules\\jest-circus\\node_modules\\jest-runtime\\node_modules\\@jest\\transform\\node_modules\\babel-plugin-istanbul\\node_modules\\istanbul-lib-instrument'
+npm warn cleanup     }
+npm warn cleanup   ],
+npm warn cleanup   [
+npm warn cleanup     'D:\\a\\mbit-erp\\mbit-erp\\apps\\server\\node_modules\\@typescript-eslint\\parser',
+npm warn cleanup     [Error: EPERM: operation not permitted, rmdir 'D:\a\mbit-erp\mbit-erp\apps\server\node_modules\@typescript-eslint\parser\node_modules\@typescript-eslint\typescript-estree\node_modules'] {
+npm warn cleanup       errno: -4048,
+npm warn cleanup       code: 'EPERM',
+npm warn cleanup       syscall: 'rmdir',
+npm warn cleanup       path: 'D:\\a\\mbit-erp\\mbit-erp\\apps\\server\\node_modules\\@typescript-eslint\\parser\\node_modules\\@typescript-eslint\\typescript-estree\\node_modules'
+npm warn cleanup     }
+npm warn cleanup   ],
+npm warn cleanup   [
+npm warn cleanup     'D:\\a\\mbit-erp\\mbit-erp\\apps\\server\\node_modules\\jest\\node_modules\\jest-cli\\node_modules\\jest-config\\node_modules\\jest-runner\\node_modules\\@jest\\transform\\node_modules\\babel-plugin-istanbul',
+npm warn cleanup     [Error: EPERM: operation not permitted, rmdir 'D:\a\mbit-erp\mbit-erp\apps\server\node_modules\jest\node_modules\jest-cli\node_modules\jest-config\node_modules\jest-runner\node_modules\@jest\transform\node_modules\babel-plugin-istanbul'] {
+npm warn cleanup       errno: -4048,
+npm warn cleanup       code: 'EPERM',
+npm warn cleanup       syscall: 'rmdir',
+npm warn cleanup       path: 'D:\\a\\mbit-erp\\mbit-erp\\apps\\server\\node_modules\\jest\\node_modules\\jest-cli\\node_modules\\jest-config\\node_modules\\jest-runner\\node_modules\\@jest\\transform\\node_modules\\babel-plugin-istanbul'
+npm warn cleanup     }
+npm warn cleanup   ],
+npm warn cleanup   [
+npm warn cleanup     'D:\\a\\mbit-erp\\mbit-erp\\apps\\server\\node_modules\\jest\\node_modules\\jest-cli\\node_modules\\jest-config',
+npm warn cleanup     [Error: EPERM: operation not permitted, rmdir 'D:\a\mbit-erp\mbit-erp\apps\server\node_modules\jest\node_modules\jest-cli\node_modules\jest-config'] {
+npm warn cleanup       errno: -4048,
+npm warn cleanup       code: 'EPERM',
+npm warn cleanup       syscall: 'rmdir',
+npm warn cleanup       path: 'D:\\a\\mbit-erp\\mbit-erp\\apps\\server\\node_modules\\jest\\node_modules\\jest-cli\\node_modules\\jest-config'
+npm warn cleanup     }
+npm warn cleanup   ],
+npm warn cleanup   [
+npm warn cleanup     'D:\\a\\mbit-erp\\mbit-erp\\apps\\server\\node_modules\\jest\\node_modules\\jest-cli',
+npm warn cleanup     [Error: EPERM: operation not permitted, rmdir 'D:\a\mbit-erp\mbit-erp\apps\server\node_modules\jest\node_modules\jest-cli\node_modules'] {
+npm warn cleanup       errno: -4048,
+npm warn cleanup       code: 'EPERM',
+npm warn cleanup       syscall: 'rmdir',
+npm warn cleanup       path: 'D:\\a\\mbit-erp\\mbit-erp\\apps\\server\\node_modules\\jest\\node_modules\\jest-cli\\node_modules'
+npm warn cleanup     }
+npm warn cleanup   ]
+npm warn cleanup ]
+added 463 packages, and audited 464 packages in 46s
+36 packages are looking for funding
+  run `npm fund` for details
+found 0 vulnerabilities
+=== Running npm dedupe to flatten deep nested dependencies ===
+added 1 package, removed 469 packages, changed 6 packages, and audited 1468 packages in 30s
+254 packages are looking for funding
+  run `npm fund` for details
+5 low severity vulnerabilities
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+Run `npm audit` for details.
+=== Verifying dependencies are REAL FILES (not junctions/symlinks) ===
+❌ ERROR: dotenv directory not found!
+Error: Process completed with exit code 1.
