@@ -211,11 +211,22 @@ async function startBackend(): Promise<void> {
       ? path.join(__dirname, '..', '..', 'server', 'node_modules')
       : path.join(process.resourcesPath, 'backend', 'node_modules');
     
+    // Ensure database directory exists before setting DATABASE_URL
+    const dbDir = path.join(dataPath, 'data');
+    const dbPath = path.join(dbDir, 'mbit-erp.db');
+    
+    // Normalize path for Prisma SQLite - use forward slashes even on Windows
+    const normalizedDbPath = dbPath.replace(/\\/g, '/');
+    // For Windows absolute paths, ensure proper format: file:/C:/path/to/db.db
+    const databaseUrl = process.platform === 'win32' && normalizedDbPath.match(/^[A-Z]:/)
+      ? `file:${normalizedDbPath}`
+      : `file:${normalizedDbPath}`;
+    
     const env = {
       ...process.env,
       PORT: String(BACKEND_PORT),
-      DATA_DIR: path.join(dataPath, 'data'),
-      DATABASE_URL: `file:${path.join(dataPath, 'data', 'mbit-erp.db')}`,
+      DATA_DIR: dbDir,
+      DATABASE_URL: databaseUrl,
       NODE_ENV: isDev ? 'development' : 'production',
       JWT_SECRET: process.env.JWT_SECRET || 'mbit-erp-default-secret-change-in-production',
       ELECTRON_RUN_AS_NODE: '1',
