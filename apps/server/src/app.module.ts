@@ -12,10 +12,12 @@ import { RbacModule } from './common/rbac/rbac.module';
 import { AuditModule } from './common/audit/audit.module';
 import { BackupModule } from './common/backup/backup.module';
 import { SystemModule } from './system/system.module';
+import { SeedModule } from './seed/seed.module';
 
 @Module({
   imports: [
     PrismaModule,
+    SeedModule,
     StorageModule,
     RbacModule,
     AuditModule,

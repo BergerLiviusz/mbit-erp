@@ -44,6 +44,18 @@ The project employs a monorepo managed by Turborepo, featuring a React 18 fronte
 
 ## Desktop Application Packaging History
 
+### v1.0.8 - Automatic Database Seeding (CRITICAL)
+- **Issue**: Admin user not created in on-premise installations → login fails with "Bejelentkezési hiba"
+- **Root cause**: Seed script never runs in Electron app, leaving database empty on first install
+- **Solution**: Implemented SeedService with onModuleInit lifecycle hook
+- **Behavior**: 
+  - On backend startup, checks if database has users
+  - If empty: automatically creates admin user, roles, permissions, system settings
+  - If populated: skips seeding silently
+- **Default credentials**: `admin@mbit.hu` / `admin123` (works on every on-premise installation)
+- **Files**: `apps/server/src/seed/seed.service.ts`, `apps/server/src/seed/seed.module.ts`
+- **Result**: Every new Electron installation gets admin access immediately ✅
+
 ### v1.0.7 - Backend Startup Timeout Fix (CRITICAL)
 - **Issue**: Backend successfully starts but frontend timeout-s before NestJS fully boots
 - **Analysis**: Windows backend initialization (Node fork + NestJS + Prisma) takes ~3-4 seconds
