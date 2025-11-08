@@ -44,8 +44,8 @@ The project employs a monorepo managed by Turborepo, featuring a React 18 fronte
 
 ## Desktop Application Packaging History
 
-### v1.0.8 - Automatic Database Seeding (CRITICAL)
-- **Issue**: Admin user not created in on-premise installations → login fails with "Bejelentkezési hiba"
+### v1.0.8 - Electron Login Fix + Automatic Database Seeding (CRITICAL)
+- **Issue #1**: Admin user not created in on-premise installations → login fails with "Bejelentkezési hiba"
 - **Root cause**: Seed script never runs in Electron app, leaving database empty on first install
 - **Solution**: Implemented SeedService with onModuleInit lifecycle hook
 - **Behavior**: 
@@ -55,6 +55,20 @@ The project employs a monorepo managed by Turborepo, featuring a React 18 fronte
 - **Default credentials**: `admin@mbit.hu` / `admin123` (works on every on-premise installation)
 - **Files**: `apps/server/src/seed/seed.service.ts`, `apps/server/src/seed/seed.module.ts`
 - **Result**: Every new Electron installation gets admin access immediately ✅
+
+- **Issue #2**: Login and all API calls return 404 in packaged Electron app
+- **Root cause**: Frontend expects Vite proxy (`/api/*` → `/`), but Electron has NO proxy (loads from `file://`)
+- **Solution**: Created environment-aware axios instance with request interceptor
+- **Implementation**:
+  1. Detects Electron via `window.electron` or `navigator.userAgent`
+  2. Sets baseURL: Electron = `'http://localhost:3000'`, Browser = `''` (uses Vite proxy)
+  3. Request interceptor strips `/api/` prefix in Electron before sending
+  4. Auto-injects Authorization header from localStorage
+- **Request flow**:
+  - Browser: `/api/auth/login` → Vite proxy → `/auth/login` → `http://localhost:3000/auth/login` ✅
+  - Electron: `/api/auth/login` → interceptor strips `/api/` → `/auth/login` → baseURL + path → `http://localhost:3000/auth/login` ✅
+- **Files**: `apps/web/src/lib/axios.ts`, all page imports updated to shared instance
+- **Result**: Login and all CRUD operations work in packaged Electron app ✅
 
 ### v1.0.7 - Backend Startup Timeout Fix (CRITICAL)
 - **Issue**: Backend successfully starts but frontend timeout-s before NestJS fully boots
