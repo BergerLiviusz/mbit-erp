@@ -1,6 +1,6 @@
 import { app, BrowserWindow, ipcMain, dialog } from 'electron';
 import * as path from 'path';
-import { spawn, ChildProcess } from 'child_process';
+import { fork, ChildProcess } from 'child_process';
 import * as fs from 'fs';
 import * as http from 'http';
 
@@ -26,6 +26,21 @@ function ensureDataDirectories(): void {
       fs.mkdirSync(dir, { recursive: true });
     }
   });
+}
+
+function getLogFilePath(): string {
+  return path.join(getUserDataPath(), 'data', 'logs', 'app.log');
+}
+
+function writeLog(message: string): void {
+  try {
+    const timestamp = new Date().toISOString();
+    const logMessage = `[${timestamp}] ${message}\n`;
+    const logPath = getLogFilePath();
+    fs.appendFileSync(logPath, logMessage, 'utf8');
+  } catch (error) {
+    console.error('[Log Error]', error);
+  }
 }
 
 async function checkBackendHealth(): Promise<boolean> {
@@ -98,9 +113,11 @@ async function startBackend(): Promise<void> {
       DATABASE_URL: `file:${path.join(dataPath, 'data', 'mbit-erp.db')}`,
       NODE_ENV: isDev ? 'development' : 'production',
       JWT_SECRET: process.env.JWT_SECRET || 'mbit-erp-default-secret-change-in-production',
+      ELECTRON_RUN_AS_NODE: '1',
     };
 
     if (isDev) {
+      const { spawn } = require('child_process');
       backendProcess = spawn('npm', ['run', 'start:dev'], {
         cwd: path.join(__dirname, '..', '..', 'server'),
         env,
@@ -108,27 +125,63 @@ async function startBackend(): Promise<void> {
       });
     } else {
       const backendPath = path.join(process.resourcesPath, 'backend', 'main.js');
-      backendProcess = spawn('node', [backendPath], {
+      
+      console.log('[Backend] Backend path:', backendPath);
+      console.log('[Backend] Resources path:', process.resourcesPath);
+      writeLog(`[Backend] Backend path: ${backendPath}`);
+      writeLog(`[Backend] Resources path: ${process.resourcesPath}`);
+      
+      if (!fs.existsSync(backendPath)) {
+        const errorMsg = `Backend file not found at: ${backendPath}`;
+        console.error(`[Backend Error] ${errorMsg}`);
+        writeLog(`[Backend Error] ${errorMsg}`);
+        reject(new Error(errorMsg));
+        return;
+      }
+      
+      console.log('[Backend] Using Electron bundled Node.js runtime via fork()');
+      writeLog('[Backend] Using Electron bundled Node.js runtime via fork()');
+      
+      backendProcess = fork(backendPath, [], {
         env,
-        shell: false,
+        stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
+        execPath: process.execPath,
+        execArgv: [],
       });
     }
 
+    if (!backendProcess) {
+      const errorMsg = 'Failed to create backend process';
+      console.error(`[Backend Error] ${errorMsg}`);
+      writeLog(`[Backend Error] ${errorMsg}`);
+      reject(new Error(errorMsg));
+      return;
+    }
+
     backendProcess.stdout?.on('data', (data) => {
-      console.log(`[Backend] ${data.toString()}`);
+      const message = data.toString();
+      console.log(`[Backend] ${message}`);
+      writeLog(`[Backend] ${message}`);
     });
 
     backendProcess.stderr?.on('data', (data) => {
-      console.error(`[Backend Error] ${data.toString()}`);
+      const message = data.toString();
+      console.error(`[Backend Error] ${message}`);
+      writeLog(`[Backend Error] ${message}`);
     });
 
     backendProcess.on('error', (error) => {
-      console.error('[Backend] Process error:', error);
+      const errorMsg = `[Backend] Process error: ${error.message}`;
+      console.error(errorMsg);
+      writeLog(errorMsg);
+      writeLog(`[Backend] Error stack: ${error.stack}`);
       reject(error);
     });
 
     backendProcess.on('exit', (code) => {
-      console.log(`[Backend] Process exited with code ${code}`);
+      const exitMsg = `[Backend] Process exited with code ${code}`;
+      console.log(exitMsg);
+      writeLog(exitMsg);
       if (code !== 0 && code !== null) {
         reject(new Error(`Backend process exited with code ${code}`));
       }
@@ -199,25 +252,43 @@ ipcMain.handle('get-backend-url', () => {
 app.whenReady().then(async () => {
   console.log('[App] Starting Mbit ERP Desktop...');
   console.log('[App] User Data Path:', getUserDataPath());
+  writeLog('[App] Starting Mbit ERP Desktop...');
+  writeLog(`[App] User Data Path: ${getUserDataPath()}`);
+  writeLog(`[App] Platform: ${process.platform}`);
+  writeLog(`[App] Electron version: ${process.versions.electron}`);
+  writeLog(`[App] Node version: ${process.versions.node}`);
+  writeLog(`[App] Packaged: ${app.isPackaged}`);
   
   ensureDataDirectories();
   
   try {
     console.log('[App] Starting backend server...');
+    writeLog('[App] Starting backend server...');
     await startBackend();
     console.log('[App] Backend ready, creating window...');
+    writeLog('[App] Backend ready, creating window...');
     createWindow();
   } catch (error) {
     console.error('[App] Failed to start backend:', error);
     
     const errorMessage = error instanceof Error ? error.message : 'Ismeretlen hiba';
+    const logPath = getLogFilePath();
+    
+    writeLog(`[App] FATAL ERROR: Failed to start backend: ${errorMessage}`);
+    if (error instanceof Error && error.stack) {
+      writeLog(`[App] Error stack: ${error.stack}`);
+    }
     
     await dialog.showMessageBox({
       type: 'error',
       title: 'Backend Indítási Hiba',
       message: 'Az alkalmazás backend szervert nem sikerült elindítani.',
-      detail: `Hiba: ${errorMessage}\n\nKérem ellenőrizze a naplófájlokat vagy próbálja újra az alkalmazást indítani.`,
-      buttons: ['Bezárás']
+      detail: `Hiba: ${errorMessage}\n\nA részletes naplófájl helye:\n${logPath}\n\nKérjük, küldje el ezt a fájlt a támogatásnak, vagy próbálja újra az alkalmazást indítani.`,
+      buttons: ['Naplófájl Megnyitása', 'Bezárás']
+    }).then((result) => {
+      if (result.response === 0) {
+        require('electron').shell.showItemInFolder(logPath);
+      }
     });
     
     app.quit();

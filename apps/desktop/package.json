@@ -53,17 +53,17 @@
         ]
       },
       {
-        "from": "../../node_modules/.prisma",
-        "to": "backend/node_modules/.prisma",
+        "from": "../server/node_modules",
+        "to": "backend/node_modules",
         "filter": [
-          "**/*"
-        ]
-      },
-      {
-        "from": "../../node_modules/@prisma",
-        "to": "backend/node_modules/@prisma",
-        "filter": [
-          "**/*"
+          "**/*",
+          "!**/*.md",
+          "!**/LICENSE",
+          "!**/README",
+          "!**/.bin",
+          "!**/test",
+          "!**/tests",
+          "!**/__tests__"
         ]
       },
       {

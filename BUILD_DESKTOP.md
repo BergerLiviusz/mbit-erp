@@ -201,6 +201,36 @@ apps/desktop/
 
 ## 🔧 Gyakori Problémák
 
+### ⚠️ KRITIKUS: Backend Indítási Hiba Windows-on (`spawn node ENOENT`)
+
+**Probléma**: Telepített Windows alkalmazás nem indul, hibát ír: "spawn node ENOENT"
+
+**Ok**: A korábbi verziók `spawn('node', ...)` hívással keresték a rendszer Node.js-t, ami nincsen telepítve a végfelhasználóknál.
+
+**Megoldás**: **AUTOMATIKUSAN JAVÍTVA v1.0.1+ VERZIÓTÓL!**
+
+Az alkalmazás most már Electron beépített Node.js futtatókörnyezetét használja `fork()` API-val:
+- ✅ `child_process.fork()` használata `spawn()` helyett
+- ✅ `ELECTRON_RUN_AS_NODE=1` környezeti változó
+- ✅ Nincs szükség rendszerszintű Node.js telepítésre
+- ✅ Teljes standalone működés minden backend dependency-vel
+- ✅ Részletes hibanapló automatikusan mentődik
+
+**Naplófájl helye telepített alkalmazásban**:
+```
+Windows: C:\Users\[USERNAME]\AppData\Roaming\Mbit ERP\data\logs\app.log
+macOS: ~/Library/Application Support/Mbit ERP/data/logs/app.log
+Linux: ~/.config/Mbit ERP/data/logs/app.log
+```
+
+**Ha még mindig problémát tapasztalsz**:
+1. Töröld az alkalmazást teljesen
+2. Töröld a felhasználói adatmappát (fenti útvonal)
+3. Telepítsd újra a legújabb verziót
+4. Ha továbbra sem működik, küldd el az `app.log` fájlt a támogatásnak
+
+---
+
 ### Build Error: `Cannot find module 'electron'`
 
 ```bash
@@ -213,6 +243,18 @@ npm install
 ```bash
 cd apps/server
 npx prisma generate
+```
+
+### Build Error: Backend node_modules hiányzik
+
+A packaging során az összes backend dependency-nek be kell ágyazódnia. Ha hiányzik:
+
+```bash
+cd apps/server
+npm install
+cd ../desktop
+npm run build
+npm run package:win
 ```
 
 ### Windows Build on Mac/Linux
