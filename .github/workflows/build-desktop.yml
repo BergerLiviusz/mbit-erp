@@ -123,47 +123,78 @@ jobs:
 
       - name: Verify packaged build (Windows)
         if: matrix.os == 'windows-latest'
-        shell: bash
+        shell: pwsh
         run: |
-          echo "=== Verifying Windows build output ==="
-          echo "Checking release folder..."
-          ls -lah apps/desktop/release/ || echo "Release folder not found"
+          Write-Host "=== Verifying Windows build output ==="
           
-          echo ""
-          echo "=== Checking .exe files ==="
-          find apps/desktop/release -name "*.exe" -exec ls -lah {} \;
-          
-          echo ""
-          echo "=== Installer sizes ==="
-          du -sh apps/desktop/release/* || echo "Could not check sizes"
-          
-          echo ""
-          echo "=== CRITICAL: Verifying backend dependencies in packaged build ==="
-          UNPACKED_DIR="apps/desktop/release/win-unpacked/resources/backend"
-          
-          if [ ! -d "$UNPACKED_DIR/node_modules" ]; then
-            echo "❌ CRITICAL ERROR: backend/node_modules not found in packaged build!"
+          $releaseDir = "apps/desktop/release"
+          if (-not (Test-Path $releaseDir)) {
+            Write-Host "❌ ERROR: Release folder not found!"
             exit 1
-          fi
+          }
           
-          if [ ! -d "$UNPACKED_DIR/node_modules/dotenv" ]; then
-            echo "❌ CRITICAL ERROR: dotenv not found in packaged build!"
-            ls -la "$UNPACKED_DIR/node_modules/" | head -20
+          Write-Host ""
+          Write-Host "=== Checking .exe files ==="
+          $exeFiles = Get-ChildItem $releaseDir -Filter "*.exe" -Recurse
+          foreach ($exe in $exeFiles) {
+            $sizeMB = $exe.Length / 1MB
+            Write-Host ("{0} - {1:N2} MB" -f $exe.Name, $sizeMB)
+          }
+          
+          Write-Host ""
+          Write-Host "=== CRITICAL: Verifying backend dependencies in packaged build ==="
+          $unpackedBackend = "apps/desktop/release/win-unpacked/resources/backend"
+          
+          if (-not (Test-Path "$unpackedBackend/node_modules")) {
+            Write-Host "❌ CRITICAL ERROR: backend/node_modules not found in packaged build!"
             exit 1
-          fi
+          }
           
-          if [ -L "$UNPACKED_DIR/node_modules/dotenv" ]; then
-            echo "❌ CRITICAL ERROR: dotenv is a SYMLINK in packaged build!"
-            ls -la "$UNPACKED_DIR/node_modules/dotenv"
+          if (-not (Test-Path "$unpackedBackend/node_modules/dotenv")) {
+            Write-Host "❌ CRITICAL ERROR: dotenv not found in packaged build!"
+            Get-ChildItem "$unpackedBackend/node_modules/" | Select-Object -First 20
             exit 1
-          fi
+          }
           
-          echo "✅ Backend dependencies successfully bundled"
-          echo "Backend node_modules size:"
-          du -sh "$UNPACKED_DIR/node_modules"
-          echo ""
-          echo "Sample packages in bundle:"
-          ls -la "$UNPACKED_DIR/node_modules/" | head -10
+          Write-Host ""
+          Write-Host "=== Deep verification: Checking ALL es-object-atoms instances in packaged build ==="
+          $packedEsInstances = Get-ChildItem -Path "$unpackedBackend/node_modules" -Recurse -Filter "es-object-atoms" -Directory -ErrorAction SilentlyContinue
+          
+          if ($packedEsInstances.Count -eq 0) {
+            Write-Host "❌ CRITICAL ERROR: No es-object-atoms found in packaged build!"
+            exit 1
+          }
+          
+          Write-Host "Found $($packedEsInstances.Count) instance(s) of es-object-atoms in packaged build"
+          
+          $packedJunctionFound = $false
+          foreach ($instance in $packedEsInstances) {
+            $attrs = $instance.Attributes
+            $relPath = $instance.FullName.Replace((Get-Location).Path, ".")
+            
+            if ($attrs -match 'ReparsePoint') {
+              Write-Host "❌ JUNCTION FOUND IN PACKAGE: $relPath"
+              $packedJunctionFound = $true
+            } else {
+              Write-Host "✅ REAL DIR IN PACKAGE: $relPath"
+            }
+          }
+          
+          if ($packedJunctionFound) {
+            Write-Host ""
+            Write-Host "❌ CRITICAL ERROR: Packaged build contains junctions! electron-builder failed to copy real files."
+            exit 1
+          }
+          
+          Write-Host ""
+          Write-Host "✅ Backend dependencies successfully bundled (all real files, no junctions)"
+          
+          $nodeModulesSize = (Get-ChildItem "$unpackedBackend/node_modules" -Recurse -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum).Sum / 1MB
+          Write-Host ("Backend node_modules size: {0:N2} MB" -f $nodeModulesSize)
+          
+          Write-Host ""
+          Write-Host "Sample packages in bundle:"
+          Get-ChildItem "$unpackedBackend/node_modules/" | Select-Object -First 10
 
       - name: Upload artifacts (Windows)
         if: matrix.os == 'windows-latest'
