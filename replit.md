@@ -44,26 +44,29 @@ The project utilizes a monorepo structure managed by Turborepo, encompassing a R
 
 ## Recent Changes (November 8, 2025)
 **Sprint 9 - Windows Build Dependency Bundling Fix (CRITICAL) - FINAL SOLUTION v1.0.5:**
-- ✅ **ROOT CAUSE IDENTIFIED**: Windows junction points/hardlinks in npm dependencies
+- ✅ **ROOT CAUSE IDENTIFIED**: npm dedupe incompatibility with nested install strategy
   - Initial diagnosis: npm workspace hoisted dependencies create symlinks (v1.0.0-v1.0.2)
   - DEEPER ISSUE: npm uses Windows **junction points** AND **hardlinks** even with `--install-strategy=nested`
-  - **DEEPEST ISSUE (v1.0.4 runtime error)**: npm creates hardlinks in DEEP nested paths (6-7 levels) even with `--install-links=false`
-  - electron-builder copies junctions/hardlinks AS-IS → broken references in packaged app
-  - Evidence: Installer 83-152 MB (vs. expected 250-300 MB), "Cannot find module 'dotenv'/'es-object-atoms'" errors
+  - **DEEPEST ISSUE (v1.0.4-v1.0.5a)**: npm dedupe **catastrophically deletes production dependencies** (dotenv, es-object-atoms)
+  - npm dedupe recalculates tree in hoisted mode → marks nested modules as extraneous → **DELETES them** (2449 packages removed!)
+  - **npm dedupe is fundamentally incompatible with --install-strategy=nested + --install-links=false**
+  - Evidence: "dotenv directory not found" after dedupe, packaged app missing critical modules
   - Git Bash `test -L` cannot detect Windows junctions → false positive verification in v1.0.3
-  - Error path: `node_modules\@nestjs\platform-express\node_modules\express\node_modules\qs\node_modules\side-channel\node_modules\side-channel-map\node_modules\get-intrinsic\index.js`
-- ✅ **THE COMPLETE FIX (v1.0.5)**: `npm dedupe` + deep verification
-  - Install: `npm install --omit=dev --install-strategy=nested --install-links=false --workspaces=false`
-  - **Flatten**: `npm dedupe` to reduce deep nested paths (6-7 levels → fewer levels)
+- ✅ **THE ACTUAL FIX (v1.0.5 FINAL)**: Single install command, NO dedupe
+  - **REMOVED npm dedupe completely** (it was deleting dependencies, not fixing junctions)
+  - Single install: `npm install --omit=dev --install-strategy=nested --install-links=false --workspaces=false`
+  - **Key insight**: nested + no-links ALREADY prevents junctions at ALL nesting levels (6-7 deep)
+  - No additional flatten step needed - the original junction problem was already solved!
   - **Pre-packaging verification**: PowerShell recursive search for ALL `es-object-atoms` instances, check each for ReparsePoint attribute
   - **Post-packaging verification**: Same deep check on `win-unpacked/resources/backend/node_modules` (catches electron-builder copy issues)
   - Expected installer size: 250-300 MB with real files
-- ✅ **GitHub Actions CI/CD Complete Fix (v1.0.5)**:
+- ✅ **GitHub Actions CI/CD Final Fix (v1.0.5)**:
   - Changed shell to PowerShell (`pwsh`) for accurate Windows junction detection
-  - Install command: `npm install --omit=dev --install-strategy=nested --install-links=false --workspaces=false`
-  - **NEW: `npm dedupe` after install** to flatten dependency tree
-  - **NEW: Deep verification** - recursive ReparsePoint check for ALL instances of `es-object-atoms` (not just top-level)
-  - **NEW: Post-packaging verification** - PowerShell-based deep scan on packaged bundle (was bash, cannot detect junctions)
+  - **Simplified install**: Single command with nested + no-links (production only)
+  - **Removed**: npm dedupe (was causing catastrophic package deletions)
+  - **Removed**: npm prune (--omit=dev already excludes dev deps)
+  - **Deep verification** - recursive ReparsePoint check for ALL instances of `es-object-atoms` (not just top-level)
+  - **Post-packaging verification** - PowerShell-based deep scan on packaged bundle
   - Detects junctions at ANY nesting level, in both pre and post-packaging phases
   - Added `permissions: contents: write` for GitHub releases (fixes 403 errors)
   - Fixed release asset list (only .exe files, removed non-existent .msi/.dmg)
@@ -82,12 +85,14 @@ The project utilizes a monorepo structure managed by Turborepo, encompassing a R
   - Detailed junction/hardlink explanation with visual examples
   - PowerShell verification scripts with ReparsePoint checks
   - Why Git Bash verification failed (cannot detect Windows junctions)
+  - **Why npm dedupe fails**: Incompatibility with nested install strategy
   - Updated expected installer size: 250-300 MB
   - Clear warning about npm's default hardlink behavior
 - ✅ **Architect Review Process**: Multi-iteration debugging with final approval
   - v1.0.0-v1.0.2: Symlink diagnosis (incorrect)
   - v1.0.3: Nested install (incomplete - still used hardlinks)
   - v1.0.4: Junction/hardlink root cause + `--install-links=false` (CORRECT for shallow deps)
-  - v1.0.5: Deep nested junction fix + npm dedupe + comprehensive verification (COMPLETE)
-  - Debug responsibility used for deep analysis
+  - v1.0.5a-b: npm dedupe attempts (FAILED - deleted production dependencies)
+  - v1.0.5 FINAL: Removed dedupe, single install command (CORRECT - architect confirmed)
+  - Debug responsibility used for deep analysis (npm dedupe incompatibility discovered)
   - PASS: All changes architect-approved - production ready
