@@ -67,6 +67,13 @@
         ]
       },
       {
+        "from": "../server/node_modules/.prisma",
+        "to": "backend/node_modules/.prisma",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
         "from": "../web/dist",
         "to": "frontend",
         "filter": [
