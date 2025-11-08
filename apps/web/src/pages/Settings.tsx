@@ -1,3 +1,4 @@
+import { apiFetch } from '../lib/api';
 import { useState, useEffect } from 'react';
 
 interface SystemSetting {
@@ -29,7 +30,6 @@ export default function Settings() {
   const [message, setMessage] = useState('');
   const [orgData, setOrgData] = useState<Record<string, string>>({});
 
-  const API_URL = import.meta.env.VITE_API_URL || '/api';
 
   useEffect(() => {
     loadSettings();
@@ -54,8 +54,8 @@ export default function Settings() {
   const loadSettings = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/system/settings`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const response = await apiFetch(`/system/settings`, {
+        
       });
       if (response.ok) {
         const data = await response.json();
@@ -69,9 +69,9 @@ export default function Settings() {
   const initializeDefaults = async () => {
     try {
       const token = localStorage.getItem('token');
-      await fetch(`${API_URL}/system/settings/initialize`, {
+      await apiFetch(`/system/settings/initialize`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
+        
       });
     } catch (error) {
       console.error('Hiba az alapértelmezett beállítások inicializálásakor:', error);
@@ -83,8 +83,8 @@ export default function Settings() {
     setHealthError('');
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/health/detailed`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const response = await apiFetch(`/health/detailed`, {
+        
       });
       
       if (response.ok) {
@@ -110,7 +110,7 @@ export default function Settings() {
     setMessage('');
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/system/settings/${kulcs}`, {
+      const response = await apiFetch(`/system/settings/${kulcs}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -139,9 +139,9 @@ export default function Settings() {
     setMessage('');
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/system/diagnostics/backup/now`, {
+      const response = await apiFetch(`/system/diagnostics/backup/now`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
+        
       });
 
       if (response.ok) {
@@ -175,7 +175,7 @@ export default function Settings() {
 
       const results = await Promise.all(
         updates.map(update => 
-          fetch(`${API_URL}/system/settings/${update.kulcs}`, {
+          apiFetch(`/system/settings/${update.kulcs}`, {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import Modal from '../components/Modal';
 import FileUpload from '../components/FileUpload';
+import { apiFetch } from '../lib/api';
 
 interface Document {
   id: string;
@@ -73,7 +74,6 @@ export default function Documents() {
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
-  const API_URL = import.meta.env.VITE_API_URL || '/api';
 
   useEffect(() => {
     loadDocuments();
@@ -89,14 +89,11 @@ export default function Documents() {
   const loadDocuments = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
       const url = selectedAllapot
-        ? `${API_URL}/dms/documents?allapot=${selectedAllapot}&skip=0&take=100`
-        : `${API_URL}/dms/documents?skip=0&take=100`;
+        ? `/dms/documents?allapot=${selectedAllapot}&skip=0&take=100`
+        : `/dms/documents?skip=0&take=100`;
 
-      const response = await fetch(url, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await apiFetch(url);
 
       if (response.ok) {
         const data = await response.json();
@@ -112,8 +109,8 @@ export default function Documents() {
   const loadCategories = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/dms/categories?skip=0&take=100`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const response = await apiFetch(`/dms/categories?skip=0&take=100`, {
+        
       });
 
       if (response.ok) {
@@ -135,7 +132,7 @@ export default function Documents() {
     setError('');
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/dms/categories`, {
+      const response = await apiFetch(`/dms/categories`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -173,8 +170,8 @@ export default function Documents() {
   const loadAccounts = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/crm/accounts?skip=0&take=100`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const response = await apiFetch(`/crm/accounts?skip=0&take=100`, {
+        
       });
 
       if (response.ok) {
@@ -255,7 +252,7 @@ export default function Documents() {
         ervenyessegVeg: formData.ervenyessegVeg || undefined,
       };
 
-      const createResponse = await fetch(`${API_URL}/dms/documents`, {
+      const createResponse = await apiFetch(`/dms/documents`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -285,7 +282,7 @@ export default function Documents() {
       const uploadFormData = new FormData();
       uploadFormData.append('file', selectedFile);
 
-      const uploadResponse = await fetch(`${API_URL}/dms/documents/${createdDocument.id}/upload`, {
+      const uploadResponse = await apiFetch(`/dms/documents/${createdDocument.id}/upload`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -362,7 +359,7 @@ export default function Documents() {
     setOcrLoading(prev => ({ ...prev, [documentId]: true }));
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/dms/documents/${documentId}/ocr`, {
+      const response = await apiFetch(`/dms/documents/${documentId}/ocr`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -382,8 +379,8 @@ export default function Documents() {
 
       setTimeout(async () => {
         try {
-          const docResponse = await fetch(`${API_URL}/dms/documents/${documentId}`, {
-            headers: { Authorization: `Bearer ${token}` },
+          const docResponse = await apiFetch(`/dms/documents/${documentId}`, {
+            
           });
           
           if (docResponse.ok) {

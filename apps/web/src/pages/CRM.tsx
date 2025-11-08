@@ -2,9 +2,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from '../lib/axios';
 import { useState } from 'react';
 import Modal from '../components/Modal';
-
-const isElectron = !!(window as any).electron || (navigator.userAgent.includes('Electron'));
-const API_URL = isElectron ? 'http://localhost:3000' : '/api';
+import { API_URL, apiFetch } from '../lib/api';
 
 export default function CRM() {
   const [activeTab, setActiveTab] = useState<'accounts' | 'campaigns' | 'tickets'>('accounts');
@@ -152,7 +150,7 @@ export default function CRM() {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/crm/accounts`, {
+      const response = await apiFetch('/crm/accounts', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -210,7 +208,7 @@ export default function CRM() {
       };
 
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/crm/campaigns`, {
+      const response = await apiFetch('/crm/campaigns', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -266,7 +264,7 @@ export default function CRM() {
       };
 
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/crm/tickets`, {
+      const response = await apiFetch('/crm/tickets', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

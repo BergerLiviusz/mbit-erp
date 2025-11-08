@@ -1,3 +1,4 @@
+import { apiFetch } from '../lib/api';
 import { useState, useEffect } from 'react';
 import Modal from '../components/Modal';
 
@@ -48,7 +49,6 @@ export default function Warehouses() {
     aktiv: true,
   });
 
-  const API_URL = import.meta.env.VITE_API_URL || '/api';
 
   useEffect(() => {
     loadWarehouses();
@@ -59,8 +59,8 @@ export default function Warehouses() {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/logistics/warehouses?skip=0&take=100`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const response = await apiFetch(`/logistics/warehouses?skip=0&take=100`, {
+        
       });
 
       if (response.ok) {
@@ -78,8 +78,8 @@ export default function Warehouses() {
     setAlertsLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/logistics/inventory/alerts`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const response = await apiFetch(`/logistics/inventory/alerts`, {
+        
       });
 
       if (response.ok) {
@@ -158,7 +158,7 @@ export default function Warehouses() {
         aktiv: formData.aktiv,
       };
 
-      const response = await fetch(`${API_URL}/logistics/warehouses`, {
+      const response = await apiFetch(`/logistics/warehouses`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

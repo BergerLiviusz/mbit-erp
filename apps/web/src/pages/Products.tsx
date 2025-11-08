@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import Modal from '../components/Modal';
+import { apiFetch } from '../lib/api';
 
 interface Product {
   id: string;
@@ -34,7 +35,6 @@ export default function Products() {
     aktiv: true,
   });
 
-  const API_URL = import.meta.env.VITE_API_URL || '/api';
 
   useEffect(() => {
     loadProducts();
@@ -43,14 +43,11 @@ export default function Products() {
   const loadProducts = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
       const url = searchTerm
-        ? `${API_URL}/logistics/items?skip=0&take=100&search=${encodeURIComponent(searchTerm)}`
-        : `${API_URL}/logistics/items?skip=0&take=100`;
+        ? `/logistics/items?skip=0&take=100&search=${encodeURIComponent(searchTerm)}`
+        : `/logistics/items?skip=0&take=100`;
 
-      const response = await fetch(url, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await apiFetch(url);
 
       if (response.ok) {
         const data = await response.json();
@@ -144,7 +141,7 @@ export default function Products() {
         aktiv: formData.aktiv,
       };
 
-      const response = await fetch(`${API_URL}/logistics/items`, {
+      const response = await apiFetch(`/logistics/items`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
