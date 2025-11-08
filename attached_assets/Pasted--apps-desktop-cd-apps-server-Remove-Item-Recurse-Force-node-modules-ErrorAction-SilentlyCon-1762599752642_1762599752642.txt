@@ -1,0 +1,152 @@
+~/.../apps/desktop$ cd apps/server
+Remove-Item -Recurse -Force node_modules -ErrorAction SilentlyContinue
+npm install --omit=dev --install-strategy=nested --install-links=false --workspaces=false
+bash: cd: apps/server: No such file or directory
+bash: Remove-Item: command not found
+
+added 26 packages, and audited 27 packages in 14s
+
+9 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+~/.../apps/desktop$ cd ../desktop
+npm run build && npm run package:win
+
+> @mbit-erp/desktop@1.0.0 prebuild
+> npm run clean
+
+
+> @mbit-erp/desktop@1.0.0 clean
+> rimraf dist-electron release
+
+
+> @mbit-erp/desktop@1.0.0 build
+> npm run build:electron && npm run build:backend && npm run build:frontend
+
+
+> @mbit-erp/desktop@1.0.0 build:electron
+> npx rimraf tsconfig.tsbuildinfo && tsc
+
+
+> @mbit-erp/desktop@1.0.0 build:backend
+> cd ../server && npx rimraf tsconfig.tsbuildinfo && npm run build
+
+
+> @mbit-erp/server@1.0.0 build
+> nest build
+
+
+> @mbit-erp/desktop@1.0.0 build:frontend
+> cd ../web && npx rimraf tsconfig.tsbuildinfo && cross-env ELECTRON_BUILD=true npm run build
+
+
+> @mbit-erp/web@1.0.0 build
+> tsc && vite build
+
+vite v5.4.21 building for production...
+✓ 142 modules transformed.
+dist/registerSW.js                0.14 kB
+dist/manifest.webmanifest         0.29 kB
+dist/index.html                   0.58 kB │ gzip:  0.34 kB
+dist/assets/index-BS2ebifF.css   20.46 kB │ gzip:  4.39 kB
+dist/assets/index-W4mie_pU.js   340.25 kB │ gzip: 95.68 kB
+✓ built in 2.13s
+
+PWA v0.17.5
+mode      generateSW
+precache  5 entries (353.98 KiB)
+files generated
+  dist/sw.js
+  dist/workbox-1be04862.js
+
+> @mbit-erp/desktop@1.0.0 package:win
+> npm run build && electron-builder --win --x64
+
+
+> @mbit-erp/desktop@1.0.0 prebuild
+> npm run clean
+
+
+> @mbit-erp/desktop@1.0.0 clean
+> rimraf dist-electron release
+
+
+> @mbit-erp/desktop@1.0.0 build
+> npm run build:electron && npm run build:backend && npm run build:frontend
+
+
+> @mbit-erp/desktop@1.0.0 build:electron
+> npx rimraf tsconfig.tsbuildinfo && tsc
+
+
+> @mbit-erp/desktop@1.0.0 build:backend
+> cd ../server && npx rimraf tsconfig.tsbuildinfo && npm run build
+
+
+> @mbit-erp/server@1.0.0 build
+> nest build
+
+
+> @mbit-erp/desktop@1.0.0 build:frontend
+> cd ../web && npx rimraf tsconfig.tsbuildinfo && cross-env ELECTRON_BUILD=true npm run build
+
+
+> @mbit-erp/web@1.0.0 build
+> tsc && vite build
+
+vite v5.4.21 building for production...
+✓ 142 modules transformed.
+dist/registerSW.js                0.14 kB
+dist/manifest.webmanifest         0.29 kB
+dist/index.html                   0.58 kB │ gzip:  0.34 kB
+dist/assets/index-BS2ebifF.css   20.46 kB │ gzip:  4.39 kB
+dist/assets/index-W4mie_pU.js   340.25 kB │ gzip: 95.68 kB
+✓ built in 2.38s
+
+PWA v0.17.5
+mode      generateSW
+precache  5 entries (353.98 KiB)
+files generated
+  dist/sw.js
+  dist/workbox-1be04862.js
+  • electron-builder  version=24.13.3 os=6.14.11
+  • loaded configuration  file=package.json ("build" field)
+  • writing effective config  file=release/builder-effective-config.yaml
+  • packaging       platform=win32 arch=x64 electron=28.3.3 appOutDir=release/win-unpacked
+  • downloading     url=https://github.com/electron-userland/electron-builder-binaries/releases/download/winCodeSign-2.6.0/winCodeSign-2.6.0.7z size=5.6 MB parts=1
+  • downloaded      url=https://github.com/electron-userland/electron-builder-binaries/releases/download/winCodeSign-2.6.0/winCodeSign-2.6.0.7z duration=344ms
+  ⨯ wine is required, please see https://electron.build/multi-platform-build#linux  
+  ⨯ /home/runner/workspace/node_modules/app-builder-bin/linux/x64/app-builder process failed ERR_ELECTRON_BUILDER_CANNOT_EXECUTE
+Exit code:
+1  failedTask=build stackTrace=Error: /home/runner/workspace/node_modules/app-builder-bin/linux/x64/app-builder process failed ERR_ELECTRON_BUILDER_CANNOT_EXECUTE
+Exit code:
+1
+    at ChildProcess.<anonymous> (/home/runner/workspace/node_modules/builder-util/src/util.ts:252:14)
+    at Object.onceWrapper (node:events:633:26)
+    at ChildProcess.emit (node:events:518:28)
+    at maybeClose (node:internal/child_process:1101:16)
+    at Process.ChildProcess._handle.onexit (node:internal/child_process:304:5)
+From previous event:
+    at processImmediate (node:internal/timers:485:21)
+From previous event:
+    at WinPackager.signApp (/home/runner/workspace/node_modules/app-builder-lib/src/winPackager.ts:384:27)
+    at WinPackager.doSignAfterPack (/home/runner/workspace/node_modules/app-builder-lib/src/platformPackager.ts:336:32)
+    at WinPackager.doPack (/home/runner/workspace/node_modules/app-builder-lib/src/platformPackager.ts:321:7)
+    at WinPackager.pack (/home/runner/workspace/node_modules/app-builder-lib/src/platformPackager.ts:140:5)
+    at Packager.doBuild (/home/runner/workspace/node_modules/app-builder-lib/src/packager.ts:445:9)
+    at executeFinally (/home/runner/workspace/node_modules/builder-util/src/promise.ts:12:14)
+    at Packager._build (/home/runner/workspace/node_modules/app-builder-lib/src/packager.ts:379:31)
+    at Packager.build (/home/runner/workspace/node_modules/app-builder-lib/src/packager.ts:340:12)
+    at executeFinally (/home/runner/workspace/node_modules/builder-util/src/promise.ts:12:14)
+npm error Lifecycle script `package:win` failed with error:
+npm error code 1
+npm error path /home/runner/workspace/apps/desktop
+npm error workspace @mbit-erp/desktop@1.0.0
+npm error location /home/runner/workspace/apps/desktop
+npm error command failed
+npm error command sh -c npm run build && electron-builder --win --x64
+~/.../apps/desktop$ cd release
+Compress-Archive -Path win-unpacked -DestinationPath "MbitERP-Portable.zip"
+bash: Compress-Archive: command not found
+~/.../desktop/release$ 
