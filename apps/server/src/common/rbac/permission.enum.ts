@@ -87,6 +87,7 @@ export enum Permission {
   
   // Stock specific
   STOCK_VIEW = 'stock:view',
+  STOCK_EDIT = 'stock:edit',
   STOCK_MOVE = 'stock:move',
   STOCK_ADJUST = 'stock:adjust',
   STOCK_INVENTORY = 'stock:inventory',
@@ -210,6 +211,7 @@ export const PermissionDescriptions: Record<Permission, { nev: string; modulo: s
   [Permission.PRODUCT_DELETE]: { nev: 'Termék törlés', modulo: 'Logisztika', leiras: 'Termékek törlése' },
   
   [Permission.STOCK_VIEW]: { nev: 'Készlet megtekintése', modulo: 'Logisztika', leiras: 'Készletállományok megtekintése' },
+  [Permission.STOCK_EDIT]: { nev: 'Készletszint szerkesztés', modulo: 'Logisztika', leiras: 'Készletszintek létrehozása és módosítása' },
   [Permission.STOCK_MOVE]: { nev: 'Készletmozgás', modulo: 'Logisztika', leiras: 'Készletmozgások rögzítése' },
   [Permission.STOCK_ADJUST]: { nev: 'Készlet korrekció', modulo: 'Logisztika', leiras: 'Készlet korrekciók végrehajtása' },
   [Permission.STOCK_INVENTORY]: { nev: 'Leltározás', modulo: 'Logisztika', leiras: 'Leltár rögzítés és lezárás' },
