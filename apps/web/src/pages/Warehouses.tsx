@@ -230,11 +230,17 @@ export default function Warehouses() {
       }
 
       setProductSuccess('Termék sikeresen hozzárendelve a raktárhoz!');
+      
+      // Reload warehouse stock to show the new product
+      if (selectedWarehouseId) {
+        await loadWarehouseStock(selectedWarehouseId);
+      }
+      
+      // Dispatch custom event to notify Products component to refresh
+      window.dispatchEvent(new CustomEvent('productsUpdated'));
+
       setTimeout(() => {
         handleCloseProductModal();
-        if (selectedWarehouseId) {
-          loadWarehouseStock(selectedWarehouseId);
-        }
       }, 1500);
     } catch (err: any) {
       setProductError(err.message || 'Hiba történt a mentés során');

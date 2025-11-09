@@ -61,6 +61,18 @@ export default function Products() {
     loadWarehouses();
   }, [searchTerm]);
 
+  // Listen for products updated events from other components (like Warehouses)
+  useEffect(() => {
+    const handleProductsUpdated = () => {
+      loadProducts();
+    };
+
+    window.addEventListener('productsUpdated', handleProductsUpdated);
+    return () => {
+      window.removeEventListener('productsUpdated', handleProductsUpdated);
+    };
+  }, []);
+
   const loadWarehouses = async () => {
     try {
       const response = await apiFetch('/logistics/warehouses?skip=0&take=100');
@@ -102,12 +114,18 @@ export default function Products() {
     return products
       .filter(p => p.aktiv)
       .reduce((sum, p) => {
+        // Ensure beszerzesiAr is a valid number
+        const beszerzesiAr = p.beszerzesiAr || 0;
+        
         // If stockLevels exist, calculate inventory value
         if (p.stockLevels && p.stockLevels.length > 0) {
-          const totalStock = p.stockLevels.reduce((stockSum, level) => stockSum + level.mennyiseg, 0);
-          return sum + (p.beszerzesiAr * totalStock);
+          const totalStock = p.stockLevels.reduce((stockSum, level) => {
+            const mennyiseg = level.mennyiseg || 0;
+            return stockSum + mennyiseg;
+          }, 0);
+          return sum + (beszerzesiAr * totalStock);
         }
-        // If no stock data, return 0 for this product (or could use a default)
+        // If no stock data, return 0 for this product
         return sum;
       }, 0);
   };
@@ -295,9 +313,14 @@ export default function Products() {
         await Promise.all(stockLevelPromises);
       }
 
+      // Reload products to get updated stockLevels data
+      await loadProducts();
+      
+      // Dispatch custom event to notify other components (like Warehouses) to refresh
+      window.dispatchEvent(new CustomEvent('productsUpdated'));
+
       setTimeout(() => {
         handleCloseModal();
-        loadProducts();
       }, 1500);
     } catch (err: any) {
       setError(err.message || 'Hiba történt a mentés során');
