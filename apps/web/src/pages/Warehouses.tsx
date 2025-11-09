@@ -1,3 +1,4 @@
+import { apiFetch } from '../lib/api';
 import { useState, useEffect } from 'react';
 import Modal from '../components/Modal';
 
@@ -35,6 +36,9 @@ export default function Warehouses() {
   const [loading, setLoading] = useState(true);
   const [alertsLoading, setAlertsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedWarehouseId, setSelectedWarehouseId] = useState<string | null>(null);
+  const [warehouseStock, setWarehouseStock] = useState<any[]>([]);
+  const [stockLoading, setStockLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
@@ -48,7 +52,6 @@ export default function Warehouses() {
     aktiv: true,
   });
 
-  const API_URL = import.meta.env.VITE_API_URL || '/api';
 
   useEffect(() => {
     loadWarehouses();
@@ -58,9 +61,8 @@ export default function Warehouses() {
   const loadWarehouses = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/logistics/warehouses?skip=0&take=100`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const response = await apiFetch(`/logistics/warehouses?skip=0&take=100`, {
+        
       });
 
       if (response.ok) {
@@ -77,9 +79,8 @@ export default function Warehouses() {
   const loadLowStockAlerts = async () => {
     setAlertsLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/logistics/inventory/alerts`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const response = await apiFetch(`/logistics/inventory/alerts`, {
+        
       });
 
       if (response.ok) {
@@ -93,8 +94,28 @@ export default function Warehouses() {
     }
   };
 
-  const countActiveWarehouses = () => {
-    return warehouses.filter(w => w.aktiv).length;
+  const loadWarehouseStock = async (warehouseId: string) => {
+    setStockLoading(true);
+    try {
+      const response = await apiFetch(`/logistics/inventory/warehouse/${warehouseId}`, {
+        
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setWarehouseStock(Array.isArray(data) ? data : []);
+        setSelectedWarehouseId(warehouseId);
+      }
+    } catch (error) {
+      console.error('Hiba a raktár készletének betöltésekor:', error);
+    } finally {
+      setStockLoading(false);
+    }
+  };
+
+  const handleCloseWarehouseDetail = () => {
+    setSelectedWarehouseId(null);
+    setWarehouseStock([]);
   };
 
   const handleOpenModal = () => {
@@ -140,7 +161,6 @@ export default function Warehouses() {
     setSaving(true);
 
     try {
-      const token = localStorage.getItem('token');
 
       let cim = '';
       if (formData.iranyitoszam || formData.telepules || formData.utca) {
@@ -158,11 +178,10 @@ export default function Warehouses() {
         aktiv: formData.aktiv,
       };
 
-      const response = await fetch(`${API_URL}/logistics/warehouses`, {
+      const response = await apiFetch(`/logistics/warehouses`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(warehouseData),
       });
@@ -243,13 +262,16 @@ export default function Warehouses() {
                     <th className="text-left p-4 font-medium text-gray-700">Típus</th>
                     <th className="text-right p-4 font-medium text-gray-700">Kapacitás</th>
                     <th className="text-center p-4 font-medium text-gray-700">Státusz</th>
+                    <th className="text-right p-4 font-medium text-gray-700">Műveletek</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
                   {warehouses.map(warehouse => (
-                    <tr key={warehouse.id} className="hover:bg-gray-50 cursor-pointer">
+                    <tr key={warehouse.id} className="hover:bg-gray-50">
                       <td className="p-4">
-                        <div className="font-medium text-mbit-blue">{warehouse.nev}</div>
+                        <div className="font-medium text-mbit-blue cursor-pointer" onClick={() => loadWarehouseStock(warehouse.id)}>
+                          {warehouse.nev}
+                        </div>
                         <div className="text-xs text-gray-500">{warehouse.azonosito}</div>
                       </td>
                       <td className="p-4 text-sm">
@@ -277,6 +299,14 @@ export default function Warehouses() {
                             Inaktív
                           </span>
                         )}
+                      </td>
+                      <td className="p-4 text-right">
+                        <button
+                          onClick={() => loadWarehouseStock(warehouse.id)}
+                          className="text-mbit-blue hover:text-blue-600 text-sm"
+                        >
+                          Részletek
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -344,6 +374,68 @@ export default function Warehouses() {
           )}
         </div>
       </div>
+
+      {selectedWarehouseId && (
+        <div className="mt-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold">
+              Raktár részletek: {warehouses.find(w => w.id === selectedWarehouseId)?.nev}
+            </h2>
+            <button
+              onClick={handleCloseWarehouseDetail}
+              className="text-gray-600 hover:text-gray-800"
+            >
+              Bezárás
+            </button>
+          </div>
+          <div className="bg-white rounded-lg shadow overflow-hidden">
+            {stockLoading ? (
+              <div className="p-8 text-center text-gray-500">Betöltés...</div>
+            ) : warehouseStock.length === 0 ? (
+              <div className="p-8 text-center text-gray-500">Nincs készlet ebben a raktárban</div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50 border-b">
+                    <tr>
+                      <th className="text-left p-4 font-medium text-gray-700">Termék</th>
+                      <th className="text-left p-4 font-medium text-gray-700">Azonosító</th>
+                      <th className="text-right p-4 font-medium text-gray-700">Mennyiség</th>
+                      <th className="text-right p-4 font-medium text-gray-700">Min. készlet</th>
+                      <th className="text-right p-4 font-medium text-gray-700">Max. készlet</th>
+                      <th className="text-left p-4 font-medium text-gray-700">Hely</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {warehouseStock.map((stock: any) => (
+                      <tr key={stock.id} className="hover:bg-gray-50">
+                        <td className="p-4 text-sm font-medium text-gray-900">
+                          {stock.item?.nev || '-'}
+                        </td>
+                        <td className="p-4 text-sm text-gray-600">
+                          {stock.item?.azonosito || '-'}
+                        </td>
+                        <td className="p-4 text-right text-sm text-gray-900">
+                          {stock.mennyiseg?.toLocaleString('hu-HU') || '0'} {stock.item?.egyseg || ''}
+                        </td>
+                        <td className="p-4 text-right text-sm text-gray-600">
+                          {stock.minimum !== null && stock.minimum !== undefined ? stock.minimum.toLocaleString('hu-HU') : '-'}
+                        </td>
+                        <td className="p-4 text-right text-sm text-gray-600">
+                          {stock.maximum !== null && stock.maximum !== undefined ? stock.maximum.toLocaleString('hu-HU') : '-'}
+                        </td>
+                        <td className="p-4 text-sm text-gray-600">
+                          {stock.location?.nev || '-'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       <Modal isOpen={isModalOpen} onClose={handleCloseModal} title="Új raktár" size="lg">
         {error && (

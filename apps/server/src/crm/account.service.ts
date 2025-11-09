@@ -1,25 +1,32 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class AccountService {
+  private readonly logger = new Logger(AccountService.name);
+
   constructor(private prisma: PrismaService) {}
 
   async findAll(skip = 0, take = 50) {
-    const [total, items] = await Promise.all([
-      this.prisma.account.count(),
-      this.prisma.account.findMany({
-        skip,
-        take,
-        include: {
-          contacts: true,
-          owner: { select: { id: true, nev: true, email: true } },
-        },
-        orderBy: { createdAt: 'desc' },
-      }),
-    ]);
+    try {
+      const [total, items] = await Promise.all([
+        this.prisma.account.count(),
+        this.prisma.account.findMany({
+          skip,
+          take,
+          include: {
+            contacts: true,
+            owner: { select: { id: true, nev: true, email: true } },
+          },
+          orderBy: { createdAt: 'desc' },
+        }),
+      ]);
 
-    return { total, items };
+      return { total, items };
+    } catch (error) {
+      this.logger.error('Error in findAll:', error);
+      throw error;
+    }
   }
 
   async findOne(id: string) {

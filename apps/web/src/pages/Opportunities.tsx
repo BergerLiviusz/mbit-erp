@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import Modal from '../components/Modal';
+import { apiFetch } from '../lib/api';
 
 interface Opportunity {
   id: string;
@@ -50,7 +51,6 @@ export default function Opportunities() {
     zarvasDatum: '',
   });
 
-  const API_URL = import.meta.env.VITE_API_URL || '/api';
 
   useEffect(() => {
     loadOpportunities();
@@ -65,14 +65,11 @@ export default function Opportunities() {
   const loadOpportunities = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
       const url = selectedSzakasz
-        ? `${API_URL}/crm/opportunities?szakasz=${selectedSzakasz}&skip=0&take=100`
-        : `${API_URL}/crm/opportunities?skip=0&take=100`;
+        ? `/crm/opportunities?szakasz=${selectedSzakasz}&skip=0&take=100`
+        : `/crm/opportunities?skip=0&take=100`;
 
-      const response = await fetch(url, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await apiFetch(url);
 
       if (response.ok) {
         const data = await response.json();
@@ -87,14 +84,11 @@ export default function Opportunities() {
 
   const loadAccounts = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/crm/accounts?skip=0&take=100`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await apiFetch('/crm/accounts?skip=0&take=100');
 
       if (response.ok) {
         const data = await response.json();
-        setAccounts(data.data || []);
+        setAccounts(data.items || data.data || []);
       }
     } catch (error) {
       console.error('Hiba az ügyfelek betöltésekor:', error);
@@ -151,7 +145,6 @@ export default function Opportunities() {
     setSaving(true);
 
     try {
-      const token = localStorage.getItem('token');
 
       const opportunityData = {
         nev: formData.nev,
@@ -162,11 +155,10 @@ export default function Opportunities() {
         zarvasDatum: formData.zarvasDatum || undefined,
       };
 
-      const response = await fetch(`${API_URL}/crm/opportunities`, {
+      const response = await apiFetch('/crm/opportunities', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(opportunityData),
       });

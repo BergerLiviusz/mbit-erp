@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import Modal from '../components/Modal';
 import FileUpload from '../components/FileUpload';
+import { apiFetch } from '../lib/api';
 
 interface Document {
   id: string;
@@ -20,6 +21,11 @@ interface Document {
   account?: {
     id: string;
     nev: string;
+  } | null;
+  ocrJob?: {
+    id: string;
+    allapot: string;
+    txtFajlUtvonal?: string | null;
   } | null;
   createdAt: string;
 }
@@ -73,7 +79,6 @@ export default function Documents() {
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
-  const API_URL = import.meta.env.VITE_API_URL || '/api';
 
   useEffect(() => {
     loadDocuments();
@@ -89,14 +94,11 @@ export default function Documents() {
   const loadDocuments = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
       const url = selectedAllapot
-        ? `${API_URL}/dms/documents?allapot=${selectedAllapot}&skip=0&take=100`
-        : `${API_URL}/dms/documents?skip=0&take=100`;
+        ? `/dms/documents?allapot=${selectedAllapot}&skip=0&take=100`
+        : `/dms/documents?skip=0&take=100`;
 
-      const response = await fetch(url, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await apiFetch(url);
 
       if (response.ok) {
         const data = await response.json();
@@ -111,9 +113,8 @@ export default function Documents() {
 
   const loadCategories = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/dms/categories?skip=0&take=100`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const response = await apiFetch(`/dms/categories?skip=0&take=100`, {
+        
       });
 
       if (response.ok) {
@@ -134,12 +135,10 @@ export default function Documents() {
     setSaving(true);
     setError('');
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/dms/categories`, {
+      const response = await apiFetch(`/dms/categories`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           nev: newCategoryName.trim(),
@@ -172,9 +171,8 @@ export default function Documents() {
 
   const loadAccounts = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/crm/accounts?skip=0&take=100`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const response = await apiFetch(`/crm/accounts?skip=0&take=100`, {
+        
       });
 
       if (response.ok) {
@@ -240,7 +238,6 @@ export default function Documents() {
     setSaving(true);
 
     try {
-      const token = localStorage.getItem('token');
 
       const documentData = {
         nev: formData.nev,
@@ -255,11 +252,10 @@ export default function Documents() {
         ervenyessegVeg: formData.ervenyessegVeg || undefined,
       };
 
-      const createResponse = await fetch(`${API_URL}/dms/documents`, {
+      const createResponse = await apiFetch(`/dms/documents`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(documentData),
       });
@@ -285,10 +281,9 @@ export default function Documents() {
       const uploadFormData = new FormData();
       uploadFormData.append('file', selectedFile);
 
-      const uploadResponse = await fetch(`${API_URL}/dms/documents/${createdDocument.id}/upload`, {
+      const uploadResponse = await apiFetch(`/dms/documents/${createdDocument.id}/upload`, {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${token}`,
         },
         body: uploadFormData,
       });
@@ -361,11 +356,9 @@ export default function Documents() {
   const handleOcrTrigger = async (documentId: string) => {
     setOcrLoading(prev => ({ ...prev, [documentId]: true }));
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/dms/documents/${documentId}/ocr`, {
+      const response = await apiFetch(`/dms/documents/${documentId}/ocr`, {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -382,14 +375,18 @@ export default function Documents() {
 
       setTimeout(async () => {
         try {
-          const docResponse = await fetch(`${API_URL}/dms/documents/${documentId}`, {
-            headers: { Authorization: `Bearer ${token}` },
+          const docResponse = await apiFetch(`/dms/documents/${documentId}`, {
+            
           });
           
           if (docResponse.ok) {
             const updatedDoc = await docResponse.json();
             setDocuments(docs => 
-              docs.map(d => d.id === documentId ? { ...d, tartalom: updatedDoc.tartalom } : d)
+              docs.map(d => d.id === documentId ? { 
+                ...d, 
+                tartalom: updatedDoc.tartalom,
+                ocrJob: updatedDoc.ocrJob 
+              } : d)
             );
             setExpandedDoc(documentId);
           } else {
@@ -404,6 +401,77 @@ export default function Documents() {
       console.error('OCR hiba:', error);
       setError('Hiba történt az OCR feldolgozás során');
       setOcrLoading(prev => ({ ...prev, [documentId]: false }));
+    }
+  };
+
+  const handleDeleteDocument = async (documentId: string, documentName: string) => {
+    if (!confirm(`Biztosan törölni szeretné a dokumentumot: ${documentName}?`)) {
+      return;
+    }
+
+    setSaving(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const response = await apiFetch(`/dms/documents/${documentId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Nincs hitelesítve. Kérem jelentkezzen be újra.');
+        } else if (response.status === 403) {
+          throw new Error('Nincs jogosultsága ehhez a művelethez.');
+        } else if (response.status >= 500) {
+          throw new Error('Szerver hiba. Kérem próbálja újra később.');
+        } else {
+          const data = await response.json();
+          throw new Error(data.message || 'Hiba történt a törlés során');
+        }
+      }
+
+      setSuccess('Dokumentum sikeresen törölve!');
+      setTimeout(() => {
+        setSuccess('');
+        loadDocuments();
+      }, 1500);
+    } catch (err: any) {
+      setError(err.message || 'Hiba történt a törlés során');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDownloadOcrText = async (documentId: string, documentName: string) => {
+    try {
+      const response = await apiFetch(`/dms/documents/${documentId}/ocr/download`, {
+        method: 'GET',
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Nincs hitelesítve. Kérem jelentkezzen be újra.');
+        } else if (response.status === 403) {
+          throw new Error('Nincs jogosultsága ehhez a művelethez.');
+        } else if (response.status === 404) {
+          throw new Error('OCR feldolgozás még nem készült el vagy nem található.');
+        } else {
+          throw new Error('Nem sikerült letölteni az OCR szövegfájlt.');
+        }
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${documentName.replace(/\.[^/.]+$/, '')}_ocr.txt`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err: any) {
+      setError(err.message || 'Hiba történt a letöltés során');
     }
   };
 
@@ -516,19 +584,36 @@ export default function Documents() {
                       </td>
                       <td className="p-4 text-sm text-gray-500">{formatDate(doc.createdAt)}</td>
                       <td className="p-4">
-                        {doc.fajlNev && (
+                        <div className="flex gap-2 flex-wrap">
+                          {doc.fajlNev && (
+                            <button
+                              onClick={() => handleOcrTrigger(doc.id)}
+                              disabled={ocrLoading[doc.id]}
+                              className={`px-3 py-1 rounded text-sm ${
+                                ocrLoading[doc.id]
+                                  ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
+                                  : 'bg-mbit-blue text-white hover:bg-blue-600'
+                              }`}
+                            >
+                              {ocrLoading[doc.id] ? 'Feldolgozás...' : 'Szövegkinyerés'}
+                            </button>
+                          )}
+                          {doc.ocrJob?.allapot === 'kesz' && doc.ocrJob?.txtFajlUtvonal && (
+                            <button
+                              onClick={() => handleDownloadOcrText(doc.id, doc.fajlNev)}
+                              className="px-3 py-1 rounded text-sm bg-green-600 text-white hover:bg-green-700"
+                              title="OCR szöveg letöltése .txt fájlként"
+                            >
+                              📥 Letöltés
+                            </button>
+                          )}
                           <button
-                            onClick={() => handleOcrTrigger(doc.id)}
-                            disabled={ocrLoading[doc.id]}
-                            className={`px-3 py-1 rounded text-sm ${
-                              ocrLoading[doc.id]
-                                ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
-                                : 'bg-mbit-blue text-white hover:bg-blue-600'
-                            }`}
+                            onClick={() => handleDeleteDocument(doc.id, doc.nev)}
+                            className="px-3 py-1 rounded text-sm bg-red-600 text-white hover:bg-red-700"
                           >
-                            {ocrLoading[doc.id] ? 'Feldolgozás...' : 'Szövegkinyerés'}
+                            Törlés
                           </button>
-                        )}
+                        </div>
                       </td>
                     </tr>
                     {expandedDoc === doc.id && (
@@ -545,8 +630,21 @@ export default function Documents() {
                               </button>
                             </div>
                             {doc.tartalom ? (
-                              <div className="bg-gray-100 p-3 rounded border border-gray-200 font-mono text-sm whitespace-pre-wrap max-h-96 overflow-y-auto">
-                                {doc.tartalom}
+                              <div>
+                                <div className="flex justify-between items-center mb-2">
+                                  <span className="text-sm text-gray-600">Kinyert szöveg</span>
+                                  {doc.ocrJob?.allapot === 'kesz' && doc.ocrJob?.txtFajlUtvonal && (
+                                    <button
+                                      onClick={() => handleDownloadOcrText(doc.id, doc.fajlNev)}
+                                      className="px-3 py-1 rounded text-sm bg-green-600 text-white hover:bg-green-700"
+                                    >
+                                      📥 Letöltés .txt fájlként
+                                    </button>
+                                  )}
+                                </div>
+                                <div className="bg-gray-100 p-3 rounded border border-gray-200 font-mono text-sm whitespace-pre-wrap max-h-96 overflow-y-auto">
+                                  {doc.tartalom}
+                                </div>
                               </div>
                             ) : (
                               <div className="text-gray-500 italic text-center py-4">

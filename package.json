@@ -17,6 +17,7 @@
     "package:win": "cd apps/desktop && npm run package:win",
     "package:mac": "cd apps/desktop && npm run package:mac",
     "package:linux": "cd apps/desktop && npm run package:linux",
+    "test:desktop": "cd apps/desktop && npm run build && npm run package -- --dir && cd ../.. && open apps/desktop/release/mac-arm64/Mbit\\ ERP.app",
     "server": "cd apps/server && npm run start:dev",
     "web": "cd apps/web && npm run dev",
     "lint": "turbo run lint",

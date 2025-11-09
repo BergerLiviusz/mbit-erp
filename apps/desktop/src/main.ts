@@ -202,6 +202,9 @@ function cleanupLegacyNodeModules(): void {
   }
 }
 
+// Health check interval for backend process monitoring
+let backendHealthCheckInterval: NodeJS.Timeout | null = null;
+
 async function startBackend(): Promise<void> {
   return new Promise((resolve, reject) => {
     const isDev = !app.isPackaged;
@@ -211,16 +214,37 @@ async function startBackend(): Promise<void> {
       ? path.join(__dirname, '..', '..', 'server', 'node_modules')
       : path.join(process.resourcesPath, 'backend', 'node_modules');
     
+    // Ensure database directory exists before setting DATABASE_URL
+    const dbDir = path.join(dataPath, 'data');
+    const dbPath = path.join(dbDir, 'mbit-erp.db');
+    
+    // Normalize path for Prisma SQLite - use forward slashes even on Windows
+    const normalizedDbPath = dbPath.replace(/\\/g, '/');
+    // For Windows absolute paths, ensure proper format: file:/C:/path/to/db.db
+    const databaseUrl = process.platform === 'win32' && normalizedDbPath.match(/^[A-Z]:/)
+      ? `file:${normalizedDbPath}`
+      : `file:${normalizedDbPath}`;
+    
     const env = {
       ...process.env,
       PORT: String(BACKEND_PORT),
-      DATA_DIR: path.join(dataPath, 'data'),
-      DATABASE_URL: `file:${path.join(dataPath, 'data', 'mbit-erp.db')}`,
+      DATA_DIR: dbDir,
+      DATABASE_URL: databaseUrl,
       NODE_ENV: isDev ? 'development' : 'production',
       JWT_SECRET: process.env.JWT_SECRET || 'mbit-erp-default-secret-change-in-production',
       ELECTRON_RUN_AS_NODE: '1',
       NODE_PATH: backendNodeModulesPath,
     };
+
+    // Log environment setup (without sensitive data)
+    console.log('[Backend] Environment configuration:');
+    console.log(`[Backend]   - PORT: ${env.PORT}`);
+    console.log(`[Backend]   - DATA_DIR: ${env.DATA_DIR}`);
+    console.log(`[Backend]   - DATABASE_URL: file:***${path.basename(dbPath)}`);
+    console.log(`[Backend]   - NODE_ENV: ${env.NODE_ENV}`);
+    console.log(`[Backend]   - ELECTRON_RUN_AS_NODE: ${env.ELECTRON_RUN_AS_NODE}`);
+    console.log(`[Backend]   - NODE_PATH: ${env.NODE_PATH}`);
+    writeLog(`[Backend] Environment: PORT=${env.PORT}, DATA_DIR=${env.DATA_DIR}, DATABASE_URL=file:***${path.basename(dbPath)}`);
 
     if (isDev) {
       const { spawn } = require('child_process');
@@ -268,6 +292,16 @@ async function startBackend(): Promise<void> {
         return;
       }
       
+      // Verify Prisma client exists
+      const prismaClientPath = path.join(nodeModulesPath, '@prisma', 'client');
+      if (!fs.existsSync(prismaClientPath)) {
+        const errorMsg = `Prisma client not found at: ${prismaClientPath}. Run 'npx prisma generate' during build.`;
+        console.error(`[Backend Error] ${errorMsg}`);
+        writeLog(`[Backend Error] ${errorMsg}`);
+        reject(new Error(errorMsg));
+        return;
+      }
+      
       console.log('[Backend] Using Electron bundled Node.js runtime via fork()');
       console.log('[Backend] NODE_PATH set to:', env.NODE_PATH);
       writeLog('[Backend] Using Electron bundled Node.js runtime via fork()');
@@ -302,6 +336,37 @@ async function startBackend(): Promise<void> {
       writeLog(`[Backend Error] ${message}`);
     });
 
+    // Monitor backend process health periodically
+    if (backendProcess) {
+      // Clear any existing health check
+      if (backendHealthCheckInterval) {
+        clearInterval(backendHealthCheckInterval);
+      }
+      
+      backendHealthCheckInterval = setInterval(() => {
+        if (backendProcess && !backendProcess.killed) {
+          // Check if process is still alive by checking if it responds to signal 0
+          try {
+            process.kill(backendProcess.pid!, 0); // Signal 0 just checks if process exists
+            console.log(`[Backend] Health check: PID ${backendProcess.pid} is alive`);
+            writeLog(`[Backend] Health check: PID ${backendProcess.pid} is alive`);
+          } catch (err) {
+            console.warn(`[Backend] Health check failed: PID ${backendProcess.pid} may be dead`);
+            writeLog(`[Backend] Health check failed: PID ${backendProcess.pid} may be dead`);
+            if (backendHealthCheckInterval) {
+              clearInterval(backendHealthCheckInterval);
+              backendHealthCheckInterval = null;
+            }
+          }
+        } else {
+          if (backendHealthCheckInterval) {
+            clearInterval(backendHealthCheckInterval);
+            backendHealthCheckInterval = null;
+          }
+        }
+      }, 10000); // Check every 10 seconds
+    }
+
     backendProcess.on('error', (error) => {
       const errorMsg = `[Backend] Process error: ${error.message}`;
       console.error(errorMsg);
@@ -310,23 +375,63 @@ async function startBackend(): Promise<void> {
       reject(error);
     });
 
-    backendProcess.on('exit', (code) => {
-      const exitMsg = `[Backend] Process exited with code ${code}`;
+    // Track if backend has started successfully
+    let backendStarted = false;
+
+    backendProcess.on('exit', (code, signal) => {
+      // Clear health check interval
+      if (backendHealthCheckInterval) {
+        clearInterval(backendHealthCheckInterval);
+        backendHealthCheckInterval = null;
+      }
+      
+      const exitMsg = `[Backend] Process exited with code ${code}, signal ${signal}`;
       console.log(exitMsg);
       writeLog(exitMsg);
-      if (code !== 0 && code !== null) {
-        reject(new Error(`Backend process exited with code ${code}`));
+      writeLog(`[Backend] Exit details: code=${code}, signal=${signal}, pid=${backendProcess?.pid}`);
+      
+      // If backend hasn't started yet and exits, it's a failure
+      if (!backendStarted) {
+        const errorMsg = code === null 
+          ? 'Backend process crashed or was killed during startup. Check logs for details.'
+          : `Backend process exited with code ${code} during startup. Check logs for details.`;
+        console.error(`[Backend Error] ${errorMsg}`);
+        writeLog(`[Backend Error] ${errorMsg}`);
+        // Only reject if we haven't already resolved/rejected
+        if (!backendStarted) {
+          reject(new Error(errorMsg));
+        }
+      } else {
+        // Backend was running but exited - this is unexpected!
+        const errorMsg = signal === 'SIGTERM'
+          ? 'Backend process was terminated unexpectedly. It may have crashed or been killed by the system.'
+          : `Backend process exited unexpectedly with code ${code}, signal ${signal}`;
+        console.error(`[Backend Error] ${errorMsg}`);
+        writeLog(`[Backend Error] ${errorMsg}`);
+        
+        // Try to restart the backend if it was running
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          console.log('[Backend] Attempting to restart backend...');
+          writeLog('[Backend] Attempting to restart backend...');
+          startBackend().catch((restartError) => {
+            console.error('[Backend] Failed to restart:', restartError);
+            writeLog(`[Backend] Failed to restart: ${restartError.message}`);
+          });
+        }
       }
     });
 
     // Wait for backend to be healthy instead of fixed delay
     waitForBackend()
       .then(() => {
+        backendStarted = true;
         console.log('[Backend] Started successfully');
+        writeLog('[Backend] Started successfully - health check passed');
         resolve();
       })
       .catch((error) => {
         console.error('[Backend] Failed to become ready:', error);
+        writeLog(`[Backend] Failed to become ready: ${error.message}`);
         reject(error);
       });
   });
@@ -369,7 +474,14 @@ function createWindow(): void {
   }
 
   mainWindow.on('closed', () => {
+    console.log('[Window] Window closed event fired');
+    writeLog('[Window] Window closed event fired');
     mainWindow = null;
+  });
+
+  mainWindow.on('close', (event) => {
+    console.log('[Window] Window close event fired');
+    writeLog('[Window] Window close event fired');
   });
 }
 
@@ -402,6 +514,10 @@ app.whenReady().then(async () => {
     console.log('[App] Backend ready, creating window...');
     writeLog('[App] Backend ready, creating window...');
     createWindow();
+    
+    // Keep backend process reference alive
+    console.log('[App] Backend process PID:', backendProcess?.pid);
+    writeLog(`[App] Backend process PID: ${backendProcess?.pid}`);
   } catch (error) {
     console.error('[App] Failed to start backend:', error);
     
@@ -438,6 +554,8 @@ app.whenReady().then(async () => {
 function stopBackend(): void {
   if (backendProcess && !backendProcess.killed) {
     console.log('[App] Stopping backend process gracefully...');
+    writeLog('[App] Stopping backend process gracefully...');
+    writeLog(`[App] Backend process PID: ${backendProcess.pid}`);
     
     // Send SIGTERM for graceful shutdown
     backendProcess.kill('SIGTERM');
@@ -446,13 +564,19 @@ function stopBackend(): void {
     setTimeout(() => {
       if (backendProcess && !backendProcess.killed) {
         console.log('[App] Forcing backend process termination...');
+        writeLog('[App] Forcing backend process termination...');
         backendProcess.kill('SIGKILL');
       }
     }, 5000);
+  } else {
+    console.log('[App] stopBackend called but backendProcess is null or already killed');
+    writeLog('[App] stopBackend called but backendProcess is null or already killed');
   }
 }
 
 app.on('window-all-closed', () => {
+  console.log('[App] window-all-closed event fired');
+  writeLog('[App] window-all-closed event fired');
   stopBackend();
   
   if (process.platform !== 'darwin') {
@@ -461,6 +585,8 @@ app.on('window-all-closed', () => {
 });
 
 app.on('before-quit', (event) => {
+  console.log('[App] before-quit event fired');
+  writeLog('[App] before-quit event fired');
   if (backendProcess && !backendProcess.killed) {
     event.preventDefault();
     stopBackend();

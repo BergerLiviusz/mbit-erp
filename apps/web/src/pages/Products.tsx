@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import Modal from '../components/Modal';
+import { apiFetch } from '../lib/api';
 
 interface Product {
   id: string;
@@ -19,6 +20,7 @@ export default function Products() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingProductId, setEditingProductId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
@@ -34,7 +36,6 @@ export default function Products() {
     aktiv: true,
   });
 
-  const API_URL = import.meta.env.VITE_API_URL || '/api';
 
   useEffect(() => {
     loadProducts();
@@ -43,14 +44,11 @@ export default function Products() {
   const loadProducts = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
       const url = searchTerm
-        ? `${API_URL}/logistics/items?skip=0&take=100&search=${encodeURIComponent(searchTerm)}`
-        : `${API_URL}/logistics/items?skip=0&take=100`;
+        ? `/logistics/items?skip=0&take=100&search=${encodeURIComponent(searchTerm)}`
+        : `/logistics/items?skip=0&take=100`;
 
-      const response = await fetch(url, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await apiFetch(url);
 
       if (response.ok) {
         const data = await response.json();
@@ -73,7 +71,32 @@ export default function Products() {
       .reduce((sum, p) => sum + p.eladasiAr, 0);
   };
 
-  const handleOpenModal = () => {
+  const handleOpenModal = (product?: Product) => {
+    if (product) {
+      setEditingProductId(product.id);
+      setFormData({
+        nev: product.nev || '',
+        azonosito: product.azonosito || '',
+        leiras: product.leiras || '',
+        egyseg: product.egyseg || 'db',
+        beszerzesiAr: product.beszerzesiAr?.toString() || '0',
+        eladasiAr: product.eladasiAr?.toString() || '0',
+        afaKulcs: product.afaKulcs?.toString() || '27',
+        aktiv: product.aktiv ?? true,
+      });
+    } else {
+      setEditingProductId(null);
+      setFormData({
+        nev: '',
+        azonosito: '',
+        leiras: '',
+        egyseg: 'db',
+        beszerzesiAr: '0',
+        eladasiAr: '0',
+        afaKulcs: '27',
+        aktiv: true,
+      });
+    }
     setError('');
     setSuccess('');
     setIsModalOpen(true);
@@ -81,6 +104,7 @@ export default function Products() {
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
+    setEditingProductId(null);
     setFormData({
       nev: '',
       azonosito: '',
@@ -131,11 +155,14 @@ export default function Products() {
     setSaving(true);
 
     try {
-      const token = localStorage.getItem('token');
+      const url = editingProductId 
+        ? `/logistics/items/${editingProductId}`
+        : '/logistics/items';
+      const method = editingProductId ? 'PUT' : 'POST';
 
       const productData = {
         nev: formData.nev,
-        azonosito: formData.azonosito || `PROD-${Date.now()}`,
+        azonosito: formData.azonosito || (editingProductId ? undefined : `PROD-${Date.now()}`),
         leiras: formData.leiras || undefined,
         egyseg: formData.egyseg,
         beszerzesiAr: beszerzesiAr,
@@ -144,11 +171,10 @@ export default function Products() {
         aktiv: formData.aktiv,
       };
 
-      const response = await fetch(`${API_URL}/logistics/items`, {
-        method: 'POST',
+      const response = await apiFetch(url, {
+        method,
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(productData),
       });
@@ -165,17 +191,56 @@ export default function Products() {
           throw new Error('Szerver hiba. Kérem próbálja újra később.');
         } else {
           const errorData = await response.json();
-          throw new Error(errorData.message || 'Hiba a termék létrehozásakor');
+          throw new Error(errorData.message || `Hiba a termék ${editingProductId ? 'frissítésekor' : 'létrehozásakor'}`);
         }
       }
 
-      setSuccess('Termék sikeresen létrehozva!');
+      setSuccess(editingProductId ? 'Termék sikeresen frissítve!' : 'Termék sikeresen létrehozva!');
       setTimeout(() => {
         handleCloseModal();
         loadProducts();
       }, 1500);
     } catch (err: any) {
       setError(err.message || 'Hiba történt a mentés során');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteProduct = async (productId: string, productName: string) => {
+    if (!confirm(`Biztosan törölni szeretné a terméket: ${productName}?`)) {
+      return;
+    }
+
+    setSaving(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const response = await apiFetch(`/logistics/items/${productId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Nincs hitelesítve. Kérem jelentkezzen be újra.');
+        } else if (response.status === 403) {
+          throw new Error('Nincs jogosultsága ehhez a művelethez.');
+        } else if (response.status >= 500) {
+          throw new Error('Szerver hiba. Kérem próbálja újra később.');
+        } else {
+          const data = await response.json();
+          throw new Error(data.message || 'Hiba történt a törlés során');
+        }
+      }
+
+      setSuccess('Termék sikeresen törölve!');
+      setTimeout(() => {
+        setSuccess('');
+        loadProducts();
+      }, 1500);
+    } catch (err: any) {
+      setError(err.message || 'Hiba történt a törlés során');
     } finally {
       setSaving(false);
     }
@@ -240,6 +305,7 @@ export default function Products() {
                     <th className="text-right p-4 font-medium text-gray-700">Eladási ár</th>
                     <th className="text-center p-4 font-medium text-gray-700">ÁFA (%)</th>
                     <th className="text-center p-4 font-medium text-gray-700">Aktív</th>
+                    <th className="text-right p-4 font-medium text-gray-700">Műveletek</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
@@ -263,6 +329,20 @@ export default function Products() {
                           </span>
                         )}
                       </td>
+                      <td className="p-4 text-right text-sm font-medium">
+                        <button
+                          onClick={() => handleOpenModal(product)}
+                          className="text-mbit-blue hover:text-blue-600 mr-3"
+                        >
+                          Szerkesztés
+                        </button>
+                        <button
+                          onClick={() => handleDeleteProduct(product.id, product.nev)}
+                          className="text-red-600 hover:text-red-800"
+                        >
+                          Törlés
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -272,7 +352,7 @@ export default function Products() {
         </div>
       </div>
 
-      <Modal isOpen={isModalOpen} onClose={handleCloseModal} title="Új termék létrehozása">
+      <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={editingProductId ? "Termék szerkesztése" : "Új termék létrehozása"}>
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
@@ -415,7 +495,7 @@ export default function Products() {
               className="px-4 py-2 bg-mbit-blue text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400"
               disabled={saving}
             >
-              {saving ? 'Mentés...' : 'Létrehozás'}
+              {saving ? 'Mentés...' : (editingProductId ? 'Frissítés' : 'Létrehozás')}
             </button>
           </div>
         </form>

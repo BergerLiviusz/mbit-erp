@@ -738,6 +738,7 @@ model OCRJob {
   documentId    String    @unique
   allapot       String
   eredmeny      String?
+  txtFajlUtvonal String?
   pontossag     Float?
   nyelv         String    @default("hun")
   hibalista     String?

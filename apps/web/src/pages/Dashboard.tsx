@@ -2,25 +2,50 @@ import { useQuery } from '@tanstack/react-query';
 import axios from '../lib/axios';
 
 export default function Dashboard() {
-  const { data: stats } = useQuery({
+  const { data: stats, isLoading, error } = useQuery({
     queryKey: ['dashboard-stats'],
     queryFn: async () => {
-      const [accounts, items, documents] = await Promise.all([
-        axios.get('/api/crm/accounts?take=1'),
-        axios.get('/api/logistics/items?take=1'),
-        axios.get('/api/dms/documents?take=1'),
-      ]);
-      return {
-        accounts: accounts.data.total || 0,
-        items: items.data.total || 0,
-        documents: documents.data.total || 0,
-      };
+      try {
+        const [accounts, items, documents] = await Promise.all([
+          axios.get('/api/crm/accounts?take=1').catch(() => ({ data: { total: 0 } })),
+          axios.get('/api/logistics/items?take=1').catch(() => ({ data: { total: 0 } })),
+          axios.get('/api/dms/documents?take=1').catch(() => ({ data: { total: 0 } })),
+        ]);
+        return {
+          accounts: accounts.data?.total || 0,
+          items: items.data?.total || 0,
+          documents: documents.data?.total || 0,
+        };
+      } catch (error) {
+        console.error('Dashboard stats error:', error);
+        // Return default values on error
+        return {
+          accounts: 0,
+          items: 0,
+          documents: 0,
+        };
+      }
     },
+    retry: 1,
+    retryDelay: 1000,
   });
 
   return (
     <div>
       <h1 className="text-3xl font-bold mb-6">Főoldal - Irányítópult</h1>
+      
+      {error && (
+        <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-4">
+          <p className="font-bold">Figyelem:</p>
+          <p>Az adatok betöltése során hiba történt. Az alkalmazás továbbra is használható.</p>
+        </div>
+      )}
+      
+      {isLoading && (
+        <div className="text-center py-8">
+          <p className="text-gray-600">Adatok betöltése...</p>
+        </div>
+      )}
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="bg-white p-6 rounded-lg shadow">

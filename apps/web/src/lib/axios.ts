@@ -25,4 +25,22 @@ axiosInstance.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+// Add response interceptor to log errors for debugging
+axiosInstance.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (isElectron) {
+      console.error('[API Error]', {
+        url: error.config?.url,
+        method: error.config?.method,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        message: error.message,
+        code: error.code,
+      });
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default axiosInstance;

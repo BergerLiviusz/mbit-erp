@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import Modal from '../components/Modal';
+import { apiFetch } from '../lib/api';
 
 interface Quote {
   id: string;
@@ -76,8 +77,6 @@ export default function Quotes() {
     items: [{ itemId: '', mennyiseg: '1', egysegAr: '0', kedvezmeny: '0' }] as QuoteItem[],
   });
 
-  const API_URL = import.meta.env.VITE_API_URL || '/api';
-
   useEffect(() => {
     loadQuotes();
   }, [selectedAllapot]);
@@ -93,14 +92,11 @@ export default function Quotes() {
   const loadQuotes = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
       const url = selectedAllapot
-        ? `${API_URL}/crm/quotes?allapot=${selectedAllapot}&skip=0&take=100`
-        : `${API_URL}/crm/quotes?skip=0&take=100`;
+        ? `/crm/quotes?allapot=${selectedAllapot}&skip=0&take=100`
+        : `/crm/quotes?skip=0&take=100`;
 
-      const response = await fetch(url, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await apiFetch(url);
 
       if (response.ok) {
         const data = await response.json();
@@ -115,10 +111,7 @@ export default function Quotes() {
 
   const loadAccounts = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/crm/accounts?skip=0&take=100`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await apiFetch('/crm/accounts?skip=0&take=100');
 
       if (response.ok) {
         const data = await response.json();
@@ -131,10 +124,7 @@ export default function Quotes() {
 
   const loadOpportunities = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/crm/opportunities?skip=0&take=100`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await apiFetch('/crm/opportunities?skip=0&take=100');
 
       if (response.ok) {
         const data = await response.json();
@@ -147,10 +137,7 @@ export default function Quotes() {
 
   const loadItems = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/logistics/items?skip=0&take=100`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await apiFetch('/logistics/items?skip=0&take=100');
 
       if (response.ok) {
         const data = await response.json();
@@ -264,7 +251,6 @@ export default function Quotes() {
     setSaving(true);
 
     try {
-      const token = localStorage.getItem('token');
 
       const quoteData = {
         accountId: formData.accountId,
@@ -279,11 +265,10 @@ export default function Quotes() {
         })),
       };
 
-      const response = await fetch(`${API_URL}/crm/quotes`, {
+      const response = await apiFetch('/crm/quotes', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(quoteData),
       });

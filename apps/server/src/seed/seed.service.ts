@@ -15,6 +15,18 @@ export class SeedService implements OnModuleInit {
 
   private async seedDatabaseIfEmpty() {
     try {
+      // Check if database schema exists by trying to query a table
+      try {
+        await this.prisma.$queryRaw`SELECT 1 FROM felhasznalok LIMIT 1`;
+      } catch (schemaError: any) {
+        // If tables don't exist, we need to initialize the schema first
+        this.logger.error('❌ Adatbázis séma nem található! A táblák létrehozása szükséges.');
+        this.logger.error('Futtassa: npx prisma db push (fejlesztői módban) vagy');
+        this.logger.error('ellenőrizze, hogy az adatbázis fájl létezik és helyes formátumú.');
+        this.logger.error('Hiba részletei:', schemaError.message);
+        return;
+      }
+
       const userCount = await this.prisma.user.count();
       
       if (userCount > 0) {
@@ -25,8 +37,11 @@ export class SeedService implements OnModuleInit {
       this.logger.log('🌱 Üres adatbázis észlelve, seed indítása...');
       await this.runSeed();
       this.logger.log('🎉 Adatbázis seed sikeres!');
-    } catch (error) {
-      this.logger.error('❌ Seed hiba:', error);
+    } catch (error: any) {
+      this.logger.error('❌ Seed hiba:', error.message);
+      if (error.message?.includes('no such table') || error.message?.includes('does not exist')) {
+        this.logger.error('Az adatbázis séma nincs inicializálva. Futtassa: npx prisma db push');
+      }
     }
   }
 

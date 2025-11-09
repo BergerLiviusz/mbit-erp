@@ -1,5 +1,5 @@
-import { Routes, Route, Link } from 'react-router-dom';
-import { useState } from 'react';
+import { Routes, Route, Link, useLocation } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import Dashboard from './pages/Dashboard';
 import CRM from './pages/CRM';
 import Documents from './pages/Documents';
@@ -9,10 +9,13 @@ import Settings from './pages/Settings';
 import Opportunities from './pages/Opportunities';
 import Quotes from './pages/Quotes';
 import Login from './pages/Login';
+import { BackendStatus } from './components/BackendStatus';
+import { DebugPanel } from './components/DebugPanel';
 import MbitLogo from './assets/logo.svg';
 
 function DropdownMenu({ title, items }: { title: string; items: Array<{ to: string; label: string }> }) {
   const [isOpen, setIsOpen] = useState(false);
+  const isElectron = !!(window as any).electron || (navigator.userAgent.includes('Electron'));
 
   return (
     <div 
@@ -33,6 +36,13 @@ function DropdownMenu({ title, items }: { title: string; items: Array<{ to: stri
               key={item.to}
               to={item.to}
               className="block px-4 py-2 hover:bg-gray-800 text-white"
+              onClick={() => {
+                if (isElectron) {
+                  import('./components/DebugPanel').then(module => {
+                    module.addLog('info', `Navigation: Clicked ${item.label}`, { to: item.to });
+                  }).catch(() => {});
+                }
+              }}
             >
               {item.label}
             </Link>
@@ -44,11 +54,35 @@ function DropdownMenu({ title, items }: { title: string; items: Array<{ to: stri
 }
 
 function App() {
+  // Check if running in Electron desktop mode
+  const isElectron = !!(window as any).electron || (navigator.userAgent.includes('Electron'));
+  const location = useLocation();
+  
+  // Log route changes
+  useEffect(() => {
+    if (isElectron) {
+      import('./components/DebugPanel').then(module => {
+        module.addLog('info', `Route changed: ${location.pathname}`, { 
+          pathname: location.pathname,
+          hash: location.hash,
+          search: location.search,
+        });
+      }).catch(() => {});
+    }
+  }, [location, isElectron]);
+  
   const [isAuthenticated, setIsAuthenticated] = useState(
-    () => !!localStorage.getItem('token')
+    () => {
+      // In Electron desktop mode, always consider authenticated (auth is bypassed on backend)
+      if (isElectron) {
+        return true;
+      }
+      return !!localStorage.getItem('token');
+    }
   );
 
-  if (!isAuthenticated) {
+  // Skip login screen in Electron desktop mode
+  if (!isAuthenticated && !isElectron) {
     return <Login onLogin={() => setIsAuthenticated(true)} />;
   }
 
@@ -62,7 +96,17 @@ function App() {
                 <img src={MbitLogo} alt="Mbit Logo" className="h-10 w-auto" />
               </Link>
               <div className="flex space-x-4">
-                <Link to="/" className="hover:bg-gray-800 px-3 py-2 rounded">
+                <Link 
+                  to="/" 
+                  className="hover:bg-gray-800 px-3 py-2 rounded"
+                  onClick={() => {
+                    if (isElectron) {
+                      import('./components/DebugPanel').then(module => {
+                        module.addLog('info', 'Navigation: Clicked Főoldal', { to: '/' });
+                      }).catch(() => {});
+                    }
+                  }}
+                >
                   Főoldal
                 </Link>
                 <DropdownMenu 
@@ -73,7 +117,17 @@ function App() {
                     { to: '/quotes', label: 'Árajánlatok' }
                   ]}
                 />
-                <Link to="/documents" className="hover:bg-gray-800 px-3 py-2 rounded">
+                <Link 
+                  to="/documents" 
+                  className="hover:bg-gray-800 px-3 py-2 rounded"
+                  onClick={() => {
+                    if (isElectron) {
+                      import('./components/DebugPanel').then(module => {
+                        module.addLog('info', 'Navigation: Clicked Dokumentumok', { to: '/documents' });
+                      }).catch(() => {});
+                    }
+                  }}
+                >
                   Dokumentumok
                 </Link>
                 <DropdownMenu 
@@ -83,25 +137,39 @@ function App() {
                     { to: '/products', label: 'Termékek' }
                   ]}
                 />
-                <Link to="/settings" className="hover:bg-gray-800 px-3 py-2 rounded">
+                <Link 
+                  to="/settings" 
+                  className="hover:bg-gray-800 px-3 py-2 rounded"
+                  onClick={() => {
+                    if (isElectron) {
+                      import('./components/DebugPanel').then(module => {
+                        module.addLog('info', 'Navigation: Clicked Beállítások', { to: '/settings' });
+                      }).catch(() => {});
+                    }
+                  }}
+                >
                   Beállítások
                 </Link>
               </div>
             </div>
-            <button
-              onClick={() => {
-                localStorage.removeItem('token');
-                setIsAuthenticated(false);
-              }}
-              className="hover:bg-gray-800 px-4 py-2 rounded"
-            >
-              Kijelentkezés
-            </button>
+            {!isElectron && (
+              <button
+                onClick={() => {
+                  localStorage.removeItem('token');
+                  setIsAuthenticated(false);
+                }}
+                className="hover:bg-gray-800 px-4 py-2 rounded"
+              >
+                Kijelentkezés
+              </button>
+            )}
           </div>
         </div>
       </nav>
 
       <main className="container mx-auto px-4 py-8">
+        {isElectron && <BackendStatus />}
+        {isElectron && <DebugPanel />}
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/crm" element={<CRM />} />

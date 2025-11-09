@@ -1,18 +1,28 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from '../lib/axios';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Modal from '../components/Modal';
+import { apiFetch } from '../lib/api';
 
 const isElectron = !!(window as any).electron || (navigator.userAgent.includes('Electron'));
-const API_URL = isElectron ? 'http://localhost:3000' : '/api';
 
 export default function CRM() {
   const [activeTab, setActiveTab] = useState<'accounts' | 'campaigns' | 'tickets'>('accounts');
   const queryClient = useQueryClient();
+  
+  // Log component mount
+  useEffect(() => {
+    if (isElectron) {
+      import('../components/DebugPanel').then(module => {
+        module.addLog('info', 'CRM component mounted', { activeTab });
+      }).catch(() => {});
+    }
+  }, []);
 
   const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
   const [isCampaignModalOpen, setIsCampaignModalOpen] = useState(false);
   const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
+  const [editingAccountId, setEditingAccountId] = useState<string | null>(null);
 
   const [accountFormData, setAccountFormData] = useState({
     nev: '',
@@ -47,11 +57,20 @@ export default function CRM() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  const { data: accounts, isLoading: accountsLoading } = useQuery({
+  const { data: accounts, isLoading: accountsLoading, error: accountsError } = useQuery({
     queryKey: ['accounts'],
     queryFn: async () => {
-      const response = await axios.get('/api/crm/accounts');
-      return response.data;
+      try {
+        const response = await axios.get('/api/crm/accounts');
+        return response.data;
+      } catch (error: any) {
+        if (isElectron) {
+          import('../components/DebugPanel').then(module => {
+            module.addLog('error', 'CRM: Failed to load accounts', { error: error.message, stack: error.stack });
+          }).catch(() => {});
+        }
+        throw error;
+      }
     },
     enabled: activeTab === 'accounts',
   });
@@ -83,16 +102,30 @@ export default function CRM() {
     enabled: isTicketModalOpen,
   });
 
-  const handleOpenAccountModal = () => {
-    setAccountFormData({
-      nev: '',
-      tipus: 'ugyfél',
-      adoszam: '',
-      cim: '',
-      email: '',
-      telefon: '',
-      megjegyzesek: '',
-    });
+  const handleOpenAccountModal = (account?: any) => {
+    if (account) {
+      setEditingAccountId(account.id);
+      setAccountFormData({
+        nev: account.nev || '',
+        tipus: account.tipus || 'ugyfél',
+        adoszam: account.adoszam || '',
+        cim: account.cim || '',
+        email: account.email || '',
+        telefon: account.telefon || '',
+        megjegyzesek: account.megjegyzesek || '',
+      });
+    } else {
+      setEditingAccountId(null);
+      setAccountFormData({
+        nev: '',
+        tipus: 'ugyfél',
+        adoszam: '',
+        cim: '',
+        email: '',
+        telefon: '',
+        megjegyzesek: '',
+      });
+    }
     setError('');
     setSuccess('');
     setIsAccountModalOpen(true);
@@ -151,12 +184,15 @@ export default function CRM() {
     setSaving(true);
 
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/crm/accounts`, {
-        method: 'POST',
+      const url = editingAccountId 
+        ? `/crm/accounts/${editingAccountId}`
+        : '/crm/accounts';
+      const method = editingAccountId ? 'PUT' : 'POST';
+
+      const response = await apiFetch(url, {
+        method,
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(accountFormData),
       });
@@ -177,13 +213,55 @@ export default function CRM() {
         }
       }
 
-      setSuccess('Ügyfél sikeresen létrehozva!');
+      setSuccess(editingAccountId ? 'Ügyfél sikeresen frissítve!' : 'Ügyfél sikeresen létrehozva!');
       setTimeout(() => {
         setIsAccountModalOpen(false);
+        setEditingAccountId(null);
         queryClient.invalidateQueries({ queryKey: ['accounts'] });
+        queryClient.invalidateQueries({ queryKey: ['accountsForSelect'] });
       }, 1500);
     } catch (err: any) {
       setError(err.message || 'Hiba történt a mentés során');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteAccount = async (accountId: string, accountName: string) => {
+    if (!confirm(`Biztosan törölni szeretné az ügyfelet: ${accountName}?`)) {
+      return;
+    }
+
+    setSaving(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const response = await apiFetch(`/crm/accounts/${accountId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Nincs hitelesítve. Kérem jelentkezzen be újra.');
+        } else if (response.status === 403) {
+          throw new Error('Nincs jogosultsága ehhez a művelethez.');
+        } else if (response.status >= 500) {
+          throw new Error('Szerver hiba. Kérem próbálja újra később.');
+        } else {
+          const data = await response.json();
+          throw new Error(data.message || 'Hiba történt a törlés során');
+        }
+      }
+
+      setSuccess('Ügyfél sikeresen törölve!');
+      setTimeout(() => {
+        setSuccess('');
+        queryClient.invalidateQueries({ queryKey: ['accounts'] });
+        queryClient.invalidateQueries({ queryKey: ['accountsForSelect'] });
+      }, 1500);
+    } catch (err: any) {
+      setError(err.message || 'Hiba történt a törlés során');
     } finally {
       setSaving(false);
     }
@@ -209,12 +287,10 @@ export default function CRM() {
         befejezesDatum: campaignFormData.befejezesDatum || undefined,
       };
 
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/crm/campaigns`, {
+      const response = await apiFetch('/crm/campaigns', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(dataToSend),
       });
@@ -265,12 +341,10 @@ export default function CRM() {
         accountId: ticketFormData.accountId || undefined,
       };
 
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/crm/tickets`, {
+      const response = await apiFetch('/crm/tickets', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(dataToSend),
       });
@@ -343,7 +417,7 @@ export default function CRM() {
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
             }`}
           >
-            Ügyfelek ({accounts?.total || 0})
+            Ügyfelek ({(accounts as any)?.total || 0})
           </button>
           <button
             onClick={() => setActiveTab('campaigns')}
@@ -373,8 +447,16 @@ export default function CRM() {
           <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
             <h2 className="text-lg font-semibold">Ügyfélnyilvántartás</h2>
           </div>
+          {accountsError && (
+            <div className="p-4 bg-red-50 border-l-4 border-red-500">
+              <p className="text-red-700 font-semibold">Hiba az adatok betöltésekor</p>
+              <p className="text-red-600 text-sm mt-1">{(accountsError as any)?.message || 'Ismeretlen hiba'}</p>
+            </div>
+          )}
           {accountsLoading ? (
             <div className="p-6">Betöltés...</div>
+          ) : (accounts as any)?.items?.length === 0 ? (
+            <div className="p-6 text-gray-500">Nincs megjeleníthető ügyfél.</div>
           ) : (
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
@@ -384,10 +466,11 @@ export default function CRM() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Telefon</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Típus</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Műveletek</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {accounts?.items?.map((account: any) => (
+                {(accounts as any)?.items?.map((account: any) => (
                   <tr key={account.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {account.azonosito}
@@ -396,6 +479,20 @@ export default function CRM() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{account.email}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{account.telefon}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{account.tipus}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <button
+                        onClick={() => handleOpenAccountModal(account)}
+                        className="text-mbit-blue hover:text-blue-600 mr-3"
+                      >
+                        Szerkesztés
+                      </button>
+                      <button
+                        onClick={() => handleDeleteAccount(account.id, account.nev)}
+                        className="text-red-600 hover:text-red-800"
+                      >
+                        Törlés
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -477,7 +574,10 @@ export default function CRM() {
         </div>
       )}
 
-      <Modal isOpen={isAccountModalOpen} onClose={() => setIsAccountModalOpen(false)} title="Új ügyfél" size="lg">
+      <Modal isOpen={isAccountModalOpen} onClose={() => {
+        setIsAccountModalOpen(false);
+        setEditingAccountId(null);
+      }} title={editingAccountId ? "Ügyfél szerkesztése" : "Új ügyfél"} size="lg">
         <form onSubmit={handleSubmitAccount}>
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
