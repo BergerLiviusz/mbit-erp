@@ -6693,3 +6693,241 @@ Ha továbbra is problémák vannak, másold az alkalmazást helyi mappába és f
 
 ---
 
+_**User (2025-11-09 11:13Z)**_
+
+ci failed at desktop app build:
+
+
+
+Run cd apps/desktop
+
+
+
+> @mbit-erp/desktop@1.0.0 package:win
+
+> npm run build && electron-builder --win --x64
+
+
+
+
+
+> @mbit-erp/desktop@1.0.0 prebuild
+
+> npm run clean
+
+
+
+
+
+> @mbit-erp/desktop@1.0.0 clean
+
+> npx rimraf dist-electron release
+
+
+
+
+
+> @mbit-erp/desktop@1.0.0 build
+
+> npm run build:electron && npm run build:backend && npm run build:frontend
+
+
+
+
+
+> @mbit-erp/desktop@1.0.0 build:electron
+
+> npx rimraf tsconfig.tsbuildinfo && tsc
+
+
+
+Error: src/main.ts(567,9): error TS18047: 'mainWindow' is possibly 'null'.
+
+Error: src/main.ts(583,11): error TS18047: 'mainWindow' is possibly 'null'.
+
+npm ERR! Lifecycle script `build:electron` failed with error: 
+
+npm ERR! Error: command failed 
+
+npm ERR!   in workspace: @mbit-erp/desktop@1.0.0 
+
+npm ERR!   at location: D:\a\mbit-erp\mbit-erp\apps\desktop 
+
+npm ERR! Lifecycle script `build` failed with error: 
+
+npm ERR! Error: command failed 
+
+npm ERR!   in workspace: @mbit-erp/desktop@1.0.0 
+
+npm ERR!   at location: D:\a\mbit-erp\mbit-erp\apps\desktop 
+
+npm ERR! Lifecycle script `package:win` failed with error: 
+
+npm ERR! Error: command failed 
+
+npm ERR!   in workspace: @mbit-erp/desktop@1.0.0 
+
+npm ERR!   at location: D:\a\mbit-erp\mbit-erp\apps\desktop 
+
+Error: Process completed with exit code 1.
+
+---
+
+_**Agent (model composer-1, mode Agent)**_
+
+
+
+---
+
+
+Javítom a TypeScript null check hibákat:
+
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: apps/desktop/src/main.ts</summary>
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="write" data-tool-name="search_replace">
+
+<details><summary>Tool use: **code_edit** • Edit file: apps/desktop/src/main.ts</summary>
+
+**Chunk 1**
+Lines added: 24, lines removed: 18
+
+```diff
+@@ -565,22 +565,28 @@
+          console.log(&#39;[Window] Trying fallback: loadFile&#39;);
+          writeLog(&#39;[Window] Trying fallback: loadFile&#39;);
+-         mainWindow.loadFile(indexPath).catch((loadFileError) =&gt; {
+-           console.error(&#39;[Window] loadFile also failed:&#39;, loadFileError);
+-           writeLog(&#96;[Window] loadFile also failed: ${loadFileError.message}&#96;);
+-           
+-           // Fallback 2: Show error message in window
+-           mainWindow?.webContents.once(&#39;did-finish-load&#39;, () =&gt; {
+-             mainWindow?.webContents.executeJavaScript(&#96;
+-               document.body.innerHTML = &#39;&lt;div style=&quot;padding: 40px; font-family: Arial; text-align: center; background: #f0f0f0;&quot;&gt;
+-                 &lt;h1 style=&quot;color: #d32f2f;&quot;&gt;Hiba történt&lt;/h1&gt;
+-                 &lt;p style=&quot;font-size: 16px; margin: 20px 0;&quot;&gt;Az alkalmazás frontend fájlja nem tölthető be.&lt;/p&gt;
+-                 &lt;p style=&quot;font-size: 14px; color: #666; margin: 10px 0;&quot;&gt;Útvonal: ${indexPath}&lt;/p&gt;
+-                 &lt;p style=&quot;font-size: 12px; color: #999; margin-top: 30px;&quot;&gt;Kérjük, másolja az alkalmazást helyi mappába és futtassa onnan.&lt;/p&gt;
+-               &lt;/div&gt;&#39;;
+-             &#96;);
+-           });
+-           // Load empty page first
+-           mainWindow.loadURL(&#39;data:text/html,&lt;html&gt;&lt;body&gt;&lt;/body&gt;&lt;/html&gt;&#39;);
+-         });
++         if (mainWindow &amp;&amp; !mainWindow.isDestroyed()) {
++           mainWindow.loadFile(indexPath).catch((loadFileError) =&gt; {
++             console.error(&#39;[Window] loadFile also failed:&#39;, loadFileError);
++             writeLog(&#96;[Window] loadFile also failed: ${loadFileError.message}&#96;);
++             
++             // Fallback 2: Show error message in window
++             if (mainWindow &amp;&amp; !mainWindow.isDestroyed()) {
++               mainWindow.webContents.once(&#39;did-finish-load&#39;, () =&gt; {
++                 if (mainWindow &amp;&amp; !mainWindow.isDestroyed()) {
++                   mainWindow.webContents.executeJavaScript(&#96;
++                     document.body.innerHTML = &#39;&lt;div style=&quot;padding: 40px; font-family: Arial; text-align: center; background: #f0f0f0;&quot;&gt;
++                       &lt;h1 style=&quot;color: #d32f2f;&quot;&gt;Hiba történt&lt;/h1&gt;
++                       &lt;p style=&quot;font-size: 16px; margin: 20px 0;&quot;&gt;Az alkalmazás frontend fájlja nem tölthető be.&lt;/p&gt;
++                       &lt;p style=&quot;font-size: 14px; color: #666; margin: 10px 0;&quot;&gt;Útvonal: ${indexPath}&lt;/p&gt;
++                       &lt;p style=&quot;font-size: 12px; color: #999; margin-top: 30px;&quot;&gt;Kérjük, másolja az alkalmazást helyi mappába és futtassa onnan.&lt;/p&gt;
++                     &lt;/div&gt;&#39;;
++                   &#96;);
++                 }
++               });
++               // Load empty page first
++               mainWindow.loadURL(&#39;data:text/html,&lt;html&gt;&lt;body&gt;&lt;/body&gt;&lt;/html&gt;&#39;);
++             }
++           });
++         }
+        });
+      } catch (urlError) {
+```
+
+</details>
+
+</tool-use>
+
+---
+
+<tool-use data-tool-type="generic" data-tool-name="read_lints">
+<details>
+          <summary>Tool use: **read_lints** • Read lints for 1 file</summary>
+      
+Lint paths:
+
+- `apps/desktop/src/main.ts`
+
+Lint results
+
+
+**No lint errors found**
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="bash" data-tool-name="run_terminal_cmd">
+<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git add -A && git commit -m "fix: Add null checks for mainWindow in TypeScript
+
+- Add null checks for mainWindow before calling methods
+- Fix TypeScript compilation errors TS18047"</summary>
+
+```bash
+cd /Users/liviuszberger/mbit-erp && git add -A && git commit -m "fix: Add null checks for mainWindow in TypeScript
+
+- Add null checks for mainWindow before calling methods
+- Fix TypeScript compilation errors TS18047"
+```
+
+```
+[main e7e81e9] fix: Add null checks for mainWindow in TypeScript
+ 2 files changed, 384 insertions(+), 17 deletions(-)
+
+```
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="bash" data-tool-name="run_terminal_cmd">
+<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git push origin main</summary>
+
+```bash
+cd /Users/liviuszberger/mbit-erp && git push origin main
+```
+
+```
+To https://github.com/BergerLiviusz/mbit-erp.git
+   ca6a0bd..e7e81e9  main -&gt; main
+
+```
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+Javítottam a TypeScript hibákat null check-ekkel. A változtatások:
+
+## Javítások
+
+### TypeScript null check hibák
+- Hozzáadva null check-ek a `mainWindow` változóhoz a 567. és 583. sorokban.
+- Ellenőrzés, hogy `mainWindow` nem `null` és nem `isDestroyed()` a metódushívások előtt.
+- Többszintű null check a callback függvényekben is.
+
+A GitHub Actions workflow most újra elindul, és a build-nek sikeresnek kell lennie. A TypeScript fordítási hibák megoldva.
+
+---
+

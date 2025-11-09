@@ -545,10 +545,12 @@ function createWindow(): void {
       
       // Check if path is UNC (starts with \\)
       if (indexPath.startsWith('\\\\')) {
-        // UNC path: convert \\server\share\path to file://server/share/path
-        // Remove leading \\ and replace \ with /
-        const uncPath = indexPath.replace(/^\\\\/, '').replace(/\\/g, '/');
-        fileUrl = `file:///${uncPath}`;
+        // UNC path: convert \\server\share\path to file://///server/share/path
+        // UNC paths need 5 slashes: file://///server/share/path
+        const uncPath = indexPath.replace(/\\/g, '/').replace(/^\/\//, '');
+        fileUrl = `file://///${uncPath}`;
+        console.log('[Window] Detected UNC path, converting to:', fileUrl);
+        writeLog(`[Window] Detected UNC path, converting to: ${fileUrl}`);
       } else {
         // Regular path: use pathToFileURL
         fileUrl = url.pathToFileURL(indexPath).href;
@@ -569,22 +571,31 @@ function createWindow(): void {
             console.error('[Window] loadFile also failed:', loadFileError);
             writeLog(`[Window] loadFile also failed: ${loadFileError.message}`);
             
-            // Fallback 2: Show error message in window
+            // Fallback 2: Show error message in window - DON'T QUIT
             if (mainWindow && !mainWindow.isDestroyed()) {
-              mainWindow.webContents.once('did-finish-load', () => {
+              // Load empty page first, then inject error message
+              mainWindow.loadURL('data:text/html,<html><head><meta charset="UTF-8"></head><body></body></html>').then(() => {
                 if (mainWindow && !mainWindow.isDestroyed()) {
-                  mainWindow.webContents.executeJavaScript(`
-                    document.body.innerHTML = '<div style="padding: 40px; font-family: Arial; text-align: center; background: #f0f0f0;">
-                      <h1 style="color: #d32f2f;">Hiba történt</h1>
-                      <p style="font-size: 16px; margin: 20px 0;">Az alkalmazás frontend fájlja nem tölthető be.</p>
-                      <p style="font-size: 14px; color: #666; margin: 10px 0;">Útvonal: ${indexPath}</p>
-                      <p style="font-size: 12px; color: #999; margin-top: 30px;">Kérjük, másolja az alkalmazást helyi mappába és futtassa onnan.</p>
-                    </div>';
-                  `);
+                  setTimeout(() => {
+                    if (mainWindow && !mainWindow.isDestroyed()) {
+                      mainWindow.webContents.executeJavaScript(`
+                        document.body.innerHTML = '<div style="padding: 40px; font-family: Arial; text-align: center; background: #f0f0f0; min-height: 100vh; display: flex; flex-direction: column; justify-content: center;">
+                          <h1 style="color: #d32f2f; margin-bottom: 20px;">⚠️ Hiba történt</h1>
+                          <p style="font-size: 16px; margin: 20px 0;">Az alkalmazás frontend fájlja nem tölthető be UNC path-ról.</p>
+                          <p style="font-size: 14px; color: #666; margin: 10px 0; word-break: break-all;">Útvonal: ${indexPath}</p>
+                          <div style="background: #fff3cd; border: 1px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 5px;">
+                            <p style="font-size: 14px; color: #856404; margin: 0;"><strong>Megoldás:</strong></p>
+                            <p style="font-size: 13px; color: #856404; margin: 10px 0 0 0;">Kérjük, másolja az alkalmazást helyi mappába (pl. C:\\Users\\YourName\\Desktop\\Mbit-ERP\\) és futtassa onnan.</p>
+                          </div>
+                        </div>';
+                      `).catch(err => console.error('Error injecting error message:', err));
+                    }
+                  }, 100);
                 }
+              }).catch((loadError) => {
+                console.error('[Window] Error loading error page:', loadError);
+                writeLog(`[Window] Error loading error page: ${loadError.message}`);
               });
-              // Load empty page first
-              mainWindow.loadURL('data:text/html,<html><body></body></html>');
             }
           });
         }
@@ -593,10 +604,16 @@ function createWindow(): void {
       console.error('[Window] Error creating file URL:', urlError);
       writeLog(`[Window] Error creating file URL: ${urlError}`);
       // Final fallback: try loadFile directly
-      mainWindow.loadFile(indexPath).catch((error) => {
-        console.error('[Window] Error loading file:', error);
-        writeLog(`[Window] Error loading file: ${error.message}`);
-      });
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.loadFile(indexPath).catch((error) => {
+          console.error('[Window] Error loading file:', error);
+          writeLog(`[Window] Error loading file: ${error.message}`);
+          // Even if this fails, show error page
+          if (mainWindow && !mainWindow.isDestroyed()) {
+            mainWindow.loadURL('data:text/html,<html><body><h1>Error loading application</h1></body></html>');
+          }
+        });
+      }
     }
   }
 
@@ -711,11 +728,24 @@ function stopBackend(): void {
 app.on('window-all-closed', () => {
   console.log('[App] window-all-closed event fired');
   writeLog('[App] window-all-closed event fired');
-  stopBackend();
   
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
+  // Don't quit immediately - wait a bit to see if window is being recreated
+  // This prevents the app from closing if frontend fails to load
+  setTimeout(() => {
+    const windows = BrowserWindow.getAllWindows();
+    if (windows.length === 0) {
+      console.log('[App] No windows remaining, quitting...');
+      writeLog('[App] No windows remaining, quitting...');
+      stopBackend();
+      
+      if (process.platform !== 'darwin') {
+        app.quit();
+      }
+    } else {
+      console.log('[App] Windows still exist, not quitting');
+      writeLog(`[App] Windows still exist (${windows.length}), not quitting`);
+    }
+  }, 1000);
 });
 
 app.on('before-quit', (event) => {
