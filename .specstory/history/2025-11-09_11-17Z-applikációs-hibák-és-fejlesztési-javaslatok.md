@@ -1848,3 +1848,1048 @@ A változtatások commitolva és pusholva lettek a `feature/remove-auth-for-desk
 
 ---
 
+_**User (2025-11-09 11:13Z)**_
+
+Az OCR funkciónak mi az outputja? A cél az lenne hogy a feltöltött dokumentumból ha végig futtatjuk a szövegkinyerés funckiót akkor csinál/generál egy letölthető .txt file-t ami tartalmazza a pdf dokumentum/kép file szövegét. Tehát egy olyan OCR funkcióra van szükségünk ami jól olvasható szöveget ki tud nyerni egy képről és txt formátumba tudja helyezni
+
+---
+
+_**Agent (model composer-1, mode Agent)**_
+
+
+
+---
+
+
+Áttekintem az OCR implementációt, majd módosítom, hogy letölthető .txt fájlt generáljon.
+
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: apps/server/src/dms/ocr.service.ts</summary>
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="search" data-tool-name="codebase_search">
+<details>
+                <summary>Tool use: **codebase_search** • Searched codebase "OCR download text file endpoint" • **12** results</summary>
+            
+| File | Lines |
+|------|-------|
+| `apps/server/src/dms/document.controller.ts` | L9-226 |
+| `apps/server/src/dms/ocr.service.ts` | L3-120 |
+| `apps/web/src/pages/Documents.tsx` | L48-811 |
+| `attached_assets/Pasted-Context-do-not-change-Monorepo-with-apps-server-NestJS-Prisma-SQLite-dev-PostgreSQL-optio-1762460904916_1762460904916.txt` | L57-95 |
+| `apps/server/src/dms/document.controller.ts` | L226 |
+| `apps/server/prisma/schema.prisma` | L681-755 |
+| `attached_assets/Pasted-Context-do-not-change-Monorepo-with-apps-server-NestJS-Prisma-SQLite-dev-PostgreSQL-optio-1762460904916_1762460904916.txt` | L128-159 |
+| `apps/server/src/system/diagnostics.controller.ts` | L10-228 |
+| `docs/Megvalosulasi_jelentes.md` | L184-262 |
+| `apps/desktop/README.md` | L102 |
+| `apps/server/prisma/schema.prisma` | L631-683 |
+| `attached_assets/Pasted-Context-do-not-change-Monorepo-with-apps-server-NestJS-Prisma-SQLite-dev-PostgreSQL-optio-1762460904916_1762460904916.txt` | L15 |
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="grep" data-tool-name="grep">
+<details>
+<summary>Tool use: **grep** • Grep for "ocr" in "apps/server/src/dms" • 25 matches</summary>
+
+Output mode: content
+
+
+| File | Content | Line |
+|------|------|------|
+| `apps/server/src/dms/document.service.ts` | `ocrJob: true,` | L117 |
+| `apps/server/src/dms/document.controller.ts` | `import \{ OcrService \} from './ocr.service';` | L9 |
+| `apps/server/src/dms/document.controller.ts` | `private ocrService: OcrService,` | L19 |
+| `apps/server/src/dms/document.controller.ts` | `where: \{ kulcs: 'dms.ocr.enabled' \},` | L149 |
+| `apps/server/src/dms/document.controller.ts` | `await this.ocrService.createJob(id);` | L153 |
+| `apps/server/src/dms/document.controller.ts` | `@Post(':id/ocr')` | L200 |
+| `apps/server/src/dms/document.controller.ts` | `async triggerOcr(@Param('id') id: string, @Request() req: any) \{` | L202 |
+| `apps/server/src/dms/document.controller.ts` | `const job = await this.ocrService.createJob(id);` | L213 |
+| `apps/server/src/dms/document.controller.ts` | `esemeny: 'ocr_trigger',` | L217 |
+| `apps/server/src/dms/document.controller.ts` | `message: 'OCR feldolgozás elindítva',` | L223 |
+| `apps/server/src/dms/ocr.service.ts` | `export class OcrService \{` | L7 |
+| `apps/server/src/dms/ocr.service.ts` | `private readonly logger = new Logger(OcrService.name);` | L8 |
+| `apps/server/src/dms/ocr.service.ts` | `const job = await this.prisma.oCRJob.create(\{` | L17 |
+| `apps/server/src/dms/ocr.service.ts` | `this.logger.error(`OCR job $\{job.id\} processing failed:`, error);` | L26 |
+| `apps/server/src/dms/ocr.service.ts` | `this.prisma.oCRJob.count(),` | L34 |
+| `apps/server/src/dms/ocr.service.ts` | `this.prisma.oCRJob.findMany(\{` | L35 |
+| `apps/server/src/dms/ocr.service.ts` | `return this.prisma.oCRJob.findUnique(\{` | L49 |
+| `apps/server/src/dms/ocr.service.ts` | `const job = await this.prisma.oCRJob.findUnique(\{` | L56 |
+| `apps/server/src/dms/ocr.service.ts` | `await this.prisma.oCRJob.update(\{` | L66 |
+| `apps/server/src/dms/ocr.service.ts` | `await this.prisma.oCRJob.update(\{` | L85 |
+| `apps/server/src/dms/ocr.service.ts` | `this.logger.log(`OCR job $\{jobId\} completed successfully with $\{text.length\} characters`);` | L101 |
+| `apps/server/src/dms/ocr.service.ts` | `this.logger.error(`OCR job $\{jobId\} failed:`, error);` | L103 |
+| `apps/server/src/dms/ocr.service.ts` | `await this.prisma.oCRJob.update(\{` | L105 |
+| `apps/server/src/dms/dms.module.ts` | `import \{ OcrService \} from './ocr.service';` | L10 |
+| `apps/server/src/dms/dms.module.ts` | `OcrService,` | L26 |
+
+
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+Módosítom az OCR-t, hogy letölthető .txt fájlt generáljon. Először ellenőrzöm a PDF feldolgozást:
+
+
+---
+
+<tool-use data-tool-type="search" data-tool-name="codebase_search">
+<details>
+                <summary>Tool use: **codebase_search** • Searched codebase "pdf-parse PDF text extraction" • **15** results</summary>
+            
+| File | Lines |
+|------|-------|
+| `attached_assets/Pasted-Context-do-not-change-Monorepo-with-apps-server-NestJS-Prisma-SQLite-dev-PostgreSQL-optio-1762460904916_1762460904916.txt` | L128-159 |
+| `apps/server/src/dms/ocr.service.ts` | L3-120 |
+| `attached_assets/Pasted-Context-do-not-change-Monorepo-with-apps-server-NestJS-Prisma-SQLite-dev-PostgreSQL-optio-1762460904916_1762460904916.txt` | L57-95 |
+| `apps/server/package.json` | L66 |
+| `apps/server/src/dms/document.controller.ts` | L9-226 |
+| `attached_assets/Pasted-Context-do-not-change-Monorepo-with-apps-server-NestJS-Prisma-SQLite-dev-PostgreSQL-optio-1762460904916_1762460904916.txt` | L15 |
+| `attached_assets/Pasted--MASTER-BUILD-BRIEF-MB-IT-Dev-Hungarian-on-prem-capable-0-Mission-Constraints-Goal-Bu-1762448346342_1762448346343.txt` | L14-33 |
+| `README.md` | L47-100 |
+| `apps/server/src/dms/ocr.service.ts` | L120 |
+| `apps/desktop/README.md` | L102 |
+| `README.md` | L430-491 |
+| `apps/server/prisma/schema.prisma` | L631-683 |
+| `README.md` | L334-432 |
+| `docs/Megvalosulasi_jelentes.md` | L104-193 |
+| `docs/Megvalosulasi_jelentes.md` | L764-835 |
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: apps/server/src/common/storage/storage.service.ts</summary>
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="grep" data-tool-name="grep">
+<details>
+<summary>Tool use: **grep** • Grep for "pdf-parse|tesseract" in "apps/server/package.json" • 2 matches</summary>
+
+Output mode: content
+
+
+| File | Content | Line |
+|------|------|------|
+| `apps/server/package.json` | `"tesseract.js": "^5.0.4",` | L36 |
+| `apps/server/package.json` | `"pdf-parse": "^1.1.1",` | L37 |
+
+
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+Módosítom az OCR-t, hogy PDF-ekhez pdf-parse-t használjon, és letölthető .txt fájlt generáljon. Először ellenőrzöm a sémát:
+
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: apps/server/prisma/schema.prisma</summary>
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="generic" data-tool-name="todo_write">
+<details><summary>Tool use: **todo_write** • Todo List</summary>
+
+- [-] OCR service: PDF fájlokhoz pdf-parse használata
+- [ ] OCR service: .txt fájl generálása a kinyert szövegből
+- [ ] Schema: OCR txt fájl útvonal tárolása
+- [ ] Backend: Download endpoint hozzáadása OCR txt fájlhoz
+- [ ] Frontend: Letöltés gomb hozzáadása
+
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+Módosítom az OCR-t, hogy letölthető .txt fájlt generáljon. Először hozzáadom a txt fájl útvonalát az adatbázishoz:
+
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: apps/server/prisma/schema.prisma</summary>
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="write" data-tool-name="search_replace">
+
+<details><summary>Tool use: **code_edit** • Edit file: apps/server/prisma/schema.prisma</summary>
+
+**Chunk 1**
+Lines added: 1, lines removed: undefined
+
+```diff
+@@ -739,4 +739,5 @@
+    allapot       String
+    eredmeny      String?
++   txtFajlUtvonal String?
+    pontossag     Float?
+    nyelv         String    @default(&quot;hun&quot;)
+```
+
+</details>
+
+</tool-use>
+
+---
+
+
+
+---
+
+
+Módosítom az OCR service-t, hogy PDF-ekhez pdf-parse-t használjon, és .txt fájlt generáljon:
+
+
+---
+
+<tool-use data-tool-type="write" data-tool-name="search_replace">
+
+<details><summary>Tool use: **code_edit** • Edit file: apps/server/src/dms/ocr.service.ts</summary>
+
+**Chunk 1**
+Lines added: 2, lines removed: undefined
+
+```diff
+@@ -3,4 +3,6 @@
+  import { StorageService } from &#39;../common/storage/storage.service&#39;;
+  import { createWorker, Worker } from &#39;tesseract.js&#39;;
++ import * as pdfParse from &#39;pdf-parse&#39;;
++ import * as path from &#39;path&#39;;
+  
+  @Injectable()
+```
+
+</details>
+
+</tool-use>
+
+---
+
+<tool-use data-tool-type="write" data-tool-name="search_replace">
+
+<details><summary>Tool use: **code_edit** • Edit file: apps/server/src/dms/ocr.service.ts</summary>
+
+**Chunk 1**
+Lines added: 1, lines removed: 1
+
+```diff
+@@ -68,5 +68,5 @@
+        await this.prisma.oCRJob.update({
+          where: { id: jobId },
+-         data: { allapot: &#39;feldolgozas&#39; },
++         data: { allapot: &#39;feldolgozas&#39;, feldolgozasKezdet: new Date() },
+        });
+  
+```
+
+**Chunk 2**
+Lines added: 30, lines removed: 7
+
+```diff
+@@ -76,18 +76,41 @@
+  
+        const filePath = this.storage.getAbsolutePath(job.document.fajlUtvonal);
+- 
+-       if (!this.worker) {
+-         this.worker = await createWorker(&#39;hun&#39;, undefined, {
+-           logger: (m) =&gt; this.logger.debug(m),
+-         });
++       let extractedText = &#39;&#39;;
++ 
++       // PDF fájlokhoz először próbáljuk meg a pdf-parse-t
++       if (job.document.mimeType === &#39;application/pdf&#39;) {
++         try {
++           const pdfBuffer = await this.storage.readFile(job.document.fajlUtvonal);
++           const pdfData = await pdfParse(pdfBuffer);
++           extractedText = pdfData.text.trim();
++           
++           // Ha van szöveg a PDF-ben, használjuk azt
++           if (extractedText.length &gt; 0) {
++             this.logger.log(&#96;PDF text extracted using pdf-parse: ${extractedText.length} characters&#96;);
++           } else {
++             // Ha nincs szöveg (pl. scanned PDF), használjuk a Tesseract.js-t
++             this.logger.log(&#39;PDF has no embedded text, using OCR&#39;);
++             extractedText = await this.extractTextWithTesseract(filePath);
++           }
++         } catch (error) {
++           this.logger.warn(&#96;pdf-parse failed, falling back to OCR: ${error}&#96;);
++           extractedText = await this.extractTextWithTesseract(filePath);
++         }
++       } else {
++         // Kép fájlokhoz Tesseract.js-t használunk
++         extractedText = await this.extractTextWithTesseract(filePath);
+        }
+  
+-       const { data: { text } } = await this.worker.recognize(filePath);
++       // Generáljuk a .txt fájlt
++       const txtFilename = &#96;${path.basename(job.document.fajlNev, path.extname(job.document.fajlNev))}_ocr.txt&#96;;
++       const txtBuffer = Buffer.from(extractedText, &#39;utf-8&#39;);
++       const txtRelativePath = await this.storage.saveFile(&#39;ocr&#39;, txtFilename, txtBuffer);
+  
+        await this.prisma.oCRJob.update({
+          where: { id: jobId },
+          data: {
+            allapot: &#39;kesz&#39;,
+-           eredmeny: text,
++           eredmeny: extractedText,
++           txtFajlUtvonal: txtRelativePath,
+            feldolgozasVeg: new Date(),
+          },
+```
+
+**Chunk 3**
+Lines added: 2, lines removed: 2
+
+```diff
+@@ -97,9 +120,9 @@
+          where: { id: job.documentId },
+          data: {
+-           tartalom: text,
++           tartalom: extractedText,
+          },
+        });
+  
+-       this.logger.log(&#96;OCR job ${jobId} completed successfully with ${text.length} characters&#96;);
++       this.logger.log(&#96;OCR job ${jobId} completed successfully with ${extractedText.length} characters&#96;);
+      } catch (error) {
+        this.logger.error(&#96;OCR job ${jobId} failed:&#96;, error);
+```
+
+**Chunk 4**
+Lines added: 11, lines removed: undefined
+
+```diff
+@@ -115,4 +138,15 @@
+      }
+    }
++ 
++   private async extractTextWithTesseract(filePath: string): Promise&lt;string&gt; {
++     if (!this.worker) {
++       this.worker = await createWorker(&#39;hun&#39;, undefined, {
++         logger: (m) =&gt; this.logger.debug(m),
++       });
++     }
++ 
++     const { data: { text } } = await this.worker.recognize(filePath);
++     return text.trim();
++   }
+  
+    async onModuleDestroy() {
+```
+
+</details>
+
+</tool-use>
+
+---
+
+
+
+---
+
+
+Hozzáadom a letöltési endpoint-ot a dokumentum controllerhez:
+
+
+---
+
+<tool-use data-tool-type="write" data-tool-name="search_replace">
+
+<details><summary>Tool use: **code_edit** • Edit file: apps/server/src/dms/document.controller.ts</summary>
+
+**Chunk 1**
+Lines added: 2, lines removed: 1
+
+```diff
+@@ -1,4 +1,5 @@
+- import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards, Request, UseInterceptors, UploadedFile, BadRequestException } from &#39;@nestjs/common&#39;;
++ import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards, Request, UseInterceptors, UploadedFile, BadRequestException, Res } from &#39;@nestjs/common&#39;;
+  import { FileInterceptor } from &#39;@nestjs/platform-express&#39;;
++ import { Response } from &#39;express&#39;;
+  import { DocumentService, CreateDocumentDto, UpdateDocumentDto, DocumentFilters } from &#39;./document.service&#39;;
+  import { AuditService } from &#39;../common/audit/audit.service&#39;;
+```
+
+</details>
+
+</tool-use>
+
+---
+
+<tool-use data-tool-type="write" data-tool-name="search_replace">
+
+<details><summary>Tool use: **code_edit** • Edit file: apps/server/src/dms/document.controller.ts</summary>
+
+**Chunk 1**
+Lines added: 33, lines removed: undefined
+
+```diff
+@@ -198,4 +198,37 @@
+      return { message: &#39;Dokumentum sikeresen törölve&#39; };
+    }
++ 
++   @Get(&#39;:id/ocr/download&#39;)
++   @Permissions(Permission.DOCUMENT_VIEW)
++   async downloadOcrText(@Param(&#39;id&#39;) id: string, @Res() res: Response) {
++     const document = await this.documentService.findOne(id);
++     
++     if (!document) {
++       throw new BadRequestException(&#39;Dokumentum nem található&#39;);
++     }
++ 
++     const ocrJob = await this.prisma.oCRJob.findUnique({
++       where: { documentId: id },
++     });
++ 
++     if (!ocrJob || ocrJob.allapot !== &#39;kesz&#39;) {
++       throw new BadRequestException(&#39;OCR feldolgozás még nem készült el vagy nem található&#39;);
++     }
++ 
++     if (!ocrJob.txtFajlUtvonal) {
++       throw new BadRequestException(&#39;OCR szövegfájl nem található&#39;);
++     }
++ 
++     try {
++       const fileBuffer = await this.storageService.readFile(ocrJob.txtFajlUtvonal);
++       const filename = &#96;${document.fajlNev.replace(/\.[^/.]+$/, &#39;&#39;)}_ocr.txt&#96;;
++ 
++       res.setHeader(&#39;Content-Type&#39;, &#39;text/plain; charset=utf-8&#39;);
++       res.setHeader(&#39;Content-Disposition&#39;, &#96;attachment; filename=&quot;${encodeURIComponent(filename)}&quot;&#96;);
++       res.send(fileBuffer);
++     } catch (error) {
++       throw new BadRequestException(&#39;Nem sikerült betölteni az OCR szövegfájlt&#39;);
++     }
++   }
+  
+    @Post(&#39;:id/ocr&#39;)
+```
+
+</details>
+
+</tool-use>
+
+---
+
+<tool-use data-tool-type="generic" data-tool-name="todo_write">
+<details><summary>Tool use: **todo_write** • Todo List</summary>
+
+- [x] OCR service: PDF fájlokhoz pdf-parse használata
+- [x] OCR service: .txt fájl generálása a kinyert szövegből
+- [x] Schema: OCR txt fájl útvonal tárolása
+- [x] Backend: Download endpoint hozzáadása OCR txt fájlhoz
+- [-] Frontend: Letöltés gomb hozzáadása
+
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+Hozzáadom a letöltés gombot a frontendhez:
+
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: apps/web/src/pages/Documents.tsx</summary>
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="write" data-tool-name="search_replace">
+
+<details><summary>Tool use: **code_edit** • Edit file: apps/web/src/pages/Documents.tsx</summary>
+
+**Chunk 1**
+Lines added: 32, lines removed: undefined
+
+```diff
+@@ -434,4 +434,36 @@
+      }
+    };
++ 
++   const handleDownloadOcrText = async (documentId: string, documentName: string) =&gt; {
++     try {
++       const response = await apiFetch(&#96;/dms/documents/${documentId}/ocr/download&#96;, {
++         method: &#39;GET&#39;,
++       });
++ 
++       if (!response.ok) {
++         if (response.status === 401) {
++           throw new Error(&#39;Nincs hitelesítve. Kérem jelentkezzen be újra.&#39;);
++         } else if (response.status === 403) {
++           throw new Error(&#39;Nincs jogosultsága ehhez a művelethez.&#39;);
++         } else if (response.status === 404) {
++           throw new Error(&#39;OCR feldolgozás még nem készült el vagy nem található.&#39;);
++         } else {
++           throw new Error(&#39;Nem sikerült letölteni az OCR szövegfájlt.&#39;);
++         }
++       }
++ 
++       const blob = await response.blob();
++       const url = window.URL.createObjectURL(blob);
++       const a = document.createElement(&#39;a&#39;);
++       a.href = url;
++       a.download = &#96;${documentName.replace(/\.[^/.]+$/, &#39;&#39;)}_ocr.txt&#96;;
++       document.body.appendChild(a);
++       a.click();
++       window.URL.revokeObjectURL(url);
++       document.body.removeChild(a);
++     } catch (err: any) {
++       setError(err.message || &#39;Hiba történt a letöltés során&#39;);
++     }
++   };
+  
+    return (
+```
+
+</details>
+
+</tool-use>
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: apps/web/src/pages/Documents.tsx</summary>
+
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+Hozzáadom a letöltés gombot a frontendhez:
+
+
+---
+
+<tool-use data-tool-type="search" data-tool-name="codebase_search">
+<details>
+                <summary>Tool use: **codebase_search** • Searched codebase "Document interface ocrJob tartalom" • **5** results</summary>
+            
+| File | Lines |
+|------|-------|
+| `apps/web/src/pages/Documents.tsx` | L30 |
+| `apps/web/src/pages/Documents.tsx` | L48-843 |
+| `apps/web/src/pages/DMS.tsx` | L2-97 |
+| `apps/web/src/pages/Documents.tsx` | L30-843 |
+| `apps/web/src/pages/Documents.tsx` | L25-42 |
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: apps/web/src/pages/Documents.tsx</summary>
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="write" data-tool-name="search_replace">
+
+<details><summary>Tool use: **code_edit** • Edit file: apps/web/src/pages/Documents.tsx</summary>
+
+**Chunk 1**
+Lines added: 5, lines removed: undefined
+
+```diff
+@@ -23,4 +23,9 @@
+      nev: string;
+    } | null;
++   ocrJob?: {
++     id: string;
++     allapot: string;
++     txtFajlUtvonal?: string | null;
++   } | null;
+    createdAt: string;
+  }
+```
+
+</details>
+
+</tool-use>
+
+---
+
+<tool-use data-tool-type="write" data-tool-name="search_replace">
+
+<details><summary>Tool use: **code_edit** • Edit file: apps/web/src/pages/Documents.tsx</summary>
+
+**Chunk 1**
+Lines added: 15, lines removed: 2
+
+```diff
+@@ -618,6 +618,19 @@
+                              &lt;/div&gt;
+                              {doc.tartalom ? (
+-                               &lt;div className=&quot;bg-gray-100 p-3 rounded border border-gray-200 font-mono text-sm whitespace-pre-wrap max-h-96 overflow-y-auto&quot;&gt;
+-                                 {doc.tartalom}
++                               &lt;div&gt;
++                                 &lt;div className=&quot;flex justify-between items-center mb-2&quot;&gt;
++                                   &lt;span className=&quot;text-sm text-gray-600&quot;&gt;Kinyert szöveg&lt;/span&gt;
++                                   {doc.ocrJob?.allapot === &#39;kesz&#39; &amp;&amp; doc.ocrJob?.txtFajlUtvonal &amp;&amp; (
++                                     &lt;button
++                                       onClick={() =&gt; handleDownloadOcrText(doc.id, doc.fajlNev)}
++                                       className=&quot;px-3 py-1 rounded text-sm bg-green-600 text-white hover:bg-green-700&quot;
++                                     &gt;
++                                       📥 Letöltés .txt fájlként
++                                     &lt;/button&gt;
++                                   )}
++                                 &lt;/div&gt;
++                                 &lt;div className=&quot;bg-gray-100 p-3 rounded border border-gray-200 font-mono text-sm whitespace-pre-wrap max-h-96 overflow-y-auto&quot;&gt;
++                                   {doc.tartalom}
++                                 &lt;/div&gt;
+                                &lt;/div&gt;
+                              ) : (
+```
+
+</details>
+
+</tool-use>
+
+---
+
+<tool-use data-tool-type="write" data-tool-name="search_replace">
+
+<details><summary>Tool use: **code_edit** • Edit file: apps/web/src/pages/Documents.tsx</summary>
+
+**Chunk 1**
+Lines added: 1, lines removed: 1
+
+```diff
+@@ -581,5 +581,5 @@
+                        &lt;td className=&quot;p-4 text-sm text-gray-500&quot;&gt;{formatDate(doc.createdAt)}&lt;/td&gt;
+                        &lt;td className=&quot;p-4&quot;&gt;
+-                         &lt;div className=&quot;flex gap-2&quot;&gt;
++                         &lt;div className=&quot;flex gap-2 flex-wrap&quot;&gt;
+                            {doc.fajlNev &amp;&amp; (
+                              &lt;button
+```
+
+**Chunk 2**
+Lines added: 9, lines removed: undefined
+
+```diff
+@@ -595,4 +595,13 @@
+                              &lt;/button&gt;
+                            )}
++                           {doc.ocrJob?.allapot === &#39;kesz&#39; &amp;&amp; doc.ocrJob?.txtFajlUtvonal &amp;&amp; (
++                             &lt;button
++                               onClick={() =&gt; handleDownloadOcrText(doc.id, doc.fajlNev)}
++                               className=&quot;px-3 py-1 rounded text-sm bg-green-600 text-white hover:bg-green-700&quot;
++                               title=&quot;OCR szöveg letöltése .txt fájlként&quot;
++                             &gt;
++                               📥 Letöltés
++                             &lt;/button&gt;
++                           )}
+                            &lt;button
+                              onClick={() =&gt; handleDeleteDocument(doc.id, doc.nev)}
+```
+
+</details>
+
+</tool-use>
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: apps/web/src/pages/Documents.tsx</summary>
+
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+Frissítem a dokumentum betöltést, hogy az OCR job adatokat is tartalmazza:
+
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: apps/server/src/dms/document.service.ts</summary>
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="write" data-tool-name="search_replace">
+
+<details><summary>Tool use: **code_edit** • Edit file: apps/server/src/dms/document.service.ts</summary>
+
+**Chunk 1**
+Lines added: 7, lines removed: undefined
+
+```diff
+@@ -87,4 +87,11 @@
+              },
+            },
++           ocrJob: {
++             select: {
++               id: true,
++               allapot: true,
++               txtFajlUtvonal: true,
++             },
++           },
+          },
+          orderBy: { createdAt: &#39;desc&#39; },
+```
+
+</details>
+
+</tool-use>
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: apps/web/src/pages/Documents.tsx</summary>
+
+</details>
+</tool-use>
+
+---
+
+Model supplied an ambiguous edit
+
+---
+
+<tool-use data-tool-type="generic" data-tool-name="read_lints">
+<details>
+          <summary>Tool use: **read_lints** • Read lints for 3 files</summary>
+      
+Lint paths:
+
+- `apps/server/src/dms/ocr.service.ts`
+- `apps/server/src/dms/document.controller.ts`
+- `apps/web/src/pages/Documents.tsx`
+
+Lint results
+
+
+**No lint errors found**
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+Frissítem az OCR trigger függvényt, hogy az OCR job adatokat is betöltse:
+
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: apps/web/src/pages/Documents.tsx</summary>
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="write" data-tool-name="search_replace">
+
+<details><summary>Tool use: **code_edit** • Edit file: apps/web/src/pages/Documents.tsx</summary>
+
+**Chunk 1**
+Lines added: 5, lines removed: 1
+
+```diff
+@@ -383,5 +383,9 @@
+              const updatedDoc = await docResponse.json();
+              setDocuments(docs =&gt; 
+-               docs.map(d =&gt; d.id === documentId ? { ...d, tartalom: updatedDoc.tartalom } : d)
++               docs.map(d =&gt; d.id === documentId ? { 
++                 ...d, 
++                 tartalom: updatedDoc.tartalom,
++                 ocrJob: updatedDoc.ocrJob 
++               } : d)
+              );
+              setExpandedDoc(documentId);
+```
+
+</details>
+
+</tool-use>
+
+---
+
+<tool-use data-tool-type="generic" data-tool-name="todo_write">
+<details><summary>Tool use: **todo_write** • Todo List</summary>
+
+- [x] OCR service: PDF fájlokhoz pdf-parse használata
+- [x] OCR service: .txt fájl generálása a kinyert szövegből
+- [x] Schema: OCR txt fájl útvonal tárolása
+- [x] Backend: Download endpoint hozzáadása OCR txt fájlhoz
+- [x] Frontend: Letöltés gomb hozzáadása
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="bash" data-tool-name="run_terminal_cmd">
+<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && npm run db:generate --prefix apps/server</summary>
+
+```bash
+cd /Users/liviuszberger/mbit-erp && npm run db:generate --prefix apps/server
+```
+
+```
+
+&gt; @mbit-erp/server@1.0.0 db:generate
+&gt; prisma generate
+
+Prisma schema loaded from prisma/schema.prisma
+
+✔ Generated Prisma Client (v5.22.0) to ./node_modules/@prisma/client in 122ms
+
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+
+Tip: Curious about the SQL queries Prisma ORM generates? Optimize helps you enhance your visibility: https://pris.ly/tip-2-optimize
+
+
+```
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+Ellenőrzöm az OCR service importját, majd commitolom a változtatásokat:
+
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: apps/server/src/dms/ocr.service.ts</summary>
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="grep" data-tool-name="grep">
+<details>
+<summary>Tool use: **grep** • Grep for "import.*pdf-parse" in "apps/server" • 1 match</summary>
+
+Output mode: content
+
+
+| File | Content | Line |
+|------|------|------|
+| `apps/server/src/dms/ocr.service.ts` | `import * as pdfParse from 'pdf-parse';` | L5 |
+
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="generic" data-tool-name="read_lints">
+<details>
+          <summary>Tool use: **read_lints** • Read lints for 1 file</summary>
+      
+Lint paths:
+
+- `apps/server/src/dms/ocr.service.ts`
+
+Lint results
+
+
+**No lint errors found**
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+Összefoglalom és commitolom a változtatásokat:
+
+
+---
+
+<tool-use data-tool-type="bash" data-tool-name="run_terminal_cmd">
+<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git add -A && git status</summary>
+
+```bash
+cd /Users/liviuszberger/mbit-erp && git add -A && git status
+```
+
+```
+On branch feature/remove-auth-for-desktop
+Your branch is up to date with &#39;origin/feature/remove-auth-for-desktop&#39;.
+
+Changes to be committed:
+  (use &quot;git restore --staged &lt;file&gt;...&quot; to unstage)
+	modified:   &quot;.specstory/history/2025-11-09_11-17Z-applik\303\241ci\303\263s-hib\303\241k-\303\251s-fejleszt\303\251si-javaslatok.md&quot;
+	modified:   apps/server/prisma/schema.prisma
+	modified:   apps/server/src/dms/document.controller.ts
+	modified:   apps/server/src/dms/document.service.ts
+	modified:   apps/server/src/dms/ocr.service.ts
+	modified:   apps/web/src/pages/Documents.tsx
+
+
+```
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="bash" data-tool-name="run_terminal_cmd">
+<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git commit -m "feat: OCR txt file generation and download functionality
+
+- OCR service: Use pdf-parse for PDF files with embedded text, fallback to Tesseract.js for scanned PDFs/images
+- OCR service: Generate downloadable .txt file from extracted text
+- Schema: Add txtFajlUtvonal field to OCRJob model
+- Backend: Add download endpoint for OCR text files
+- Frontend: Add download button for OCR text files in Documents page
+- Frontend: Show download button when OCR is complete and txt file is available"</summary>
+
+```bash
+cd /Users/liviuszberger/mbit-erp && git commit -m "feat: OCR txt file generation and download functionality
+
+- OCR service: Use pdf-parse for PDF files with embedded text, fallback to Tesseract.js for scanned PDFs/images
+- OCR service: Generate downloadable .txt file from extracted text
+- Schema: Add txtFajlUtvonal field to OCRJob model
+- Backend: Add download endpoint for OCR text files
+- Frontend: Add download button for OCR text files in Documents page
+- Frontend: Show download button when OCR is complete and txt file is available"
+```
+
+```
+[feature/remove-auth-for-desktop 07360ac] feat: OCR txt file generation and download functionality
+ 6 files changed, 1940 insertions(+), 21 deletions(-)
+
+```
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="bash" data-tool-name="run_terminal_cmd">
+<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git push</summary>
+
+```bash
+cd /Users/liviuszberger/mbit-erp && git push
+```
+
+```
+To https://github.com/BergerLiviusz/mbit-erp.git
+   d6a9a78..07360ac  feature/remove-auth-for-desktop -&gt; feature/remove-auth-for-desktop
+
+```
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+Összefoglalás: az OCR funkció most letölthető .txt fájlt generál.
+
+## Végrehajtott változtatások
+
+### 1. OCR szövegkinyerés fejlesztése
+- PDF fájlokhoz: először `pdf-parse`-t használ beágyazott szöveghez, ha nincs szöveg (pl. szkennelt PDF), akkor `Tesseract.js`-t.
+- Kép fájlokhoz: `Tesseract.js` OCR-t használ.
+
+### 2. .txt fájl generálás
+- Az OCR után automatikusan létrejön egy `.txt` fájl a kinyert szöveggel.
+- A fájl az `ocr` könyvtárban kerül tárolásra.
+- A fájl útvonala az `OCRJob` táblában (`txtFajlUtvonal`) kerül tárolásra.
+
+### 3. Letöltési funkció
+- Backend: új endpoint `/dms/documents/:id/ocr/download` a .txt fájl letöltéséhez.
+- Frontend: letöltés gomb a dokumentumok táblázatában és az OCR eredmény megjelenítésnél.
+- A gomb csak akkor jelenik meg, ha az OCR kész és elérhető a .txt fájl.
+
+### 4. Adatbázis változtatások
+- Hozzáadva: `txtFajlUtvonal` mező az `OCRJob` modellhez.
+- Prisma Client újragenerálva.
+
+## Használat
+
+1. Dokumentum feltöltése: PDF vagy kép fájl feltöltése.
+2. Szövegkinyerés indítása: a "Szövegkinyerés" gombra kattintás.
+3. Feldolgozás: az OCR feldolgozza a fájlt (PDF-ekhez először pdf-parse, ha nincs szöveg, akkor OCR).
+4. Letöltés: az OCR befejezése után megjelenik a "Letöltés" gomb, amellyel letölthető a `.txt` fájl.
+
+A változtatások commitolva és pusholva lettek. Az adatbázis migrációt a következő lépésben kell futtatni (`npm run db:push` vagy Prisma Migrate), hogy az új `txtFajlUtvonal` mező elérhető legyen.
+
+---
+
