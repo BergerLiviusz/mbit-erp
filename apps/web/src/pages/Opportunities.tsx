@@ -88,7 +88,7 @@ export default function Opportunities() {
 
       if (response.ok) {
         const data = await response.json();
-        setAccounts(data.data || []);
+        setAccounts(data.items || data.data || []);
       }
     } catch (error) {
       console.error('Hiba az ügyfelek betöltésekor:', error);

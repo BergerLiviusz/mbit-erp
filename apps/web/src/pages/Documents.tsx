@@ -395,6 +395,45 @@ export default function Documents() {
     }
   };
 
+  const handleDeleteDocument = async (documentId: string, documentName: string) => {
+    if (!confirm(`Biztosan törölni szeretné a dokumentumot: ${documentName}?`)) {
+      return;
+    }
+
+    setSaving(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const response = await apiFetch(`/dms/documents/${documentId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Nincs hitelesítve. Kérem jelentkezzen be újra.');
+        } else if (response.status === 403) {
+          throw new Error('Nincs jogosultsága ehhez a művelethez.');
+        } else if (response.status >= 500) {
+          throw new Error('Szerver hiba. Kérem próbálja újra később.');
+        } else {
+          const data = await response.json();
+          throw new Error(data.message || 'Hiba történt a törlés során');
+        }
+      }
+
+      setSuccess('Dokumentum sikeresen törölve!');
+      setTimeout(() => {
+        setSuccess('');
+        loadDocuments();
+      }, 1500);
+    } catch (err: any) {
+      setError(err.message || 'Hiba történt a törlés során');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
@@ -504,19 +543,27 @@ export default function Documents() {
                       </td>
                       <td className="p-4 text-sm text-gray-500">{formatDate(doc.createdAt)}</td>
                       <td className="p-4">
-                        {doc.fajlNev && (
+                        <div className="flex gap-2">
+                          {doc.fajlNev && (
+                            <button
+                              onClick={() => handleOcrTrigger(doc.id)}
+                              disabled={ocrLoading[doc.id]}
+                              className={`px-3 py-1 rounded text-sm ${
+                                ocrLoading[doc.id]
+                                  ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
+                                  : 'bg-mbit-blue text-white hover:bg-blue-600'
+                              }`}
+                            >
+                              {ocrLoading[doc.id] ? 'Feldolgozás...' : 'Szövegkinyerés'}
+                            </button>
+                          )}
                           <button
-                            onClick={() => handleOcrTrigger(doc.id)}
-                            disabled={ocrLoading[doc.id]}
-                            className={`px-3 py-1 rounded text-sm ${
-                              ocrLoading[doc.id]
-                                ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
-                                : 'bg-mbit-blue text-white hover:bg-blue-600'
-                            }`}
+                            onClick={() => handleDeleteDocument(doc.id, doc.nev)}
+                            className="px-3 py-1 rounded text-sm bg-red-600 text-white hover:bg-red-700"
                           >
-                            {ocrLoading[doc.id] ? 'Feldolgozás...' : 'Szövegkinyerés'}
+                            Törlés
                           </button>
-                        )}
+                        </div>
                       </td>
                     </tr>
                     {expandedDoc === doc.id && (

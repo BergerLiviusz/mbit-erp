@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Body, Param, Query, UseGuards, Request, UseInterceptors, UploadedFile, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards, Request, UseInterceptors, UploadedFile, BadRequestException } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { DocumentService, CreateDocumentDto, UpdateDocumentDto, DocumentFilters } from './document.service';
 import { AuditService } from '../common/audit/audit.service';
@@ -164,6 +164,37 @@ export class DocumentController {
         mimeType: file.mimetype,
       },
     };
+  }
+
+  @Delete(':id')
+  @Permissions(Permission.DOCUMENT_DELETE)
+  async delete(@Param('id') id: string, @Request() req: any) {
+    const document = await this.documentService.findOne(id);
+    
+    if (!document) {
+      throw new BadRequestException('Dokumentum nem található');
+    }
+
+    // Töröljük a fájlt is, ha létezik
+    if (document.fajlUtvonal) {
+      try {
+        await this.storageService.deleteFile(document.fajlUtvonal);
+      } catch (error) {
+        // Logoljuk, de nem dobunk hibát, ha a fájl nem található
+        console.warn(`Fájl törlése sikertelen: ${document.fajlUtvonal}`, error);
+      }
+    }
+
+    await this.documentService.delete(id);
+    
+    await this.auditService.logDelete(
+      'Document',
+      id,
+      document,
+      req.user?.id,
+    );
+
+    return { message: 'Dokumentum sikeresen törölve' };
   }
 
   @Post(':id/ocr')

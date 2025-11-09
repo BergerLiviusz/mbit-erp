@@ -148,10 +148,20 @@ export class DocumentService {
     });
   }
 
+  async delete(id: string) {
+    return this.prisma.document.delete({
+      where: { id },
+    });
+  }
+
   async generateIktatoSzam(): Promise<string> {
     const pattern = await this.systemSettings.get('numbering.document.pattern');
     const defaultPattern = 'MBIT/{YYYY}/{####}';
     const template = pattern || defaultPattern;
+
+    // Szervezet nevének lekérése a beállításokból
+    const orgName = await this.systemSettings.get('organization.name');
+    const orgPrefix = orgName ? orgName.replace(/[^A-Z0-9]/gi, '').toUpperCase() : 'MBIT';
 
     const now = new Date();
     const year = now.getFullYear();
@@ -168,11 +178,15 @@ export class DocumentService {
     const sequenceNumber = countThisYear + 1;
 
     let iktatoSzam = template
+      .replace('{ORG}', orgPrefix)
       .replace('{YYYY}', year.toString())
       .replace('{YY}', year.toString().slice(-2))
       .replace('{####}', sequenceNumber.toString().padStart(4, '0'))
       .replace('{###}', sequenceNumber.toString().padStart(3, '0'))
       .replace('{##}', sequenceNumber.toString().padStart(2, '0'));
+
+    // Ha még mindig tartalmazza a MBIT-et, cseréljük le
+    iktatoSzam = iktatoSzam.replace(/MBIT/g, orgPrefix);
 
     return iktatoSzam;
   }

@@ -22,6 +22,7 @@ export default function CRM() {
   const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
   const [isCampaignModalOpen, setIsCampaignModalOpen] = useState(false);
   const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
+  const [editingAccountId, setEditingAccountId] = useState<string | null>(null);
 
   const [accountFormData, setAccountFormData] = useState({
     nev: '',
@@ -101,16 +102,30 @@ export default function CRM() {
     enabled: isTicketModalOpen,
   });
 
-  const handleOpenAccountModal = () => {
-    setAccountFormData({
-      nev: '',
-      tipus: 'ugyfél',
-      adoszam: '',
-      cim: '',
-      email: '',
-      telefon: '',
-      megjegyzesek: '',
-    });
+  const handleOpenAccountModal = (account?: any) => {
+    if (account) {
+      setEditingAccountId(account.id);
+      setAccountFormData({
+        nev: account.nev || '',
+        tipus: account.tipus || 'ugyfél',
+        adoszam: account.adoszam || '',
+        cim: account.cim || '',
+        email: account.email || '',
+        telefon: account.telefon || '',
+        megjegyzesek: account.megjegyzesek || '',
+      });
+    } else {
+      setEditingAccountId(null);
+      setAccountFormData({
+        nev: '',
+        tipus: 'ugyfél',
+        adoszam: '',
+        cim: '',
+        email: '',
+        telefon: '',
+        megjegyzesek: '',
+      });
+    }
     setError('');
     setSuccess('');
     setIsAccountModalOpen(true);
@@ -169,8 +184,13 @@ export default function CRM() {
     setSaving(true);
 
     try {
-      const response = await apiFetch('/crm/accounts', {
-        method: 'POST',
+      const url = editingAccountId 
+        ? `/crm/accounts/${editingAccountId}`
+        : '/crm/accounts';
+      const method = editingAccountId ? 'PUT' : 'POST';
+
+      const response = await apiFetch(url, {
+        method,
         headers: {
           'Content-Type': 'application/json',
         },
@@ -193,13 +213,55 @@ export default function CRM() {
         }
       }
 
-      setSuccess('Ügyfél sikeresen létrehozva!');
+      setSuccess(editingAccountId ? 'Ügyfél sikeresen frissítve!' : 'Ügyfél sikeresen létrehozva!');
       setTimeout(() => {
         setIsAccountModalOpen(false);
+        setEditingAccountId(null);
         queryClient.invalidateQueries({ queryKey: ['accounts'] });
+        queryClient.invalidateQueries({ queryKey: ['accountsForSelect'] });
       }, 1500);
     } catch (err: any) {
       setError(err.message || 'Hiba történt a mentés során');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteAccount = async (accountId: string, accountName: string) => {
+    if (!confirm(`Biztosan törölni szeretné az ügyfelet: ${accountName}?`)) {
+      return;
+    }
+
+    setSaving(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const response = await apiFetch(`/crm/accounts/${accountId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Nincs hitelesítve. Kérem jelentkezzen be újra.');
+        } else if (response.status === 403) {
+          throw new Error('Nincs jogosultsága ehhez a művelethez.');
+        } else if (response.status >= 500) {
+          throw new Error('Szerver hiba. Kérem próbálja újra később.');
+        } else {
+          const data = await response.json();
+          throw new Error(data.message || 'Hiba történt a törlés során');
+        }
+      }
+
+      setSuccess('Ügyfél sikeresen törölve!');
+      setTimeout(() => {
+        setSuccess('');
+        queryClient.invalidateQueries({ queryKey: ['accounts'] });
+        queryClient.invalidateQueries({ queryKey: ['accountsForSelect'] });
+      }, 1500);
+    } catch (err: any) {
+      setError(err.message || 'Hiba történt a törlés során');
     } finally {
       setSaving(false);
     }
@@ -404,6 +466,7 @@ export default function CRM() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Telefon</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Típus</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Műveletek</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -416,6 +479,20 @@ export default function CRM() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{account.email}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{account.telefon}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{account.tipus}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <button
+                        onClick={() => handleOpenAccountModal(account)}
+                        className="text-mbit-blue hover:text-blue-600 mr-3"
+                      >
+                        Szerkesztés
+                      </button>
+                      <button
+                        onClick={() => handleDeleteAccount(account.id, account.nev)}
+                        className="text-red-600 hover:text-red-800"
+                      >
+                        Törlés
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -497,7 +574,10 @@ export default function CRM() {
         </div>
       )}
 
-      <Modal isOpen={isAccountModalOpen} onClose={() => setIsAccountModalOpen(false)} title="Új ügyfél" size="lg">
+      <Modal isOpen={isAccountModalOpen} onClose={() => {
+        setIsAccountModalOpen(false);
+        setEditingAccountId(null);
+      }} title={editingAccountId ? "Ügyfél szerkesztése" : "Új ügyfél"} size="lg">
         <form onSubmit={handleSubmitAccount}>
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
