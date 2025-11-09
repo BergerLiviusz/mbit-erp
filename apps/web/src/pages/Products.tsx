@@ -2,6 +2,13 @@ import { useState, useEffect } from 'react';
 import Modal from '../components/Modal';
 import { apiFetch } from '../lib/api';
 
+interface Warehouse {
+  id: string;
+  azonosito: string;
+  nev: string;
+  aktiv: boolean;
+}
+
 interface Product {
   id: string;
   azonosito: string;
@@ -27,6 +34,7 @@ interface Product {
 
 export default function Products() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -44,12 +52,26 @@ export default function Products() {
     eladasiAr: '0',
     afaKulcs: '27',
     aktiv: true,
+    warehouses: [] as Array<{ warehouseId: string; mennyiseg: string }>,
   });
 
 
   useEffect(() => {
     loadProducts();
+    loadWarehouses();
   }, [searchTerm]);
+
+  const loadWarehouses = async () => {
+    try {
+      const response = await apiFetch('/logistics/warehouses?skip=0&take=100');
+      if (response.ok) {
+        const data = await response.json();
+        setWarehouses((data.data || []).filter((w: Warehouse) => w.aktiv));
+      }
+    } catch (error) {
+      console.error('Hiba a raktárak betöltésekor:', error);
+    }
+  };
 
   const loadProducts = async () => {
     setLoading(true);
@@ -90,7 +112,7 @@ export default function Products() {
       }, 0);
   };
 
-  const handleOpenModal = (product?: Product) => {
+  const handleOpenModal = async (product?: Product) => {
     if (product) {
       setEditingProductId(product.id);
       setFormData({
@@ -102,6 +124,10 @@ export default function Products() {
         eladasiAr: product.eladasiAr?.toString() || '0',
         afaKulcs: product.afaKulcs?.toString() || '27',
         aktiv: product.aktiv ?? true,
+        warehouses: product.stockLevels?.map(sl => ({
+          warehouseId: sl.warehouseId,
+          mennyiseg: sl.mennyiseg.toString(),
+        })) || [],
       });
     } else {
       setEditingProductId(null);
@@ -114,6 +140,7 @@ export default function Products() {
         eladasiAr: '0',
         afaKulcs: '27',
         aktiv: true,
+        warehouses: [],
       });
     }
     setError('');
@@ -133,9 +160,30 @@ export default function Products() {
       eladasiAr: '0',
       afaKulcs: '27',
       aktiv: true,
+      warehouses: [],
     });
     setError('');
     setSuccess('');
+  };
+
+  const handleAddWarehouse = () => {
+    setFormData({
+      ...formData,
+      warehouses: [...formData.warehouses, { warehouseId: '', mennyiseg: '0' }],
+    });
+  };
+
+  const handleRemoveWarehouse = (index: number) => {
+    setFormData({
+      ...formData,
+      warehouses: formData.warehouses.filter((_, i) => i !== index),
+    });
+  };
+
+  const handleWarehouseChange = (index: number, field: 'warehouseId' | 'mennyiseg', value: string) => {
+    const newWarehouses = [...formData.warehouses];
+    newWarehouses[index] = { ...newWarehouses[index], [field]: value };
+    setFormData({ ...formData, warehouses: newWarehouses });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -214,7 +262,39 @@ export default function Products() {
         }
       }
 
+      const productResponse = await response.json();
+      const productId = editingProductId || productResponse.id;
+
       setSuccess(editingProductId ? 'Termék sikeresen frissítve!' : 'Termék sikeresen létrehozva!');
+      
+      // Handle warehouse assignments
+      if (formData.warehouses.length > 0) {
+        const stockLevelPromises = formData.warehouses
+          .filter(w => w.warehouseId && w.mennyiseg)
+          .map(w => {
+            const mennyiseg = parseFloat(w.mennyiseg);
+            if (isNaN(mennyiseg) || mennyiseg < 0) return null;
+            
+            return apiFetch('/logistics/inventory/stock-levels', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                itemId: productId,
+                warehouseId: w.warehouseId,
+                mennyiseg: mennyiseg,
+              }),
+            }).catch(err => {
+              console.error('Hiba a készletszint létrehozásakor:', err);
+              return null;
+            });
+          })
+          .filter(p => p !== null);
+
+        await Promise.all(stockLevelPromises);
+      }
+
       setTimeout(() => {
         handleCloseModal();
         loadProducts();
@@ -499,6 +579,73 @@ export default function Products() {
             <label htmlFor="aktiv" className="ml-2 block text-sm text-gray-700">
               Aktív
             </label>
+          </div>
+
+          <div className="border-t pt-4">
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Raktárak hozzárendelése (opcionális)
+              </label>
+              <button
+                type="button"
+                onClick={handleAddWarehouse}
+                className="text-sm bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
+              >
+                + Raktár hozzáadása
+              </button>
+            </div>
+            <div className="space-y-3 max-h-48 overflow-y-auto">
+              {formData.warehouses.map((warehouse, index) => (
+                <div key={index} className="flex gap-2 items-start border border-gray-200 rounded p-3 bg-gray-50">
+                  <div className="flex-1 grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                        Raktár
+                      </label>
+                      <select
+                        value={warehouse.warehouseId}
+                        onChange={(e) => handleWarehouseChange(index, 'warehouseId', e.target.value)}
+                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      >
+                        <option value="">-- Válasszon --</option>
+                        {warehouses.map(w => (
+                          <option key={w.id} value={w.id}>{w.nev} ({w.azonosito})</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                        Készletmennyiség
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={warehouse.mennyiseg}
+                        onChange={(e) => handleWarehouseChange(index, 'mennyiseg', e.target.value)}
+                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        placeholder="0"
+                      />
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveWarehouse(index)}
+                    className="mt-5 text-red-500 hover:text-red-700"
+                    title="Raktár eltávolítása"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              ))}
+              {formData.warehouses.length === 0 && (
+                <p className="text-sm text-gray-500 text-center py-2">
+                  Nincs hozzárendelt raktár. Kattintson a "+ Raktár hozzáadása" gombra.
+                </p>
+              )}
+            </div>
           </div>
 
           <div className="flex justify-end space-x-3 pt-4">

@@ -121,4 +121,83 @@ export class InventoryService {
       lowStockItems.map((item) => this.addLowStockFlag(item)),
     );
   }
+
+  async createStockLevel(data: {
+    itemId: string;
+    warehouseId: string;
+    locationId?: string | null;
+    mennyiseg?: number;
+    minimum?: number | null;
+    maximum?: number | null;
+  }) {
+    // Check if stock level already exists
+    const existing = await this.prisma.stockLevel.findUnique({
+      where: {
+        itemId_warehouseId_locationId: {
+          itemId: data.itemId,
+          warehouseId: data.warehouseId,
+          locationId: data.locationId || null,
+        },
+      },
+    });
+
+    if (existing) {
+      // Update existing stock level
+      return await this.prisma.stockLevel.update({
+        where: { id: existing.id },
+        data: {
+          mennyiseg: data.mennyiseg !== undefined ? data.mennyiseg : existing.mennyiseg,
+          minimum: data.minimum !== undefined ? data.minimum : existing.minimum,
+          maximum: data.maximum !== undefined ? data.maximum : existing.maximum,
+        },
+        include: {
+          item: true,
+          warehouse: true,
+          location: true,
+        },
+      });
+    }
+
+    // Create new stock level
+    return await this.prisma.stockLevel.create({
+      data: {
+        itemId: data.itemId,
+        warehouseId: data.warehouseId,
+        locationId: data.locationId || null,
+        mennyiseg: data.mennyiseg || 0,
+        minimum: data.minimum || null,
+        maximum: data.maximum || null,
+      },
+      include: {
+        item: true,
+        warehouse: true,
+        location: true,
+      },
+    });
+  }
+
+  async updateStockLevel(
+    id: string,
+    data: {
+      mennyiseg?: number;
+      minimum?: number | null;
+      maximum?: number | null;
+    },
+  ) {
+    return await this.prisma.stockLevel.update({
+      where: { id },
+      data,
+      include: {
+        item: true,
+        warehouse: true,
+        location: true,
+      },
+    });
+  }
+
+  async deleteStockLevel(id: string) {
+    return await this.prisma.stockLevel.delete({
+      where: { id },
+    });
+  }
 }

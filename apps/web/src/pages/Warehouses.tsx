@@ -30,18 +30,30 @@ interface LowStockAlert {
   };
 }
 
+interface Item {
+  id: string;
+  azonosito: string;
+  nev: string;
+  egyseg: string;
+  aktiv?: boolean;
+}
+
 export default function Warehouses() {
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [lowStockAlerts, setLowStockAlerts] = useState<LowStockAlert[]>([]);
   const [loading, setLoading] = useState(true);
   const [alertsLoading, setAlertsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [selectedWarehouseId, setSelectedWarehouseId] = useState<string | null>(null);
   const [warehouseStock, setWarehouseStock] = useState<any[]>([]);
   const [stockLoading, setStockLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
+  const [productError, setProductError] = useState<string>('');
+  const [productSuccess, setProductSuccess] = useState<string>('');
+  const [items, setItems] = useState<Item[]>([]);
 
   const [formData, setFormData] = useState({
     nev: '',
@@ -52,11 +64,34 @@ export default function Warehouses() {
     aktiv: true,
   });
 
+  const [productFormData, setProductFormData] = useState({
+    itemId: '',
+    mennyiseg: '0',
+  });
+
 
   useEffect(() => {
     loadWarehouses();
     loadLowStockAlerts();
   }, []);
+
+  useEffect(() => {
+    if (isProductModalOpen) {
+      loadItems();
+    }
+  }, [isProductModalOpen]);
+
+  const loadItems = async () => {
+    try {
+      const response = await apiFetch('/logistics/items?skip=0&take=100');
+      if (response.ok) {
+        const data = await response.json();
+        setItems(data.items || []);
+      }
+    } catch (error) {
+      console.error('Hiba a termékek betöltésekor:', error);
+    }
+  };
 
   const loadWarehouses = async () => {
     setLoading(true);
@@ -116,6 +151,96 @@ export default function Warehouses() {
   const handleCloseWarehouseDetail = () => {
     setSelectedWarehouseId(null);
     setWarehouseStock([]);
+  };
+
+  const handleOpenProductModal = () => {
+    if (!selectedWarehouseId) {
+      setProductError('Először válasszon ki egy raktárt!');
+      return;
+    }
+    setProductError('');
+    setProductSuccess('');
+    setProductFormData({
+      itemId: '',
+      mennyiseg: '0',
+    });
+    setIsProductModalOpen(true);
+  };
+
+  const handleCloseProductModal = () => {
+    setIsProductModalOpen(false);
+    setProductFormData({
+      itemId: '',
+      mennyiseg: '0',
+    });
+    setProductError('');
+    setProductSuccess('');
+  };
+
+  const handleAddProductToWarehouse = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setProductError('');
+    setProductSuccess('');
+
+    if (!selectedWarehouseId) {
+      setProductError('Nincs kiválasztott raktár');
+      return;
+    }
+
+    if (!productFormData.itemId) {
+      setProductError('Válasszon ki egy terméket');
+      return;
+    }
+
+    const mennyiseg = parseFloat(productFormData.mennyiseg);
+    if (isNaN(mennyiseg) || mennyiseg < 0) {
+      setProductError('A mennyiség nem lehet negatív');
+      return;
+    }
+
+    setSaving(true);
+
+    try {
+      const response = await apiFetch('/logistics/inventory/stock-levels', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          itemId: productFormData.itemId,
+          warehouseId: selectedWarehouseId,
+          mennyiseg: mennyiseg,
+        }),
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Nincs hitelesítve. Kérem jelentkezzen be újra.');
+        } else if (response.status === 403) {
+          throw new Error('Nincs jogosultsága ehhez a művelethez.');
+        } else if (response.status === 400) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Hibás adatok.');
+        } else if (response.status >= 500) {
+          throw new Error('Szerver hiba. Kérem próbálja újra később.');
+        } else {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Hiba a termék hozzárendelésekor');
+        }
+      }
+
+      setProductSuccess('Termék sikeresen hozzárendelve a raktárhoz!');
+      setTimeout(() => {
+        handleCloseProductModal();
+        if (selectedWarehouseId) {
+          loadWarehouseStock(selectedWarehouseId);
+        }
+      }, 1500);
+    } catch (err: any) {
+      setProductError(err.message || 'Hiba történt a mentés során');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const countActiveWarehouses = () => {
@@ -385,12 +510,20 @@ export default function Warehouses() {
             <h2 className="text-xl font-bold">
               Raktár részletek: {warehouses.find(w => w.id === selectedWarehouseId)?.nev}
             </h2>
-            <button
-              onClick={handleCloseWarehouseDetail}
-              className="text-gray-600 hover:text-gray-800"
-            >
-              Bezárás
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={handleOpenProductModal}
+                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 text-sm"
+              >
+                + Termék hozzáadása
+              </button>
+              <button
+                onClick={handleCloseWarehouseDetail}
+                className="text-gray-600 hover:text-gray-800"
+              >
+                Bezárás
+              </button>
+            </div>
           </div>
           <div className="bg-white rounded-lg shadow overflow-hidden">
             {stockLoading ? (
@@ -440,6 +573,88 @@ export default function Warehouses() {
           </div>
         </div>
       )}
+
+      <Modal isOpen={isProductModalOpen} onClose={handleCloseProductModal} title="Termék hozzáadása raktárhoz" size="md">
+        {productError && (
+          <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+            {productError}
+          </div>
+        )}
+        {productSuccess && (
+          <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded">
+            {productSuccess}
+          </div>
+        )}
+
+        <form onSubmit={handleAddProductToWarehouse}>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Raktár <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={warehouses.find(w => w.id === selectedWarehouseId)?.nev || ''}
+                className="w-full px-3 py-2 border border-gray-300 rounded bg-gray-50"
+                disabled
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Termék <span className="text-red-500">*</span>
+              </label>
+              <select
+                value={productFormData.itemId}
+                onChange={(e) => setProductFormData({ ...productFormData, itemId: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              >
+                <option value="">-- Válasszon terméket --</option>
+                {items.filter(item => item.aktiv !== false).map(item => (
+                  <option key={item.id} value={item.id}>
+                    {item.nev} ({item.azonosito}) - {item.egyseg}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Készletmennyiség <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={productFormData.mennyiseg}
+                onChange={(e) => setProductFormData({ ...productFormData, mennyiseg: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+                placeholder="0"
+              />
+            </div>
+          </div>
+
+          <div className="mt-6 flex justify-end gap-3">
+            <button
+              type="button"
+              onClick={handleCloseProductModal}
+              className="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50"
+              disabled={saving}
+            >
+              Mégse
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 bg-mbit-blue text-white rounded hover:bg-blue-600 disabled:opacity-50"
+              disabled={saving}
+            >
+              {saving ? 'Hozzáadás...' : 'Hozzáadás'}
+            </button>
+          </div>
+        </form>
+      </Modal>
 
       <Modal isOpen={isModalOpen} onClose={handleCloseModal} title="Új raktár" size="lg">
         {error && (
