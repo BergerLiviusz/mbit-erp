@@ -66,12 +66,6 @@ export default function Login({ onLogin }: LoginProps) {
             Bejelentkezés
           </button>
         </form>
-
-        <div className="mt-4 text-sm text-gray-600 text-center">
-          <p>Alapértelmezett hozzáférés:</p>
-          <p>Email: admin@mbit.hu</p>
-          <p>Jelszó: 1234</p>
-        </div>
       </div>
     </div>
   );

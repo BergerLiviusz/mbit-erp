@@ -11,7 +11,9 @@ import Quotes from './pages/Quotes';
 import Login from './pages/Login';
 import { BackendStatus } from './components/BackendStatus';
 import { DebugPanel } from './components/DebugPanel';
+import { LoadingScreen } from './components/LoadingScreen';
 import MbitLogo from './assets/logo.svg';
+import axios from './lib/axios';
 
 function DropdownMenu({ title, items }: { title: string; items: Array<{ to: string; label: string }> }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -77,6 +79,52 @@ function App() {
       return !!localStorage.getItem('token');
     }
   );
+  
+  const [isBackendReady, setIsBackendReady] = useState(false);
+  const [isCheckingBackend, setIsCheckingBackend] = useState(true);
+
+  // Check backend readiness on mount
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout | null = null;
+    
+    const checkBackend = async () => {
+      try {
+        const response = await axios.get('/health');
+        if (response.status === 200 && response.data?.status === 'ok') {
+          setIsBackendReady(true);
+          setIsCheckingBackend(false);
+          if (intervalId) {
+            clearInterval(intervalId);
+          }
+        } else {
+          setIsBackendReady(false);
+          setIsCheckingBackend(false);
+        }
+      } catch (err) {
+        setIsBackendReady(false);
+        setIsCheckingBackend(false);
+      }
+    };
+
+    // Check immediately
+    checkBackend();
+    
+    // Then check every 2 seconds until backend is ready
+    intervalId = setInterval(() => {
+      checkBackend();
+    }, 2000);
+
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, []);
+
+  // Show loading screen while checking backend or if backend is not ready
+  if (isCheckingBackend || !isBackendReady) {
+    return <LoadingScreen />;
+  }
 
   // Always show login screen if not authenticated
   if (!isAuthenticated) {
