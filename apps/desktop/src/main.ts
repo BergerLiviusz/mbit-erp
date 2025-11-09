@@ -1,5 +1,6 @@
 import { app, BrowserWindow, ipcMain, dialog } from 'electron';
 import * as path from 'path';
+import * as url from 'url';
 import { fork, ChildProcess } from 'child_process';
 import * as fs from 'fs';
 import * as http from 'http';
@@ -538,10 +539,59 @@ function createWindow(): void {
       });
     }
     
-    mainWindow.loadFile(indexPath).catch((error) => {
-      console.error('[Window] Error loading file:', error);
-      writeLog(`[Window] Error loading file: ${error.message}`);
-    });
+    // Handle UNC paths properly - convert to file:// URL format
+    try {
+      let fileUrl: string;
+      
+      // Check if path is UNC (starts with \\)
+      if (indexPath.startsWith('\\\\')) {
+        // UNC path: convert \\server\share\path to file://server/share/path
+        // Remove leading \\ and replace \ with /
+        const uncPath = indexPath.replace(/^\\\\/, '').replace(/\\/g, '/');
+        fileUrl = `file:///${uncPath}`;
+      } else {
+        // Regular path: use pathToFileURL
+        fileUrl = url.pathToFileURL(indexPath).href;
+      }
+      
+      console.log('[Window] Loading from URL:', fileUrl);
+      writeLog(`[Window] Loading from URL: ${fileUrl}`);
+      
+      mainWindow.loadURL(fileUrl).catch((error) => {
+        console.error('[Window] Error loading URL:', error);
+        writeLog(`[Window] Error loading URL: ${error.message}`);
+        
+        // Fallback 1: Try with loadFile (handles UNC paths better in some Electron versions)
+        console.log('[Window] Trying fallback: loadFile');
+        writeLog('[Window] Trying fallback: loadFile');
+        mainWindow.loadFile(indexPath).catch((loadFileError) => {
+          console.error('[Window] loadFile also failed:', loadFileError);
+          writeLog(`[Window] loadFile also failed: ${loadFileError.message}`);
+          
+          // Fallback 2: Show error message in window
+          mainWindow?.webContents.once('did-finish-load', () => {
+            mainWindow?.webContents.executeJavaScript(`
+              document.body.innerHTML = '<div style="padding: 40px; font-family: Arial; text-align: center; background: #f0f0f0;">
+                <h1 style="color: #d32f2f;">Hiba történt</h1>
+                <p style="font-size: 16px; margin: 20px 0;">Az alkalmazás frontend fájlja nem tölthető be.</p>
+                <p style="font-size: 14px; color: #666; margin: 10px 0;">Útvonal: ${indexPath}</p>
+                <p style="font-size: 12px; color: #999; margin-top: 30px;">Kérjük, másolja az alkalmazást helyi mappába és futtassa onnan.</p>
+              </div>';
+            `);
+          });
+          // Load empty page first
+          mainWindow.loadURL('data:text/html,<html><body></body></html>');
+        });
+      });
+    } catch (urlError) {
+      console.error('[Window] Error creating file URL:', urlError);
+      writeLog(`[Window] Error creating file URL: ${urlError}`);
+      // Final fallback: try loadFile directly
+      mainWindow.loadFile(indexPath).catch((error) => {
+        console.error('[Window] Error loading file:', error);
+        writeLog(`[Window] Error loading file: ${error.message}`);
+      });
+    }
   }
 
   mainWindow.on('closed', () => {

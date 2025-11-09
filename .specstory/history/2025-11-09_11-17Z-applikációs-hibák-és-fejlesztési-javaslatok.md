@@ -5682,3 +5682,653 @@ _**Agent (model composer-1, mode Agent)**_
 
 ---
 
+
+Vizsgálom a problémát: az alkalmazás elindul, de az ablak nem jelenik meg. Ellenőrzöm a window létrehozását és az ikon beállítását.
+
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: apps/desktop/src/main.ts</summary>
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="search" data-tool-name="codebase_search">
+<details>
+                <summary>Tool use: **codebase_search** • Searched codebase "createWindow backend ready window show" • **12** results</summary>
+            
+| File | Lines |
+|------|-------|
+| `apps/desktop/src/main.ts` | L515-575 |
+| `apps/desktop/src/main.ts` | L207-509 |
+| `apps/desktop/src/main.ts` | L45-202 |
+| `apps/desktop/src/main.ts` | L205-509 |
+| `apps/desktop/src/main.ts` | L517-598 |
+| `apps/desktop/src/main.ts` | L28 |
+| `apps/desktop/src/main.ts` | L122-437 |
+| `apps/desktop/src/main.ts` | L205-437 |
+| `apps/desktop/src/main.ts` | L577-622 |
+| `apps/desktop/src/main.ts` | L34-120 |
+| `apps/desktop/src/main.ts` | L437-513 |
+| `apps/desktop/src/main.ts` | L600-622 |
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: apps/desktop/src/main.ts</summary>
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="grep" data-tool-name="grep">
+<details>
+<summary>Tool use: **grep** • Grep for "createWindow" in "apps/desktop/src/main.ts" • 3 matches</summary>
+
+Output mode: content
+
+
+| File | Content | Line |
+|------|------|------|
+| `apps/desktop/src/main.ts` | `function createWindow(): void \{` | L440 |
+| `apps/desktop/src/main.ts` | `createWindow();` | L540 |
+| `apps/desktop/src/main.ts` | `createWindow();` | L573 |
+
+
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+A backend nem válaszol időben, ezért az ablak nem jelenik meg. Módosítom, hogy az ablak azonnal megjelenjen, és a backend indítását háttérben folytassuk. Az ikon beállítását is ellenőrzöm.
+
+
+---
+
+<tool-use data-tool-type="write" data-tool-name="search_replace">
+
+<details><summary>Tool use: **code_edit** • Edit file: apps/desktop/src/main.ts</summary>
+
+**Chunk 1**
+Lines added: 38, lines removed: 34
+
+```diff
+@@ -532,40 +532,44 @@
+    cleanupLegacyNodeModules();
+    
+-   try {
+-     console.log(&#39;[App] Starting backend server...&#39;);
+-     writeLog(&#39;[App] Starting backend server...&#39;);
+-     await startBackend();
+-     console.log(&#39;[App] Backend ready, creating window...&#39;);
+-     writeLog(&#39;[App] Backend ready, creating window...&#39;);
+-     createWindow();
+-     
+-     // Keep backend process reference alive
+-     console.log(&#39;[App] Backend process PID:&#39;, backendProcess?.pid);
+-     writeLog(&#96;[App] Backend process PID: ${backendProcess?.pid}&#96;);
+-   } catch (error) {
+-     console.error(&#39;[App] Failed to start backend:&#39;, error);
+-     
+-     const errorMessage = error instanceof Error ? error.message : &#39;Ismeretlen hiba&#39;;
+-     const logPath = getLogFilePath();
+-     
+-     writeLog(&#96;[App] FATAL ERROR: Failed to start backend: ${errorMessage}&#96;);
+-     if (error instanceof Error &amp;&amp; error.stack) {
+-       writeLog(&#96;[App] Error stack: ${error.stack}&#96;);
+-     }
+-     
+-     await dialog.showMessageBox({
+-       type: &#39;error&#39;,
+-       title: &#39;Backend Indítási Hiba&#39;,
+-       message: &#39;Az alkalmazás backend szervert nem sikerült elindítani.&#39;,
+-       detail: &#96;Hiba: ${errorMessage}\n\nA részletes naplófájl helye:\n${logPath}\n\nKérjük, küldje el ezt a fájlt a támogatásnak, vagy próbálja újra az alkalmazást indítani.&#96;,
+-       buttons: [&#39;Naplófájl Megnyitása&#39;, &#39;Bezárás&#39;]
+-     }).then((result) =&gt; {
+-       if (result.response === 0) {
+-         require(&#39;electron&#39;).shell.showItemInFolder(logPath);
++   // Create window immediately - don&#39;t wait for backend
++   console.log(&#39;[App] Creating window immediately...&#39;);
++   writeLog(&#39;[App] Creating window immediately...&#39;);
++   createWindow();
++   
++   // Start backend in background - don&#39;t block window creation
++   console.log(&#39;[App] Starting backend server in background...&#39;);
++   writeLog(&#39;[App] Starting backend server in background...&#39;);
++   
++   startBackend()
++     .then(() =&gt; {
++       console.log(&#39;[App] Backend started successfully&#39;);
++       writeLog(&#39;[App] Backend started successfully&#39;);
++       
++       // Reload window once backend is ready
++       if (mainWindow &amp;&amp; !mainWindow.isDestroyed()) {
++         console.log(&#39;[App] Reloading window now that backend is ready...&#39;);
++         writeLog(&#39;[App] Reloading window now that backend is ready...&#39;);
++         mainWindow.reload();
++       }
++     })
++     .catch((error) =&gt; {
++       console.error(&#39;[App] Failed to start backend:&#39;, error);
++       const errorMessage = error instanceof Error ? error.message : &#39;Ismeretlen hiba&#39;;
++       writeLog(&#96;[App] ERROR: Failed to start backend: ${errorMessage}&#96;);
++       if (error instanceof Error &amp;&amp; error.stack) {
++         writeLog(&#96;[App] Error stack: ${error.stack}&#96;);
++       }
++       
++       // Show error dialog but don&#39;t quit - let user see the window
++       if (mainWindow &amp;&amp; !mainWindow.isDestroyed()) {
++         dialog.showMessageBox(mainWindow, {
++           type: &#39;error&#39;,
++           title: &#39;Backend Indítási Hiba&#39;,
++           message: &#39;Az alkalmazás backend szervert nem sikerült elindítani.&#39;,
++           detail: &#96;Hiba: ${errorMessage}\n\nAz alkalmazás továbbra is működik, de előfordulhat, hogy egyes funkciók nem érhetők el.\n\nKérjük, indítsa újra az alkalmazást.&#96;,
++           buttons: [&#39;Rendben&#39;]
++         }).catch(() =&gt; {});
+        }
+      });
+-     
+-     app.quit();
+-   }
+  
+    app.on(&#39;activate&#39;, () =&gt; {
+```
+
+</details>
+
+</tool-use>
+
+---
+
+<tool-use data-tool-type="write" data-tool-name="search_replace">
+
+<details><summary>Tool use: **code_edit** • Edit file: apps/desktop/src/main.ts</summary>
+
+**Chunk 1**
+Lines added: 25, lines removed: 6
+
+```diff
+@@ -442,12 +442,31 @@
+    
+    // Use .ico for Windows, .png for other platforms
+-   const iconPath = isDev
+-     ? (process.platform === &#39;win32&#39; 
++   // Try to find icon, but don&#39;t fail if it doesn&#39;t exist
++   let iconPath: string | undefined;
++   try {
++     if (isDev) {
++       iconPath = process.platform === &#39;win32&#39; 
+          ? path.join(__dirname, &#39;..&#39;, &#39;resources&#39;, &#39;icon.ico&#39;)
+-         : path.join(__dirname, &#39;..&#39;, &#39;resources&#39;, &#39;icon.png&#39;))
+-     : (process.platform === &#39;win32&#39;
++         : path.join(__dirname, &#39;..&#39;, &#39;resources&#39;, &#39;icon.png&#39;);
++     } else {
++       iconPath = process.platform === &#39;win32&#39;
+          ? path.join(process.resourcesPath, &#39;icon.ico&#39;)
+-         : path.join(process.resourcesPath, &#39;icon.png&#39;));
+- 
++         : path.join(process.resourcesPath, &#39;icon.png&#39;);
++     }
++     
++     // Check if icon file exists
++     if (!fs.existsSync(iconPath)) {
++       console.warn(&#96;[Window] Icon not found at ${iconPath}, using default&#96;);
++       writeLog(&#96;[Window] Icon not found at ${iconPath}, using default&#96;);
++       iconPath = undefined;
++     }
++   } catch (error) {
++     console.warn(&#39;[Window] Error checking icon path:&#39;, error);
++     iconPath = undefined;
++   }
++ 
++   console.log(&#39;[Window] Creating BrowserWindow...&#39;);
++   writeLog(&#39;[Window] Creating BrowserWindow...&#39;);
++   
+    mainWindow = new BrowserWindow({
+      width: 1400,
+```
+
+**Chunk 2**
+Lines added: 9, lines removed: 4
+
+```diff
+@@ -464,14 +483,19 @@
+      },
+      autoHideMenuBar: true,
+-     show: false,
++     show: true, // Show immediately
+    });
+  
+-   // Show window immediately, don&#39;t wait for ready-to-show
+-   // This ensures the window appears even if backend takes time
++   console.log(&#39;[Window] BrowserWindow created, showing...&#39;);
++   writeLog(&#39;[Window] BrowserWindow created, showing...&#39;);
++   
++   // Show window immediately
+    mainWindow.show();
++   mainWindow.focus();
+    
+    // Also handle ready-to-show for better UX
+    mainWindow.once(&#39;ready-to-show&#39;, () =&gt; {
+-     if (mainWindow &amp;&amp; !mainWindow.isVisible()) {
++     console.log(&#39;[Window] Window ready-to-show event fired&#39;);
++     writeLog(&#39;[Window] Window ready-to-show event fired&#39;);
++     if (mainWindow &amp;&amp; !mainWindow.isDestroyed() &amp;&amp; !mainWindow.isVisible()) {
+        mainWindow.show();
+        mainWindow.focus();
+```
+
+**Chunk 3**
+Lines added: 8, lines removed: 3
+
+```diff
+@@ -480,7 +504,12 @@
+    
+    // Handle window errors
+-   mainWindow.webContents.on(&#39;did-fail-load&#39;, (event, errorCode, errorDescription) =&gt; {
+-     console.error(&#39;[Window] Failed to load:&#39;, errorCode, errorDescription);
+-     writeLog(&#96;[Window] Failed to load: ${errorCode} - ${errorDescription}&#96;);
++   mainWindow.webContents.on(&#39;did-fail-load&#39;, (event, errorCode, errorDescription, validatedURL) =&gt; {
++     console.error(&#39;[Window] Failed to load:&#39;, errorCode, errorDescription, validatedURL);
++     writeLog(&#96;[Window] Failed to load: ${errorCode} - ${errorDescription} - ${validatedURL}&#96;);
++   });
++   
++   mainWindow.webContents.on(&#39;did-finish-load&#39;, () =&gt; {
++     console.log(&#39;[Window] Window finished loading&#39;);
++     writeLog(&#39;[Window] Window finished loading&#39;);
+    });
+    
+```
+
+**Chunk 4**
+Lines added: 18, lines removed: undefined
+
+```diff
+@@ -492,4 +521,22 @@
+      console.log(&#39;[Window] Loading frontend from:&#39;, indexPath);
+      writeLog(&#96;[Window] Loading frontend from: ${indexPath}&#96;);
++     
++     // Check if index.html exists
++     if (!fs.existsSync(indexPath)) {
++       const errorMsg = &#96;Frontend index.html not found at: ${indexPath}&#96;;
++       console.error(&#96;[Window] ${errorMsg}&#96;);
++       writeLog(&#96;[Window] ${errorMsg}&#96;);
++       
++       mainWindow.webContents.once(&#39;did-finish-load&#39;, () =&gt; {
++         mainWindow?.webContents.executeJavaScript(&#96;
++           document.body.innerHTML = &#39;&lt;div style=&quot;padding: 20px; font-family: Arial; text-align: center;&quot;&gt;
++             &lt;h1&gt;Hiba&lt;/h1&gt;
++             &lt;p&gt;Az alkalmazás frontend fájlja nem található.&lt;/p&gt;
++             &lt;p&gt;Útvonal: ${indexPath}&lt;/p&gt;
++           &lt;/div&gt;&#39;;
++         &#96;);
++       });
++     }
++     
+      mainWindow.loadFile(indexPath).catch((error) =&gt; {
+        console.error(&#39;[Window] Error loading file:&#39;, error);
+```
+
+**Chunk 5**
+Lines added: 3, lines removed: undefined
+
+```diff
+@@ -508,4 +555,7 @@
+      writeLog(&#39;[Window] Window close event fired&#39;);
+    });
++   
++   console.log(&#39;[Window] Window setup complete&#39;);
++   writeLog(&#39;[Window] Window setup complete&#39;);
+  }
+  
+```
+
+</details>
+
+</tool-use>
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: .github/workflows/build-desktop.yml</summary>
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="grep" data-tool-name="grep">
+<details>
+<summary>Tool use: **grep** • Grep for "icon" in ".github/workflows/build-desktop.yml" • 0 matches</summary>
+
+Output mode: content
+
+
+_No matches found_
+
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+Hozzáadom az ikon ellenőrzését a workflow-hoz, és ellenőrzöm, hogy az icon.ico fájl a megfelelő helyen van-e:
+
+
+---
+
+<tool-use data-tool-type="bash" data-tool-name="run_terminal_cmd">
+<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && ls -la apps/desktop/resources/</summary>
+
+```bash
+cd /Users/liviuszberger/mbit-erp && ls -la apps/desktop/resources/
+```
+
+```
+total 1152
+drwxr-xr-x   7 liviuszberger  staff     224 Nov  9 13:35 .
+drwxr-xr-x  12 liviuszberger  staff     384 Nov  9 12:43 ..
+-rw-r--r--   1 liviuszberger  staff    1406 Nov  8 17:55 README.md
+-rw-r--r--   1 liviuszberger  staff     614 Nov  8 17:55 entitlements.mac.plist
+-rw-r--r--   1 liviuszberger  staff    9580 Nov  9 13:35 icon.ico
+-rw-r--r--   1 liviuszberger  staff  563480 Nov  8 17:55 icon.png
+-rw-r--r--   1 liviuszberger  staff     567 Nov  8 17:55 icon.svg
+
+```
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="write" data-tool-name="search_replace">
+
+<details><summary>Tool use: **code_edit** • Edit file: .github/workflows/build-desktop.yml</summary>
+
+**Chunk 1**
+Lines added: 22, lines removed: undefined
+
+```diff
+@@ -128,4 +128,26 @@
+            Write-Host (&quot;{0:N2} MB&quot; -f $size)
+  
++       - name: Verify icon files exist
++         shell: pwsh
++         run: |
++           Write-Host &quot;=== Verifying icon files ===&quot;
++           
++           $iconIco = &quot;apps/desktop/resources/icon.ico&quot;
++           $iconPng = &quot;apps/desktop/resources/icon.png&quot;
++           
++           if (-not (Test-Path $iconIco)) {
++             Write-Host &quot;⚠️ WARNING: icon.ico not found at $iconIco&quot;
++           } else {
++             $size = (Get-Item $iconIco).Length / 1KB
++             Write-Host &quot;✅ icon.ico found: $size KB&quot;
++           }
++           
++           if (-not (Test-Path $iconPng)) {
++             Write-Host &quot;⚠️ WARNING: icon.png not found at $iconPng&quot;
++           } else {
++             $size = (Get-Item $iconPng).Length / 1KB
++             Write-Host &quot;✅ icon.png found: $size KB&quot;
++           }
++ 
+        - name: Build desktop app
+          run: |
+```
+
+</details>
+
+</tool-use>
+
+---
+
+<tool-use data-tool-type="generic" data-tool-name="read_lints">
+<details>
+          <summary>Tool use: **read_lints** • Read lints for 1 file</summary>
+      
+Lint paths:
+
+- `apps/desktop/src/main.ts`
+
+Lint results
+
+
+**No lint errors found**
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="bash" data-tool-name="run_terminal_cmd">
+<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git add -A && git commit -m "fix: Electron window shows immediately, backend starts in background
+
+- Create window immediately without waiting for backend
+- Start backend in background to avoid blocking window creation
+- Add better error handling and logging for window creation
+- Add icon file existence check with fallback
+- Reload window once backend is ready
+- Add icon verification step to CI workflow"</summary>
+
+```bash
+cd /Users/liviuszberger/mbit-erp && git add -A && git commit -m "fix: Electron window shows immediately, backend starts in background
+
+- Create window immediately without waiting for backend
+- Start backend in background to avoid blocking window creation
+- Add better error handling and logging for window creation
+- Add icon file existence check with fallback
+- Reload window once backend is ready
+- Add icon verification step to CI workflow"
+```
+
+```
+[main b2fb1ac] fix: Electron window shows immediately, backend starts in background
+ 3 files changed, 1846 insertions(+), 46 deletions(-)
+
+```
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="bash" data-tool-name="run_terminal_cmd">
+<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git push origin main</summary>
+
+```bash
+cd /Users/liviuszberger/mbit-erp && git push origin main
+```
+
+```
+To https://github.com/BergerLiviusz/mbit-erp.git
+   958f4aa..b2fb1ac  main -&gt; main
+
+```
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+Összefoglalás:
+
+## Főbb változtatások
+
+### 1. Ablak azonnali megjelenítése
+- Az ablak azonnal létrejön, nem vár a backend indítására.
+- A backend háttérben indul, nem blokkolja az ablak megjelenését.
+- További logolás az ablak létrehozásához és betöltéséhez.
+
+### 2. Ikon kezelés
+- Az ikon ellenőrzése fájl létezésre, fallback, ha hiányzik.
+- Az `icon.ico` fájl létezik a `resources` mappában.
+- CI-ben ikon fájlok ellenőrzése.
+
+### 3. Backend indítás
+- A backend háttérben indul, nem blokkolja az alkalmazást.
+- Sikeres indítás után az ablak újratöltődik.
+- Hiba esetén hibaüzenet jelenik meg, de az alkalmazás nem záródik be.
+
+### 4. CI workflow frissítés
+- Ikon fájlok ellenőrzése a build előtt.
+
+## Várható működés
+
+1. Az alkalmazás elindítása után az ablak azonnal megjelenik.
+2. A backend háttérben indul.
+3. Amikor a backend készen áll, az ablak újratöltődik.
+4. Ha a backend nem indul el, hibaüzenet jelenik meg, de az ablak látható marad.
+
+A GitHub Actions workflow most újra elindul. A build után az alkalmazásnak azonnal meg kell jelennie, és az ikonnak is működnie kell.
+
+Megjegyzés: Ha az alkalmazás network path-ról fut (pl. `\\Mac\Home\Downloads\...`), ez problémákat okozhat Windows-on. Javasolt az alkalmazást helyi mappába másolni és onnan futtatni.
+
+---
+
+_**User (2025-11-09 11:13Z)**_
+
+ci succeeded but:
+
+
+
+-now the app starts up for a moment also in the task manager as a process, opens the window and in a blink of an eye it quits.
+
+-the icon file is still not there, please use the one inside @attached_assets under the name "brandlogo copy.ico" or @mbitvector.svg or @brandlogo_1762509870083.png . Either one is good as long as it works with the build and it doesnt cause build errors or any other issues.
+
+
+
+Here is the app log:
+
+[2025-11-09T12:56:51.614Z] [App] Starting Mbit ERP Desktop...
+
+
+
+[2025-11-09T12:56:51.632Z] [App] User Data Path: C:\Users\liviuszberger\AppData\Roaming\@mbit-erp/desktop
+
+[2025-11-09T12:56:51.632Z] [App] Platform: win32
+
+[2025-11-09T12:56:51.633Z] [App] Electron version: 28.3.3
+
+[2025-11-09T12:56:51.634Z] [App] Node version: 18.18.2
+
+[2025-11-09T12:56:51.636Z] [App] Packaged: true
+
+[2025-11-09T12:56:51.638Z] [Cleanup] Checking for legacy nested node_modules directories...
+
+[2025-11-09T12:56:52.205Z] [Cleanup] ✓ No legacy nested node_modules found
+
+[2025-11-09T12:56:52.209Z] [App] Creating window immediately...
+
+[2025-11-09T12:56:52.211Z] [Window] Icon not found at \\Mac\Home\Downloads\mbit-erp-windows-installer (1)\Mbit-ERP-Portable-1.0.0\resources\icon.ico, using default
+
+[2025-11-09T12:56:52.212Z] [Window] Creating BrowserWindow...
+
+[2025-11-09T12:56:52.794Z] [Window] BrowserWindow created, showing...
+
+[2025-11-09T12:56:52.799Z] [Window] Loading frontend from: \\Mac\Home\Downloads\mbit-erp-windows-installer (1)\Mbit-ERP-Portable-1.0.0\resources\frontend\index.html
+
+[2025-11-09T12:56:52.983Z] [Window] Window setup complete
+
+[2025-11-09T12:56:52.985Z] [App] Starting backend server in background...
+
+[2025-11-09T12:56:52.989Z] [Backend] Environment: PORT=3000, DATA_DIR=C:\Users\liviuszberger\AppData\Roaming\@mbit-erp\desktop\data, DATABASE_URL=file:***mbit-erp.db
+
+[2025-11-09T12:56:52.990Z] [Backend] Backend path: \\Mac\Home\Downloads\mbit-erp-windows-installer (1)\Mbit-ERP-Portable-1.0.0\resources\backend\main.js
+
+[2025-11-09T12:56:52.990Z] [Backend] Backend directory: \\Mac\Home\Downloads\mbit-erp-windows-installer (1)\Mbit-ERP-Portable-1.0.0\resources\backend
+
+[2025-11-09T12:56:52.990Z] [Backend] Node modules path: \\Mac\Home\Downloads\mbit-erp-windows-installer (1)\Mbit-ERP-Portable-1.0.0\resources\backend\node_modules
+
+[2025-11-09T12:56:52.990Z] [Backend] Resources path: \\Mac\Home\Downloads\mbit-erp-windows-installer (1)\Mbit-ERP-Portable-1.0.0\resources
+
+[2025-11-09T12:56:52.993Z] [Backend] Using Electron bundled Node.js runtime via fork()
+
+[2025-11-09T12:56:52.993Z] [Backend] NODE_PATH set to: \\Mac\Home\Downloads\mbit-erp-windows-installer (1)\Mbit-ERP-Portable-1.0.0\resources\backend\node_modules
+
+[2025-11-09T12:56:53.035Z] [Backend] Waiting for backend to be ready (max 120s)...
+
+[2025-11-09T12:56:53.535Z] [Window] Error loading file: ERR_FAILED (-2) loading 'file:///\\Mac\Home\Downloads\mbit-erp-windows-installer (1)\Mbit-ERP-Portable-1.0.0\resources\frontend\index.html'
+
+[2025-11-09T12:57:08.738Z] [App] Starting Mbit ERP Desktop...
+
+[2025-11-09T12:57:08.742Z] [App] User Data Path: C:\Users\liviuszberger\AppData\Roaming\@mbit-erp/desktop
+
+[2025-11-09T12:57:08.742Z] [App] Platform: win32
+
+[2025-11-09T12:57:08.742Z] [App] Electron version: 28.3.3
+
+[2025-11-09T12:57:08.743Z] [App] Node version: 18.18.2
+
+[2025-11-09T12:57:08.744Z] [App] Packaged: true
+
+[2025-11-09T12:57:08.744Z] [Cleanup] Checking for legacy nested node_modules directories...
+
+[2025-11-09T12:57:09.041Z] [Cleanup] ✓ No legacy nested node_modules found
+
+[2025-11-09T12:57:09.043Z] [App] Creating window immediately...
+
+[2025-11-09T12:57:09.044Z] [Window] Icon not found at \\Mac\Home\Downloads\mbit-erp-windows-installer (1)\Mbit-ERP-Portable-1.0.0\resources\icon.ico, using default
+
+[2025-11-09T12:57:09.044Z] [Window] Creating BrowserWindow...
+
+[2025-11-09T12:57:09.108Z] [Window] BrowserWindow created, showing...
+
+[2025-11-09T12:57:09.111Z] [Window] Loading frontend from: \\Mac\Home\Downloads\mbit-erp-windows-installer (1)\Mbit-ERP-Portable-1.0.0\resources\frontend\index.html
+
+[2025-11-09T12:57:09.128Z] [Window] Window setup complete
+
+[2025-11-09T12:57:09.129Z] [App] Starting backend server in background...
+
+[2025-11-09T12:57:09.130Z] [Backend] Environment: PORT=3000, DATA_DIR=C:\Users\liviuszberger\AppData\Roaming\@mbit-erp\desktop\data, DATABASE_URL=file:***mbit-erp.db
+
+[2025-11-09T12:57:09.131Z] [Backend] Backend path: \\Mac\Home\Downloads\mbit-erp-windows-installer (1)\Mbit-ERP-Portable-1.0.0\resources\backend\main.js
+
+[2025-11-09T12:57:09.131Z] [Backend] Backend directory: \\Mac\Home\Downloads\mbit-erp-windows-installer (1)\Mbit-ERP-Portable-1.0.0\resources\backend
+
+[2025-11-09T12:57:09.131Z] [Backend] Node modules path: \\Mac\Home\Downloads\mbit-erp-windows-installer (1)\Mbit-ERP-Portable-1.0.0\resources\backend\node_modules
+
+[2025-11-09T12:57:09.131Z] [Backend] Resources path: \\Mac\Home\Downloads\mbit-erp-windows-installer (1)\Mbit-ERP-Portable-1.0.0\resources
+
+[2025-11-09T12:57:09.133Z] [Backend] Using Electron bundled Node.js runtime via fork()
+
+[2025-11-09T12:57:09.133Z] [Backend] NODE_PATH set to: \\Mac\Home\Downloads\mbit-erp-windows-installer (1)\Mbit-ERP-Portable-1.0.0\resources\backend\node_modules
+
+[2025-11-09T12:57:09.154Z] [Backend] Waiting for backend to be ready (max 120s)...
+
+[2025-11-09T12:57:09.292Z] [Window] Error loading file: ERR_FAILED (-2) loading 'file:///\\Mac\Home\Downloads\mbit-erp-windows-installer (1)\Mbit-ERP-Portable-1.0.0\resources\frontend\index.html'
+
+
+
+
+
+----
+
+-find out the issues and fix each deep rooted problem you see.
+
+---
+
+_**Agent (model composer-1, mode Agent)**_
+
+
+
+---
+

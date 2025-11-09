@@ -118,7 +118,14 @@
       ],
       "icon": "resources/icon.ico",
       "artifactName": "${productName}-Setup-${version}.${ext}",
-      "publisherName": "MB-IT Kft."
+      "publisherName": "MB-IT Kft.",
+      "extraResources": [
+        {
+          "from": "resources/icon.ico",
+          "to": "icon.ico",
+          "filter": ["**/*"]
+        }
+      ]
     },
     "nsis": {
       "oneClick": false,
