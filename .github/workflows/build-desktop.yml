@@ -127,6 +127,28 @@ jobs:
           $size = (Get-ChildItem node_modules -Recurse -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum).Sum / 1MB
           Write-Host ("{0:N2} MB" -f $size)
 
+      - name: Verify icon files exist
+        shell: pwsh
+        run: |
+          Write-Host "=== Verifying icon files ==="
+          
+          $iconIco = "apps/desktop/resources/icon.ico"
+          $iconPng = "apps/desktop/resources/icon.png"
+          
+          if (-not (Test-Path $iconIco)) {
+            Write-Host "⚠️ WARNING: icon.ico not found at $iconIco"
+          } else {
+            $size = (Get-Item $iconIco).Length / 1KB
+            Write-Host "✅ icon.ico found: $size KB"
+          }
+          
+          if (-not (Test-Path $iconPng)) {
+            Write-Host "⚠️ WARNING: icon.png not found at $iconPng"
+          } else {
+            $size = (Get-Item $iconPng).Length / 1KB
+            Write-Host "✅ icon.png found: $size KB"
+          }
+
       - name: Build desktop app
         run: |
           cd apps/desktop

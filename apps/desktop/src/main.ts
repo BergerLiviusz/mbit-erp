@@ -441,14 +441,33 @@ function createWindow(): void {
   const isDev = !app.isPackaged;
   
   // Use .ico for Windows, .png for other platforms
-  const iconPath = isDev
-    ? (process.platform === 'win32' 
+  // Try to find icon, but don't fail if it doesn't exist
+  let iconPath: string | undefined;
+  try {
+    if (isDev) {
+      iconPath = process.platform === 'win32' 
         ? path.join(__dirname, '..', 'resources', 'icon.ico')
-        : path.join(__dirname, '..', 'resources', 'icon.png'))
-    : (process.platform === 'win32'
+        : path.join(__dirname, '..', 'resources', 'icon.png');
+    } else {
+      iconPath = process.platform === 'win32'
         ? path.join(process.resourcesPath, 'icon.ico')
-        : path.join(process.resourcesPath, 'icon.png'));
+        : path.join(process.resourcesPath, 'icon.png');
+    }
+    
+    // Check if icon file exists
+    if (!fs.existsSync(iconPath)) {
+      console.warn(`[Window] Icon not found at ${iconPath}, using default`);
+      writeLog(`[Window] Icon not found at ${iconPath}, using default`);
+      iconPath = undefined;
+    }
+  } catch (error) {
+    console.warn('[Window] Error checking icon path:', error);
+    iconPath = undefined;
+  }
 
+  console.log('[Window] Creating BrowserWindow...');
+  writeLog('[Window] Creating BrowserWindow...');
+  
   mainWindow = new BrowserWindow({
     width: 1400,
     height: 900,
@@ -463,25 +482,35 @@ function createWindow(): void {
       webSecurity: true,
     },
     autoHideMenuBar: true,
-    show: false,
+    show: true, // Show immediately
   });
 
-  // Show window immediately, don't wait for ready-to-show
-  // This ensures the window appears even if backend takes time
+  console.log('[Window] BrowserWindow created, showing...');
+  writeLog('[Window] BrowserWindow created, showing...');
+  
+  // Show window immediately
   mainWindow.show();
+  mainWindow.focus();
   
   // Also handle ready-to-show for better UX
   mainWindow.once('ready-to-show', () => {
-    if (mainWindow && !mainWindow.isVisible()) {
+    console.log('[Window] Window ready-to-show event fired');
+    writeLog('[Window] Window ready-to-show event fired');
+    if (mainWindow && !mainWindow.isDestroyed() && !mainWindow.isVisible()) {
       mainWindow.show();
       mainWindow.focus();
     }
   });
   
   // Handle window errors
-  mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
-    console.error('[Window] Failed to load:', errorCode, errorDescription);
-    writeLog(`[Window] Failed to load: ${errorCode} - ${errorDescription}`);
+  mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL) => {
+    console.error('[Window] Failed to load:', errorCode, errorDescription, validatedURL);
+    writeLog(`[Window] Failed to load: ${errorCode} - ${errorDescription} - ${validatedURL}`);
+  });
+  
+  mainWindow.webContents.on('did-finish-load', () => {
+    console.log('[Window] Window finished loading');
+    writeLog('[Window] Window finished loading');
   });
   
   if (isDev) {
@@ -491,6 +520,24 @@ function createWindow(): void {
     const indexPath = path.join(process.resourcesPath, 'frontend', 'index.html');
     console.log('[Window] Loading frontend from:', indexPath);
     writeLog(`[Window] Loading frontend from: ${indexPath}`);
+    
+    // Check if index.html exists
+    if (!fs.existsSync(indexPath)) {
+      const errorMsg = `Frontend index.html not found at: ${indexPath}`;
+      console.error(`[Window] ${errorMsg}`);
+      writeLog(`[Window] ${errorMsg}`);
+      
+      mainWindow.webContents.once('did-finish-load', () => {
+        mainWindow?.webContents.executeJavaScript(`
+          document.body.innerHTML = '<div style="padding: 20px; font-family: Arial; text-align: center;">
+            <h1>Hiba</h1>
+            <p>Az alkalmazás frontend fájlja nem található.</p>
+            <p>Útvonal: ${indexPath}</p>
+          </div>';
+        `);
+      });
+    }
+    
     mainWindow.loadFile(indexPath).catch((error) => {
       console.error('[Window] Error loading file:', error);
       writeLog(`[Window] Error loading file: ${error.message}`);
@@ -507,6 +554,9 @@ function createWindow(): void {
     console.log('[Window] Window close event fired');
     writeLog('[Window] Window close event fired');
   });
+  
+  console.log('[Window] Window setup complete');
+  writeLog('[Window] Window setup complete');
 }
 
 ipcMain.handle('get-user-data-path', () => {
@@ -531,42 +581,46 @@ app.whenReady().then(async () => {
   
   cleanupLegacyNodeModules();
   
-  try {
-    console.log('[App] Starting backend server...');
-    writeLog('[App] Starting backend server...');
-    await startBackend();
-    console.log('[App] Backend ready, creating window...');
-    writeLog('[App] Backend ready, creating window...');
-    createWindow();
-    
-    // Keep backend process reference alive
-    console.log('[App] Backend process PID:', backendProcess?.pid);
-    writeLog(`[App] Backend process PID: ${backendProcess?.pid}`);
-  } catch (error) {
-    console.error('[App] Failed to start backend:', error);
-    
-    const errorMessage = error instanceof Error ? error.message : 'Ismeretlen hiba';
-    const logPath = getLogFilePath();
-    
-    writeLog(`[App] FATAL ERROR: Failed to start backend: ${errorMessage}`);
-    if (error instanceof Error && error.stack) {
-      writeLog(`[App] Error stack: ${error.stack}`);
-    }
-    
-    await dialog.showMessageBox({
-      type: 'error',
-      title: 'Backend Indítási Hiba',
-      message: 'Az alkalmazás backend szervert nem sikerült elindítani.',
-      detail: `Hiba: ${errorMessage}\n\nA részletes naplófájl helye:\n${logPath}\n\nKérjük, küldje el ezt a fájlt a támogatásnak, vagy próbálja újra az alkalmazást indítani.`,
-      buttons: ['Naplófájl Megnyitása', 'Bezárás']
-    }).then((result) => {
-      if (result.response === 0) {
-        require('electron').shell.showItemInFolder(logPath);
+  // Create window immediately - don't wait for backend
+  console.log('[App] Creating window immediately...');
+  writeLog('[App] Creating window immediately...');
+  createWindow();
+  
+  // Start backend in background - don't block window creation
+  console.log('[App] Starting backend server in background...');
+  writeLog('[App] Starting backend server in background...');
+  
+  startBackend()
+    .then(() => {
+      console.log('[App] Backend started successfully');
+      writeLog('[App] Backend started successfully');
+      
+      // Reload window once backend is ready
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        console.log('[App] Reloading window now that backend is ready...');
+        writeLog('[App] Reloading window now that backend is ready...');
+        mainWindow.reload();
+      }
+    })
+    .catch((error) => {
+      console.error('[App] Failed to start backend:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Ismeretlen hiba';
+      writeLog(`[App] ERROR: Failed to start backend: ${errorMessage}`);
+      if (error instanceof Error && error.stack) {
+        writeLog(`[App] Error stack: ${error.stack}`);
+      }
+      
+      // Show error dialog but don't quit - let user see the window
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        dialog.showMessageBox(mainWindow, {
+          type: 'error',
+          title: 'Backend Indítási Hiba',
+          message: 'Az alkalmazás backend szervert nem sikerült elindítani.',
+          detail: `Hiba: ${errorMessage}\n\nAz alkalmazás továbbra is működik, de előfordulhat, hogy egyes funkciók nem érhetők el.\n\nKérjük, indítsa újra az alkalmazást.`,
+          buttons: ['Rendben']
+        }).catch(() => {});
       }
     });
-    
-    app.quit();
-  }
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
