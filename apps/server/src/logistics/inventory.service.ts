@@ -130,16 +130,31 @@ export class InventoryService {
     minimum?: number | null;
     maximum?: number | null;
   }) {
+    // Normalize locationId: use null if undefined or null
+    const locationId = data.locationId === undefined || data.locationId === null ? null : data.locationId;
+
     // Check if stock level already exists
-    const existing = await this.prisma.stockLevel.findUnique({
-      where: {
-        itemId_warehouseId_locationId: {
+    // Use findFirst when locationId is null, as findUnique doesn't handle null in compound unique keys
+    let existing;
+    if (locationId === null) {
+      existing = await this.prisma.stockLevel.findFirst({
+        where: {
           itemId: data.itemId,
           warehouseId: data.warehouseId,
-          locationId: data.locationId || null,
+          locationId: null,
         },
-      },
-    });
+      });
+    } else {
+      existing = await this.prisma.stockLevel.findUnique({
+        where: {
+          itemId_warehouseId_locationId: {
+            itemId: data.itemId,
+            warehouseId: data.warehouseId,
+            locationId: locationId,
+          },
+        },
+      });
+    }
 
     if (existing) {
       // Update existing stock level
@@ -163,7 +178,7 @@ export class InventoryService {
       data: {
         itemId: data.itemId,
         warehouseId: data.warehouseId,
-        locationId: data.locationId || null,
+        locationId: locationId,
         mennyiseg: data.mennyiseg || 0,
         minimum: data.minimum || null,
         maximum: data.maximum || null,
