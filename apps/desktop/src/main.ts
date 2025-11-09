@@ -450,16 +450,39 @@ function createWindow(): void {
         ? path.join(__dirname, '..', 'resources', 'icon.ico')
         : path.join(__dirname, '..', 'resources', 'icon.png');
     } else {
-      iconPath = process.platform === 'win32'
-        ? path.join(process.resourcesPath, 'icon.ico')
-        : path.join(process.resourcesPath, 'icon.png');
-    }
-    
-    // Check if icon file exists
-    if (!fs.existsSync(iconPath)) {
-      console.warn(`[Window] Icon not found at ${iconPath}, using default`);
-      writeLog(`[Window] Icon not found at ${iconPath}, using default`);
-      iconPath = undefined;
+      // In packaged app, icon should be in resources folder
+      // Try multiple possible locations
+      const possibleIconPaths = [
+        path.join(process.resourcesPath, 'icon.ico'),
+        path.join(process.resourcesPath, '..', 'icon.ico'),
+        path.join(__dirname, '..', '..', 'resources', 'icon.ico'),
+      ];
+      
+      for (const possiblePath of possibleIconPaths) {
+        if (fs.existsSync(possiblePath)) {
+          iconPath = possiblePath;
+          console.log(`[Window] Found icon at: ${iconPath}`);
+          writeLog(`[Window] Found icon at: ${iconPath}`);
+          break;
+        }
+      }
+      
+      if (!iconPath && process.platform !== 'win32') {
+        iconPath = path.join(process.resourcesPath, 'icon.png');
+        if (!fs.existsSync(iconPath)) {
+          iconPath = undefined;
+        }
+      }
+      
+      if (!iconPath) {
+        console.warn(`[Window] Icon not found in any expected location, using default`);
+        writeLog(`[Window] Icon not found in any expected location, using default`);
+        // Log all checked paths for debugging
+        possibleIconPaths.forEach(p => {
+          console.log(`[Window] Checked: ${p} - exists: ${fs.existsSync(p)}`);
+          writeLog(`[Window] Checked: ${p} - exists: ${fs.existsSync(p)}`);
+        });
+      }
     }
   } catch (error) {
     console.warn('[Window] Error checking icon path:', error);

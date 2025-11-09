@@ -6931,3 +6931,315 @@ A GitHub Actions workflow most újra elindul, és a build-nek sikeresnek kell le
 
 ---
 
+_**User (2025-11-09 11:13Z)**_
+
+still no icon on the windows build's Mbit ERP.exe and still, it does the same thing: app window shows up for a moment along with task manager process and then quits, dissapears. Fix the possible problem itself and find out what kind of thing could be deeply rooted that is causing it. Think step-by-step and solve the presumed issue.
+
+
+
+here is the app log of the new session:
+
+
+
+[2025-11-09T13:10:52.120Z] [App] Starting Mbit ERP Desktop...
+
+[2025-11-09T13:10:52.132Z] [App] User Data Path: C:\Users\liviuszberger\AppData\Roaming\@mbit-erp/desktop
+
+[2025-11-09T13:10:52.133Z] [App] Platform: win32
+
+[2025-11-09T13:10:52.133Z] [App] Electron version: 28.3.3
+
+[2025-11-09T13:10:52.134Z] [App] Node version: 18.18.2
+
+[2025-11-09T13:10:52.135Z] [App] Packaged: true
+
+[2025-11-09T13:10:52.136Z] [Cleanup] Checking for legacy nested node_modules directories...
+
+[2025-11-09T13:10:52.573Z] [Cleanup] ✓ No legacy nested node_modules found
+
+[2025-11-09T13:10:52.575Z] [App] Creating window immediately...
+
+[2025-11-09T13:10:52.577Z] [Window] Icon not found at \\Mac\Home\Downloads\mbit-erp-windows-installer (1)\Mbit-ERP-Portable-1.0.0\resources\icon.ico, using default
+
+[2025-11-09T13:10:52.577Z] [Window] Creating BrowserWindow...
+
+[2025-11-09T13:10:53.027Z] [Window] BrowserWindow created, showing...
+
+[2025-11-09T13:10:53.032Z] [Window] Loading frontend from: \\Mac\Home\Downloads\mbit-erp-windows-installer (1)\Mbit-ERP-Portable-1.0.0\resources\frontend\index.html
+
+[2025-11-09T13:10:53.035Z] [Window] Loading from URL: file:///Mac/Home/Downloads/mbit-erp-windows-installer (1)/Mbit-ERP-Portable-1.0.0/resources/frontend/index.html
+
+[2025-11-09T13:10:53.144Z] [Window] Window setup complete
+
+[2025-11-09T13:10:53.145Z] [App] Starting backend server in background...
+
+[2025-11-09T13:10:53.148Z] [Backend] Environment: PORT=3000, DATA_DIR=C:\Users\liviuszberger\AppData\Roaming\@mbit-erp\desktop\data, DATABASE_URL=file:***mbit-erp.db
+
+[2025-11-09T13:10:53.149Z] [Backend] Backend path: \\Mac\Home\Downloads\mbit-erp-windows-installer (1)\Mbit-ERP-Portable-1.0.0\resources\backend\main.js
+
+[2025-11-09T13:10:53.149Z] [Backend] Backend directory: \\Mac\Home\Downloads\mbit-erp-windows-installer (1)\Mbit-ERP-Portable-1.0.0\resources\backend
+
+[2025-11-09T13:10:53.149Z] [Backend] Node modules path: \\Mac\Home\Downloads\mbit-erp-windows-installer (1)\Mbit-ERP-Portable-1.0.0\resources\backend\node_modules
+
+[2025-11-09T13:10:53.149Z] [Backend] Resources path: \\Mac\Home\Downloads\mbit-erp-windows-installer (1)\Mbit-ERP-Portable-1.0.0\resources
+
+[2025-11-09T13:10:53.151Z] [Backend] Using Electron bundled Node.js runtime via fork()
+
+[2025-11-09T13:10:53.152Z] [Backend] NODE_PATH set to: \\Mac\Home\Downloads\mbit-erp-windows-installer (1)\Mbit-ERP-Portable-1.0.0\resources\backend\node_modules
+
+[2025-11-09T13:10:53.181Z] [Backend] Waiting for backend to be ready (max 120s)...
+
+[2025-11-09T13:10:53.453Z] [Window] Error loading URL: ERR_FAILED (-2) loading 'file:///Mac/Home/Downloads/mbit-erp-windows-installer (1)/Mbit-ERP-Portable-1.0.0/resources/frontend/index.html'
+
+[2025-11-09T13:10:53.454Z] [Window] Trying fallback: loadFile
+
+
+
+---
+
+_**Agent (model composer-1, mode Agent)**_
+
+
+
+---
+
+
+Két probléma: az UNC path konverzió hibás (`file:///Mac/...` helyett `file://///Mac/...` kell), és az alkalmazás bezáródik, ha a frontend nem töltődik be. Javítom mindkettőt:
+
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: apps/desktop/src/main.ts</summary>
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="write" data-tool-name="search_replace">
+
+<details><summary>Tool use: **code_edit** • Edit file: apps/desktop/src/main.ts</summary>
+
+**Chunk 1**
+Lines added: 6, lines removed: 4
+
+```diff
+@@ -546,8 +546,10 @@
+        // Check if path is UNC (starts with \\)
+        if (indexPath.startsWith(&#39;\\\\&#39;)) {
+-         // UNC path: convert \\server\share\path to file://server/share/path
+-         // Remove leading \\ and replace \ with /
+-         const uncPath = indexPath.replace(/^\\\\/, &#39;&#39;).replace(/\\/g, &#39;/&#39;);
+-         fileUrl = &#96;file:///${uncPath}&#96;;
++         // UNC path: convert \\server\share\path to file://///server/share/path
++         // UNC paths need 5 slashes: file://///server/share/path
++         const uncPath = indexPath.replace(/\\/g, &#39;/&#39;).replace(/^\/\//, &#39;&#39;);
++         fileUrl = &#96;file://///${uncPath}&#96;;
++         console.log(&#39;[Window] Detected UNC path, converting to:&#39;, fileUrl);
++         writeLog(&#96;[Window] Detected UNC path, converting to: ${fileUrl}&#96;);
+        } else {
+          // Regular path: use pathToFileURL
+```
+
+**Chunk 2**
+Lines added: 22, lines removed: 13
+
+```diff
+@@ -570,20 +572,29 @@
+              writeLog(&#96;[Window] loadFile also failed: ${loadFileError.message}&#96;);
+              
+-             // Fallback 2: Show error message in window
++             // Fallback 2: Show error message in window - DON&#39;T QUIT
+              if (mainWindow &amp;&amp; !mainWindow.isDestroyed()) {
+-               mainWindow.webContents.once(&#39;did-finish-load&#39;, () =&gt; {
+-                 if (mainWindow &amp;&amp; !mainWindow.isDestroyed()) {
+-                   mainWindow.webContents.executeJavaScript(&#96;
+-                     document.body.innerHTML = &#39;&lt;div style=&quot;padding: 40px; font-family: Arial; text-align: center; background: #f0f0f0;&quot;&gt;
+-                       &lt;h1 style=&quot;color: #d32f2f;&quot;&gt;Hiba történt&lt;/h1&gt;
+-                       &lt;p style=&quot;font-size: 16px; margin: 20px 0;&quot;&gt;Az alkalmazás frontend fájlja nem tölthető be.&lt;/p&gt;
+-                       &lt;p style=&quot;font-size: 14px; color: #666; margin: 10px 0;&quot;&gt;Útvonal: ${indexPath}&lt;/p&gt;
+-                       &lt;p style=&quot;font-size: 12px; color: #999; margin-top: 30px;&quot;&gt;Kérjük, másolja az alkalmazást helyi mappába és futtassa onnan.&lt;/p&gt;
+-                     &lt;/div&gt;&#39;;
+-                   &#96;);
++               // Load empty page first, then inject error message
++               mainWindow.loadURL(&#39;data:text/html,&lt;html&gt;&lt;head&gt;&lt;meta charset=&quot;UTF-8&quot;&gt;&lt;/head&gt;&lt;body&gt;&lt;/body&gt;&lt;/html&gt;&#39;).then(() =&gt; {
++                 if (mainWindow &amp;&amp; !mainWindow.isDestroyed()) {
++                   setTimeout(() =&gt; {
++                     if (mainWindow &amp;&amp; !mainWindow.isDestroyed()) {
++                       mainWindow.webContents.executeJavaScript(&#96;
++                         document.body.innerHTML = &#39;&lt;div style=&quot;padding: 40px; font-family: Arial; text-align: center; background: #f0f0f0; min-height: 100vh; display: flex; flex-direction: column; justify-content: center;&quot;&gt;
++                           &lt;h1 style=&quot;color: #d32f2f; margin-bottom: 20px;&quot;&gt;⚠️ Hiba történt&lt;/h1&gt;
++                           &lt;p style=&quot;font-size: 16px; margin: 20px 0;&quot;&gt;Az alkalmazás frontend fájlja nem tölthető be UNC path-ról.&lt;/p&gt;
++                           &lt;p style=&quot;font-size: 14px; color: #666; margin: 10px 0; word-break: break-all;&quot;&gt;Útvonal: ${indexPath}&lt;/p&gt;
++                           &lt;div style=&quot;background: #fff3cd; border: 1px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 5px;&quot;&gt;
++                             &lt;p style=&quot;font-size: 14px; color: #856404; margin: 0;&quot;&gt;&lt;strong&gt;Megoldás:&lt;/strong&gt;&lt;/p&gt;
++                             &lt;p style=&quot;font-size: 13px; color: #856404; margin: 10px 0 0 0;&quot;&gt;Kérjük, másolja az alkalmazást helyi mappába (pl. C:\\Users\\YourName\\Desktop\\Mbit-ERP\\) és futtassa onnan.&lt;/p&gt;
++                           &lt;/div&gt;
++                         &lt;/div&gt;&#39;;
++                       &#96;).catch(err =&gt; console.error(&#39;Error injecting error message:&#39;, err));
++                     }
++                   }, 100);
+                  }
++               }).catch((loadError) =&gt; {
++                 console.error(&#39;[Window] Error loading error page:&#39;, loadError);
++                 writeLog(&#96;[Window] Error loading error page: ${loadError.message}&#96;);
+                });
+-               // Load empty page first
+-               mainWindow.loadURL(&#39;data:text/html,&lt;html&gt;&lt;body&gt;&lt;/body&gt;&lt;/html&gt;&#39;);
+              }
+            });
+```
+
+**Chunk 3**
+Lines added: 10, lines removed: 4
+
+```diff
+@@ -594,8 +605,14 @@
+        writeLog(&#96;[Window] Error creating file URL: ${urlError}&#96;);
+        // Final fallback: try loadFile directly
+-       mainWindow.loadFile(indexPath).catch((error) =&gt; {
+-         console.error(&#39;[Window] Error loading file:&#39;, error);
+-         writeLog(&#96;[Window] Error loading file: ${error.message}&#96;);
+-       });
++       if (mainWindow &amp;&amp; !mainWindow.isDestroyed()) {
++         mainWindow.loadFile(indexPath).catch((error) =&gt; {
++           console.error(&#39;[Window] Error loading file:&#39;, error);
++           writeLog(&#96;[Window] Error loading file: ${error.message}&#96;);
++           // Even if this fails, show error page
++           if (mainWindow &amp;&amp; !mainWindow.isDestroyed()) {
++             mainWindow.loadURL(&#39;data:text/html,&lt;html&gt;&lt;body&gt;&lt;h1&gt;Error loading application&lt;/h1&gt;&lt;/body&gt;&lt;/html&gt;&#39;);
++           }
++         });
++       }
+      }
+    }
+```
+
+</details>
+
+</tool-use>
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: apps/desktop/src/main.ts</summary>
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="grep" data-tool-name="grep">
+<details>
+<summary>Tool use: **grep** • Grep for "window-all-closed" in "apps/desktop/src/main.ts" • 3 matches</summary>
+
+Output mode: content
+
+
+| File | Content | Line |
+|------|------|------|
+| `apps/desktop/src/main.ts` | `app.on('window-all-closed', () => \{` | L728 |
+| `apps/desktop/src/main.ts` | `console.log('[App] window-all-closed event fired');` | L729 |
+| `apps/desktop/src/main.ts` | `writeLog('[App] window-all-closed event fired');` | L730 |
+
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: apps/desktop/src/main.ts</summary>
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="write" data-tool-name="search_replace">
+
+<details><summary>Tool use: **code_edit** • Edit file: apps/desktop/src/main.ts</summary>
+
+**Chunk 1**
+Lines added: 18, lines removed: 5
+
+```diff
+@@ -729,9 +729,22 @@
+    console.log(&#39;[App] window-all-closed event fired&#39;);
+    writeLog(&#39;[App] window-all-closed event fired&#39;);
+-   stopBackend();
+-   
+-   if (process.platform !== &#39;darwin&#39;) {
+-     app.quit();
+-   }
++   
++   // Don&#39;t quit immediately - wait a bit to see if window is being recreated
++   // This prevents the app from closing if frontend fails to load
++   setTimeout(() =&gt; {
++     const windows = BrowserWindow.getAllWindows();
++     if (windows.length === 0) {
++       console.log(&#39;[App] No windows remaining, quitting...&#39;);
++       writeLog(&#39;[App] No windows remaining, quitting...&#39;);
++       stopBackend();
++       
++       if (process.platform !== &#39;darwin&#39;) {
++         app.quit();
++       }
++     } else {
++       console.log(&#39;[App] Windows still exist, not quitting&#39;);
++       writeLog(&#96;[App] Windows still exist (${windows.length}), not quitting&#96;);
++     }
++   }, 1000);
+  });
+  
+```
+
+</details>
+
+</tool-use>
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: apps/desktop/src/main.ts</summary>
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="unknown" data-tool-name="search_replace">
+<details>
+<summary>Tool use: **search_replace**</summary>
+
+
+Parameters:
+
+```json
+{
+  &quot;relativeWorkspacePath&quot;: &quot;apps/desktop/src/main.ts&quot;,
+  &quot;code&quot;: {}
+}
+```
+Additional data:
+
+```json
+{
+  &quot;codeblockId&quot;: &quot;f607c2f6-1ce8-4ae3-a35f-f153cf7303bf&quot;
+}
+```
+User decision: **accepted**
+
+Status: **loading**
+
+
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
