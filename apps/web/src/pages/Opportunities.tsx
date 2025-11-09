@@ -146,13 +146,28 @@ export default function Opportunities() {
 
     try {
 
+      // Parse and validate date
+      let zarvasDatum: Date | undefined = undefined;
+      if (formData.zarvasDatum) {
+        const date = new Date(formData.zarvasDatum);
+        if (!isNaN(date.getTime())) {
+          // Check if year is reasonable (between 1900 and 2100)
+          const year = date.getFullYear();
+          if (year >= 1900 && year <= 2100) {
+            zarvasDatum = date;
+          } else {
+            console.warn(`Invalid year in date: ${formData.zarvasDatum}, ignoring date`);
+          }
+        }
+      }
+
       const opportunityData = {
         nev: formData.nev,
         accountId: formData.accountId,
         szakasz: formData.szakasz,
         ertek: ertekNum,
         valoszinuseg: valoszinusegNum,
-        zarvasDatum: formData.zarvasDatum || undefined,
+        zarvasDatum: zarvasDatum,
       };
 
       const response = await apiFetch('/crm/opportunities', {

@@ -355,6 +355,7 @@ export default function Documents() {
 
   const handleOcrTrigger = async (documentId: string) => {
     setOcrLoading(prev => ({ ...prev, [documentId]: true }));
+    setError('');
     try {
       const response = await apiFetch(`/dms/documents/${documentId}/ocr`, {
         method: 'POST',
@@ -373,7 +374,11 @@ export default function Documents() {
         return;
       }
 
-      setTimeout(async () => {
+      setSuccess('OCR feldolgozás elindítva. Kérjük várjon...');
+      setTimeout(() => setSuccess(''), 3000);
+
+      // Poll for OCR completion
+      const pollInterval = setInterval(async () => {
         try {
           const docResponse = await apiFetch(`/dms/documents/${documentId}`, {
             
@@ -388,15 +393,29 @@ export default function Documents() {
                 ocrJob: updatedDoc.ocrJob 
               } : d)
             );
-            setExpandedDoc(documentId);
-          } else {
-            setError('Nem sikerült betölteni az OCR eredményt');
+            
+            if (updatedDoc.ocrJob?.allapot === 'kesz') {
+              clearInterval(pollInterval);
+              setOcrLoading(prev => ({ ...prev, [documentId]: false }));
+              setSuccess('OCR feldolgozás sikeresen befejeződött!');
+              setTimeout(() => setSuccess(''), 5000);
+              setExpandedDoc(documentId);
+            } else if (updatedDoc.ocrJob?.allapot === 'hiba') {
+              clearInterval(pollInterval);
+              setOcrLoading(prev => ({ ...prev, [documentId]: false }));
+              setError('OCR feldolgozás sikertelen volt.');
+            }
           }
         } catch (err) {
-          setError('Hiba történt az OCR eredmény lekérésekor');
+          console.error('Error polling OCR status:', err);
         }
+      }, 2000);
+
+      // Stop polling after 60 seconds
+      setTimeout(() => {
+        clearInterval(pollInterval);
         setOcrLoading(prev => ({ ...prev, [documentId]: false }));
-      }, 3000);
+      }, 60000);
     } catch (error) {
       console.error('OCR hiba:', error);
       setError('Hiba történt az OCR feldolgozás során');

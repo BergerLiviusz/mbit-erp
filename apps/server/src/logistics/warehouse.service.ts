@@ -53,9 +53,33 @@ export class WarehouseService {
   }
 
   async create(dto: CreateWarehouseDto) {
+    // If azonosito is not provided or empty, generate one
+    let azonosito = dto.azonosito?.trim();
+    if (!azonosito) {
+      // Generate azonosito based on count
+      const count = await this.prisma.warehouse.count();
+      azonosito = `RKT-${String(count + 1).padStart(4, '0')}`;
+    }
+    
+    // Check if azonosito already exists
+    const existing = await this.prisma.warehouse.findUnique({
+      where: { azonosito },
+    });
+    
+    if (existing) {
+      // If exists, append a suffix
+      let counter = 1;
+      let newAzonosito = `${azonosito}-${counter}`;
+      while (await this.prisma.warehouse.findUnique({ where: { azonosito: newAzonosito } })) {
+        counter++;
+        newAzonosito = `${azonosito}-${counter}`;
+      }
+      azonosito = newAzonosito;
+    }
+    
     return this.prisma.warehouse.create({
       data: {
-        azonosito: dto.azonosito,
+        azonosito,
         nev: dto.nev,
         cim: dto.cim,
         aktiv: dto.aktiv !== undefined ? dto.aktiv : true,

@@ -73,16 +73,13 @@ function App() {
   
   const [isAuthenticated, setIsAuthenticated] = useState(
     () => {
-      // In Electron desktop mode, always consider authenticated (auth is bypassed on backend)
-      if (isElectron) {
-        return true;
-      }
+      // Always check for token, even in Electron mode
       return !!localStorage.getItem('token');
     }
   );
 
-  // Skip login screen in Electron desktop mode
-  if (!isAuthenticated && !isElectron) {
+  // Always show login screen if not authenticated
+  if (!isAuthenticated) {
     return <Login onLogin={() => setIsAuthenticated(true)} />;
   }
 
@@ -152,17 +149,16 @@ function App() {
                 </Link>
               </div>
             </div>
-            {!isElectron && (
-              <button
-                onClick={() => {
-                  localStorage.removeItem('token');
-                  setIsAuthenticated(false);
-                }}
-                className="hover:bg-gray-800 px-4 py-2 rounded"
-              >
-                Kijelentkezés
-              </button>
-            )}
+            <button
+              onClick={() => {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                setIsAuthenticated(false);
+              }}
+              className="hover:bg-gray-800 px-4 py-2 rounded"
+            >
+              Kijelentkezés
+            </button>
           </div>
         </div>
       </nav>

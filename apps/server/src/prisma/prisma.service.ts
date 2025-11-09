@@ -61,6 +61,37 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
         this.logger.warn('Schema initialization check failed:', error);
       }
     }
+    
+    // Check and add missing columns (migrations)
+    try {
+      await this.applyMigrations();
+    } catch (error) {
+      this.logger.warn('Migration check failed:', error);
+    }
+  }
+
+  private async applyMigrations() {
+    try {
+      // Check if txtFajlUtvonal column exists in OCRJob table
+      const tableInfo = await this.$queryRaw<Array<{ name: string }>>`
+        PRAGMA table_info(ocr_feladatok);
+      `;
+      
+      const hasTxtFajlUtvonal = tableInfo.some(col => col.name === 'txtFajlUtvonal');
+      
+      if (!hasTxtFajlUtvonal) {
+        this.logger.log('Adding missing column txtFajlUtvonal to ocr_feladatok table...');
+        await this.$executeRaw`
+          ALTER TABLE ocr_feladatok ADD COLUMN txtFajlUtvonal TEXT;
+        `;
+        this.logger.log('✅ Column txtFajlUtvonal added successfully');
+      }
+    } catch (error: any) {
+      // Table might not exist yet, which is fine
+      if (!error.message?.includes('no such table')) {
+        this.logger.warn('Migration check error:', error.message);
+      }
+    }
   }
 
   private async ensureSchema() {
