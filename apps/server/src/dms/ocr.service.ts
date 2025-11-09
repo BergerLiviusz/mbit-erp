@@ -2,6 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../common/storage/storage.service';
 import { createWorker, Worker } from 'tesseract.js';
+import * as pdfParse from 'pdf-parse';
+import * as path from 'path';
 
 @Injectable()
 export class OcrService {
@@ -65,7 +67,7 @@ export class OcrService {
 
       await this.prisma.oCRJob.update({
         where: { id: jobId },
-        data: { allapot: 'feldolgozas' },
+        data: { allapot: 'feldolgozas', feldolgozasKezdet: new Date() },
       });
 
       if (!job.document.fajlUtvonal) {
@@ -73,20 +75,43 @@ export class OcrService {
       }
 
       const filePath = this.storage.getAbsolutePath(job.document.fajlUtvonal);
+      let extractedText = '';
 
-      if (!this.worker) {
-        this.worker = await createWorker('hun', undefined, {
-          logger: (m) => this.logger.debug(m),
-        });
+      // PDF fájlokhoz először próbáljuk meg a pdf-parse-t
+      if (job.document.mimeType === 'application/pdf') {
+        try {
+          const pdfBuffer = await this.storage.readFile(job.document.fajlUtvonal);
+          const pdfData = await pdfParse(pdfBuffer);
+          extractedText = pdfData.text.trim();
+          
+          // Ha van szöveg a PDF-ben, használjuk azt
+          if (extractedText.length > 0) {
+            this.logger.log(`PDF text extracted using pdf-parse: ${extractedText.length} characters`);
+          } else {
+            // Ha nincs szöveg (pl. scanned PDF), használjuk a Tesseract.js-t
+            this.logger.log('PDF has no embedded text, using OCR');
+            extractedText = await this.extractTextWithTesseract(filePath);
+          }
+        } catch (error) {
+          this.logger.warn(`pdf-parse failed, falling back to OCR: ${error}`);
+          extractedText = await this.extractTextWithTesseract(filePath);
+        }
+      } else {
+        // Kép fájlokhoz Tesseract.js-t használunk
+        extractedText = await this.extractTextWithTesseract(filePath);
       }
 
-      const { data: { text } } = await this.worker.recognize(filePath);
+      // Generáljuk a .txt fájlt
+      const txtFilename = `${path.basename(job.document.fajlNev, path.extname(job.document.fajlNev))}_ocr.txt`;
+      const txtBuffer = Buffer.from(extractedText, 'utf-8');
+      const txtRelativePath = await this.storage.saveFile('ocr', txtFilename, txtBuffer);
 
       await this.prisma.oCRJob.update({
         where: { id: jobId },
         data: {
           allapot: 'kesz',
-          eredmeny: text,
+          eredmeny: extractedText,
+          txtFajlUtvonal: txtRelativePath,
           feldolgozasVeg: new Date(),
         },
       });
@@ -94,11 +119,11 @@ export class OcrService {
       await this.prisma.document.update({
         where: { id: job.documentId },
         data: {
-          tartalom: text,
+          tartalom: extractedText,
         },
       });
 
-      this.logger.log(`OCR job ${jobId} completed successfully with ${text.length} characters`);
+      this.logger.log(`OCR job ${jobId} completed successfully with ${extractedText.length} characters`);
     } catch (error) {
       this.logger.error(`OCR job ${jobId} failed:`, error);
       
@@ -111,6 +136,17 @@ export class OcrService {
         },
       });
     }
+  }
+
+  private async extractTextWithTesseract(filePath: string): Promise<string> {
+    if (!this.worker) {
+      this.worker = await createWorker('hun', undefined, {
+        logger: (m) => this.logger.debug(m),
+      });
+    }
+
+    const { data: { text } } = await this.worker.recognize(filePath);
+    return text.trim();
   }
 
   async onModuleDestroy() {

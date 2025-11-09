@@ -1,5 +1,6 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards, Request, UseInterceptors, UploadedFile, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards, Request, UseInterceptors, UploadedFile, BadRequestException, Res } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { Response } from 'express';
 import { DocumentService, CreateDocumentDto, UpdateDocumentDto, DocumentFilters } from './document.service';
 import { AuditService } from '../common/audit/audit.service';
 import { Permissions } from '../common/rbac/rbac.decorator';
@@ -195,6 +196,39 @@ export class DocumentController {
     );
 
     return { message: 'Dokumentum sikeresen törölve' };
+  }
+
+  @Get(':id/ocr/download')
+  @Permissions(Permission.DOCUMENT_VIEW)
+  async downloadOcrText(@Param('id') id: string, @Res() res: Response) {
+    const document = await this.documentService.findOne(id);
+    
+    if (!document) {
+      throw new BadRequestException('Dokumentum nem található');
+    }
+
+    const ocrJob = await this.prisma.oCRJob.findUnique({
+      where: { documentId: id },
+    });
+
+    if (!ocrJob || ocrJob.allapot !== 'kesz') {
+      throw new BadRequestException('OCR feldolgozás még nem készült el vagy nem található');
+    }
+
+    if (!ocrJob.txtFajlUtvonal) {
+      throw new BadRequestException('OCR szövegfájl nem található');
+    }
+
+    try {
+      const fileBuffer = await this.storageService.readFile(ocrJob.txtFajlUtvonal);
+      const filename = `${document.fajlNev.replace(/\.[^/.]+$/, '')}_ocr.txt`;
+
+      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(filename)}"`);
+      res.send(fileBuffer);
+    } catch (error) {
+      throw new BadRequestException('Nem sikerült betölteni az OCR szövegfájlt');
+    }
   }
 
   @Post(':id/ocr')

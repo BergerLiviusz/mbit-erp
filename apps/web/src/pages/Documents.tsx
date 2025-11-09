@@ -22,6 +22,11 @@ interface Document {
     id: string;
     nev: string;
   } | null;
+  ocrJob?: {
+    id: string;
+    allapot: string;
+    txtFajlUtvonal?: string | null;
+  } | null;
   createdAt: string;
 }
 
@@ -377,7 +382,11 @@ export default function Documents() {
           if (docResponse.ok) {
             const updatedDoc = await docResponse.json();
             setDocuments(docs => 
-              docs.map(d => d.id === documentId ? { ...d, tartalom: updatedDoc.tartalom } : d)
+              docs.map(d => d.id === documentId ? { 
+                ...d, 
+                tartalom: updatedDoc.tartalom,
+                ocrJob: updatedDoc.ocrJob 
+              } : d)
             );
             setExpandedDoc(documentId);
           } else {
@@ -431,6 +440,38 @@ export default function Documents() {
       setError(err.message || 'Hiba történt a törlés során');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDownloadOcrText = async (documentId: string, documentName: string) => {
+    try {
+      const response = await apiFetch(`/dms/documents/${documentId}/ocr/download`, {
+        method: 'GET',
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Nincs hitelesítve. Kérem jelentkezzen be újra.');
+        } else if (response.status === 403) {
+          throw new Error('Nincs jogosultsága ehhez a művelethez.');
+        } else if (response.status === 404) {
+          throw new Error('OCR feldolgozás még nem készült el vagy nem található.');
+        } else {
+          throw new Error('Nem sikerült letölteni az OCR szövegfájlt.');
+        }
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${documentName.replace(/\.[^/.]+$/, '')}_ocr.txt`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err: any) {
+      setError(err.message || 'Hiba történt a letöltés során');
     }
   };
 
@@ -543,7 +584,7 @@ export default function Documents() {
                       </td>
                       <td className="p-4 text-sm text-gray-500">{formatDate(doc.createdAt)}</td>
                       <td className="p-4">
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 flex-wrap">
                           {doc.fajlNev && (
                             <button
                               onClick={() => handleOcrTrigger(doc.id)}
@@ -555,6 +596,15 @@ export default function Documents() {
                               }`}
                             >
                               {ocrLoading[doc.id] ? 'Feldolgozás...' : 'Szövegkinyerés'}
+                            </button>
+                          )}
+                          {doc.ocrJob?.allapot === 'kesz' && doc.ocrJob?.txtFajlUtvonal && (
+                            <button
+                              onClick={() => handleDownloadOcrText(doc.id, doc.fajlNev)}
+                              className="px-3 py-1 rounded text-sm bg-green-600 text-white hover:bg-green-700"
+                              title="OCR szöveg letöltése .txt fájlként"
+                            >
+                              📥 Letöltés
                             </button>
                           )}
                           <button
@@ -580,8 +630,21 @@ export default function Documents() {
                               </button>
                             </div>
                             {doc.tartalom ? (
-                              <div className="bg-gray-100 p-3 rounded border border-gray-200 font-mono text-sm whitespace-pre-wrap max-h-96 overflow-y-auto">
-                                {doc.tartalom}
+                              <div>
+                                <div className="flex justify-between items-center mb-2">
+                                  <span className="text-sm text-gray-600">Kinyert szöveg</span>
+                                  {doc.ocrJob?.allapot === 'kesz' && doc.ocrJob?.txtFajlUtvonal && (
+                                    <button
+                                      onClick={() => handleDownloadOcrText(doc.id, doc.fajlNev)}
+                                      className="px-3 py-1 rounded text-sm bg-green-600 text-white hover:bg-green-700"
+                                    >
+                                      📥 Letöltés .txt fájlként
+                                    </button>
+                                  )}
+                                </div>
+                                <div className="bg-gray-100 p-3 rounded border border-gray-200 font-mono text-sm whitespace-pre-wrap max-h-96 overflow-y-auto">
+                                  {doc.tartalom}
+                                </div>
                               </div>
                             ) : (
                               <div className="text-gray-500 italic text-center py-4">

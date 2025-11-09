@@ -86,6 +86,13 @@ export class DocumentService {
               email: true,
             },
           },
+          ocrJob: {
+            select: {
+              id: true,
+              allapot: true,
+              txtFajlUtvonal: true,
+            },
+          },
         },
         orderBy: { createdAt: 'desc' },
       }),
