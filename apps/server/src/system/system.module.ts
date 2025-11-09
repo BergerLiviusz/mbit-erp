@@ -3,6 +3,8 @@ import { SystemSettingsController } from './settings.controller';
 import { SystemSettingsService } from './settings.service';
 import { HealthController } from './health.controller';
 import { DiagnosticsController } from './diagnostics.controller';
+import { UserController } from './user.controller';
+import { UserService } from './user.service';
 import { PrismaModule } from '../prisma/prisma.module';
 import { BackupModule } from '../common/backup/backup.module';
 import { AuditModule } from '../common/audit/audit.module';
@@ -11,8 +13,8 @@ import { RbacModule } from '../common/rbac/rbac.module';
 
 @Module({
   imports: [PrismaModule, BackupModule, AuditModule, StorageModule, RbacModule],
-  controllers: [SystemSettingsController, HealthController, DiagnosticsController],
-  providers: [SystemSettingsService],
-  exports: [SystemSettingsService],
+  controllers: [SystemSettingsController, HealthController, DiagnosticsController, UserController],
+  providers: [SystemSettingsService, UserService],
+  exports: [SystemSettingsService, UserService],
 })
 export class SystemModule {}

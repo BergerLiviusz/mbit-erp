@@ -440,9 +440,14 @@ async function startBackend(): Promise<void> {
 function createWindow(): void {
   const isDev = !app.isPackaged;
   
+  // Use .ico for Windows, .png for other platforms
   const iconPath = isDev
-    ? path.join(__dirname, '..', 'resources', 'icon.png')
-    : path.join(process.resourcesPath, 'icon.png');
+    ? (process.platform === 'win32' 
+        ? path.join(__dirname, '..', 'resources', 'icon.ico')
+        : path.join(__dirname, '..', 'resources', 'icon.png'))
+    : (process.platform === 'win32'
+        ? path.join(process.resourcesPath, 'icon.ico')
+        : path.join(process.resourcesPath, 'icon.png'));
 
   mainWindow = new BrowserWindow({
     width: 1400,
@@ -461,8 +466,22 @@ function createWindow(): void {
     show: false,
   });
 
+  // Show window immediately, don't wait for ready-to-show
+  // This ensures the window appears even if backend takes time
+  mainWindow.show();
+  
+  // Also handle ready-to-show for better UX
   mainWindow.once('ready-to-show', () => {
-    mainWindow?.show();
+    if (mainWindow && !mainWindow.isVisible()) {
+      mainWindow.show();
+      mainWindow.focus();
+    }
+  });
+  
+  // Handle window errors
+  mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
+    console.error('[Window] Failed to load:', errorCode, errorDescription);
+    writeLog(`[Window] Failed to load: ${errorCode} - ${errorDescription}`);
   });
   
   if (isDev) {
@@ -470,7 +489,12 @@ function createWindow(): void {
     mainWindow.webContents.openDevTools();
   } else {
     const indexPath = path.join(process.resourcesPath, 'frontend', 'index.html');
-    mainWindow.loadFile(indexPath);
+    console.log('[Window] Loading frontend from:', indexPath);
+    writeLog(`[Window] Loading frontend from: ${indexPath}`);
+    mainWindow.loadFile(indexPath).catch((error) => {
+      console.error('[Window] Error loading file:', error);
+      writeLog(`[Window] Error loading file: ${error.message}`);
+    });
   }
 
   mainWindow.on('closed', () => {

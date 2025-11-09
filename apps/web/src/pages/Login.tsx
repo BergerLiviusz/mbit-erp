@@ -7,7 +7,7 @@ interface LoginProps {
 
 export default function Login({ onLogin }: LoginProps) {
   const [email, setEmail] = useState('admin@mbit.hu');
-  const [password, setPassword] = useState('admin123');
+  const [password, setPassword] = useState('1234');
   const [error, setError] = useState('');
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -70,7 +70,7 @@ export default function Login({ onLogin }: LoginProps) {
         <div className="mt-4 text-sm text-gray-600 text-center">
           <p>Alapértelmezett hozzáférés:</p>
           <p>Email: admin@mbit.hu</p>
-          <p>Jelszó: admin123</p>
+          <p>Jelszó: 1234</p>
         </div>
       </div>
     </div>

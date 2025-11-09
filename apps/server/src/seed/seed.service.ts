@@ -51,7 +51,7 @@ export class SeedService implements OnModuleInit {
     await this.seedAdminUser(roles[0].id);
     await this.seedSystemSettings();
     
-    this.logger.log(`✅ Admin felhasználó létrehozva: admin@mbit.hu / admin123`);
+    this.logger.log(`✅ Admin felhasználó létrehozva: admin / 1234`);
   }
 
   private async seedPermissions() {
@@ -141,10 +141,14 @@ export class SeedService implements OnModuleInit {
   private async seedAdminUser(adminRoleId: string) {
     this.logger.log('👤 Admin felhasználó létrehozása...');
     
-    const hashedPassword = await bcrypt.hash('admin123', 10);
+    // Create admin user with username "admin" and password "1234"
+    const hashedPassword = await bcrypt.hash('1234', 10);
     const adminUser = await this.prisma.user.upsert({
       where: { email: 'admin@mbit.hu' },
-      update: {},
+      update: {
+        // Update password if user exists but password is different
+        password: hashedPassword,
+      },
       create: {
         email: 'admin@mbit.hu',
         password: hashedPassword,

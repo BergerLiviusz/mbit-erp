@@ -18,7 +18,9 @@ interface HealthStatus {
   storage: { status: string; dataDir: string; available: boolean };
 }
 
-type TabType = 'organization' | 'backup' | 'system';
+import UsersTab from './UsersTab';
+
+type TabType = 'organization' | 'backup' | 'system' | 'users';
 
 export default function Settings() {
   const [activeTab, setActiveTab] = useState<TabType>('organization');
@@ -435,6 +437,16 @@ export default function Settings() {
           >
             Rendszer
           </button>
+          <button
+            onClick={() => setActiveTab('users')}
+            className={`py-4 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'users'
+                ? 'border-mbit-blue text-mbit-blue'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            Felhasználók
+          </button>
         </nav>
       </div>
 
@@ -442,6 +454,12 @@ export default function Settings() {
         {activeTab === 'organization' && renderOrganizationTab()}
         {activeTab === 'backup' && renderBackupTab()}
         {activeTab === 'system' && renderSystemTab()}
+        {activeTab === 'users' && (
+          <UsersTab
+            currentUserId={JSON.parse(localStorage.getItem('user') || '{}')?.id}
+            isAdmin={JSON.parse(localStorage.getItem('user') || '{}')?.roles?.includes('Admin')}
+          />
+        )}
       </div>
     </div>
   );

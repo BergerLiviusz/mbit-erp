@@ -95,6 +95,10 @@
       {
         "from": "resources/icon.png",
         "to": "icon.png"
+      },
+      {
+        "from": "resources/icon.ico",
+        "to": "icon.ico"
       }
     ],
     "win": {
@@ -112,7 +116,7 @@
           ]
         }
       ],
-      "icon": "resources/icon.png",
+      "icon": "resources/icon.ico",
       "artifactName": "${productName}-Setup-${version}.${ext}",
       "publisherName": "MB-IT Kft."
     },
@@ -133,7 +137,7 @@
           ]
         }
       ],
-      "icon": "resources/icon.png",
+      "icon": "resources/icon.ico",
       "category": "public.app-category.business",
       "artifactName": "${productName}-${version}-${arch}.${ext}",
       "hardenedRuntime": true,
@@ -165,7 +169,7 @@
         "AppImage",
         "deb"
       ],
-      "icon": "resources/icon.png",
+      "icon": "resources/icon.ico",
       "category": "Office",
       "maintainer": "MB-IT Kft. <info@mb-it.hu>",
       "artifactName": "${productName}-${version}-${arch}.${ext}"
