@@ -164,7 +164,7 @@ mbit-data/
 *.pem
 
 # Generated icons (electron-builder auto-generates from PNG)
-apps/desktop/resources/*.ico
+# Note: icon.ico is needed for Windows builds, so it's tracked in git
 apps/desktop/resources/*.icns
 resources/*.ico
 resources/*.icns

@@ -131,12 +131,18 @@ jobs:
         shell: pwsh
         run: |
           Write-Host "=== Verifying icon files ==="
+          Write-Host "Current directory: $(Get-Location)"
+          Write-Host "Listing apps/desktop/resources directory:"
+          Get-ChildItem "apps/desktop/resources/" -ErrorAction SilentlyContinue | Select-Object Name, Length
           
           $iconIco = "apps/desktop/resources/icon.ico"
           $iconPng = "apps/desktop/resources/icon.png"
           
+          Write-Host ""
+          Write-Host "Checking for icon.ico..."
           if (-not (Test-Path $iconIco)) {
             Write-Host "❌ ERROR: icon.ico not found at $iconIco"
+            Write-Host "Full path attempted: $((Get-Location).Path)\$iconIco"
             Write-Host "This will cause the Windows build to fail or use default icon"
             exit 1
           } else {
@@ -152,6 +158,8 @@ jobs:
             Write-Host "✅ icon.ico file appears valid (size: $($bytes.Length) bytes)"
           }
           
+          Write-Host ""
+          Write-Host "Checking for icon.png..."
           if (-not (Test-Path $iconPng)) {
             Write-Host "⚠️ WARNING: icon.png not found at $iconPng"
           } else {
