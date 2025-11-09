@@ -2893,3 +2893,15 @@ A változtatások commitolva és pusholva lettek. Az adatbázis migrációt a k�
 
 ---
 
+_**User (2025-11-09 11:13Z)**_
+
+the github actions didnt start probably because i have renamed the branch to "main" please push and commit to that branch now and make sure the workflow starts on github actions for the windows prod build
+
+---
+
+_**Agent (model composer-1, mode Agent)**_
+
+
+
+---
+

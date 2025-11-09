@@ -118,6 +118,10 @@ export default function Warehouses() {
     setWarehouseStock([]);
   };
 
+  const countActiveWarehouses = () => {
+    return warehouses.filter(w => w.aktiv).length;
+  };
+
   const handleOpenModal = () => {
     setError('');
     setSuccess('');
