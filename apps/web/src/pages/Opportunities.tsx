@@ -37,6 +37,7 @@ export default function Opportunities() {
   const [loading, setLoading] = useState(true);
   const [selectedSzakasz, setSelectedSzakasz] = useState<string>('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingOpportunityId, setEditingOpportunityId] = useState<string | null>(null);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string>('');
@@ -95,14 +96,36 @@ export default function Opportunities() {
     }
   };
 
-  const handleOpenModal = () => {
+  const handleOpenModal = (opportunity?: Opportunity) => {
     setError('');
     setSuccess('');
+    if (opportunity) {
+      setEditingOpportunityId(opportunity.id);
+      setFormData({
+        nev: opportunity.nev,
+        accountId: opportunity.account.id,
+        szakasz: opportunity.szakasz,
+        ertek: opportunity.ertek.toString(),
+        valoszinuseg: opportunity.valoszinuseg.toString(),
+        zarvasDatum: opportunity.zarvasDatum ? new Date(opportunity.zarvasDatum).toISOString().split('T')[0] : '',
+      });
+    } else {
+      setEditingOpportunityId(null);
+      setFormData({
+        nev: '',
+        accountId: '',
+        szakasz: 'uj',
+        ertek: '',
+        valoszinuseg: '50',
+        zarvasDatum: '',
+      });
+    }
     setIsModalOpen(true);
   };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
+    setEditingOpportunityId(null);
     setFormData({
       nev: '',
       accountId: '',
@@ -170,12 +193,28 @@ export default function Opportunities() {
         zarvasDatum: zarvasDatum,
       };
 
-      const response = await apiFetch('/crm/opportunities', {
-        method: 'POST',
+      const url = editingOpportunityId 
+        ? `/crm/opportunities/${editingOpportunityId}`
+        : '/crm/opportunities';
+      const method = editingOpportunityId ? 'PUT' : 'POST';
+
+      // For PUT requests, don't send accountId (it's not in UpdateOpportunityDto)
+      const requestData = editingOpportunityId 
+        ? {
+            nev: opportunityData.nev,
+            szakasz: opportunityData.szakasz,
+            ertek: opportunityData.ertek,
+            valoszinuseg: opportunityData.valoszinuseg,
+            zarvasDatum: opportunityData.zarvasDatum,
+          }
+        : opportunityData;
+
+      const response = await apiFetch(url, {
+        method,
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(opportunityData),
+        body: JSON.stringify(requestData),
       });
 
       if (!response.ok) {
@@ -190,11 +229,11 @@ export default function Opportunities() {
           throw new Error('Szerver hiba. Kérem próbálja újra később.');
         } else {
           const errorData = await response.json();
-          throw new Error(errorData.message || 'Hiba a lehetőség létrehozásakor');
+          throw new Error(errorData.message || `Hiba a lehetőség ${editingOpportunityId ? 'frissítésekor' : 'létrehozásakor'}`);
         }
       }
 
-      setSuccess('Lehetőség sikeresen létrehozva!');
+      setSuccess(editingOpportunityId ? 'Lehetőség sikeresen frissítve!' : 'Lehetőség sikeresen létrehozva!');
       setTimeout(() => {
         handleCloseModal();
         loadOpportunities();
@@ -309,11 +348,12 @@ export default function Opportunities() {
                 <th className="text-right p-4 font-medium text-gray-700">Várható</th>
                 <th className="text-left p-4 font-medium text-gray-700">Zárás</th>
                 <th className="text-left p-4 font-medium text-gray-700">Létrehozva</th>
+                <th className="text-right p-4 font-medium text-gray-700">Műveletek</th>
               </tr>
             </thead>
             <tbody className="divide-y">
               {opportunities.map(opp => (
-                <tr key={opp.id} className="hover:bg-gray-50 cursor-pointer">
+                <tr key={opp.id} className="hover:bg-gray-50">
                   <td className="p-4">
                     <div className="font-medium text-mbit-blue">{opp.nev}</div>
                   </td>
@@ -335,6 +375,14 @@ export default function Opportunities() {
                   </td>
                   <td className="p-4 text-sm">{formatDate(opp.zarvasDatum)}</td>
                   <td className="p-4 text-sm text-gray-500">{formatDate(opp.createdAt)}</td>
+                  <td className="p-4 text-right">
+                    <button
+                      onClick={() => handleOpenModal(opp)}
+                      className="text-mbit-blue hover:text-blue-600 text-sm font-medium"
+                    >
+                      Szerkesztés
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -342,7 +390,7 @@ export default function Opportunities() {
         )}
       </div>
 
-      <Modal isOpen={isModalOpen} onClose={handleCloseModal} title="Új lehetőség" size="lg">
+      <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={editingOpportunityId ? "Lehetőség szerkesztése" : "Új lehetőség"} size="lg">
         {error && (
           <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
             {error}
@@ -378,12 +426,16 @@ export default function Opportunities() {
                 onChange={(e) => setFormData({ ...formData, accountId: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
+                disabled={!!editingOpportunityId}
               >
                 <option value="">-- Válasszon --</option>
                 {accounts.map(a => (
                   <option key={a.id} value={a.id}>{a.nev} ({a.azonosito})</option>
                 ))}
               </select>
+              {editingOpportunityId && (
+                <p className="mt-1 text-xs text-gray-500">Az ügyfél nem módosítható szerkesztéskor</p>
+              )}
             </div>
 
             <div>
@@ -461,7 +513,7 @@ export default function Opportunities() {
               className="px-4 py-2 bg-mbit-blue text-white rounded hover:bg-blue-600 disabled:opacity-50"
               disabled={saving}
             >
-              {saving ? 'Mentés...' : 'Mentés'}
+              {saving ? 'Mentés...' : (editingOpportunityId ? 'Frissítés' : 'Mentés')}
             </button>
           </div>
         </form>

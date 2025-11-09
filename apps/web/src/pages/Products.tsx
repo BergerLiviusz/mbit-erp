@@ -12,6 +12,16 @@ interface Product {
   eladasiAr: number;
   afaKulcs: number;
   aktiv: boolean;
+  stockLevels?: Array<{
+    id: string;
+    warehouseId: string;
+    mennyiseg: number;
+    warehouse?: {
+      id: string;
+      nev: string;
+      azonosito: string;
+    };
+  }>;
   createdAt: string;
 }
 
@@ -66,9 +76,18 @@ export default function Products() {
   };
 
   const calculateTotalValue = () => {
+    // Calculate inventory value: purchase price × stock quantity
     return products
       .filter(p => p.aktiv)
-      .reduce((sum, p) => sum + p.eladasiAr, 0);
+      .reduce((sum, p) => {
+        // If stockLevels exist, calculate inventory value
+        if (p.stockLevels && p.stockLevels.length > 0) {
+          const totalStock = p.stockLevels.reduce((stockSum, level) => stockSum + level.mennyiseg, 0);
+          return sum + (p.beszerzesiAr * totalStock);
+        }
+        // If no stock data, return 0 for this product (or could use a default)
+        return sum;
+      }, 0);
   };
 
   const handleOpenModal = (product?: Product) => {
@@ -270,10 +289,11 @@ export default function Products() {
           </div>
         </div>
         <div className="bg-white p-4 rounded-lg shadow">
-          <div className="text-sm text-gray-600">Összesített érték</div>
+          <div className="text-sm text-gray-600">Összesített készletérték</div>
           <div className="text-2xl font-bold text-blue-600">
             {calculateTotalValue().toLocaleString('hu-HU')} Ft
           </div>
+          <div className="text-xs text-gray-500 mt-1">Beszerzési ár × készletmennyiség</div>
         </div>
       </div>
 

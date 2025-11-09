@@ -10,6 +10,7 @@ interface Quote {
   afa: number;
   vegosszeg: number;
   allapot: string;
+  megjegyzesek?: string | null;
   account: {
     id: string;
     nev: string;
@@ -19,6 +20,19 @@ interface Quote {
     id: string;
     nev: string;
   } | null;
+  items?: Array<{
+    id: string;
+    itemId: string;
+    mennyiseg: number;
+    egysegAr: number;
+    kedvezmeny: number;
+    item: {
+      id: string;
+      nev: string;
+      azonosito: string;
+      eladasiAr: number;
+    };
+  }>;
   createdAt: string;
 }
 
@@ -62,6 +76,7 @@ export default function Quotes() {
   const [loading, setLoading] = useState(true);
   const [selectedAllapot, setSelectedAllapot] = useState<string>('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingQuoteId, setEditingQuoteId] = useState<string | null>(null);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [items, setItems] = useState<Item[]>([]);
@@ -73,6 +88,7 @@ export default function Quotes() {
     accountId: '',
     opportunityId: '',
     ervenyessegDatum: '',
+    allapot: 'tervezet',
     megjegyzesek: '',
     items: [{ itemId: '', mennyiseg: '1', egysegAr: '0', kedvezmeny: '0' }] as QuoteItem[],
   });
@@ -115,7 +131,15 @@ export default function Quotes() {
 
       if (response.ok) {
         const data = await response.json();
-        setAccounts(data.data || []);
+        // Handle both possible response formats
+        const accountsList = data.items || data.data || [];
+        console.log('Loaded accounts:', accountsList.length);
+        setAccounts(accountsList);
+        if (accountsList.length === 0) {
+          console.warn('No accounts found. Response data:', data);
+        }
+      } else {
+        console.error('Failed to load accounts:', response.status, response.statusText);
       }
     } catch (error) {
       console.error('Hiba az ügyfelek betöltésekor:', error);
@@ -148,18 +172,60 @@ export default function Quotes() {
     }
   };
 
-  const handleOpenModal = () => {
+  const handleOpenModal = async (quote?: Quote) => {
     setError('');
     setSuccess('');
+    if (quote) {
+      setEditingQuoteId(quote.id);
+      // Load full quote details including items
+      try {
+        const response = await apiFetch(`/crm/quotes/${quote.id}`);
+        if (response.ok) {
+          const fullQuote = await response.json();
+          setFormData({
+            accountId: fullQuote.account.id,
+            opportunityId: fullQuote.opportunity?.id || '',
+            ervenyessegDatum: new Date(fullQuote.ervenyessegDatum).toISOString().split('T')[0],
+            allapot: fullQuote.allapot,
+            megjegyzesek: fullQuote.megjegyzesek || '',
+            items: fullQuote.items && fullQuote.items.length > 0
+              ? fullQuote.items.map((item: any) => ({
+                  itemId: item.itemId,
+                  mennyiseg: item.mennyiseg.toString(),
+                  egysegAr: item.egysegAr.toString(),
+                  kedvezmeny: item.kedvezmeny.toString(),
+                }))
+              : [{ itemId: '', mennyiseg: '1', egysegAr: '0', kedvezmeny: '0' }],
+          });
+        } else {
+          setError('Hiba az árajánlat betöltésekor');
+        }
+      } catch (error) {
+        console.error('Error loading quote details:', error);
+        setError('Hiba az árajánlat betöltésekor');
+      }
+    } else {
+      setEditingQuoteId(null);
+      setFormData({
+        accountId: '',
+        opportunityId: '',
+        ervenyessegDatum: '',
+        allapot: 'tervezet',
+        megjegyzesek: '',
+        items: [{ itemId: '', mennyiseg: '1', egysegAr: '0', kedvezmeny: '0' }],
+      });
+    }
     setIsModalOpen(true);
   };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
+    setEditingQuoteId(null);
     setFormData({
       accountId: '',
       opportunityId: '',
       ervenyessegDatum: '',
+      allapot: 'tervezet',
       megjegyzesek: '',
       items: [{ itemId: '', mennyiseg: '1', egysegAr: '0', kedvezmeny: '0' }],
     });
@@ -251,45 +317,86 @@ export default function Quotes() {
     setSaving(true);
 
     try {
+      const url = editingQuoteId 
+        ? `/crm/quotes/${editingQuoteId}`
+        : '/crm/quotes';
+      const method = editingQuoteId ? 'PUT' : 'POST';
 
-      const quoteData = {
-        accountId: formData.accountId,
-        opportunityId: formData.opportunityId || undefined,
-        ervenyessegDatum: ervenyessegDate.toISOString(),
-        megjegyzesek: formData.megjegyzesek || undefined,
-        items: formData.items.map(item => ({
-          itemId: item.itemId,
-          mennyiseg: parseFloat(item.mennyiseg),
-          egysegAr: parseFloat(item.egysegAr),
-          kedvezmeny: parseFloat(item.kedvezmeny),
-        })),
-      };
+      if (editingQuoteId) {
+        // For PUT requests, only send updatable fields
+        const updateData = {
+          ervenyessegDatum: ervenyessegDate.toISOString(),
+          allapot: formData.allapot,
+          megjegyzesek: formData.megjegyzesek || undefined,
+        };
 
-      const response = await apiFetch('/crm/quotes', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(quoteData),
-      });
+        const response = await apiFetch(url, {
+          method,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(updateData),
+        });
 
-      if (!response.ok) {
-        if (response.status === 401) {
-          throw new Error('Nincs hitelesítve. Kérem jelentkezzen be újra.');
-        } else if (response.status === 403) {
-          throw new Error('Nincs jogosultsága ehhez a művelethez.');
-        } else if (response.status === 400) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Hibás adatok.');
-        } else if (response.status >= 500) {
-          throw new Error('Szerver hiba. Kérem próbálja újra később.');
-        } else {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Hiba az árajánlat létrehozásakor');
+        if (!response.ok) {
+          if (response.status === 401) {
+            throw new Error('Nincs hitelesítve. Kérem jelentkezzen be újra.');
+          } else if (response.status === 403) {
+            throw new Error('Nincs jogosultsága ehhez a művelethez.');
+          } else if (response.status === 400) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Hibás adatok.');
+          } else if (response.status >= 500) {
+            throw new Error('Szerver hiba. Kérem próbálja újra később.');
+          } else {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Hiba az árajánlat frissítésekor');
+          }
         }
+
+        setSuccess('Árajánlat sikeresen frissítve!');
+      } else {
+        // For POST requests, send full quote data
+        const quoteData = {
+          accountId: formData.accountId,
+          opportunityId: formData.opportunityId || undefined,
+          ervenyessegDatum: ervenyessegDate.toISOString(),
+          megjegyzesek: formData.megjegyzesek || undefined,
+          items: formData.items.map(item => ({
+            itemId: item.itemId,
+            mennyiseg: parseFloat(item.mennyiseg),
+            egysegAr: parseFloat(item.egysegAr),
+            kedvezmeny: parseFloat(item.kedvezmeny),
+          })),
+        };
+
+        const response = await apiFetch(url, {
+          method,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(quoteData),
+        });
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            throw new Error('Nincs hitelesítve. Kérem jelentkezzen be újra.');
+          } else if (response.status === 403) {
+            throw new Error('Nincs jogosultsága ehhez a művelethez.');
+          } else if (response.status === 400) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Hibás adatok.');
+          } else if (response.status >= 500) {
+            throw new Error('Szerver hiba. Kérem próbálja újra később.');
+          } else {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Hiba az árajánlat létrehozásakor');
+          }
+        }
+
+        setSuccess('Árajánlat sikeresen létrehozva!');
       }
 
-      setSuccess('Árajánlat sikeresen létrehozva!');
       setTimeout(() => {
         handleCloseModal();
         loadQuotes();
@@ -404,11 +511,12 @@ export default function Quotes() {
                 <th className="text-right p-4 font-medium text-gray-700">Végösszeg</th>
                 <th className="text-left p-4 font-medium text-gray-700">Érvényes</th>
                 <th className="text-left p-4 font-medium text-gray-700">Létrehozva</th>
+                <th className="text-right p-4 font-medium text-gray-700">Műveletek</th>
               </tr>
             </thead>
             <tbody className="divide-y">
               {quotes.map(quote => (
-                <tr key={quote.id} className="hover:bg-gray-50 cursor-pointer">
+                <tr key={quote.id} className="hover:bg-gray-50">
                   <td className="p-4">
                     <div className="font-medium text-mbit-blue">{quote.azonosito}</div>
                   </td>
@@ -427,6 +535,14 @@ export default function Quotes() {
                   </td>
                   <td className="p-4 text-sm">{formatDate(quote.ervenyessegDatum)}</td>
                   <td className="p-4 text-sm text-gray-500">{formatDate(quote.createdAt)}</td>
+                  <td className="p-4 text-right">
+                    <button
+                      onClick={() => handleOpenModal(quote)}
+                      className="text-mbit-blue hover:text-blue-600 text-sm font-medium"
+                    >
+                      Szerkesztés
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -434,7 +550,7 @@ export default function Quotes() {
         )}
       </div>
 
-      <Modal isOpen={isModalOpen} onClose={handleCloseModal} title="Új árajánlat" size="xl">
+      <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={editingQuoteId ? "Árajánlat szerkesztése" : "Új árajánlat"} size="xl">
         {error && (
           <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
             {error}
@@ -458,12 +574,23 @@ export default function Quotes() {
                   onChange={(e) => setFormData({ ...formData, accountId: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
+                  disabled={!!editingQuoteId}
                 >
                   <option value="">-- Válasszon --</option>
-                  {accounts.map(a => (
-                    <option key={a.id} value={a.id}>{a.nev} ({a.azonosito})</option>
-                  ))}
+                  {accounts.length === 0 ? (
+                    <option value="" disabled>Nincs elérhető ügyfél</option>
+                  ) : (
+                    accounts.map(a => (
+                      <option key={a.id} value={a.id}>{a.nev} ({a.azonosito})</option>
+                    ))
+                  )}
                 </select>
+                {editingQuoteId && (
+                  <p className="mt-1 text-xs text-gray-500">Az ügyfél nem módosítható szerkesztéskor</p>
+                )}
+                {accounts.length === 0 && !editingQuoteId && (
+                  <p className="mt-1 text-xs text-yellow-600">Nincs elérhető ügyfél. Kérjük, először hozzon létre ügyfelet.</p>
+                )}
               </div>
 
               <div>
@@ -474,26 +601,48 @@ export default function Quotes() {
                   value={formData.opportunityId}
                   onChange={(e) => setFormData({ ...formData, opportunityId: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  disabled={!!editingQuoteId}
                 >
                   <option value="">-- Válasszon --</option>
                   {opportunities.map(o => (
                     <option key={o.id} value={o.id}>{o.nev}</option>
                   ))}
                 </select>
+                {editingQuoteId && (
+                  <p className="mt-1 text-xs text-gray-500">A lehetőség nem módosítható szerkesztéskor</p>
+                )}
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Érvényesség dátuma <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="date"
-                value={formData.ervenyessegDatum}
-                onChange={(e) => setFormData({ ...formData, ervenyessegDatum: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Érvényesség dátuma <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="date"
+                  value={formData.ervenyessegDatum}
+                  onChange={(e) => setFormData({ ...formData, ervenyessegDatum: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Állapot <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={formData.allapot}
+                  onChange={(e) => setFormData({ ...formData, allapot: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                >
+                  {ALLAPOTOK.map(all => (
+                    <option key={all.kod} value={all.kod}>{all.nev}</option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             <div>
@@ -518,10 +667,14 @@ export default function Quotes() {
                   type="button"
                   onClick={handleAddItem}
                   className="text-sm bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
+                  disabled={!!editingQuoteId}
                 >
                   + Tétel hozzáadása
                 </button>
               </div>
+              {editingQuoteId && (
+                <p className="mb-2 text-xs text-gray-500">A tételek nem módosíthatók szerkesztéskor</p>
+              )}
 
               <div className="space-y-3 max-h-64 overflow-y-auto">
                 {formData.items.map((item, index) => (
@@ -537,6 +690,7 @@ export default function Quotes() {
                             onChange={(e) => handleItemChange(index, 'itemId', e.target.value)}
                             className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
                             required
+                            disabled={!!editingQuoteId}
                           >
                             <option value="">-- Válasszon --</option>
                             {items.map(i => (
@@ -557,6 +711,7 @@ export default function Quotes() {
                             onChange={(e) => handleItemChange(index, 'mennyiseg', e.target.value)}
                             className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
                             required
+                            disabled={!!editingQuoteId}
                           />
                         </div>
 
@@ -572,6 +727,7 @@ export default function Quotes() {
                             onChange={(e) => handleItemChange(index, 'egysegAr', e.target.value)}
                             className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
                             required
+                            disabled={!!editingQuoteId}
                           />
                         </div>
 
@@ -588,6 +744,7 @@ export default function Quotes() {
                             onChange={(e) => handleItemChange(index, 'kedvezmeny', e.target.value)}
                             className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
                             required
+                            disabled={!!editingQuoteId}
                           />
                         </div>
                       </div>
@@ -625,7 +782,7 @@ export default function Quotes() {
               className="px-4 py-2 bg-mbit-blue text-white rounded hover:bg-blue-600 disabled:opacity-50"
               disabled={saving}
             >
-              {saving ? 'Mentés...' : 'Mentés'}
+              {saving ? 'Mentés...' : (editingQuoteId ? 'Frissítés' : 'Mentés')}
             </button>
           </div>
         </form>

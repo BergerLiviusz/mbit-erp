@@ -21,6 +21,11 @@ export class ItemService {
         take,
         include: {
           itemGroup: true,
+          stockLevels: {
+            include: {
+              warehouse: true,
+            },
+          },
         },
         orderBy: { createdAt: 'desc' },
       }),
