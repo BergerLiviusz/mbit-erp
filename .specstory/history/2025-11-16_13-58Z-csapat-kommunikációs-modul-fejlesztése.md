@@ -7011,3 +7011,816 @@ A CI workflow újra elindul, és most sikeresen le kellene futnia. A GitHub Acti
 
 ---
 
+_**User (2025-11-16 16:25Z)**_
+
+okés CI lefutott.
+
+Megnyitottam az applikációt a windows tesztkörnyezetben sikeresen.
+
+
+
+az új "Csapat Kommunikáció" modul teljesen statikus és nem reagál az egyetlen gomb semmire , amikor megnyomom a "+Új feladat"-ot semmi nem történik pedig a backend csatlakoztatva. Nem ír semmi különöset benyomásom szerint az app log de itt van, bemásolom:
+
+
+
+[2025-11-16T19:52:31.316Z] [Cleanup] Checking for legacy nested node_modules directories...
+
+
+
+[2025-11-16T19:52:31.550Z] [Cleanup] ✓ No legacy nested node_modules found
+
+[2025-11-16T19:52:31.559Z] [App] Creating window immediately...
+
+[2025-11-16T19:52:31.566Z] [Window] Found icon at: C:\Users\liviuszberger\Desktop\Mbit\resources\icon.ico
+
+[2025-11-16T19:52:31.568Z] [Window] Creating BrowserWindow...
+
+[2025-11-16T19:52:32.272Z] [Window] BrowserWindow created, showing...
+
+[2025-11-16T19:52:32.274Z] [Window] Loading frontend from: C:\Users\liviuszberger\Desktop\Mbit\resources\frontend\index.html
+
+[2025-11-16T19:52:32.277Z] [Window] Loading from URL: file:///C:/Users/liviuszberger/Desktop/Mbit/resources/frontend/index.html
+
+[2025-11-16T19:52:32.395Z] [Window] Window setup complete
+
+[2025-11-16T19:52:32.396Z] [App] Starting backend server in background...
+
+[2025-11-16T19:52:32.400Z] [Backend] Environment: PORT=3000, DATA_DIR=C:\Users\liviuszberger\AppData\Roaming\@mbit-erp\desktop\data, DATABASE_URL=file:***mbit-erp.db
+
+[2025-11-16T19:52:32.401Z] [Backend] Backend path: C:\Users\liviuszberger\Desktop\Mbit\resources\backend\main.js
+
+[2025-11-16T19:52:32.401Z] [Backend] Backend directory: C:\Users\liviuszberger\Desktop\Mbit\resources\backend
+
+[2025-11-16T19:52:32.401Z] [Backend] Node modules path: C:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules
+
+[2025-11-16T19:52:32.402Z] [Backend] Resources path: C:\Users\liviuszberger\Desktop\Mbit\resources
+
+[2025-11-16T19:52:32.402Z] [Backend] Using Electron bundled Node.js runtime via fork()
+
+[2025-11-16T19:52:32.403Z] [Backend] NODE_PATH set to: C:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules
+
+[2025-11-16T19:52:32.422Z] [Backend] Waiting for backend to be ready (max 120s)...
+
+[2025-11-16T19:52:33.499Z] [Backend] 🔧 Electron mode detected - skipping .env file loading (using Electron-provided environment variables)
+
+[2025-11-16T19:52:33.515Z] [Window] Window finished loading
+
+[2025-11-16T19:52:33.526Z] [Window] Window ready-to-show event fired
+
+[2025-11-16T19:52:40.684Z] [Backend] Still waiting... (attempt 5/60, 10s elapsed)
+
+[2025-11-16T19:52:42.436Z] [Backend] Health check: PID 4660 is alive
+
+[2025-11-16T19:52:50.748Z] [Backend] Still waiting... (attempt 10/60, 20s elapsed)
+
+[2025-11-16T19:52:52.449Z] [Backend] Health check: PID 4660 is alive
+
+[2025-11-16T19:52:55.279Z] [Backend] 🔍 Environment check:
+
+  - ELECTRON_RUN_AS_NODE: 1
+
+  - DATABASE_URL: ***SET***
+
+[2025-11-16T19:52:55.281Z] [Backend]   - PORT: 3000
+
+  - NODE_ENV: production
+
+[2025-11-16T19:52:55.290Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[NestFactory] [39m[32mStarting Nest application...[39m
+
+[2025-11-16T19:52:55.360Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[StorageService] [39m[32mData directory: C:\Users\liviuszberger\mbit-data[39m
+
+[2025-11-16T19:52:55.493Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPrismaModule dependencies initialized[39m[38;5;3m +133ms[39m
+
+[2025-11-16T19:52:55.494Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mStorageModule dependencies initialized[39m[38;5;3m +1ms[39m
+
+[2025-11-16T19:52:55.494Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPassportModule dependencies initialized[39m[38;5;3m +0ms[39m
+
+[2025-11-16T19:52:55.530Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mJwtModule dependencies initialized[39m[38;5;3m +36ms[39m
+
+[2025-11-16T19:52:55.534Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAppModule dependencies initialized[39m[38;5;3m +4ms[39m
+
+[2025-11-16T19:52:55.534Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mSeedModule dependencies initialized[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAuditModule dependencies initialized[39m[38;5;3m +0ms[39m
+
+[2025-11-16T19:52:55.536Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAuditModule dependencies initialized[39m[38;5;3m +1ms[39m
+
+[2025-11-16T19:52:55.536Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mBackupModule dependencies initialized[39m[38;5;3m +1ms[39m
+
+[2025-11-16T19:52:55.538Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mRbacModule dependencies initialized[39m[38;5;3m +1ms[39m
+
+[2025-11-16T19:52:55.540Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAuthModule dependencies initialized[39m[38;5;3m +3ms[39m
+
+[2025-11-16T19:52:55.549Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mSystemModule dependencies initialized[39m[38;5;3m +9ms[39m
+
+[2025-11-16T19:52:55.550Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mTeamModule dependencies initialized[39m[38;5;3m +1ms[39m
+
+[2025-11-16T19:52:55.551Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mDmsModule dependencies initialized[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mLogisticsModule dependencies initialized[39m[38;5;3m +1ms[39m
+
+[32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mCrmModule dependencies initialized[39m[38;5;3m +0ms[39m
+
+[2025-11-16T19:52:55.933Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAppController {/}:[39m[38;5;3m +382ms[39m
+
+[2025-11-16T19:52:55.938Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/, GET} route[39m[38;5;3m +5ms[39m
+
+[2025-11-16T19:52:55.938Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/health, GET} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAuthController {/auth}:[39m[38;5;3m +0ms[39m
+
+[2025-11-16T19:52:55.941Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/auth/login, POST} route[39m[38;5;3m +2ms[39m
+
+[2025-11-16T19:52:55.942Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/auth/register, POST} route[39m[38;5;3m +2ms[39m
+
+[2025-11-16T19:52:55.943Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAccountController {/crm/accounts}:[39m[38;5;3m +1ms[39m
+
+[2025-11-16T19:52:55.948Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/accounts, GET} route[39m[38;5;3m +5ms[39m
+
+[2025-11-16T19:52:55.951Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/accounts/:id, GET} route[39m[38;5;3m +3ms[39m
+
+[2025-11-16T19:52:55.952Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/accounts, POST} route[39m[38;5;3m +1ms[39m
+
+[2025-11-16T19:52:55.952Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/accounts/:id, PUT} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T19:52:55.955Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/accounts/:id, DELETE} route[39m[38;5;3m +3ms[39m
+
+[2025-11-16T19:52:55.955Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mCampaignController {/crm/campaigns}:[39m[38;5;3m +0ms[39m
+
+[2025-11-16T19:52:55.960Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/campaigns, GET} route[39m[38;5;3m +4ms[39m
+
+[2025-11-16T19:52:55.960Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/campaigns/:id, GET} route[39m[38;5;3m +1ms[39m
+
+[32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/campaigns, POST} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T19:52:55.960Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/campaigns/:id, PUT} route[39m[38;5;3m +1ms[39m
+
+[2025-11-16T19:52:55.961Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/campaigns/:id, DELETE} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T19:52:55.962Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mTicketController {/crm/tickets}:[39m[38;5;3m +0ms[39m
+
+[2025-11-16T19:52:55.962Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/tickets, GET} route[39m[38;5;3m +1ms[39m
+
+[2025-11-16T19:52:55.963Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/tickets/:id, GET} route[39m[38;5;3m +1ms[39m
+
+[2025-11-16T19:52:55.963Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/tickets, POST} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T19:52:55.963Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/tickets/:id, PUT} route[39m[38;5;3m +1ms[39m
+
+[2025-11-16T19:52:55.964Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/tickets/:id, DELETE} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T19:52:55.964Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mOpportunityController {/crm/opportunities}:[39m[38;5;3m +0ms[39m
+
+[2025-11-16T19:52:55.965Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/opportunities, GET} route[39m[38;5;3m +1ms[39m
+
+[2025-11-16T19:52:55.966Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/opportunities/stats, GET} route[39m[38;5;3m +1ms[39m
+
+[2025-11-16T19:52:55.966Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/opportunities/:id, GET} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T19:52:55.967Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/opportunities, POST} route[39m[38;5;3m +1ms[39m
+
+[32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/opportunities/:id, PUT} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T19:52:55.967Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/opportunities/:id, DELETE} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mQuoteController {/crm/quotes}:[39m[38;5;3m +0ms[39m
+
+[2025-11-16T19:52:55.968Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/quotes, GET} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T19:52:55.968Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/quotes/:id, GET} route[39m[38;5;3m +2ms[39m
+
+[2025-11-16T19:52:55.969Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/quotes, POST} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/quotes/:id, PUT} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T19:52:55.969Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/quotes/:id/approve, POST} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T19:52:55.969Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/quotes/:id/reject, POST} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T19:52:55.970Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/quotes/:id, DELETE} route[39m[38;5;3m +1ms[39m
+
+[2025-11-16T19:52:55.970Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mSystemSettingsController {/system/settings}:[39m[38;5;3m +0ms[39m
+
+[2025-11-16T19:52:55.971Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/settings, GET} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/settings/category/:category, GET} route[39m[38;5;3m +1ms[39m
+
+[2025-11-16T19:52:55.971Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/settings/:key, GET} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/settings, POST} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/settings/:key, PUT} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T19:52:55.971Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/settings/bulk, POST} route[39m[38;5;3m +1ms[39m
+
+[2025-11-16T19:52:55.972Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/settings/:key, DELETE} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/settings/initialize, POST} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T19:52:55.972Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mHealthController {/health}:[39m[38;5;3m +0ms[39m
+
+[2025-11-16T19:52:55.973Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/health, GET} route[39m[38;5;3m +1ms[39m
+
+[2025-11-16T19:52:55.973Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/health/detailed, GET} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T19:52:55.973Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mDiagnosticsController {/system/diagnostics}:[39m[38;5;3m +0ms[39m
+
+[2025-11-16T19:52:55.974Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/diagnostics/logs/download, GET} route[39m[38;5;3m +1ms[39m
+
+[2025-11-16T19:52:55.975Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/diagnostics/stats, GET} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T19:52:55.975Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/diagnostics/backup/now, POST} route[39m[38;5;3m +2ms[39m
+
+[2025-11-16T19:52:55.976Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/diagnostics/backup/list, GET} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T19:52:55.976Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/diagnostics/permissions/check-admin, GET} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/diagnostics/permissions/fix-admin, POST} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T19:52:55.977Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mUserController {/system/users}:[39m[38;5;3m +1ms[39m
+
+[2025-11-16T19:52:55.977Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/users, GET} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T19:52:55.977Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/users/:id, GET} route[39m[38;5;3m +1ms[39m
+
+[2025-11-16T19:52:55.978Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/users, POST} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/users/:id, PUT} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T19:52:55.978Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/users/:id/password, PUT} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T19:52:55.978Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/users/:id, DELETE} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T19:52:55.978Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mDocumentController {/dms/documents}:[39m[38;5;3m +0ms[39m
+
+[2025-11-16T19:52:55.979Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/documents, GET} route[39m[38;5;3m +1ms[39m
+
+[2025-11-16T19:52:55.980Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/documents/:id, GET} route[39m[38;5;3m +1ms[39m
+
+[2025-11-16T19:52:55.980Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/documents, POST} route[39m[38;5;3m +1ms[39m
+
+[2025-11-16T19:52:55.981Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/documents/:id, PUT} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T19:52:55.984Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/documents/:id/upload, POST} route[39m[38;5;3m +3ms[39m
+
+[2025-11-16T19:52:55.985Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/documents/:id, DELETE} route[39m[38;5;3m +1ms[39m
+
+[32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/documents/:id/ocr/download, GET} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T19:52:55.985Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/documents/:id/ocr, POST} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mDocumentCategoryController {/dms/categories}:[39m[38;5;3m +0ms[39m
+
+[2025-11-16T19:52:55.986Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/categories, GET} route[39m[38;5;3m +1ms[39m
+
+[2025-11-16T19:52:55.986Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/categories/:id, GET} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T19:52:55.986Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/categories, POST} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T19:52:55.986Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/categories/:id, PUT} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mItemController {/logistics/items}:[39m[38;5;3m +1ms[39m
+
+[2025-11-16T19:52:55.987Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/items, GET} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T19:52:55.987Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/items/:id, GET} route[39m[38;5;3m +1ms[39m
+
+[2025-11-16T19:52:55.988Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/items, POST} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T19:52:55.988Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/items/:id, PUT} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T19:52:55.989Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/items/:id, DELETE} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T19:52:55.989Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mWarehouseController {/logistics/warehouses}:[39m[38;5;3m +1ms[39m
+
+[2025-11-16T19:52:55.990Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/warehouses, GET} route[39m[38;5;3m +1ms[39m
+
+[2025-11-16T19:52:55.991Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/warehouses/:id, GET} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/warehouses, POST} route[39m[38;5;3m +1ms[39m
+
+[32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/warehouses/:id, PUT} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T19:52:55.991Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mStockController {/logistics/stock}:[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/stock, GET} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T19:52:55.991Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/stock/low-stock, GET} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 4660  - [39m11/16/2025, 8:52:55 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/stock/move, POST} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 4660  - [39m11/16/2025, 8:52:56 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mInventoryController {/logistics/inventory}:[39m[38;5;3m +1ms[39m
+
+[2025-11-16T19:52:55.992Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:56 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/inventory, GET} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T19:52:55.993Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:56 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/inventory/warehouse/:warehouseId, GET} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 4660  - [39m11/16/2025, 8:52:56 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/inventory/alerts, GET} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 4660  - [39m11/16/2025, 8:52:56 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/inventory/stock-levels, POST} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T19:52:55.994Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:56 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/inventory/stock-levels/:id, PUT} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 4660  - [39m11/16/2025, 8:52:56 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/inventory/stock-levels/:id, DELETE} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 4660  - [39m11/16/2025, 8:52:56 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mPurchaseOrderController {/logistics/purchase-orders}:[39m[38;5;3m +1ms[39m
+
+[2025-11-16T19:52:55.994Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:56 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/purchase-orders, GET} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 4660  - [39m11/16/2025, 8:52:56 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/purchase-orders/:id, GET} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T19:52:55.994Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:56 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/purchase-orders, POST} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 4660  - [39m11/16/2025, 8:52:56 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/purchase-orders/:id, PUT} route[39m[38;5;3m +1ms[39m
+
+[32m[Nest] 4660  - [39m11/16/2025, 8:52:56 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mTaskController {/team/tasks}:[39m[38;5;3m +0ms[39m
+
+[2025-11-16T19:52:55.995Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:56 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/tasks, GET} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T19:52:55.997Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:56 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/tasks/my, GET} route[39m[38;5;3m +2ms[39m
+
+[2025-11-16T19:52:55.998Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:56 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/tasks/assigned-to/:userId, GET} route[39m[38;5;3m +1ms[39m
+
+[32m[Nest] 4660  - [39m11/16/2025, 8:52:56 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/tasks/:id, GET} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 4660  - [39m11/16/2025, 8:52:56 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/tasks, POST} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 4660  - [39m11/16/2025, 8:52:56 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/tasks/:id, PUT} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T19:52:55.998Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:56 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/tasks/:id, DELETE} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T19:52:55.999Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:56 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/tasks/:id/status, PATCH} route[39m[38;5;3m +1ms[39m
+
+[2025-11-16T19:52:55.999Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:56 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/tasks/:id/assign, PATCH} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T19:52:56.000Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:56 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/tasks/:id/move, PATCH} route[39m[38;5;3m +1ms[39m
+
+[2025-11-16T19:52:56.000Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:56 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mDashboardController {/team/dashboard}:[39m[38;5;3m +0ms[39m
+
+[2025-11-16T19:52:56.001Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:56 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/dashboard/stats, GET} route[39m[38;5;3m +1ms[39m
+
+[2025-11-16T19:52:56.001Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:56 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/dashboard/my-tasks, GET} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 4660  - [39m11/16/2025, 8:52:56 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mBoardController {/team/boards}:[39m[38;5;3m +0ms[39m
+
+[2025-11-16T19:52:56.002Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:56 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/boards, GET} route[39m[38;5;3m +1ms[39m
+
+[32m[Nest] 4660  - [39m11/16/2025, 8:52:56 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/boards/:id, GET} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 4660  - [39m11/16/2025, 8:52:56 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/boards, POST} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T19:52:56.003Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:56 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/boards/:id, PUT} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 4660  - [39m11/16/2025, 8:52:56 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/boards/:id, DELETE} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T19:52:56.004Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:56 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/boards/:id/members, POST} route[39m[38;5;3m +2ms[39m
+
+[2025-11-16T19:52:56.005Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:56 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/boards/:id/members/:userId, DELETE} route[39m[38;5;3m +1ms[39m
+
+[32m[Nest] 4660  - [39m11/16/2025, 8:52:56 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/boards/:id/columns, GET} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 4660  - [39m11/16/2025, 8:52:56 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/boards/:id/columns, POST} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 4660  - [39m11/16/2025, 8:52:56 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/boards/:id/columns/:columnId, PUT} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T19:52:56.007Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:56 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/boards/:id/columns/:columnId, DELETE} route[39m[38;5;3m +2ms[39m
+
+[2025-11-16T19:52:56.008Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:56 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mCommentController {/team/tasks}:[39m[38;5;3m +0ms[39m
+
+[2025-11-16T19:52:56.009Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:56 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/tasks/:taskId/comments, GET} route[39m[38;5;3m +2ms[39m
+
+[2025-11-16T19:52:56.010Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:56 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/tasks/:taskId/comments, POST} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 4660  - [39m11/16/2025, 8:52:56 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/tasks/comments/:id, PUT} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T19:52:56.010Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:56 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/tasks/comments/:id, DELETE} route[39m[38;5;3m +1ms[39m
+
+[2025-11-16T19:52:56.049Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:56 PM [32m    LOG[39m [38;5;3m[PrismaService] [39m[32m✅ Adatbázis kapcsolat létrejött[39m
+
+[2025-11-16T19:52:56.083Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:56 PM [32m    LOG[39m [38;5;3m[PrismaService] [39m[32m🌱 New database detected - initializing schema...[39m
+
+[2025-11-16T19:52:56.084Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:56 PM [32m    LOG[39m [38;5;3m[PrismaService] [39m[32mRunning prisma db push to create tables...[39m
+
+[2025-11-16T19:52:56.084Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:56 PM [32m    LOG[39m [38;5;3m[PrismaService] [39m[32mSchema path:[39m
+
+[32m[Nest] 4660  - [39m11/16/2025, 8:52:56 PM [32m    LOG[39m [38;5;3m[PrismaService] [39m[32mC:\Users\liviuszberger\Desktop\Mbit\resources\backend\prisma\schema.prisma[39m
+
+[32m[Nest] 4660  - [39m11/16/2025, 8:52:56 PM [32m    LOG[39m [38;5;3m[PrismaService] [39m[32mWorking directory:[39m
+
+[32m[Nest] 4660  - [39m11/16/2025, 8:52:56 PM [32m    LOG[39m [38;5;3m[PrismaService] [39m[32mC:\Users\liviuszberger\Desktop\Mbit\resources\backend\prisma[39m
+
+[32m[Nest] 4660  - [39m11/16/2025, 8:52:56 PM [32m    LOG[39m [38;5;3m[PrismaService] [39m[32mPrisma CLI:[39m
+
+[32m[Nest] 4660  - [39m11/16/2025, 8:52:56 PM [32m    LOG[39m [38;5;3m[PrismaService] [39m[32mC:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules\prisma\build\index.js[39m
+
+[2025-11-16T19:52:56.084Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:56 PM [32m    LOG[39m [38;5;3m[PrismaService] [39m[32mNode executable:[39m
+
+[32m[Nest] 4660  - [39m11/16/2025, 8:52:56 PM [32m    LOG[39m [38;5;3m[PrismaService] [39m[32mC:\Users\liviuszberger\Desktop\Mbit\Mbit ERP.exe[39m
+
+[2025-11-16T19:52:56.085Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:52:56 PM [32m    LOG[39m [38;5;3m[PrismaService] [39m[32mExecuting command:[39m
+
+[32m[Nest] 4660  - [39m11/16/2025, 8:52:56 PM [32m    LOG[39m [38;5;3m[PrismaService] [39m[32m"C:\Users\liviuszberger\Desktop\Mbit\Mbit ERP.exe" "C:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules\prisma\build\index.js" db push --skip-generate --accept-data-loss[39m
+
+[2025-11-16T19:52:59.817Z] [Backend] Prisma schema loaded from schema.prisma
+
+[2025-11-16T19:52:59.870Z] [Backend] Datasource "db": SQLite database "mbit-erp.db" at "file:C:/Users/liviuszberger/AppData/Roaming/@mbit-erp/desktop/data/mbit-erp.db"
+
+[2025-11-16T19:53:00.314Z] [Backend] 
+
+Your database is now in sync with your Prisma schema. Done in 332ms
+
+[2025-11-16T19:53:00.316Z] [Backend] 
+
+[2025-11-16T19:53:00.458Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:53:00 PM [32m    LOG[39m [38;5;3m[PrismaService] [39m[32m✅ Database schema created successfully[39m
+
+[2025-11-16T19:53:00.527Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:53:00 PM [32m    LOG[39m [38;5;3m[SeedService] [39m[32m🌱 Üres adatbázis észlelve, seed indítása...[39m
+
+[2025-11-16T19:53:00.530Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:53:00 PM [32m    LOG[39m [38;5;3m[SeedService] [39m[32m🔑 Jogosultságok létrehozása...[39m
+
+[2025-11-16T19:53:00.810Z] [Backend] Still waiting... (attempt 15/60, 30s elapsed)
+
+[2025-11-16T19:53:00.869Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:53:00 PM [32m    LOG[39m [38;5;3m[SeedService] [39m[32m✅ 112 jogosultság létrehozva[39m
+
+[2025-11-16T19:53:00.880Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:53:00 PM [32m    LOG[39m [38;5;3m[SeedService] [39m[32m👥 Szerepkörök létrehozása...[39m
+
+[2025-11-16T19:53:01.208Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:53:01 PM [32m    LOG[39m [38;5;3m[SeedService] [39m[32m✅ Szerepkörök létrehozva[39m
+
+[2025-11-16T19:53:01.208Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:53:01 PM [32m    LOG[39m [38;5;3m[SeedService] [39m[32m👤 Admin felhasználó létrehozása...[39m
+
+[2025-11-16T19:53:01.396Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:53:01 PM [32m    LOG[39m [38;5;3m[SeedService] [39m[32m⚙️ Rendszerbeállítások inicializálása...[39m
+
+[2025-11-16T19:53:01.540Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:53:01 PM [32m    LOG[39m [38;5;3m[SeedService] [39m[32m✅ 24 rendszerbeállítás inicializálva[39m
+
+[2025-11-16T19:53:01.541Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:53:01 PM [32m    LOG[39m [38;5;3m[SeedService] [39m[32m✅ Admin felhasználó létrehozva: admin / 1234[39m
+
+[32m[Nest] 4660  - [39m11/16/2025, 8:53:01 PM [32m    LOG[39m [38;5;3m[SeedService] [39m[32m🎉 Adatbázis seed sikeres![39m
+
+[2025-11-16T19:53:01.561Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:53:01 PM [32m    LOG[39m [38;5;3m[NestApplication] [39m[32mNest application successfully started[39m[38;5;3m +20ms[39m
+
+[2025-11-16T19:53:01.581Z] [Backend] 🚀 Mbit ERP szerver fut: http://127.0.0.1:3000
+
+[2025-11-16T19:53:02.451Z] [Backend] Health check: PID 4660 is alive
+
+[2025-11-16T19:53:02.839Z] [Health Check] Backend is ready on 127.0.0.1
+
+[2025-11-16T19:53:02.840Z] [Backend] ✓ Ready after 16 attempt(s) (~32s)
+
+[2025-11-16T19:53:02.841Z] [Backend] Started successfully - health check passed
+
+[2025-11-16T19:53:02.841Z] [App] Backend started successfully
+
+[2025-11-16T19:53:02.841Z] [App] Reloading window now that backend is ready...
+
+[2025-11-16T19:53:02.927Z] [Window] Window finished loading
+
+[2025-11-16T19:53:12.468Z] [Backend] Health check: PID 4660 is alive
+
+[2025-11-16T19:53:20.212Z] [Backend] [32m[Nest] 4660  - [39m11/16/2025, 8:53:20 PM [32m    LOG[39m [38;5;3m[SystemSettingsService] [39m[32mDefault settings initialized[39m
+
+[2025-11-16T19:53:22.470Z] [Backend] Health check: PID 4660 is alive
+
+[2025-11-16T19:53:32.490Z] [Backend] Health check: PID 4660 is alive
+
+[2025-11-16T19:53:40.137Z] [Backend Error] [31m[Nest] 4660  - [39m11/16/2025, 8:53:40 PM [31m  ERROR[39m [38;5;3m[AuditService] [39m[31mFailed to create audit log:[39m
+
+[2025-11-16T19:53:40.138Z] [Backend Error] [31m[Nest] 4660  - [39m11/16/2025, 8:53:40 PM [31m  ERROR[39m [38;5;3m[AuditService] [39m[31mPrismaClientKnownRequestError: 
+
+Invalid `prisma.auditLog.create()` invocation:
+
+Foreign key constraint violated: `foreign key`[39m
+
+[2025-11-16T19:53:42.496Z] [Backend] Health check: PID 4660 is alive
+
+[2025-11-16T19:53:52.510Z] [Backend] Health check: PID 4660 is alive
+
+[2025-11-16T19:54:02.513Z] [Backend] Health check: PID 4660 is alive
+
+[2025-11-16T19:54:12.520Z] [Backend] Health check: PID 4660 is alive
+
+[2025-11-16T19:54:22.541Z] [Backend] Health check: PID 4660 is alive
+
+[2025-11-16T19:54:32.556Z] [Backend] Health check: PID 4660 is alive
+
+[2025-11-16T19:54:42.563Z] [Backend] Health check: PID 4660 is alive
+
+[2025-11-16T19:54:52.615Z] [Backend] Health check: PID 4660 is alive
+
+[2025-11-16T19:55:02.632Z] [Backend] Health check: PID 4660 is alive
+
+[2025-11-16T19:55:12.658Z] [Backend] Health check: PID 4660 is alive
+
+[2025-11-16T19:55:22.662Z] [Backend] Health check: PID 4660 is alive
+
+[2025-11-16T19:55:32.664Z] [Backend] Health check: PID 4660 is alive
+
+[2025-11-16T19:55:42.672Z] [Backend] Health check: PID 4660 is alive
+
+[2025-11-16T19:55:52.673Z] [Backend] Health check: PID 4660 is alive
+
+[2025-11-16T19:56:02.675Z] [Backend] Health check: PID 4660 is alive
+
+[2025-11-16T19:56:12.675Z] [Backend] Health check: PID 4660 is alive
+
+[2025-11-16T19:56:22.680Z] [Backend] Health check: PID 4660 is alive
+
+[2025-11-16T19:56:32.687Z] [Backend] Health check: PID 4660 is alive
+
+
+
+
+
+----
+
+-próbáld meg megtalálni a problémát hogy miért nem csinál semmit az +Új feladat gomb és implementáld hogy teljesen funkcionális legyen minden területe az új Csapat kommunikáció modulnak amit terveztünk és fejlesztettünk.
+
+---
+
+_**Agent (model composer-1, mode Agent)**_
+
+
+
+---
+
+
+Ellenőrzöm a Team oldalt és az "+Új feladat" gombot, majd implementálom a hiányzó funkciókat.
+
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Team.tsx</summary>
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="search" data-tool-name="codebase_search">
+<details>
+                <summary>Tool use: **codebase_search** • Searched codebase "How are modals implemented in other pages like CRM?" • **7** results</summary>
+            
+| File | Lines |
+|------|-------|
+| `apps/web/src/pages/CRM.tsx` | L940 |
+| `apps/web/src/pages/CRM.tsx` | L6-940 |
+| `apps/web/src/pages/Opportunities.tsx` | L32-522 |
+| `apps/web/src/pages/Quotes.tsx` | L71-791 |
+| `apps/web/src/pages/UsersTab.tsx` | L15-533 |
+| `apps/web/src/pages/Documents.tsx` | L53-893 |
+| `apps/web/src/pages/Products.tsx` | L32-694 |
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/CRM.tsx</summary>
+
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+
+---
+
+
+Ellenőrzöm a Modal komponenst és az API hook-okat:
+
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: /Users/liviuszberger/mbit-erp/apps/web/src/components/Modal.tsx</summary>
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: /Users/liviuszberger/mbit-erp/apps/web/src/lib/api/team.ts</summary>
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="grep" data-tool-name="grep">
+<details>
+<summary>Tool use: **grep** • Grep for "useCreateTask|useCreateBoard" in "apps/web/src/lib/api/team.ts" • 2 matches</summary>
+
+Output mode: content
+
+
+| File | Content | Line |
+|------|------|------|
+| `apps/web/src/lib/api/team.ts` | `export function useCreateTask() \{` | L229 |
+| `apps/web/src/lib/api/team.ts` | `export function useCreateBoard() \{` | L344 |
+
+
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+Átnézem a create hook-okat és implementálom a teljes funkcionalitást:
+
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: /Users/liviuszberger/mbit-erp/apps/web/src/lib/api/team.ts</summary>
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="search" data-tool-name="codebase_search">
+<details>
+                <summary>Tool use: **codebase_search** • Searched codebase "How to get current user information for task assignment?" • **15** results</summary>
+            
+| File | Lines |
+|------|-------|
+| `apps/web/src/lib/api/team.ts` | L64 |
+| `apps/web/src/components/team/TaskCard.tsx` | L10-93 |
+| `apps/web/src/pages/Team.tsx` | L93 |
+| `apps/web/src/components/team/TaskModal.tsx` | L9-125 |
+| `apps/web/src/lib/api/team.ts` | L207-240 |
+| `apps/web/src/lib/api/team.ts` | L101-152 |
+| `apps/web/src/components/team/TaskBoard.tsx` | L16-124 |
+| `apps/web/src/lib/api/team.ts` | L117-167 |
+| `apps/web/src/components/team/TaskModal.tsx` | L125 |
+| `apps/web/src/components/team/TaskModal.tsx` | L4-125 |
+| `apps/web/src/components/team/TaskCard.tsx` | L5-93 |
+| `apps/web/src/lib/api/team.ts` | L66-99 |
+| `apps/web/src/pages/Settings.tsx` | L22-465 |
+| `apps/web/src/App.tsx` | L18-244 |
+| `apps/web/src/pages/CRM.tsx` | L940 |
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: /Users/liviuszberger/mbit-erp/apps/web/src/lib/api.ts</summary>
+
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+Implementálom a teljes funkcionalitást: új feladat létrehozás modal, board kezelés, felhasználók listája és CRUD műveletek.
+
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: /Users/liviuszberger/mbit-erp/apps/web/src/lib/api/team.ts</summary>
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="grep" data-tool-name="grep">
+<details>
+<summary>Tool use: **grep** • Grep for "CreateTaskDto|UpdateTaskDto" in "apps/server/src/team/task/dto" • 2 matches</summary>
+
+Output mode: content
+
+
+| File | Content | Line |
+|------|------|------|
+| `apps/server/src/team/task/dto/update-task.dto.ts` | `export class UpdateTaskDto \{` | L4 |
+| `apps/server/src/team/task/dto/create-task.dto.ts` | `export class CreateTaskDto \{` | L19 |
+
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: /Users/liviuszberger/mbit-erp/apps/server/src/team/task/dto/create-task.dto.ts</summary>
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="search" data-tool-name="codebase_search">
+<details>
+                <summary>Tool use: **codebase_search** • Searched codebase "How to get list of users for assignment dropdown?" • **11** results</summary>
+            
+| File | Lines |
+|------|-------|
+| `apps/web/src/pages/UsersTab.tsx` | L10-533 |
+| `apps/web/src/pages/Opportunities.tsx` | L32-522 |
+| `apps/web/src/pages/Quotes.tsx` | L71-791 |
+| `apps/web/src/pages/UsersTab.tsx` | L15 |
+| `apps/web/src/pages/Settings.tsx` | L22-465 |
+| `apps/web/src/pages/CRM.tsx` | L6-940 |
+| `apps/web/src/pages/UsersTab.tsx` | L15-533 |
+| `apps/web/src/pages/Opportunities.tsx` | L17-522 |
+| `apps/web/src/pages/Documents.tsx` | L53-893 |
+| `apps/web/src/pages/Quotes.tsx` | L57-791 |
+| `apps/web/src/pages/Products.tsx` | L11-694 |
+
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+Implementálom a teljes funkcionalitást a Team.tsx-ben:
+
+
+---
+
+<tool-use data-tool-type="unknown" data-tool-name="write">
+<details>
+<summary>Tool use: **write**</summary>
+
+Status: **loading**
+
+
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+
+---
+
+<tool-use data-tool-type="unknown" data-tool-name="read_lints">
+<details>
+<summary>Tool use: **read_lints**</summary>
+
+Status: **loading**
+
+
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+
+---
+
+
+
+---
+
+<tool-use data-tool-type="unknown" data-tool-name="read_file">
+<details>
+<summary>Tool use: **read_file**</summary>
+
+Status: **loading**
+
+
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+
+---
+

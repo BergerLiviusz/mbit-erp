@@ -48,8 +48,9 @@ export class SeedService implements OnModuleInit {
   private async runSeed() {
     await this.seedPermissions();
     const roles = await this.seedRoles();
-    await this.seedAdminUser(roles[0].id);
+    const adminUser = await this.seedAdminUser(roles[0].id);
     await this.seedSystemSettings();
+    await this.seedDefaultBoard(adminUser.id);
     
     this.logger.log(`✅ Admin felhasználó létrehozva: admin / 1234`);
   }
@@ -213,5 +214,41 @@ export class SeedService implements OnModuleInit {
     }
 
     this.logger.log(`✅ ${settings.length} rendszerbeállítás inicializálva`);
+  }
+
+  private async seedDefaultBoard(adminUserId: string) {
+    this.logger.log('📋 Alapértelmezett board létrehozása...');
+    
+    // Check if default board already exists
+    const existingBoard = await this.prisma.taskBoard.findFirst({
+      where: { isDefault: true },
+    });
+
+    if (existingBoard) {
+      this.logger.log('✅ Alapértelmezett board már létezik');
+      return;
+    }
+
+    // Create default board
+    const defaultBoard = await this.prisma.taskBoard.create({
+      data: {
+        nev: 'Fő board',
+        leiras: 'Alapértelmezett feladat board',
+        szin: '#3B82F6',
+        aktiv: true,
+        isDefault: true,
+        createdById: adminUserId,
+        columns: {
+          create: [
+            { nev: 'Teendők', allapot: 'TODO', pozicio: 0, limit: 0 },
+            { nev: 'Folyamatban', allapot: 'IN_PROGRESS', pozicio: 1, limit: 0 },
+            { nev: 'Áttekintés alatt', allapot: 'IN_REVIEW', pozicio: 2, limit: 0 },
+            { nev: 'Kész', allapot: 'DONE', pozicio: 3, limit: 0 },
+          ],
+        },
+      },
+    });
+
+    this.logger.log('✅ Alapértelmezett board létrehozva');
   }
 }
