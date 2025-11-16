@@ -140,11 +140,32 @@ export class BoardService {
     return board;
   }
 
-  async create(dto: CreateBoardDto, userId: string) {
+  async create(dto: CreateBoardDto, userId: string | null) {
+    // Validate userId exists if provided
+    if (userId) {
+      const userExists = await this.prisma.user.findUnique({
+        where: { id: userId },
+      });
+      if (!userExists) {
+        // If user doesn't exist, try to find admin user
+        const adminUser = await this.prisma.user.findFirst({
+          where: {
+            email: 'admin@mbit.hu',
+            aktiv: true,
+          },
+        });
+        if (adminUser) {
+          userId = adminUser.id;
+        } else {
+          userId = null;
+        }
+      }
+    }
+
     const board = await this.prisma.taskBoard.create({
       data: {
         ...dto,
-        createdById: userId,
+        createdById: userId || undefined,
       },
       include: {
         createdBy: {
@@ -175,14 +196,16 @@ export class BoardService {
       ),
     );
 
-    // Létrehozó automatikusan ADMIN tag
-    await this.prisma.taskBoardMember.create({
-      data: {
-        boardId: board.id,
-        userId,
-        jogosultsag: BoardMemberPermission.ADMIN,
-      },
-    });
+    // Létrehozó automatikusan ADMIN tag (csak ha userId létezik)
+    if (userId) {
+      await this.prisma.taskBoardMember.create({
+        data: {
+          boardId: board.id,
+          userId,
+          jogosultsag: BoardMemberPermission.ADMIN,
+        },
+      });
+    }
 
     // Audit log
     await this.auditService.logCreate('TaskBoard', board.id, board, userId);

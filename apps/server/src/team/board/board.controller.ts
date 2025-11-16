@@ -43,7 +43,7 @@ export class BoardController {
   @Post()
   @Permissions(Permission.BOARD_CREATE)
   async create(@Request() req: any, @Body() dto: CreateBoardDto) {
-    return await this.boardService.create(dto, req.user.id);
+    return await this.boardService.create(dto, req.user?.id || null);
   }
 
   @Put(':id')

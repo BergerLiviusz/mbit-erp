@@ -19,14 +19,39 @@ export class RbacGuard extends AuthGuard('jwt') implements CanActivate {
     // This allows the desktop app to work without requiring user login
     const isElectronDesktop = process.env.ELECTRON_RUN_AS_NODE === '1';
     if (isElectronDesktop) {
-      // Create a mock user object for Electron desktop mode
+      // Find admin user in database for Electron desktop mode
+      // This ensures foreign key constraints work correctly
+      const adminUser = await this.prisma.user.findFirst({
+        where: {
+          email: 'admin@mbit.hu',
+          aktiv: true,
+        },
+        include: {
+          roles: {
+            include: {
+              role: true,
+            },
+          },
+        },
+      });
+
       const request = context.switchToHttp().getRequest();
-      request.user = {
-        id: 'electron-desktop-user',
-        userId: 'electron-desktop-user',
-        email: 'desktop@mbit.local',
-        roles: ['Admin', 'User'],
-      };
+      if (adminUser) {
+        request.user = {
+          id: adminUser.id,
+          userId: adminUser.id,
+          email: adminUser.email,
+          roles: adminUser.roles.map(ur => ur.role.nev),
+        };
+      } else {
+        // Fallback if admin user doesn't exist yet
+        request.user = {
+          id: null,
+          userId: null,
+          email: 'desktop@mbit.local',
+          roles: ['Admin', 'User'],
+        };
+      }
       return true;
     }
 
