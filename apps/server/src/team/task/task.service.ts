@@ -267,11 +267,33 @@ export class TaskService {
     return task;
   }
 
-  async create(dto: CreateTaskDto, userId: string) {
+  async create(dto: CreateTaskDto, userId: string | null) {
+    // Validate userId exists if provided
+    let validUserId = userId;
+    if (userId) {
+      const userExists = await this.prisma.user.findUnique({
+        where: { id: userId },
+      });
+      if (!userExists) {
+        // If user doesn't exist, try to find admin user
+        const adminUser = await this.prisma.user.findFirst({
+          where: {
+            email: 'admin@mbit.hu',
+            aktiv: true,
+          },
+        });
+        if (adminUser) {
+          validUserId = adminUser.id;
+        } else {
+          validUserId = null;
+        }
+      }
+    }
+
     const task = await this.prisma.task.create({
       data: {
         ...dto,
-        createdById: userId,
+        createdById: validUserId || undefined,
         hataridoDatum: dto.hataridoDatum ? new Date(dto.hataridoDatum) : null,
       },
       include: {
@@ -292,16 +314,18 @@ export class TaskService {
       },
     });
 
-    // Activity log
-    await this.activityService.createActivity(
-      task.id,
-      userId,
-      TaskActivityType.CREATED,
-      `Feladat létrehozva: ${task.cim}`,
-    );
+    // Activity log (only if userId exists)
+    if (validUserId) {
+      await this.activityService.createActivity(
+        task.id,
+        validUserId,
+        TaskActivityType.CREATED,
+        `Feladat létrehozva: ${task.cim}`,
+      );
+    }
 
     // Audit log
-    await this.auditService.logCreate('Task', task.id, task, userId);
+    await this.auditService.logCreate('Task', task.id, task, validUserId);
 
     // Ha van assignedTo, akkor watcher hozzáadása
     if (task.assignedToId) {

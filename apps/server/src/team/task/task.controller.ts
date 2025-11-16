@@ -88,7 +88,7 @@ export class TaskController {
   @Post()
   @Permissions(Permission.TASK_CREATE)
   async create(@Request() req: any, @Body() dto: CreateTaskDto) {
-    return await this.taskService.create(dto, req.user.id);
+    return await this.taskService.create(dto, req.user?.id || null);
   }
 
   @Put(':id')
