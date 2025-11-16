@@ -282,6 +282,11 @@ export default function Team() {
         <TaskModal
           taskId={selectedTaskId}
           onClose={() => setSelectedTaskId(null)}
+          onTaskUpdate={() => {
+            if (boardIdToLoad) {
+              refetchBoard();
+            }
+          }}
         />
       )}
 

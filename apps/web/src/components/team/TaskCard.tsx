@@ -1,7 +1,7 @@
 import { Task } from '../../lib/api/team';
 import { format } from 'date-fns';
 import { hu } from 'date-fns/locale';
-import { Calendar, User, Tag } from 'lucide-react';
+import { Calendar, User, Tag, GripVertical } from 'lucide-react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
@@ -41,13 +41,21 @@ export default function TaskCard({ task, onClick }: TaskCardProps) {
     <div
       ref={setNodeRef}
       style={style}
-      {...attributes}
-      {...listeners}
-      onClick={onClick}
-      className={`bg-white rounded-lg shadow-sm border border-gray-200 p-4 cursor-pointer hover:shadow-md transition-shadow ${
+      className={`bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow relative ${
         isOverdue ? 'border-red-300' : ''
-      }`}
+      } ${isDragging ? 'z-50' : ''}`}
     >
+      {/* Drag handle */}
+      <div
+        {...attributes}
+        {...listeners}
+        className="absolute left-2 top-2 cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <GripVertical className="w-4 h-4" />
+      </div>
+
+      <div onClick={onClick} className="cursor-pointer pl-6">
       <div className="flex items-start justify-between mb-2">
         <h3 className="font-semibold text-gray-900 text-sm flex-1">{task.cim}</h3>
         <span className={`px-2 py-1 rounded text-xs font-medium ${priorityColors[task.prioritas]}`}>
@@ -89,6 +97,7 @@ export default function TaskCard({ task, onClick }: TaskCardProps) {
           <span className="text-xs text-gray-400">{task.board.nev}</span>
         </div>
       )}
+      </div>
     </div>
   );
 }

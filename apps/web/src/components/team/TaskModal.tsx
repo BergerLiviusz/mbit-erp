@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useTask, useTaskComments, useCreateComment } from '../../lib/api/team';
+import { useTask, useTaskComments, useCreateComment, useUpdateTask, useBoard, Task, TaskColumn } from '../../lib/api/team';
 import { format } from 'date-fns';
 import { hu } from 'date-fns/locale';
 import { X, Calendar, User } from 'lucide-react';
@@ -7,13 +7,19 @@ import { X, Calendar, User } from 'lucide-react';
 interface TaskModalProps {
   taskId: string;
   onClose: () => void;
+  onTaskUpdate?: () => void;
 }
 
-export default function TaskModal({ taskId, onClose }: TaskModalProps) {
+export default function TaskModal({ taskId, onClose, onTaskUpdate }: TaskModalProps) {
   const { data: task, isLoading } = useTask(taskId);
   const { data: comments } = useTaskComments(taskId);
   const createComment = useCreateComment();
+  const updateTask = useUpdateTask();
   const [commentText, setCommentText] = useState('');
+  
+  // Load board to get available columns
+  const boardId = task?.boardId || '';
+  const { data: board } = useBoard(boardId);
 
   const handleAddComment = async () => {
     if (!commentText.trim()) return;
@@ -26,6 +32,37 @@ export default function TaskModal({ taskId, onClose }: TaskModalProps) {
     } catch (error) {
       console.error('Failed to add comment:', error);
     }
+  };
+
+  const handleStatusChange = async (newStatus: Task['allapot']) => {
+    if (!task || task.allapot === newStatus) return;
+    
+    try {
+      await updateTask.mutateAsync({
+        id: task.id,
+        data: {
+          allapot: newStatus,
+        },
+      });
+      // Notify parent component to refresh board
+      if (onTaskUpdate) {
+        onTaskUpdate();
+      }
+    } catch (error) {
+      console.error('Failed to update task status:', error);
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    const labels: Record<string, string> = {
+      TODO: 'Teendő',
+      IN_PROGRESS: 'Folyamatban',
+      IN_REVIEW: 'Áttekintés alatt',
+      DONE: 'Kész',
+      BLOCKED: 'Blokkolva',
+      CANCELLED: 'Törölve',
+    };
+    return labels[status] || status;
   };
 
   if (isLoading) {
@@ -46,7 +83,7 @@ export default function TaskModal({ taskId, onClose }: TaskModalProps) {
         <div className="sticky top-0 bg-white border-b border-gray-200 p-6 flex items-start justify-between">
           <div className="flex-1">
             <h2 className="text-2xl font-bold text-gray-900 mb-2">{task.cim}</h2>
-            <div className="flex items-center gap-4 text-sm text-gray-600">
+            <div className="flex items-center gap-4 text-sm text-gray-600 flex-wrap">
               {task.assignedTo && (
                 <div className="flex items-center gap-1">
                   <User className="w-4 h-4" />
@@ -61,6 +98,27 @@ export default function TaskModal({ taskId, onClose }: TaskModalProps) {
                   </span>
                 </div>
               )}
+              <div className="flex items-center gap-2">
+                <span className="text-gray-500">Állapot:</span>
+                {board?.columns && board.columns.length > 0 ? (
+                  <select
+                    value={task.allapot}
+                    onChange={(e) => handleStatusChange(e.target.value as Task['allapot'])}
+                    className="px-3 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-medium"
+                    disabled={updateTask.isPending}
+                  >
+                    {board.columns.map((column: TaskColumn) => (
+                      <option key={column.id} value={column.allapot}>
+                        {column.nev}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <span className="px-3 py-1 bg-gray-100 rounded-lg text-sm font-medium">
+                    {getStatusLabel(task.allapot)}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
           <button

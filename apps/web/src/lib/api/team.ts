@@ -256,6 +256,13 @@ export function useUpdateTask() {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       queryClient.invalidateQueries({ queryKey: ['task', variables.id] });
       queryClient.invalidateQueries({ queryKey: ['boards'] });
+      // Invalidate specific board if boardId is in data
+      if (variables.data.boardId) {
+        queryClient.invalidateQueries({ queryKey: ['board', variables.data.boardId] });
+      }
+      // Also invalidate board if task has boardId
+      queryClient.invalidateQueries({ queryKey: ['board'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
     },
   });
 }
@@ -316,9 +323,15 @@ export function useMoveTask() {
         queryClient.setQueryData(['boards'], context.previousBoards);
       }
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       queryClient.invalidateQueries({ queryKey: ['boards'] });
+      // Invalidate specific board
+      if (variables.data.boardId) {
+        queryClient.invalidateQueries({ queryKey: ['board', variables.data.boardId] });
+      }
+      queryClient.invalidateQueries({ queryKey: ['task', variables.id] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
     },
   });
 }

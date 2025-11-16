@@ -9,6 +9,7 @@ import {
   useSensors,
   closestCenter,
 } from '@dnd-kit/core';
+import { useQueryClient } from '@tanstack/react-query';
 import { TaskBoard as TaskBoardType, Task } from '../../lib/api/team';
 import TaskColumn from './TaskColumn';
 import TaskCard from './TaskCard';
@@ -22,6 +23,7 @@ interface TaskBoardProps {
 export default function TaskBoard({ board, onTaskClick }: TaskBoardProps) {
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const moveTask = useMoveTask();
+  const queryClient = useQueryClient();
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -66,6 +68,8 @@ export default function TaskBoard({ board, onTaskClick }: TaskBoardProps) {
             position: newPosition,
           },
         });
+        // Refresh board data after move
+        queryClient.invalidateQueries({ queryKey: ['board', board.id] });
       } catch (error) {
         console.error('Failed to move task:', error);
       }
@@ -90,6 +94,8 @@ export default function TaskBoard({ board, onTaskClick }: TaskBoardProps) {
               position: newIndex,
             },
           });
+          // Refresh board data after reorder
+          queryClient.invalidateQueries({ queryKey: ['board', board.id] });
         } catch (error) {
           console.error('Failed to reorder task:', error);
         }
