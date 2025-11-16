@@ -8,6 +8,7 @@ import Products from './pages/Products';
 import Settings from './pages/Settings';
 import Opportunities from './pages/Opportunities';
 import Quotes from './pages/Quotes';
+import Team from './pages/Team';
 import Login from './pages/Login';
 import { BackendStatus } from './components/BackendStatus';
 import { DebugPanel } from './components/DebugPanel';
@@ -175,6 +176,19 @@ function App() {
                 >
                   Dokumentumok
                 </Link>
+                <Link 
+                  to="/team" 
+                  className="hover:bg-gray-800 px-3 py-2 rounded"
+                  onClick={() => {
+                    if (isElectron) {
+                      import('./components/DebugPanel').then(module => {
+                        module.addLog('info', 'Navigation: Clicked Csapat kommunikáció', { to: '/team' });
+                      }).catch(() => {});
+                    }
+                  }}
+                >
+                  Csapat kommunikáció
+                </Link>
                 <DropdownMenu 
                   title="Logisztika"
                   items={[
@@ -220,6 +234,7 @@ function App() {
           <Route path="/opportunities" element={<Opportunities />} />
           <Route path="/quotes" element={<Quotes />} />
           <Route path="/documents" element={<Documents />} />
+          <Route path="/team" element={<Team />} />
           <Route path="/warehouses" element={<Warehouses />} />
           <Route path="/products" element={<Products />} />
           <Route path="/settings" element={<Settings />} />

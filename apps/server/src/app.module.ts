@@ -13,6 +13,7 @@ import { AuditModule } from './common/audit/audit.module';
 import { BackupModule } from './common/backup/backup.module';
 import { SystemModule } from './system/system.module';
 import { SeedModule } from './seed/seed.module';
+import { TeamModule } from './team/team.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { SeedModule } from './seed/seed.module';
     LogisticsModule,
     OldAuditModule,
     SystemModule,
+    TeamModule,
   ],
   controllers: [AppController],
   providers: [AppService],

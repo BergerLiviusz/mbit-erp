@@ -19,12 +19,19 @@ model User {
   sessions          Session[]
   auditLogs         AuditLog[]
   ownedAccounts     Account[]      @relation("AccountOwner")
-  assignedTasks     Task[]
+  assignedTasks     Task[]         @relation("AssignedTasks")
+  createdTasks      Task[]         @relation("CreatedTasks")
   createdCampaigns  Campaign[]
   createdLeads      Lead[]
   createdTickets    Ticket[]
   createdDocuments  Document[]
   documentAccess    DocumentAccess[]
+  createdBoards     TaskBoard[]    @relation("CreatedBoards")
+  boardMemberships  TaskBoardMember[] @relation("BoardMembers")
+  taskComments      TaskComment[]  @relation("TaskComments")
+  taskActivities    TaskActivity[] @relation("TaskActivities")
+  taskAttachments   TaskAttachment[] @relation("TaskAttachments")
+  taskWatchers      TaskWatcher[]  @relation("TaskWatchers")
 
   @@map("felhasznalok")
 }
@@ -134,6 +141,7 @@ model Account {
   tickets             Ticket[]
   documents           Document[]
   customFields        AccountCustomField[]
+  tasks               Task[]
 
   @@index([ownerId])
   @@map("ugyfelek")
@@ -216,6 +224,7 @@ model Lead {
   campaign     Campaign?    @relation(fields: [campaignId], references: [id], onDelete: SetNull)
   createdBy    User?        @relation(fields: [createdById], references: [id], onDelete: SetNull)
   opportunity  Opportunity?
+  tasks        Task[]
 
   @@index([accountId])
   @@index([campaignId])
@@ -238,6 +247,7 @@ model Opportunity {
   lead            Lead?      @relation(fields: [leadId], references: [id], onDelete: SetNull)
   quotes          Quote[]
   documents       Document[]
+  tasks           Task[]
 
   @@index([accountId])
   @@map("lehetosegek")
@@ -262,6 +272,7 @@ model Quote {
   discounts        Discount[]
   documents        Document[]
   order            Order?
+  tasks            Task[]
 
   @@index([accountId])
   @@index([opportunityId])
@@ -323,6 +334,7 @@ model Order {
   discounts        Discount[]
   invoiceStub      InvoiceStub?
   shipments        Shipment[]
+  tasks            Task[]
 
   @@index([accountId])
   @@map("rendelesek")
@@ -582,6 +594,7 @@ model Ticket {
   account        Account?       @relation(fields: [accountId], references: [id], onDelete: SetNull)
   createdBy      User?          @relation(fields: [createdById], references: [id], onDelete: SetNull)
   messages       Message[]
+  tasks          Task[]
 
   @@index([accountId])
   @@index([allapot])
@@ -610,12 +623,50 @@ model Task {
   prioritas      String
   hataridoDatum  DateTime?
   assignedToId   String?
+  createdById    String?
+  boardId        String?
+  position       Int?
+  tags           String?
+  completedAt    DateTime?
+  
+  // Kapcsolatok más modulokhoz
+  accountId      String?
+  opportunityId  String?
+  leadId         String?
+  quoteId        String?
+  orderId        String?
+  ticketId       String?
+  documentId     String?
+  
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
-  assignedTo     User?     @relation(fields: [assignedToId], references: [id], onDelete: SetNull)
+  
+  // Relations
+  assignedTo     User?     @relation("AssignedTasks", fields: [assignedToId], references: [id], onDelete: SetNull)
+  createdBy      User?     @relation("CreatedTasks", fields: [createdById], references: [id], onDelete: SetNull)
+  board          TaskBoard? @relation(fields: [boardId], references: [id], onDelete: SetNull)
+  
+  // Más modulok kapcsolatai
+  account        Account?     @relation(fields: [accountId], references: [id], onDelete: SetNull)
+  opportunity    Opportunity? @relation(fields: [opportunityId], references: [id], onDelete: SetNull)
+  lead           Lead?        @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  quote          Quote?       @relation(fields: [quoteId], references: [id], onDelete: SetNull)
+  order          Order?       @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  ticket         Ticket?      @relation(fields: [ticketId], references: [id], onDelete: SetNull)
+  document       Document?    @relation(fields: [documentId], references: [id], onDelete: SetNull)
+  
+  // Kommentek és tevékenységek
+  comments       TaskComment[]
+  activities     TaskActivity[]
+  attachments    TaskAttachment[]
+  watchers       TaskWatcher[]
 
   @@index([assignedToId])
+  @@index([createdById])
+  @@index([boardId])
   @@index([allapot])
+  @@index([accountId])
+  @@index([opportunityId])
   @@map("feladatok")
 }
 
@@ -682,6 +733,7 @@ model Document {
   ocrJob            OCRJob?
   tags              DocumentTag[]
   access            DocumentAccess[]
+  tasks             Task[]
 
   @@index([accountId])
   @@index([categoryId])
@@ -903,4 +955,118 @@ model DeliveryNote {
   @@index([purchaseOrderId])
   @@index([shipmentId])
   @@map("szallitolevelek")
+}
+
+model TaskBoard {
+  id                String    @id @default(uuid())
+  nev               String
+  leiras            String?
+  szin              String?
+  aktiv             Boolean   @default(true)
+  isDefault         Boolean   @default(false)
+  createdById       String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  createdBy         User?     @relation("CreatedBoards", fields: [createdById], references: [id], onDelete: SetNull)
+  tasks             Task[]
+  columns           TaskColumn[]
+  members           TaskBoardMember[]
+  
+  @@index([createdById])
+  @@map("task_boardok")
+}
+
+model TaskColumn {
+  id                String    @id @default(uuid())
+  boardId           String
+  nev               String
+  allapot           String
+  pozicio           Int
+  limit             Int?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  board             TaskBoard @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  
+  @@unique([boardId, allapot])
+  @@index([boardId])
+  @@map("task_oszlopok")
+}
+
+model TaskBoardMember {
+  id                String    @id @default(uuid())
+  boardId           String
+  userId            String
+  jogosultsag       String
+  createdAt         DateTime  @default(now())
+  
+  board             TaskBoard @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  user              User      @relation("BoardMembers", fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([boardId, userId])
+  @@map("task_board_tagok")
+}
+
+model TaskComment {
+  id                String    @id @default(uuid())
+  taskId            String
+  userId            String
+  szoveg            String
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  task              Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user              User      @relation("TaskComments", fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([taskId])
+  @@map("task_kommentek")
+}
+
+model TaskActivity {
+  id                String    @id @default(uuid())
+  taskId            String
+  userId            String?
+  tipus             String
+  leiras            String?
+  regiErtek         String?
+  ujErtek           String?
+  createdAt         DateTime  @default(now())
+  
+  task              Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user              User?     @relation("TaskActivities", fields: [userId], references: [id], onDelete: SetNull)
+  
+  @@index([taskId])
+  @@index([createdAt])
+  @@map("task_tevekenysegek")
+}
+
+model TaskAttachment {
+  id                String    @id @default(uuid())
+  taskId            String
+  fajlNev           String
+  fajlUtvonal       String
+  fajlMeret         Int
+  mimeType          String
+  uploadedById      String
+  createdAt         DateTime  @default(now())
+  
+  task              Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  uploadedBy        User      @relation("TaskAttachments", fields: [uploadedById], references: [id], onDelete: Cascade)
+  
+  @@index([taskId])
+  @@map("task_mellekletek")
+}
+
+model TaskWatcher {
+  id                String    @id @default(uuid())
+  taskId            String
+  userId            String
+  createdAt         DateTime  @default(now())
+  
+  task              Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user              User      @relation("TaskWatchers", fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([taskId, userId])
+  @@map("task_figyelok")
 }

@@ -133,6 +133,27 @@ export enum Permission {
   REPORT_VIEW = 'report:view',
   REPORT_CREATE = 'report:create',
   REPORT_EXPORT = 'report:export',
+  
+  // Team Communication Permissions
+  TEAM_VIEW = 'team:view',
+  TEAM_CREATE = 'team:create',
+  TEAM_EDIT = 'team:edit',
+  TEAM_DELETE = 'team:delete',
+  
+  // Task specific
+  TASK_VIEW = 'task:view',
+  TASK_CREATE = 'task:create',
+  TASK_EDIT = 'task:edit',
+  TASK_DELETE = 'task:delete',
+  TASK_ASSIGN = 'task:assign',
+  TASK_MANAGE_ALL = 'task:manage_all',
+  
+  // Board specific
+  BOARD_VIEW = 'board:view',
+  BOARD_CREATE = 'board:create',
+  BOARD_EDIT = 'board:edit',
+  BOARD_DELETE = 'board:delete',
+  BOARD_MANAGE_MEMBERS = 'board:manage_members',
 }
 
 export const PermissionDescriptions: Record<Permission, { nev: string; modulo: string; leiras: string }> = {
@@ -251,4 +272,22 @@ export const PermissionDescriptions: Record<Permission, { nev: string; modulo: s
   [Permission.REPORT_VIEW]: { nev: 'Jelentések megtekintése', modulo: 'Jelentések', leiras: 'Riportok böngészése' },
   [Permission.REPORT_CREATE]: { nev: 'Jelentés készítés', modulo: 'Jelentések', leiras: 'Új riportok generálása' },
   [Permission.REPORT_EXPORT]: { nev: 'Jelentés exportálás', modulo: 'Jelentések', leiras: 'Riportok exportálása' },
+  
+  [Permission.TEAM_VIEW]: { nev: 'Csapat kommunikáció megtekintése', modulo: 'Csapat kommunikáció', leiras: 'Csapat kommunikáció modulban való böngészés' },
+  [Permission.TEAM_CREATE]: { nev: 'Csapat kommunikáció létrehozás', modulo: 'Csapat kommunikáció', leiras: 'Új feladatok és board-ok létrehozása' },
+  [Permission.TEAM_EDIT]: { nev: 'Csapat kommunikáció szerkesztés', modulo: 'Csapat kommunikáció', leiras: 'Feladatok és board-ok módosítása' },
+  [Permission.TEAM_DELETE]: { nev: 'Csapat kommunikáció törlés', modulo: 'Csapat kommunikáció', leiras: 'Feladatok és board-ok törlése' },
+  
+  [Permission.TASK_VIEW]: { nev: 'Feladatok megtekintése', modulo: 'Csapat kommunikáció', leiras: 'Feladatok böngészése' },
+  [Permission.TASK_CREATE]: { nev: 'Feladat létrehozás', modulo: 'Csapat kommunikáció', leiras: 'Új feladatok rögzítése' },
+  [Permission.TASK_EDIT]: { nev: 'Feladat szerkesztés', modulo: 'Csapat kommunikáció', leiras: 'Feladatok módosítása' },
+  [Permission.TASK_DELETE]: { nev: 'Feladat törlés', modulo: 'Csapat kommunikáció', leiras: 'Feladatok törlése' },
+  [Permission.TASK_ASSIGN]: { nev: 'Feladat hozzárendelés', modulo: 'Csapat kommunikáció', leiras: 'Feladatok kiosztása felhasználóknak' },
+  [Permission.TASK_MANAGE_ALL]: { nev: 'Minden feladat kezelése', modulo: 'Csapat kommunikáció', leiras: 'Admin jogosultság: minden feladat kezelése' },
+  
+  [Permission.BOARD_VIEW]: { nev: 'Board-ok megtekintése', modulo: 'Csapat kommunikáció', leiras: 'Kanban board-ok böngészése' },
+  [Permission.BOARD_CREATE]: { nev: 'Board létrehozás', modulo: 'Csapat kommunikáció', leiras: 'Új Kanban board-ok létrehozása' },
+  [Permission.BOARD_EDIT]: { nev: 'Board szerkesztés', modulo: 'Csapat kommunikáció', leiras: 'Board-ok módosítása' },
+  [Permission.BOARD_DELETE]: { nev: 'Board törlés', modulo: 'Csapat kommunikáció', leiras: 'Board-ok törlése' },
+  [Permission.BOARD_MANAGE_MEMBERS]: { nev: 'Board tagok kezelése', modulo: 'Csapat kommunikáció', leiras: 'Board tagok hozzáadása és eltávolítása' },
 };
