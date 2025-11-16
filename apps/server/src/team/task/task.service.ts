@@ -190,6 +190,7 @@ export class TaskService {
             columns: {
               orderBy: { pozicio: 'asc' },
             },
+            members: true,
           },
         },
         account: true,
