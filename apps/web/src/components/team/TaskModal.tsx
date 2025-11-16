@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { Task, useTask, useUpdateTask, useDeleteTask, useTaskComments, useCreateComment } from '../../lib/api/team';
+import { useTask, useTaskComments, useCreateComment } from '../../lib/api/team';
 import { format } from 'date-fns';
 import { hu } from 'date-fns/locale';
-import { X, Calendar, User, MessageSquare, Clock } from 'lucide-react';
+import { X, Calendar, User } from 'lucide-react';
 
 interface TaskModalProps {
   taskId: string;
@@ -12,8 +12,6 @@ interface TaskModalProps {
 export default function TaskModal({ taskId, onClose }: TaskModalProps) {
   const { data: task, isLoading } = useTask(taskId);
   const { data: comments } = useTaskComments(taskId);
-  const updateTask = useUpdateTask();
-  const deleteTask = useDeleteTask();
   const createComment = useCreateComment();
   const [commentText, setCommentText] = useState('');
 

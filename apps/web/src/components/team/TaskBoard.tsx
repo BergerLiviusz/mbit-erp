@@ -9,9 +9,6 @@ import {
   useSensors,
   closestCenter,
 } from '@dnd-kit/core';
-import {
-  SortableContext,
-} from '@dnd-kit/sortable';
 import { TaskBoard as TaskBoardType, Task } from '../../lib/api/team';
 import TaskColumn from './TaskColumn';
 import TaskCard from './TaskCard';

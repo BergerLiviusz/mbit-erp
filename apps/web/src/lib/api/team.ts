@@ -299,7 +299,7 @@ export function useMoveTask() {
 
       return { previousTasks, previousTask, previousBoards };
     },
-    onError: (err, variables, context) => {
+    onError: (_err, variables, context) => {
       // Rollback on error
       if (context?.previousTasks) {
         queryClient.setQueryData(['tasks'], context.previousTasks);
