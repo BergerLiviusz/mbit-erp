@@ -113,6 +113,7 @@ export default function TaskBoard({ board, onTaskClick }: TaskBoardProps) {
             column={column}
             tasks={board.tasks || []}
             onTaskClick={onTaskClick}
+            boardColor={board.szin}
           />
         ))}
       </div>

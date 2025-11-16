@@ -229,19 +229,30 @@ export default function Team() {
           {boardsLoading ? (
             <div className="text-gray-500">Board-ok betöltése...</div>
           ) : boards && boards.length > 0 ? (
-            boards.map((board: TaskBoard) => (
-              <button
-                key={board.id}
-                onClick={() => setSelectedBoardId(board.id)}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                  selectedBoardId === board.id || (!selectedBoardId && board.isDefault)
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                {board.nev}
-              </button>
-            ))
+            boards.map((board: TaskBoard) => {
+              const isSelected = selectedBoardId === board.id || (!selectedBoardId && board.isDefault);
+              const boardColor = board.szin || '#3B82F6';
+              
+              return (
+                <button
+                  key={board.id}
+                  onClick={() => setSelectedBoardId(board.id)}
+                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                    isSelected
+                      ? 'text-white shadow-md'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                  style={isSelected ? {
+                    backgroundColor: boardColor,
+                    borderLeft: `4px solid ${boardColor}`,
+                  } : {
+                    borderLeft: `4px solid ${boardColor}`,
+                  }}
+                >
+                  {board.nev}
+                </button>
+              );
+            })
           ) : (
             <div className="text-gray-500">Nincs board. Hozzon létre egy újat!</div>
           )}

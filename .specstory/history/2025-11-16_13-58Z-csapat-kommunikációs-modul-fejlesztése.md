@@ -8634,3 +8634,1202 @@ A változások GitHub-ra kerültek. A CI build után az új verzióban működni
 
 ---
 
+_**User (2025-11-16 16:25Z)**_
+
+oké, tesztelés közben ez derült ki:
+
+-amikor kitöltöm az "Új Board" gomb megnyomása után feljövök fieldeket, ezt az errort kapom ha rányomok a "létrehozás" gombra:
+
+Invalid `prisma.taskBoard.create()` invocation: Foreign key constraint violated: `foreign key`
+
+
+
+app log:
+
+
+
+[2025-11-16T20:11:00.268Z] [Cleanup] ✓ No legacy nested node_modules found
+
+
+
+[2025-11-16T20:11:00.272Z] [App] Creating window immediately...
+
+[2025-11-16T20:11:00.281Z] [Window] Found icon at: C:\Users\liviuszberger\Desktop\Mbit\resources\icon.ico
+
+[2025-11-16T20:11:00.284Z] [Window] Creating BrowserWindow...
+
+[2025-11-16T20:11:00.930Z] [Window] BrowserWindow created, showing...
+
+[2025-11-16T20:11:00.935Z] [Window] Loading frontend from: C:\Users\liviuszberger\Desktop\Mbit\resources\frontend\index.html
+
+[2025-11-16T20:11:00.940Z] [Window] Loading from URL: file:///C:/Users/liviuszberger/Desktop/Mbit/resources/frontend/index.html
+
+[2025-11-16T20:11:01.059Z] [Window] Window setup complete
+
+[2025-11-16T20:11:01.060Z] [App] Starting backend server in background...
+
+[2025-11-16T20:11:01.064Z] [Backend] Environment: PORT=3000, DATA_DIR=C:\Users\liviuszberger\AppData\Roaming\@mbit-erp\desktop\data, DATABASE_URL=file:***mbit-erp.db
+
+[2025-11-16T20:11:01.064Z] [Backend] Backend path: C:\Users\liviuszberger\Desktop\Mbit\resources\backend\main.js
+
+[2025-11-16T20:11:01.065Z] [Backend] Backend directory: C:\Users\liviuszberger\Desktop\Mbit\resources\backend
+
+[2025-11-16T20:11:01.065Z] [Backend] Node modules path: C:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules
+
+[2025-11-16T20:11:01.065Z] [Backend] Resources path: C:\Users\liviuszberger\Desktop\Mbit\resources
+
+[2025-11-16T20:11:01.066Z] [Backend] Using Electron bundled Node.js runtime via fork()
+
+[2025-11-16T20:11:01.066Z] [Backend] NODE_PATH set to: C:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules
+
+[2025-11-16T20:11:01.086Z] [Backend] Waiting for backend to be ready (max 120s)...
+
+[2025-11-16T20:11:02.219Z] [Window] Window finished loading
+
+[2025-11-16T20:11:02.224Z] [Window] Window ready-to-show event fired
+
+[2025-11-16T20:11:02.359Z] [Backend] 🔧 Electron mode detected - skipping .env file loading (using Electron-provided environment variables)
+
+[2025-11-16T20:11:09.342Z] [Backend] Still waiting... (attempt 5/60, 10s elapsed)
+
+[2025-11-16T20:11:11.096Z] [Backend] Health check: PID 5164 is alive
+
+[2025-11-16T20:11:17.971Z] [Backend] 🔍 Environment check:
+
+  - ELECTRON_RUN_AS_NODE: 1
+
+[2025-11-16T20:11:17.974Z] [Backend]   - DATABASE_URL: ***SET***
+
+  - PORT: 3000
+
+  - NODE_ENV: production
+
+[2025-11-16T20:11:17.985Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:17 PM [32m    LOG[39m [38;5;3m[NestFactory] [39m[32mStarting Nest application...[39m
+
+[2025-11-16T20:11:18.072Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[StorageService] [39m[32mData directory: C:\Users\liviuszberger\mbit-data[39m
+
+[2025-11-16T20:11:18.268Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPrismaModule dependencies initialized[39m[38;5;3m +195ms[39m
+
+[2025-11-16T20:11:18.268Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mStorageModule dependencies initialized[39m[38;5;3m +1ms[39m
+
+[2025-11-16T20:11:18.269Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPassportModule dependencies initialized[39m[38;5;3m +1ms[39m
+
+[2025-11-16T20:11:18.350Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mJwtModule dependencies initialized[39m[38;5;3m +78ms[39m
+
+[2025-11-16T20:11:18.355Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAppModule dependencies initialized[39m[38;5;3m +8ms[39m
+
+[2025-11-16T20:11:18.356Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mSeedModule dependencies initialized[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAuditModule dependencies initialized[39m[38;5;3m +0ms[39m
+
+[2025-11-16T20:11:18.357Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAuditModule dependencies initialized[39m[38;5;3m +1ms[39m
+
+[2025-11-16T20:11:18.358Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mBackupModule dependencies initialized[39m[38;5;3m +1ms[39m
+
+[2025-11-16T20:11:18.360Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mRbacModule dependencies initialized[39m[38;5;3m +3ms[39m
+
+[2025-11-16T20:11:18.361Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAuthModule dependencies initialized[39m[38;5;3m +1ms[39m
+
+[2025-11-16T20:11:18.373Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mSystemModule dependencies initialized[39m[38;5;3m +12ms[39m
+
+[2025-11-16T20:11:18.374Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mTeamModule dependencies initialized[39m[38;5;3m +1ms[39m
+
+[2025-11-16T20:11:18.375Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mDmsModule dependencies initialized[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mLogisticsModule dependencies initialized[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mCrmModule dependencies initialized[39m[38;5;3m +1ms[39m
+
+[2025-11-16T20:11:18.655Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAppController {/}:[39m[38;5;3m +279ms[39m
+
+[2025-11-16T20:11:18.660Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/, GET} route[39m[38;5;3m +6ms[39m
+
+[2025-11-16T20:11:18.660Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/health, GET} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T20:11:18.661Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAuthController {/auth}:[39m[38;5;3m +1ms[39m
+
+[2025-11-16T20:11:18.663Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/auth/login, POST} route[39m[38;5;3m +1ms[39m
+
+[2025-11-16T20:11:18.665Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/auth/register, POST} route[39m[38;5;3m +3ms[39m
+
+[2025-11-16T20:11:18.666Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAccountController {/crm/accounts}:[39m[38;5;3m +1ms[39m
+
+[2025-11-16T20:11:18.671Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/accounts, GET} route[39m[38;5;3m +5ms[39m
+
+[2025-11-16T20:11:18.675Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/accounts/:id, GET} route[39m[38;5;3m +4ms[39m
+
+[2025-11-16T20:11:18.675Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/accounts, POST} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T20:11:18.676Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/accounts/:id, PUT} route[39m[38;5;3m +1ms[39m
+
+[2025-11-16T20:11:18.678Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/accounts/:id, DELETE} route[39m[38;5;3m +2ms[39m
+
+[2025-11-16T20:11:18.679Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mCampaignController {/crm/campaigns}:[39m[38;5;3m +0ms[39m
+
+[2025-11-16T20:11:18.683Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/campaigns, GET} route[39m[38;5;3m +5ms[39m
+
+[2025-11-16T20:11:18.686Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/campaigns/:id, GET} route[39m[38;5;3m +3ms[39m
+
+[2025-11-16T20:11:18.687Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/campaigns, POST} route[39m[38;5;3m +1ms[39m
+
+[2025-11-16T20:11:18.687Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/campaigns/:id, PUT} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/campaigns/:id, DELETE} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T20:11:18.687Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mTicketController {/crm/tickets}:[39m[38;5;3m +0ms[39m
+
+[2025-11-16T20:11:18.688Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/tickets, GET} route[39m[38;5;3m +1ms[39m
+
+[32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/tickets/:id, GET} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T20:11:18.688Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/tickets, POST} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T20:11:18.689Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/tickets/:id, PUT} route[39m[38;5;3m +1ms[39m
+
+[2025-11-16T20:11:18.689Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/tickets/:id, DELETE} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T20:11:18.690Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mOpportunityController {/crm/opportunities}:[39m[38;5;3m +1ms[39m
+
+[2025-11-16T20:11:18.691Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/opportunities, GET} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T20:11:18.691Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/opportunities/stats, GET} route[39m[38;5;3m +2ms[39m
+
+[2025-11-16T20:11:18.692Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/opportunities/:id, GET} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T20:11:18.693Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/opportunities, POST} route[39m[38;5;3m +1ms[39m
+
+[2025-11-16T20:11:18.693Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/opportunities/:id, PUT} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/opportunities/:id, DELETE} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T20:11:18.693Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mQuoteController {/crm/quotes}:[39m[38;5;3m +0ms[39m
+
+[2025-11-16T20:11:18.694Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/quotes, GET} route[39m[38;5;3m +1ms[39m
+
+[32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/quotes/:id, GET} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T20:11:18.694Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/quotes, POST} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T20:11:18.694Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/quotes/:id, PUT} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T20:11:18.695Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/quotes/:id/approve, POST} route[39m[38;5;3m +1ms[39m
+
+[2025-11-16T20:11:18.695Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/quotes/:id/reject, POST} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T20:11:18.696Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/quotes/:id, DELETE} route[39m[38;5;3m +1ms[39m
+
+[2025-11-16T20:11:18.696Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mSystemSettingsController {/system/settings}:[39m[38;5;3m +0ms[39m
+
+[2025-11-16T20:11:18.697Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/settings, GET} route[39m[38;5;3m +1ms[39m
+
+[2025-11-16T20:11:18.698Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/settings/category/:category, GET} route[39m[38;5;3m +1ms[39m
+
+[2025-11-16T20:11:18.699Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/settings/:key, GET} route[39m[38;5;3m +1ms[39m
+
+[32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/settings, POST} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T20:11:18.699Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/settings/:key, PUT} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T20:11:18.699Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/settings/bulk, POST} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T20:11:18.700Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/settings/:key, DELETE} route[39m[38;5;3m +1ms[39m
+
+[2025-11-16T20:11:18.700Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/settings/initialize, POST} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T20:11:18.701Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mHealthController {/health}:[39m[38;5;3m +1ms[39m
+
+[2025-11-16T20:11:18.701Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/health, GET} route[39m[38;5;3m +1ms[39m
+
+[2025-11-16T20:11:18.702Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/health/detailed, GET} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T20:11:18.702Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mDiagnosticsController {/system/diagnostics}:[39m[38;5;3m +0ms[39m
+
+[2025-11-16T20:11:18.703Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/diagnostics/logs/download, GET} route[39m[38;5;3m +1ms[39m
+
+[2025-11-16T20:11:18.703Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/diagnostics/stats, GET} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T20:11:18.703Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/diagnostics/backup/now, POST} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T20:11:18.704Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/diagnostics/backup/list, GET} route[39m[38;5;3m +1ms[39m
+
+[2025-11-16T20:11:18.704Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/diagnostics/permissions/check-admin, GET} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T20:11:18.705Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/diagnostics/permissions/fix-admin, POST} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T20:11:18.706Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mUserController {/system/users}:[39m[38;5;3m +2ms[39m
+
+[2025-11-16T20:11:18.707Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/users, GET} route[39m[38;5;3m +2ms[39m
+
+[2025-11-16T20:11:18.708Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/users/:id, GET} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/users, POST} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T20:11:18.709Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/users/:id, PUT} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/users/:id/password, PUT} route[39m[38;5;3m +1ms[39m
+
+[2025-11-16T20:11:18.709Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/users/:id, DELETE} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T20:11:18.709Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mDocumentController {/dms/documents}:[39m[38;5;3m +0ms[39m
+
+[2025-11-16T20:11:18.710Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/documents, GET} route[39m[38;5;3m +1ms[39m
+
+[2025-11-16T20:11:18.711Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/documents/:id, GET} route[39m[38;5;3m +1ms[39m
+
+[2025-11-16T20:11:18.713Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/documents, POST} route[39m[38;5;3m +2ms[39m
+
+[2025-11-16T20:11:18.713Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/documents/:id, PUT} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T20:11:18.715Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/documents/:id/upload, POST} route[39m[38;5;3m +2ms[39m
+
+[2025-11-16T20:11:18.716Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/documents/:id, DELETE} route[39m[38;5;3m +1ms[39m
+
+[2025-11-16T20:11:18.716Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/documents/:id/ocr/download, GET} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T20:11:18.717Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/documents/:id/ocr, POST} route[39m[38;5;3m +1ms[39m
+
+[32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mDocumentCategoryController {/dms/categories}:[39m[38;5;3m +0ms[39m
+
+[2025-11-16T20:11:18.717Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/categories, GET} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T20:11:18.717Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/categories/:id, GET} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T20:11:18.717Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/categories, POST} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/categories/:id, PUT} route[39m[38;5;3m +1ms[39m
+
+[2025-11-16T20:11:18.718Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mItemController {/logistics/items}:[39m[38;5;3m +0ms[39m
+
+[2025-11-16T20:11:18.719Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/items, GET} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T20:11:18.720Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/items/:id, GET} route[39m[38;5;3m +2ms[39m
+
+[2025-11-16T20:11:18.720Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/items, POST} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T20:11:18.720Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/items/:id, PUT} route[39m[38;5;3m +1ms[39m
+
+[2025-11-16T20:11:18.721Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/items/:id, DELETE} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mWarehouseController {/logistics/warehouses}:[39m[38;5;3m +0ms[39m
+
+[2025-11-16T20:11:18.721Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/warehouses, GET} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T20:11:18.721Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/warehouses/:id, GET} route[39m[38;5;3m +1ms[39m
+
+[2025-11-16T20:11:18.722Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/warehouses, POST} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/warehouses/:id, PUT} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mStockController {/logistics/stock}:[39m[38;5;3m +0ms[39m
+
+[2025-11-16T20:11:18.722Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/stock, GET} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/stock/low-stock, GET} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T20:11:18.723Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/stock/move, POST} route[39m[38;5;3m +1ms[39m
+
+[32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mInventoryController {/logistics/inventory}:[39m[38;5;3m +0ms[39m
+
+[2025-11-16T20:11:18.723Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/inventory, GET} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T20:11:18.723Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/inventory/warehouse/:warehouseId, GET} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T20:11:18.724Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/inventory/alerts, GET} route[39m[38;5;3m +1ms[39m
+
+[2025-11-16T20:11:18.724Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/inventory/stock-levels, POST} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T20:11:18.728Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/inventory/stock-levels/:id, PUT} route[39m[38;5;3m +4ms[39m
+
+[2025-11-16T20:11:18.729Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/inventory/stock-levels/:id, DELETE} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mPurchaseOrderController {/logistics/purchase-orders}:[39m[38;5;3m +0ms[39m
+
+[2025-11-16T20:11:18.729Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/purchase-orders, GET} route[39m[38;5;3m +1ms[39m
+
+[2025-11-16T20:11:18.729Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/purchase-orders/:id, GET} route[39m[38;5;3m +1ms[39m
+
+[2025-11-16T20:11:18.731Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/purchase-orders, POST} route[39m[38;5;3m +2ms[39m
+
+[2025-11-16T20:11:18.733Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/purchase-orders/:id, PUT} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T20:11:18.734Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mTaskController {/team/tasks}:[39m[38;5;3m +1ms[39m
+
+[2025-11-16T20:11:18.734Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/tasks, GET} route[39m[38;5;3m +1ms[39m
+
+[2025-11-16T20:11:18.735Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/tasks/my, GET} route[39m[38;5;3m +1ms[39m
+
+[2025-11-16T20:11:18.736Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/tasks/assigned-to/:userId, GET} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/tasks/:id, GET} route[39m[38;5;3m +1ms[39m
+
+[2025-11-16T20:11:18.737Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/tasks, POST} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/tasks/:id, PUT} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/tasks/:id, DELETE} route[39m[38;5;3m +1ms[39m
+
+[2025-11-16T20:11:18.737Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/tasks/:id/status, PATCH} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/tasks/:id/assign, PATCH} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T20:11:18.738Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/tasks/:id/move, PATCH} route[39m[38;5;3m +1ms[39m
+
+[32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mDashboardController {/team/dashboard}:[39m[38;5;3m +0ms[39m
+
+[2025-11-16T20:11:18.738Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/dashboard/stats, GET} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/dashboard/my-tasks, GET} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mBoardController {/team/boards}:[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/boards, GET} route[39m[38;5;3m +1ms[39m
+
+[32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/boards/:id, GET} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T20:11:18.739Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/boards, POST} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/boards/:id, PUT} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T20:11:18.740Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/boards/:id, DELETE} route[39m[38;5;3m +1ms[39m
+
+[2025-11-16T20:11:18.741Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/boards/:id/members, POST} route[39m[38;5;3m +1ms[39m
+
+[2025-11-16T20:11:18.741Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/boards/:id/members/:userId, DELETE} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T20:11:18.741Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/boards/:id/columns, GET} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T20:11:18.742Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/boards/:id/columns, POST} route[39m[38;5;3m +1ms[39m
+
+[2025-11-16T20:11:18.742Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/boards/:id/columns/:columnId, PUT} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T20:11:18.743Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/boards/:id/columns/:columnId, DELETE} route[39m[38;5;3m +1ms[39m
+
+[2025-11-16T20:11:18.743Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mCommentController {/team/tasks}:[39m[38;5;3m +0ms[39m
+
+[2025-11-16T20:11:18.743Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/tasks/:taskId/comments, GET} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T20:11:18.743Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/tasks/:taskId/comments, POST} route[39m[38;5;3m +1ms[39m
+
+[2025-11-16T20:11:18.744Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/tasks/comments/:id, PUT} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T20:11:18.744Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/tasks/comments/:id, DELETE} route[39m[38;5;3m +0ms[39m
+
+[2025-11-16T20:11:18.790Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[PrismaService] [39m[32m✅ Adatbázis kapcsolat létrejött[39m
+
+[2025-11-16T20:11:18.840Z] [Backend] [95m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [95m  DEBUG[39m [38;5;3m[PrismaService] [39m[95mDatabase schema already initialized[39m
+
+[2025-11-16T20:11:18.870Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[SeedService] [39m[32m✅ Adatbázis már tartalmaz felhasználókat, seed kihagyva[39m
+
+[2025-11-16T20:11:18.879Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:11:18 PM [32m    LOG[39m [38;5;3m[NestApplication] [39m[32mNest application successfully started[39m[38;5;3m +9ms[39m
+
+[2025-11-16T20:11:18.902Z] [Backend] 🚀 Mbit ERP szerver fut: http://127.0.0.1:3000
+
+[2025-11-16T20:11:19.439Z] [Health Check] Backend is ready on 127.0.0.1
+
+[2025-11-16T20:11:19.440Z] [Backend] ✓ Ready after 10 attempt(s) (~20s)
+
+[2025-11-16T20:11:19.440Z] [Backend] Started successfully - health check passed
+
+[2025-11-16T20:11:19.441Z] [App] Backend started successfully
+
+[2025-11-16T20:11:19.441Z] [App] Reloading window now that backend is ready...
+
+[2025-11-16T20:11:19.544Z] [Window] Window finished loading
+
+[2025-11-16T20:11:21.095Z] [Backend] Health check: PID 5164 is alive
+
+[2025-11-16T20:11:31.108Z] [Backend] Health check: PID 5164 is alive
+
+[2025-11-16T20:11:41.121Z] [Backend] Health check: PID 5164 is alive
+
+[2025-11-16T20:11:51.152Z] [Backend] Health check: PID 5164 is alive
+
+[2025-11-16T20:12:01.163Z] [Backend] Health check: PID 5164 is alive
+
+[2025-11-16T20:12:11.221Z] [Backend] Health check: PID 5164 is alive
+
+[2025-11-16T20:12:21.240Z] [Backend] Health check: PID 5164 is alive
+
+[2025-11-16T20:12:22.233Z] [Backend Error] [31m[Nest] 5164  - [39m11/16/2025, 9:12:22 PM [31m  ERROR[39m [38;5;3m[AllExceptionsFilter] [39m[31mHTTP 500 Error: POST /team/boards[39m
+
+[2025-11-16T20:12:22.234Z] [Backend Error] PrismaClientKnownRequestError: 
+
+Invalid `prisma.taskBoard.create()` invocation:
+
+Foreign key constraint violated: `foreign key`
+
+    at $n.handleRequestError (C:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules\@prisma\client\runtime\library.js:121:7315)
+
+    at $n.handleAndLogRequestError (C:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules\@prisma\client\runtime\library.js:121:6623)
+
+    at $n.request (C:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules\@prisma\client\runtime\library.js:121:6307)
+
+    at async l (C:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules\@prisma\client\runtime\library.js:130:9633)
+
+    at async C:\Users\liviuszberger\Desktop\Mbit\resources\backend\prisma\prisma.service.js:45:28
+
+    at async BoardService.create (C:\Users\liviuszberger\Desktop\Mbit\resources\backend\team\board\board.service.js:142:23)
+
+    at async BoardController.create (C:\Users\liviuszberger\Desktop\Mbit\resources\backend\team\board\board.controller.js:39:16)
+
+    at async C:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules\@nestjs\core\router\router-execution-context.js:46:28
+
+    at async C:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules\@nestjs\core\router\router-proxy.js:9:17
+
+=== EXCEPTION DETAILS ===
+
+{
+
+  "statusCode": 500,
+
+  "timestamp": "2025-11-16T20:12:22.228Z",
+
+  "path": "/team/boards",
+
+  "method": "POST",
+
+  "message": "\nInvalid `prisma.taskBoard.create()` invocation:\n\n\nForeign key constraint violated: `foreign key`",
+
+  "error": "PrismaClientKnownRequestError: \nInvalid `prisma.taskBoard.create()` invocation:\n\n\nForeign key constraint violated: `foreign key`\n    at $n.handleRequestError (C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:7315)\n    at $n.handleAndLogRequestError (C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6623)\n    at $n.request (C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6307)\n    at async l (C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:130:9633)\n    at async C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\prisma\\prisma.service.js:45:28\n    at async BoardService.create (C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\team\\board\\board.service.js:142:23)\n    at async BoardController.create (C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\team\\board\\board.controller.js:39:16)\n    at async C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\node_modules\\@nestjs\\core\\router\\router-execution-context.js:46:28\n    at async C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\node_modules\\@nestjs\\core\\router\\router-proxy.js:9:17"
+
+}
+
+========================
+
+[2025-11-16T20:12:31.241Z] [Backend] Health check: PID 5164 is alive
+
+[2025-11-16T20:12:41.245Z] [Backend] Health check: PID 5164 is alive
+
+[2025-11-16T20:12:47.372Z] [Backend] [32m[Nest] 5164  - [39m11/16/2025, 9:12:47 PM [32m    LOG[39m [38;5;3m[SystemSettingsService] [39m[32mDefault settings initialized[39m
+
+[2025-11-16T20:12:51.251Z] [Backend] Health check: PID 5164 is alive
+
+[2025-11-16T20:12:55.483Z] [Backend Error] [31m[Nest] 5164  - [39m11/16/2025, 9:12:55 PM [31m  ERROR[39m [38;5;3m[AllExceptionsFilter] [39m[31mHTTP 500 Error: POST /team/boards[39m
+
+PrismaClientKnownRequestError: 
+
+Invalid `prisma.taskBoard.create()` invocation:
+
+Foreign key constraint violated: `foreign key`
+
+    at $n.handleRequestError (C:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules\@prisma\client\runtime\library.js:121:7315)
+
+    at $n.handleAndLogRequestError (C:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules\@prisma\client\runtime\library.js:121:6623)
+
+    at $n.request (C:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules\@prisma\client\runtime\library.js:121:6307)
+
+    at async l (C:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules\@prisma\client\runtime\library.js:130:9633)
+
+    at async C:\Users\liviuszberger\Desktop\Mbit\resources\backend\prisma\prisma.service.js:45:28
+
+    at async BoardService.create (C:\Users\liviuszberger\Desktop\Mbit\resources\backend\team\board\board.service.js:142:23)
+
+    at async BoardController.create (C:\Users\liviuszberger\Desktop\Mbit\resources\backend\team\board\board.controller.js:39:16)
+
+    at async C:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules\@nestjs\core\router\router-execution-context.js:46:28
+
+    at async C:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules\@nestjs\core\router\router-proxy.js:9:17
+
+[2025-11-16T20:12:55.484Z] [Backend Error] === EXCEPTION DETAILS ===
+
+{
+
+  "statusCode": 500,
+
+  "timestamp": "2025-11-16T20:12:55.482Z",
+
+  "path": "/team/boards",
+
+  "method": "POST",
+
+  "message": "\nInvalid `prisma.taskBoard.create()` invocation:\n\n\nForeign key constraint violated: `foreign key`",
+
+  "error": "PrismaClientKnownRequestError: \nInvalid `prisma.taskBoard.create()` invocation:\n\n\nForeign key constraint violated: `foreign key`\n    at $n.handleRequestError (C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:7315)\n    at $n.handleAndLogRequestError (C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6623)\n    at $n.request (C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6307)\n    at async l (C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:130:9633)\n    at async C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\prisma\\prisma.service.js:45:28\n    at async BoardService.create (C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\team\\board\\board.service.js:142:23)\n    at async BoardController.create (C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\team\\board\\board.controller.js:39:16)\n    at async C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\node_modules\\@nestjs\\core\\router\\router-execution-context.js:46:28\n    at async C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\node_modules\\@nestjs\\core\\router\\router-proxy.js:9:17"
+
+}
+
+========================
+
+[2025-11-16T20:13:01.256Z] [Backend] Health check: PID 5164 is alive
+
+[2025-11-16T20:13:11.291Z] [Backend] Health check: PID 5164 is alive
+
+[2025-11-16T20:13:21.310Z] [Backend] Health check: PID 5164 is alive
+
+[2025-11-16T20:13:31.312Z] [Backend] Health check: PID 5164 is alive
+
+[2025-11-16T20:13:41.318Z] [Backend] Health check: PID 5164 is alive
+
+[2025-11-16T20:13:51.360Z] [Backend] Health check: PID 5164 is alive
+
+[2025-11-16T20:14:01.369Z] [Backend] Health check: PID 5164 is alive
+
+[2025-11-16T20:14:11.380Z] [Backend] Health check: PID 5164 is alive
+
+
+
+----
+
+-ezt kellene fixálni és mélyen átgondolni mi okozhatja a problémát
+
+
+
+---
+
+_**Agent (model composer-1, mode Agent)**_
+
+
+
+---
+
+
+A foreign key hiba valószínűleg a `createdById` miatt van. Ellenőrzöm a BoardService és a BoardController kódját:
+
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: /Users/liviuszberger/mbit-erp/apps/server/src/team/board/board.service.ts</summary>
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: /Users/liviuszberger/mbit-erp/apps/server/src/team/board/board.controller.ts</summary>
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: /Users/liviuszberger/mbit-erp/apps/server/prisma/schema.prisma</summary>
+
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+Ellenőrzöm a TaskBoard sémát és a User relációt:
+
+
+---
+
+<tool-use data-tool-type="grep" data-tool-name="grep">
+<details>
+<summary>Tool use: **grep** • Grep for "model TaskBoard" in "apps/server/prisma/schema.prisma" • 2 matches</summary>
+
+Output mode: content
+
+
+| File | Content | Line |
+|------|------|------|
+| `apps/server/prisma/schema.prisma` | `model TaskBoard \{` | L960 |
+| `apps/server/prisma/schema.prisma` | `model TaskBoardMember \{` | L997 |
+
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="search" data-tool-name="codebase_search">
+<details>
+                <summary>Tool use: **codebase_search** • Searched codebase "How is req.user.id set in authentication guard?" • **11** results</summary>
+            
+| File | Lines |
+|------|-------|
+| `apps/server/src/common/rbac/rbac.guard.ts` | L5-104 |
+| `apps/server/src/auth/jwt.strategy.ts` | L22 |
+| `apps/server/src/common/rbac/rbac.guard.ts` | L104 |
+| `apps/server/src/auth/auth.service.ts` | L74 |
+| `apps/server/src/common/rbac/rbac.module.ts` | L15 |
+| `apps/server/src/system/user.controller.ts` | L17-91 |
+| `apps/server/src/system/user.controller.ts` | L91 |
+| `apps/server/src/auth/auth.module.ts` | L19 |
+| `apps/server/src/team/task/task.controller.ts` | L23-174 |
+| `apps/server/src/team/comment/comment.controller.ts` | L54 |
+| `apps/server/src/team/board/board.controller.ts` | L17-144 |
+
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+Az Electron módban a mock user ID (`'electron-desktop-user'`) nem létezik az adatbázisban, ezért a foreign key constraint megszakad. Javítom: Electron módban az admin felhasználó ID-ját használjuk, vagy null-t állítunk be, ha opcionális.
+
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: /Users/liviuszberger/mbit-erp/apps/server/src/team/board/board.service.ts</summary>
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: /Users/liviuszberger/mbit-erp/apps/server/src/common/rbac/rbac.guard.ts</summary>
+
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+Javítom a RbacGuard-ot, hogy Electron módban az admin felhasználó ID-ját használja:
+
+
+---
+
+<tool-use data-tool-type="write" data-tool-name="search_replace">
+
+<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/common/rbac/rbac.guard.ts</summary>
+
+**Chunk 1**
+Lines added: 32, lines removed: 7
+
+```diff
+@@ -20,12 +20,37 @@
+      const isElectronDesktop = process.env.ELECTRON_RUN_AS_NODE === &#39;1&#39;;
+      if (isElectronDesktop) {
+-       // Create a mock user object for Electron desktop mode
++       // Find admin user in database for Electron desktop mode
++       // This ensures foreign key constraints work correctly
++       const adminUser = await this.prisma.user.findFirst({
++         where: {
++           email: &#39;admin@mbit.hu&#39;,
++           aktiv: true,
++         },
++         include: {
++           roles: {
++             include: {
++               role: true,
++             },
++           },
++         },
++       });
++ 
+        const request = context.switchToHttp().getRequest();
+-       request.user = {
+-         id: &#39;electron-desktop-user&#39;,
+-         userId: &#39;electron-desktop-user&#39;,
+-         email: &#39;desktop@mbit.local&#39;,
+-         roles: [&#39;Admin&#39;, &#39;User&#39;],
+-       };
++       if (adminUser) {
++         request.user = {
++           id: adminUser.id,
++           userId: adminUser.id,
++           email: adminUser.email,
++           roles: adminUser.roles.map(ur =&gt; ur.role.nev),
++         };
++       } else {
++         // Fallback if admin user doesn&#39;t exist yet
++         request.user = {
++           id: null,
++           userId: null,
++           email: &#39;desktop@mbit.local&#39;,
++           roles: [&#39;Admin&#39;, &#39;User&#39;],
++         };
++       }
+        return true;
+      }
+```
+
+</details>
+
+</tool-use>
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: /Users/liviuszberger/mbit-erp/apps/server/src/team/board/board.service.ts</summary>
+
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+Frissítem a BoardService-t, hogy kezelje a null userId esetet:
+
+
+---
+
+<tool-use data-tool-type="write" data-tool-name="search_replace">
+
+<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/team/board/board.service.ts</summary>
+
+**Chunk 1**
+Lines added: 23, lines removed: 2
+
+```diff
+@@ -141,9 +141,30 @@
+    }
+  
+-   async create(dto: CreateBoardDto, userId: string) {
++   async create(dto: CreateBoardDto, userId: string | null) {
++     // Validate userId exists if provided
++     if (userId) {
++       const userExists = await this.prisma.user.findUnique({
++         where: { id: userId },
++       });
++       if (!userExists) {
++         // If user doesn&#39;t exist, try to find admin user
++         const adminUser = await this.prisma.user.findFirst({
++           where: {
++             email: &#39;admin@mbit.hu&#39;,
++             aktiv: true,
++           },
++         });
++         if (adminUser) {
++           userId = adminUser.id;
++         } else {
++           userId = null;
++         }
++       }
++     }
++ 
+      const board = await this.prisma.taskBoard.create({
+        data: {
+          ...dto,
+-         createdById: userId,
++         createdById: userId || undefined,
+        },
+        include: {
+```
+
+**Chunk 2**
+Lines added: 10, lines removed: 8
+
+```diff
+@@ -176,12 +197,14 @@
+      );
+  
+-     // Létrehozó automatikusan ADMIN tag
+-     await this.prisma.taskBoardMember.create({
+-       data: {
+-         boardId: board.id,
+-         userId,
+-         jogosultsag: BoardMemberPermission.ADMIN,
+-       },
+-     });
++     // Létrehozó automatikusan ADMIN tag (csak ha userId létezik)
++     if (userId) {
++       await this.prisma.taskBoardMember.create({
++         data: {
++           boardId: board.id,
++           userId,
++           jogosultsag: BoardMemberPermission.ADMIN,
++         },
++       });
++     }
+  
+      // Audit log
+```
+
+</details>
+
+</tool-use>
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: /Users/liviuszberger/mbit-erp/apps/server/src/team/board/board.controller.ts</summary>
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="generic" data-tool-name="read_lints">
+<details>
+          <summary>Tool use: **read_lints** • Read lints for 2 files</summary>
+      
+Lint paths:
+
+- `apps/server/src/common/rbac/rbac.guard.ts`
+- `apps/server/src/team/board/board.service.ts`
+
+Lint results
+
+
+**No lint errors found**
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="bash" data-tool-name="run_terminal_cmd">
+<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp/apps/server && npm run build</summary>
+
+```bash
+cd /Users/liviuszberger/mbit-erp/apps/server && npm run build
+```
+
+```
+
+&gt; @mbit-erp/server@1.0.0 build
+&gt; nest build
+
+
+```
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+Frissítem a BoardController-t, hogy kezelje a null userId esetet:
+
+
+---
+
+<tool-use data-tool-type="write" data-tool-name="search_replace">
+
+<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/team/board/board.controller.ts</summary>
+
+**Chunk 1**
+Lines added: 1, lines removed: 1
+
+```diff
+@@ -44,5 +44,5 @@
+    @Permissions(Permission.BOARD_CREATE)
+    async create(@Request() req: any, @Body() dto: CreateBoardDto) {
+-     return await this.boardService.create(dto, req.user.id);
++     return await this.boardService.create(dto, req.user?.id || null);
+    }
+  
+```
+
+</details>
+
+</tool-use>
+
+---
+
+<tool-use data-tool-type="bash" data-tool-name="run_terminal_cmd">
+<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git add -A && git commit -m "fix: Resolve foreign key constraint violation when creating boards in Electron mode
+
+- Update RbacGuard to find admin user from database in Electron mode instead of using mock ID
+- Update BoardService.create to validate userId exists and fallback to admin user if needed
+- Handle null userId case gracefully in board creation
+- Fix foreign key constraint violation by ensuring userId references existing user" && git push origin main</summary>
+
+```bash
+cd /Users/liviuszberger/mbit-erp && git add -A && git commit -m "fix: Resolve foreign key constraint violation when creating boards in Electron mode
+
+- Update RbacGuard to find admin user from database in Electron mode instead of using mock ID
+- Update BoardService.create to validate userId exists and fallback to admin user if needed
+- Handle null userId case gracefully in board creation
+- Fix foreign key constraint violation by ensuring userId references existing user" && git push origin main
+```
+
+```
+[main e906f00] fix: Resolve foreign key constraint violation when creating boards in Electron mode
+ 4 files changed, 886 insertions(+), 28 deletions(-)
+To https://github.com/BergerLiviusz/mbit-erp.git
+   d09d5d8..e906f00  main -&gt; main
+
+```
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+Ellenőrzöm a TaskService-t is, hogy ugyanez a probléma ne jelentkezzen:
+
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: /Users/liviuszberger/mbit-erp/apps/server/src/team/task/task.service.ts</summary>
+
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+Frissítem a TaskService-t is:
+
+
+---
+
+<tool-use data-tool-type="write" data-tool-name="search_replace">
+
+<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/team/task/task.service.ts</summary>
+
+**Chunk 1**
+Lines added: 24, lines removed: 2
+
+```diff
+@@ -268,9 +268,31 @@
+    }
+  
+-   async create(dto: CreateTaskDto, userId: string) {
++   async create(dto: CreateTaskDto, userId: string | null) {
++     // Validate userId exists if provided
++     let validUserId = userId;
++     if (userId) {
++       const userExists = await this.prisma.user.findUnique({
++         where: { id: userId },
++       });
++       if (!userExists) {
++         // If user doesn&#39;t exist, try to find admin user
++         const adminUser = await this.prisma.user.findFirst({
++           where: {
++             email: &#39;admin@mbit.hu&#39;,
++             aktiv: true,
++           },
++         });
++         if (adminUser) {
++           validUserId = adminUser.id;
++         } else {
++           validUserId = null;
++         }
++       }
++     }
++ 
+      const task = await this.prisma.task.create({
+        data: {
+          ...dto,
+-         createdById: userId,
++         createdById: validUserId || undefined,
+          hataridoDatum: dto.hataridoDatum ? new Date(dto.hataridoDatum) : null,
+        },
+```
+
+</details>
+
+</tool-use>
+
+---
+
+<tool-use data-tool-type="write" data-tool-name="search_replace">
+
+<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/team/task/task.service.ts</summary>
+
+**Chunk 1**
+Lines added: 10, lines removed: 8
+
+```diff
+@@ -315,14 +315,16 @@
+      });
+  
+-     // Activity log
+-     await this.activityService.createActivity(
+-       task.id,
+-       userId,
+-       TaskActivityType.CREATED,
+-       &#96;Feladat létrehozva: ${task.cim}&#96;,
+-     );
++     // Activity log (only if userId exists)
++     if (validUserId) {
++       await this.activityService.createActivity(
++         task.id,
++         validUserId,
++         TaskActivityType.CREATED,
++         &#96;Feladat létrehozva: ${task.cim}&#96;,
++       );
++     }
+  
+      // Audit log
+-     await this.auditService.logCreate(&#39;Task&#39;, task.id, task, userId);
++     await this.auditService.logCreate(&#39;Task&#39;, task.id, task, validUserId);
+  
+      // Ha van assignedTo, akkor watcher hozzáadása
+```
+
+</details>
+
+</tool-use>
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: /Users/liviuszberger/mbit-erp/apps/server/src/team/task/task.controller.ts</summary>
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="bash" data-tool-name="run_terminal_cmd">
+<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp/apps/server && npm run build</summary>
+
+```bash
+cd /Users/liviuszberger/mbit-erp/apps/server && npm run build
+```
+
+```
+
+&gt; @mbit-erp/server@1.0.0 build
+&gt; nest build
+
+
+```
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+Frissítem a TaskController-t is:
+
+
+---
+
+<tool-use data-tool-type="grep" data-tool-name="grep">
+<details>
+<summary>Tool use: **grep** • Grep for "async create.*CreateTaskDto" in "apps/server/src/team/task/task.controller.ts" • 1 match</summary>
+
+Output mode: content
+
+
+| File | Content | Line |
+|------|------|------|
+| `apps/server/src/team/task/task.controller.ts` | `async create(@Request() req: any, @Body() dto: CreateTaskDto) \{` | L90 |
+
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: /Users/liviuszberger/mbit-erp/apps/server/src/team/task/task.controller.ts</summary>
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="write" data-tool-name="search_replace">
+
+<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/team/task/task.controller.ts</summary>
+
+**Chunk 1**
+Lines added: 1, lines removed: 1
+
+```diff
+@@ -89,5 +89,5 @@
+    @Permissions(Permission.TASK_CREATE)
+    async create(@Request() req: any, @Body() dto: CreateTaskDto) {
+-     return await this.taskService.create(dto, req.user.id);
++     return await this.taskService.create(dto, req.user?.id || null);
+    }
+  
+```
+
+</details>
+
+</tool-use>
+
+---
+
+<tool-use data-tool-type="bash" data-tool-name="run_terminal_cmd">
+<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git add -A && git commit -m "fix: Also fix foreign key constraint in TaskService.create for Electron mode
+
+- Update TaskService.create to validate userId and fallback to admin user
+- Handle null userId case gracefully in task creation
+- Update TaskController to handle null userId from request" && git push origin main</summary>
+
+```bash
+cd /Users/liviuszberger/mbit-erp && git add -A && git commit -m "fix: Also fix foreign key constraint in TaskService.create for Electron mode
+
+- Update TaskService.create to validate userId and fallback to admin user
+- Handle null userId case gracefully in task creation
+- Update TaskController to handle null userId from request" && git push origin main
+```
+
+```
+[main 2d59158] fix: Also fix foreign key constraint in TaskService.create for Electron mode
+ 2 files changed, 35 insertions(+), 11 deletions(-)
+To https://github.com/BergerLiviusz/mbit-erp.git
+   e906f00..2d59158  main -&gt; main
+
+```
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+## Probléma elemzése
+
+A foreign key constraint hiba oka: Electron módban a `RbacGuard` egy mock user objektumot hozott létre `id: 'electron-desktop-user'` értékkel, ami nem létezik az adatbázisban. Amikor board-ot vagy task-ot próbáltunk létrehozni `createdById: 'electron-desktop-user'` értékkel, a foreign key constraint megszakadt.
+
+## Megoldás
+
+### 1. RbacGuard frissítése
+- Electron módban az admin felhasználót keressük az adatbázisból (`admin@mbit.hu`)
+- Az admin felhasználó valós ID-ját használjuk a mock helyett
+- Ha az admin felhasználó nem létezik, `null`-t állítunk be
+
+### 2. BoardService.create frissítése
+- Validáljuk, hogy a `userId` létezik-e az adatbázisban
+- Ha nem létezik, az admin felhasználó ID-jára váltunk
+- Ha az admin sem létezik, `null`-t használunk (a `createdById` opcionális)
+
+### 3. TaskService.create frissítése
+- Ugyanez a validáció és fallback logika
+
+### 4. Controller-ek frissítése
+- A `req.user?.id || null` használata a null-safe hozzáféréshez
+
+## Eredmény
+
+Most Electron módban:
+- Az admin felhasználó ID-ja kerül használatra
+- A foreign key constraint-ek működnek
+- Board és task létrehozás működik
+- Ha az admin felhasználó nem létezik, a `createdById` `null` lesz (opcionális mező)
+
+A változások GitHub-ra kerültek. A CI build után az új verzióban működnie kell a board létrehozásnak. Teszteld az új build-et.
+
+---
+

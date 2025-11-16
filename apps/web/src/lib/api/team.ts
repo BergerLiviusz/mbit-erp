@@ -233,9 +233,14 @@ export function useCreateTask() {
       const response = await axios.post('/api/team/tasks', data);
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       queryClient.invalidateQueries({ queryKey: ['boards'] });
+      // Invalidate specific board if boardId is provided
+      if (variables.boardId) {
+        queryClient.invalidateQueries({ queryKey: ['board', variables.boardId] });
+      }
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
     },
   });
 }
