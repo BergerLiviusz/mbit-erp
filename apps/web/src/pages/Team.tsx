@@ -30,7 +30,7 @@ export default function Team() {
 
   const selectedBoard = boards?.find((b: TaskBoard) => b.id === selectedBoardId) || boards?.[0];
   const boardIdToLoad = selectedBoard?.id || '';
-  const { data: boardDetails } = useBoard(boardIdToLoad);
+  const { data: boardDetails, refetch: refetchBoard } = useBoard(boardIdToLoad);
 
   const [taskFormData, setTaskFormData] = useState<CreateTaskDto>({
     cim: '',
@@ -126,6 +126,10 @@ export default function Team() {
         leiras: taskFormData.leiras || undefined,
       });
       setSuccess('Feladat sikeresen létrehozva');
+      // Refetch board data to show new task
+      if (boardIdToLoad) {
+        refetchBoard();
+      }
       setTimeout(() => {
         setIsCreateTaskModalOpen(false);
         setSuccess('');
