@@ -4,7 +4,6 @@ import { SystemSettingsService } from '../system/settings.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { OrderStatus } from './enums/order-status.enum';
-import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class OrderService {
@@ -23,7 +22,7 @@ export class OrderService {
       endDate?: string;
     },
   ) {
-    const where: Prisma.OrderWhereInput = {};
+    const where: any = {};
 
     if (filters?.allapot) {
       where.allapot = filters.allapot;

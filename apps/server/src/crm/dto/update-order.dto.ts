@@ -1,6 +1,7 @@
 import { PartialType } from '@nestjs/mapped-types';
-import { CreateOrderDto } from './create-order.dto';
-import { IsOptional, IsEnum, IsDateString, IsString } from 'class-validator';
+import { CreateOrderDto, OrderItemDto } from './create-order.dto';
+import { IsOptional, IsEnum, IsDateString, IsString, IsArray, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
 import { OrderStatus } from '../enums/order-status.enum';
 
 export class UpdateOrderDto extends PartialType(CreateOrderDto) {
@@ -19,5 +20,11 @@ export class UpdateOrderDto extends PartialType(CreateOrderDto) {
   @IsOptional()
   @IsString()
   megjegyzesek?: string;
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => OrderItemDto)
+  items?: OrderItemDto[];
 }
 
