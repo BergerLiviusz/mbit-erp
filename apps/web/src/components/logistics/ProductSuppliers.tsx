@@ -13,9 +13,10 @@ import axios from '../../lib/axios';
 
 interface ProductSuppliersProps {
   itemId: string;
+  showHeader?: boolean;
 }
 
-export default function ProductSuppliers({ itemId }: ProductSuppliersProps) {
+export default function ProductSuppliers({ itemId, showHeader = true }: ProductSuppliersProps) {
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string>('');
@@ -115,16 +116,28 @@ export default function ProductSuppliers({ itemId }: ProductSuppliersProps) {
   const linkedSupplierIds = itemSuppliers?.map((is: ItemSupplier) => is.supplierId) || [];
 
   return (
-    <div className="mt-6">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-semibold">Szállítók</h3>
-        <button
-          onClick={handleOpenLinkModal}
-          className="bg-mbit-blue text-white px-3 py-1 rounded text-sm hover:bg-blue-700"
-        >
-          + Szállító hozzáadása
-        </button>
-      </div>
+    <div>
+      {showHeader && (
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold">Szállítók</h3>
+          <button
+            onClick={handleOpenLinkModal}
+            className="bg-mbit-blue text-white px-3 py-1 rounded text-sm hover:bg-blue-700"
+          >
+            + Szállító hozzáadása
+          </button>
+        </div>
+      )}
+      {!showHeader && (
+        <div className="flex justify-end mb-4">
+          <button
+            onClick={handleOpenLinkModal}
+            className="bg-mbit-blue text-white px-3 py-1 rounded text-sm hover:bg-blue-700"
+          >
+            + Szállító hozzáadása
+          </button>
+        </div>
+      )}
 
       {error && (
         <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded text-sm">

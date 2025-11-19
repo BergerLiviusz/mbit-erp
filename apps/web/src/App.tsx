@@ -10,6 +10,8 @@ import Suppliers from './pages/Suppliers';
 import Settings from './pages/Settings';
 import Opportunities from './pages/Opportunities';
 import Quotes from './pages/Quotes';
+import Orders from './pages/Orders';
+import OrdersLogistics from './pages/OrdersLogistics';
 import Team from './pages/Team';
 import Login from './pages/Login';
 import { BackendStatus } from './components/BackendStatus';
@@ -162,7 +164,8 @@ function App() {
                   items={[
                     { to: '/crm', label: 'Partnerek' },
                     { to: '/opportunities', label: 'Lehetőségek' },
-                    { to: '/quotes', label: 'Árajánlatok' }
+                    { to: '/quotes', label: 'Árajánlatok' },
+                    { to: '/orders', label: 'Rendelések' }
                   ]}
                 />
                 <Link 
@@ -197,7 +200,8 @@ function App() {
                     { to: '/warehouses', label: 'Raktárak' },
                     { to: '/products', label: 'Termékek' },
                     { to: '/returns', label: 'Visszárúk' },
-                    { to: '/suppliers', label: 'Szállítók' }
+                    { to: '/suppliers', label: 'Szállítók' },
+                    { to: '/orders-logistics', label: 'Rendelések' }
                   ]}
                 />
                 <Link 
@@ -237,12 +241,14 @@ function App() {
           <Route path="/crm" element={<CRM />} />
           <Route path="/opportunities" element={<Opportunities />} />
           <Route path="/quotes" element={<Quotes />} />
+          <Route path="/orders" element={<Orders />} />
           <Route path="/documents" element={<Documents />} />
           <Route path="/team" element={<Team />} />
           <Route path="/warehouses" element={<Warehouses />} />
           <Route path="/products" element={<Products />} />
           <Route path="/returns" element={<Returns />} />
           <Route path="/suppliers" element={<Suppliers />} />
+          <Route path="/orders-logistics" element={<OrdersLogistics />} />
           <Route path="/settings" element={<Settings />} />
         </Routes>
       </main>

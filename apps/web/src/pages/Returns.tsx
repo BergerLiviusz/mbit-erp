@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import Modal from '../components/Modal';
 import {
   useReturns,
@@ -634,43 +635,80 @@ export default function Returns() {
           size="lg"
         >
           <div className="space-y-4">
-            <div>
-              <strong>Rendelés:</strong> {selectedReturn.order?.azonosito || '-'}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Rendelés</label>
+                <p className="text-sm text-gray-900">
+                  {selectedReturn.order?.azonosito ? (
+                    <Link
+                      to={`/orders-logistics?orderId=${selectedReturn.orderId}`}
+                      className="text-blue-600 hover:text-blue-900"
+                    >
+                      {selectedReturn.order.azonosito} →
+                    </Link>
+                  ) : (
+                    '-'
+                  )}
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Áru</label>
+                <p className="text-sm text-gray-900">
+                  {selectedReturn.item?.azonosito} - {selectedReturn.item?.nev}
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Raktár</label>
+                <p className="text-sm text-gray-900">{selectedReturn.warehouse?.nev}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Mennyiség</label>
+                <p className="text-sm text-gray-900">{selectedReturn.mennyiseg}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Ok</label>
+                <p className="text-sm text-gray-900">{getOkLabel(selectedReturn.ok)}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Állapot</label>
+                <div className="mt-1">{getStatusBadge(selectedReturn.allapot)}</div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Dátum</label>
+                <p className="text-sm text-gray-900">
+                  {new Date(selectedReturn.visszaruDatum).toLocaleDateString('hu-HU')}
+                </p>
+              </div>
             </div>
-            <div>
-              <strong>Áru:</strong> {selectedReturn.item?.azonosito} - {selectedReturn.item?.nev}
-            </div>
-            <div>
-              <strong>Raktár:</strong> {selectedReturn.warehouse?.nev}
-            </div>
-            <div>
-              <strong>Mennyiség:</strong> {selectedReturn.mennyiseg}
-            </div>
-            <div>
-              <strong>Ok:</strong> {getOkLabel(selectedReturn.ok)}
-            </div>
-            <div>
-              <strong>Állapot:</strong> {getStatusBadge(selectedReturn.allapot)}
-            </div>
-            <div>
-              <strong>Dátum:</strong>{' '}
-              {new Date(selectedReturn.visszaruDatum).toLocaleDateString('hu-HU')}
-            </div>
+
             {selectedReturn.megjegyzesek && (
               <div>
-                <strong>Megjegyzések:</strong> {selectedReturn.megjegyzesek}
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Megjegyzések
+                </label>
+                <p className="text-sm text-gray-900 whitespace-pre-wrap">
+                  {selectedReturn.megjegyzesek}
+                </p>
               </div>
             )}
-            {selectedReturn.createdBy && (
-              <div>
-                <strong>Létrehozta:</strong> {selectedReturn.createdBy.nev} (
-                {selectedReturn.createdBy.email})
-              </div>
-            )}
-            {selectedReturn.approvedBy && (
-              <div>
-                <strong>Jóváhagyta:</strong> {selectedReturn.approvedBy.nev} (
-                {selectedReturn.approvedBy.email})
+
+            {(selectedReturn.createdBy || selectedReturn.approvedBy) && (
+              <div className="border-t pt-4">
+                <h3 className="text-sm font-medium text-gray-700 mb-2">Művelet történet</h3>
+                {selectedReturn.createdBy && (
+                  <div className="text-sm text-gray-600 mb-1">
+                    <strong>Létrehozta:</strong> {selectedReturn.createdBy.nev} (
+                    {selectedReturn.createdBy.email}) -{' '}
+                    {new Date(selectedReturn.createdAt).toLocaleDateString('hu-HU')}
+                  </div>
+                )}
+                {selectedReturn.approvedBy && (
+                  <div className="text-sm text-gray-600">
+                    <strong>Jóváhagyta:</strong> {selectedReturn.approvedBy.nev} (
+                    {selectedReturn.approvedBy.email}) -{' '}
+                    {new Date(selectedReturn.updatedAt).toLocaleDateString('hu-HU')}
+                  </div>
+                )}
               </div>
             )}
           </div>

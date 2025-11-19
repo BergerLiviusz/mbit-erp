@@ -9,16 +9,20 @@ import { OpportunityController } from './opportunity.controller';
 import { OpportunityService } from './opportunity.service';
 import { QuoteController } from './quote.controller';
 import { QuoteService } from './quote.service';
+import { OrderController } from './order.controller';
+import { OrderService } from './order.service';
 import { SystemModule } from '../system/system.module';
+import { AuditModule } from '../common/audit/audit.module';
 
 @Module({
-  imports: [SystemModule],
+  imports: [SystemModule, AuditModule],
   controllers: [
     AccountController,
     CampaignController,
     TicketController,
     OpportunityController,
     QuoteController,
+    OrderController,
   ],
   providers: [
     AccountService,
@@ -26,7 +30,8 @@ import { SystemModule } from '../system/system.module';
     TicketService,
     OpportunityService,
     QuoteService,
+    OrderService,
   ],
-  exports: [OpportunityService, QuoteService],
+  exports: [OpportunityService, QuoteService, OrderService],
 })
 export class CrmModule {}

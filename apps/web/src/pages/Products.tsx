@@ -39,6 +39,8 @@ export default function Products() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSuppliersModalOpen, setIsSuppliersModalOpen] = useState(false);
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string>('');
@@ -461,6 +463,16 @@ export default function Products() {
                           Szerkesztés
                         </button>
                         <button
+                          onClick={() => {
+                            setSelectedProductId(product.id);
+                            setIsSuppliersModalOpen(true);
+                          }}
+                          className="text-green-600 hover:text-green-800 mr-3"
+                          title="Szállítók kezelése"
+                        >
+                          Szállítók
+                        </button>
+                        <button
                           onClick={() => handleDeleteProduct(product.id, product.nev)}
                           className="text-red-600 hover:text-red-800"
                         >
@@ -672,13 +684,6 @@ export default function Products() {
             </div>
           </div>
 
-          {/* Suppliers section - only show when editing existing product */}
-          {editingProductId && (
-            <div className="border-t pt-4 mt-4" onClick={(e) => e.stopPropagation()}>
-              <ProductSuppliers itemId={editingProductId} />
-            </div>
-          )}
-
           <div className="flex justify-end space-x-3 pt-4">
             <button
               type="button"
@@ -698,6 +703,21 @@ export default function Products() {
           </div>
         </form>
       </Modal>
+
+      {/* Suppliers Modal - Separate from product form */}
+      {selectedProductId && (
+        <Modal
+          isOpen={isSuppliersModalOpen}
+          onClose={() => {
+            setIsSuppliersModalOpen(false);
+            setSelectedProductId(null);
+          }}
+          title="Termék szállítói"
+          size="lg"
+        >
+          <ProductSuppliers itemId={selectedProductId} showHeader={false} />
+        </Modal>
+      )}
     </div>
   );
 }
