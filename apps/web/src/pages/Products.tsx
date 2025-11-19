@@ -674,7 +674,7 @@ export default function Products() {
 
           {/* Suppliers section - only show when editing existing product */}
           {editingProductId && (
-            <div className="border-t pt-4 mt-4">
+            <div className="border-t pt-4 mt-4" onClick={(e) => e.stopPropagation()}>
               <ProductSuppliers itemId={editingProductId} />
             </div>
           )}

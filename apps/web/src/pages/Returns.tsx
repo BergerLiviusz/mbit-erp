@@ -209,16 +209,75 @@ export default function Returns() {
     return okMap[ok] || ok;
   };
 
+  const handleExportCSV = () => {
+    if (!returnsData?.items || returnsData.items.length === 0) {
+      alert('Nincs exportálandó adat!');
+      return;
+    }
+
+    const headers = [
+      'Rendelés',
+      'Áru azonosító',
+      'Áru név',
+      'Raktár',
+      'Mennyiség',
+      'Ok',
+      'Állapot',
+      'Dátum',
+      'Létrehozta',
+      'Jóváhagyta',
+      'Megjegyzések',
+    ];
+
+    const rows = returnsData.items.map((r: Return) => [
+      r.order?.azonosito || '-',
+      r.item?.azonosito || '-',
+      r.item?.nev || '-',
+      r.warehouse?.nev || '-',
+      r.mennyiseg.toString(),
+      getOkLabel(r.ok),
+      r.allapot,
+      new Date(r.visszaruDatum).toLocaleDateString('hu-HU'),
+      r.createdBy?.nev || '-',
+      r.approvedBy?.nev || '-',
+      r.megjegyzesek || '',
+    ]);
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map((row) => row.map((cell) => `"${cell}"`).join(',')),
+    ].join('\n');
+
+    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `visszaru_export_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Visszárú Kezelés</h1>
-        <button
-          onClick={() => handleOpenModal()}
-          className="bg-mbit-blue text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-        >
-          + Új visszárú
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={handleExportCSV}
+            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm"
+            title="CSV export"
+          >
+            📥 Export CSV
+          </button>
+          <button
+            onClick={() => handleOpenModal()}
+            className="bg-mbit-blue text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+          >
+            + Új visszárú
+          </button>
+        </div>
       </div>
 
       {error && (

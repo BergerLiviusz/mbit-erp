@@ -66,6 +66,7 @@ export default function ProductSuppliers({ itemId }: ProductSuppliersProps) {
 
   const handleLinkSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation(); // Prevent event bubbling to parent form
     setSaving(true);
     setError('');
     setSuccess('');
@@ -228,7 +229,7 @@ export default function ProductSuppliers({ itemId }: ProductSuppliersProps) {
         title="Szállító hozzáadása"
         size="md"
       >
-        <form onSubmit={handleLinkSubmit} className="space-y-4">
+        <form onSubmit={handleLinkSubmit} onClick={(e) => e.stopPropagation()} className="space-y-4">
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded text-sm">
               {error}

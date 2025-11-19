@@ -6,15 +6,19 @@ export default function Dashboard() {
     queryKey: ['dashboard-stats'],
     queryFn: async () => {
       try {
-        const [accounts, items, documents] = await Promise.all([
+        const [accounts, items, documents, returns, suppliers] = await Promise.all([
           axios.get('/api/crm/accounts?take=1').catch(() => ({ data: { total: 0 } })),
           axios.get('/api/logistics/items?take=1').catch(() => ({ data: { total: 0 } })),
           axios.get('/api/dms/documents?take=1').catch(() => ({ data: { total: 0 } })),
+          axios.get('/api/logistics/returns?take=1').catch(() => ({ data: { total: 0 } })),
+          axios.get('/api/logistics/suppliers?take=1').catch(() => ({ data: { total: 0 } })),
         ]);
         return {
           accounts: accounts.data?.total || 0,
           items: items.data?.total || 0,
           documents: documents.data?.total || 0,
+          returns: returns.data?.total || 0,
+          suppliers: suppliers.data?.total || 0,
         };
       } catch (error) {
         console.error('Dashboard stats error:', error);
@@ -23,6 +27,8 @@ export default function Dashboard() {
           accounts: 0,
           items: 0,
           documents: 0,
+          returns: 0,
+          suppliers: 0,
         };
       }
     },
@@ -47,7 +53,7 @@ export default function Dashboard() {
         </div>
       )}
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6 mb-8">
         <div className="bg-white p-6 rounded-lg shadow">
           <h3 className="text-gray-500 text-sm uppercase">Ügyfelek</h3>
           <p className="text-4xl font-bold text-blue-900">{stats?.accounts || 0}</p>
@@ -60,6 +66,14 @@ export default function Dashboard() {
           <h3 className="text-gray-500 text-sm uppercase">Dokumentumok</h3>
           <p className="text-4xl font-bold text-purple-900">{stats?.documents || 0}</p>
         </div>
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-gray-500 text-sm uppercase">Visszárúk</h3>
+          <p className="text-4xl font-bold text-orange-900">{stats?.returns || 0}</p>
+        </div>
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-gray-500 text-sm uppercase">Szállítók</h3>
+          <p className="text-4xl font-bold text-indigo-900">{stats?.suppliers || 0}</p>
+        </div>
       </div>
 
       <div className="bg-white p-6 rounded-lg shadow">
@@ -67,7 +81,7 @@ export default function Dashboard() {
         <p className="text-gray-700 mb-4">
           Ez a modular vállalati alkalmazás CRM, DMS és logisztikai funkciókkal rendelkezik.
         </p>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <div className="border-l-4 border-mbit-blue pl-4">
             <h3 className="font-bold mb-2">CRM Modul</h3>
             <ul className="text-sm text-gray-600 space-y-1">
@@ -92,7 +106,21 @@ export default function Dashboard() {
               <li>• Cikktörzs kezelés</li>
               <li>• Raktárkezelés</li>
               <li>• Készletfigyelés</li>
-              <li>• Árlista menedzsment</li>
+              <li>• Visszárú kezelés</li>
+              <li>• Szállítók kezelése</li>
+              <li>• Leltárív nyomtatás (PDF/CSV/Excel)</li>
+              <li>• Áru-szállító kapcsolatok</li>
+            </ul>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="border-l-4 border-orange-500 pl-4">
+            <h3 className="font-bold mb-2">Csapat kommunikáció</h3>
+            <ul className="text-sm text-gray-600 space-y-1">
+              <li>• Kanban board-ok</li>
+              <li>• Feladatkezelés</li>
+              <li>• Email értesítések</li>
+              <li>• Kommentek és tevékenységek</li>
             </ul>
           </div>
         </div>

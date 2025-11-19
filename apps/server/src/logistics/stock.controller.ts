@@ -22,4 +22,19 @@ export class StockController {
   createStockMove(@Body() data: any) {
     return this.stockService.createStockMove(data);
   }
+
+  @Get('movements')
+  getStockMovements(
+    @Query('itemId') itemId?: string,
+    @Query('warehouseId') warehouseId?: string,
+    @Query('skip') skip?: string,
+    @Query('take') take?: string,
+  ) {
+    return this.stockService.getStockMovements({
+      itemId,
+      warehouseId,
+      skip: skip ? parseInt(skip) : undefined,
+      take: take ? parseInt(take) : undefined,
+    });
+  }
 }

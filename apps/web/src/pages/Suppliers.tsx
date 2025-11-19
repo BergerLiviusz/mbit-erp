@@ -117,16 +117,59 @@ export default function Suppliers() {
     setIsItemsModalOpen(true);
   };
 
+  const handleExportCSV = () => {
+    if (!suppliersData?.suppliers || suppliersData.suppliers.length === 0) {
+      alert('Nincs exportálandó adat!');
+      return;
+    }
+
+    const headers = ['Név', 'Adószám', 'Cím', 'Email', 'Telefon', 'Aktív', 'Létrehozva'];
+
+    const rows = suppliersData.suppliers.map((s: Supplier) => [
+      s.nev,
+      s.adoszam || '-',
+      s.cim || '-',
+      s.email || '-',
+      s.telefon || '-',
+      s.aktiv ? 'Igen' : 'Nem',
+      new Date(s.createdAt).toLocaleDateString('hu-HU'),
+    ]);
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map((row) => row.map((cell) => `"${cell}"`).join(',')),
+    ].join('\n');
+
+    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `szallitok_export_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Szállítók Kezelése</h1>
-        <button
-          onClick={() => handleOpenModal()}
-          className="bg-mbit-blue text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-        >
-          + Új szállító
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={handleExportCSV}
+            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm"
+            title="CSV export"
+          >
+            📥 Export CSV
+          </button>
+          <button
+            onClick={() => handleOpenModal()}
+            className="bg-mbit-blue text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+          >
+            + Új szállító
+          </button>
+        </div>
       </div>
 
       {error && (
