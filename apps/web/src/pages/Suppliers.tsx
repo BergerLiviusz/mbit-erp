@@ -2,17 +2,13 @@ import { useState } from 'react';
 import Modal from '../components/Modal';
 import {
   useSuppliers,
-  useSupplier,
   useCreateSupplier,
   useUpdateSupplier,
   useDeleteSupplier,
   useSupplierItems,
   Supplier,
   CreateSupplierDto,
-  UpdateSupplierDto,
 } from '../lib/api/logistics';
-import { useQuery } from '@tanstack/react-query';
-import axios from '../lib/axios';
 
 export default function Suppliers() {
   const [searchTerm, setSearchTerm] = useState('');

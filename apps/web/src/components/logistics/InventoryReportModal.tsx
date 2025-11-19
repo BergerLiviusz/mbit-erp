@@ -2,7 +2,6 @@ import { useState } from 'react';
 import Modal from '../Modal';
 import { downloadInventoryReport, InventoryReportFilters } from '../../lib/api/logistics';
 import { useQuery } from '@tanstack/react-query';
-import axios from '../../lib/axios';
 import { apiFetch } from '../../lib/api';
 
 interface InventoryReportModalProps {
@@ -85,7 +84,7 @@ export default function InventoryReportModal({
                 name="format"
                 value="pdf"
                 checked={filters.format === 'pdf'}
-                onChange={(e) => setFilters({ ...filters, format: 'pdf' })}
+                onChange={() => setFilters({ ...filters, format: 'pdf' })}
                 className="mr-2"
               />
               <span>PDF</span>
@@ -96,7 +95,7 @@ export default function InventoryReportModal({
                 name="format"
                 value="csv"
                 checked={filters.format === 'csv'}
-                onChange={(e) => setFilters({ ...filters, format: 'csv' })}
+                onChange={() => setFilters({ ...filters, format: 'csv' })}
                 className="mr-2"
               />
               <span>CSV</span>
@@ -107,7 +106,7 @@ export default function InventoryReportModal({
                 name="format"
                 value="excel"
                 checked={filters.format === 'excel'}
-                onChange={(e) => setFilters({ ...filters, format: 'excel' })}
+                onChange={() => setFilters({ ...filters, format: 'excel' })}
                 className="mr-2"
               />
               <span>Excel</span>
