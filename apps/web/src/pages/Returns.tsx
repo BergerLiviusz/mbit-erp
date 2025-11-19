@@ -245,7 +245,7 @@ export default function Returns() {
 
     const csvContent = [
       headers.join(','),
-      ...rows.map((row) => row.map((cell) => `"${cell}"`).join(',')),
+      ...rows.map((row: string[]) => row.map((cell: string) => `"${cell}"`).join(',')),
     ].join('\n');
 
     const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
