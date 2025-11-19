@@ -31,9 +31,7 @@ export default function OrdersLogistics() {
 
   // Get returns for selected order
   const { data: returnsData } = useReturns(
-    selectedOrder ? { orderId: selectedOrder.id } : {},
-    0,
-    100,
+    selectedOrder ? { orderId: selectedOrder.id, skip: 0, take: 100 } : undefined,
   );
 
   const changeStatus = useOrderStatusChange();
@@ -112,12 +110,12 @@ export default function OrdersLogistics() {
       order.osszeg.toLocaleString('hu-HU'),
       order.vegosszeg.toLocaleString('hu-HU'),
       getStatusLabel(order.allapot),
-      order.returns?.length || 0,
+      String(order.returns?.length || 0),
     ]);
 
     const csvContent = [
       headers.join(','),
-      ...rows.map((row: string[]) => row.map((cell: string) => `"${cell}"`).join(',')),
+      ...rows.map((row: (string | number)[]) => row.map((cell: string | number) => `"${String(cell)}"`).join(',')),
     ].join('\n');
 
     const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
