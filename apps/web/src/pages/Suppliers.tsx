@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Modal from '../components/Modal';
 import {
   useSuppliers,
@@ -6,23 +6,50 @@ import {
   useUpdateSupplier,
   useDeleteSupplier,
   useSupplierItems,
+  useLinkItemSupplier,
+  useUnlinkItemSupplier,
   Supplier,
   CreateSupplierDto,
+  LinkItemSupplierDto,
 } from '../lib/api/logistics';
+import { apiFetch } from '../lib/api';
+
+interface Item {
+  id: string;
+  azonosito: string;
+  nev: string;
+  egyseg: string;
+}
 
 export default function Suppliers() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isItemsModalOpen, setIsItemsModalOpen] = useState(false);
+  const [isLinkItemModalOpen, setIsLinkItemModalOpen] = useState(false);
   const [editingSupplierId, setEditingSupplierId] = useState<string | null>(null);
   const [selectedSupplierId, setSelectedSupplierId] = useState<string | null>(null);
+  const [items, setItems] = useState<Item[]>([]);
   const [saving, setSaving] = useState(false);
+  const [linking, setLinking] = useState(false);
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
 
   const { data: suppliersData, isLoading, refetch } = useSuppliers(searchTerm, 0, 100);
 
-  const { data: supplierItems } = useSupplierItems(selectedSupplierId || '');
+  const { data: supplierItems, refetch: refetchSupplierItems } = useSupplierItems(selectedSupplierId || '');
+
+  const linkItemSupplier = useLinkItemSupplier();
+  const unlinkItemSupplier = useUnlinkItemSupplier();
+
+  const [linkFormData, setLinkFormData] = useState<LinkItemSupplierDto & { itemId: string }>({
+    supplierId: '',
+    itemId: '',
+    beszerzesiAr: undefined,
+    minMennyiseg: undefined,
+    szallitasiIdo: undefined,
+    megjegyzesek: '',
+    isPrimary: false,
+  });
 
   const createSupplier = useCreateSupplier();
   const updateSupplier = useUpdateSupplier();
@@ -112,9 +139,90 @@ export default function Suppliers() {
     }
   };
 
+  useEffect(() => {
+    if (isItemsModalOpen && selectedSupplierId) {
+      loadItems();
+    }
+  }, [isItemsModalOpen, selectedSupplierId]);
+
+  const loadItems = async () => {
+    try {
+      const response = await apiFetch('/logistics/items?skip=0&take=1000');
+      if (response.ok) {
+        const data = await response.json();
+        setItems(data.items || []);
+      }
+    } catch (error) {
+      console.error('Hiba a termékek betöltésekor:', error);
+    }
+  };
+
   const handleViewItems = (supplierId: string) => {
     setSelectedSupplierId(supplierId);
     setIsItemsModalOpen(true);
+  };
+
+  const handleOpenLinkItemModal = () => {
+    if (!selectedSupplierId) return;
+    setLinkFormData({
+      supplierId: selectedSupplierId,
+      itemId: '',
+      beszerzesiAr: undefined,
+      minMennyiseg: undefined,
+      szallitasiIdo: undefined,
+      megjegyzesek: '',
+      isPrimary: false,
+    });
+    setError('');
+    setSuccess('');
+    setIsLinkItemModalOpen(true);
+  };
+
+  const handleLinkItemSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedSupplierId || !linkFormData.itemId) return;
+
+    setLinking(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      await linkItemSupplier.mutateAsync({
+        itemId: linkFormData.itemId,
+        supplierId: selectedSupplierId,
+        data: {
+          supplierId: selectedSupplierId,
+          beszerzesiAr: linkFormData.beszerzesiAr,
+          minMennyiseg: linkFormData.minMennyiseg,
+          szallitasiIdo: linkFormData.szallitasiIdo,
+          megjegyzesek: linkFormData.megjegyzesek,
+          isPrimary: linkFormData.isPrimary,
+        },
+      });
+      setSuccess('Termék sikeresen hozzárendelve!');
+      setIsLinkItemModalOpen(false);
+      refetchSupplierItems();
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Hiba történt a hozzárendelés során');
+    } finally {
+      setLinking(false);
+    }
+  };
+
+  const handleUnlinkItem = async (itemId: string) => {
+    if (!selectedSupplierId) return;
+    if (!confirm('Biztosan eltávolítja ezt a terméket a szállítótól?')) return;
+
+    try {
+      await unlinkItemSupplier.mutateAsync({
+        itemId,
+        supplierId: selectedSupplierId,
+      });
+      setSuccess('Termék sikeresen eltávolítva!');
+      refetchSupplierItems();
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Hiba történt az eltávolítás során');
+    }
   };
 
   const handleExportCSV = () => {
@@ -398,56 +506,248 @@ export default function Suppliers() {
         onClose={() => {
           setIsItemsModalOpen(false);
           setSelectedSupplierId(null);
+          setError('');
+          setSuccess('');
         }}
         title="Szállító árui"
         size="lg"
       >
-        {supplierItems && supplierItems.length > 0 ? (
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  Áru azonosító
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  Név
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  Egység
-                </th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
-                  Elsődleges
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {supplierItems.map((itemSupplier: any) => (
-                <tr key={itemSupplier.id}>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {itemSupplier.item?.azonosito}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-900">
-                    {itemSupplier.item?.nev}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {itemSupplier.item?.egyseg}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-center">
-                    {itemSupplier.isPrimary ? (
-                      <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded">
-                        ✓
-                      </span>
-                    ) : (
-                      <span className="text-gray-400">-</span>
-                    )}
-                  </td>
+        <div className="space-y-4">
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded text-sm">
+              {error}
+            </div>
+          )}
+
+          {success && (
+            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded text-sm">
+              {success}
+            </div>
+          )}
+
+          <div className="flex justify-end">
+            <button
+              onClick={handleOpenLinkItemModal}
+              className="bg-mbit-blue text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm"
+            >
+              + Termék hozzáadása
+            </button>
+          </div>
+
+          {supplierItems && supplierItems.length > 0 ? (
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    Áru azonosító
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    Név
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    Egység
+                  </th>
+                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                    Elsődleges
+                  </th>
+                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                    Műveletek
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
-          <p className="text-gray-500">Nincs áru kapcsolva ehhez a szállítóhoz.</p>
-        )}
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {supplierItems.map((itemSupplier: any) => (
+                  <tr key={itemSupplier.id}>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {itemSupplier.item?.azonosito}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-900">
+                      {itemSupplier.item?.nev}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {itemSupplier.item?.egyseg}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                      {itemSupplier.isPrimary ? (
+                        <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded">
+                          ✓
+                        </span>
+                      ) : (
+                        <span className="text-gray-400">-</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <button
+                        onClick={() => handleUnlinkItem(itemSupplier.itemId)}
+                        className="text-red-600 hover:text-red-900"
+                        title="Eltávolítás"
+                      >
+                        🗑
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <p className="text-gray-500">Nincs áru kapcsolva ehhez a szállítóhoz.</p>
+          )}
+        </div>
+      </Modal>
+
+      {/* Link Item Modal */}
+      <Modal
+        isOpen={isLinkItemModalOpen}
+        onClose={() => {
+          setIsLinkItemModalOpen(false);
+          setError('');
+          setSuccess('');
+        }}
+        title="Termék hozzáadása szállítóhoz"
+        size="md"
+        zIndex={60}
+      >
+        <form onSubmit={handleLinkItemSubmit} className="space-y-4">
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded text-sm">
+              {error}
+            </div>
+          )}
+
+          {success && (
+            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded text-sm">
+              {success}
+            </div>
+          )}
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Termék <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={linkFormData.itemId}
+              onChange={(e) =>
+                setLinkFormData({ ...linkFormData, itemId: e.target.value })
+              }
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+              required
+            >
+              <option value="">Válasszon terméket</option>
+              {items
+                .filter(
+                  (item) =>
+                    !supplierItems?.some(
+                      (si: any) => si.itemId === item.id,
+                    ),
+                )
+                .map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.azonosito} - {item.nev}
+                  </option>
+                ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Beszerzési ár (HUF)
+            </label>
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              value={linkFormData.beszerzesiAr || ''}
+              onChange={(e) =>
+                setLinkFormData({
+                  ...linkFormData,
+                  beszerzesiAr: e.target.value ? parseFloat(e.target.value) : undefined,
+                })
+              }
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Minimum rendelési mennyiség
+            </label>
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              value={linkFormData.minMennyiseg || ''}
+              onChange={(e) =>
+                setLinkFormData({
+                  ...linkFormData,
+                  minMennyiseg: e.target.value ? parseFloat(e.target.value) : undefined,
+                })
+              }
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Szállítási idő (nap)
+            </label>
+            <input
+              type="number"
+              min="0"
+              value={linkFormData.szallitasiIdo || ''}
+              onChange={(e) =>
+                setLinkFormData({
+                  ...linkFormData,
+                  szallitasiIdo: e.target.value ? parseInt(e.target.value) : undefined,
+                })
+              }
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Megjegyzések</label>
+            <textarea
+              value={linkFormData.megjegyzesek}
+              onChange={(e) =>
+                setLinkFormData({ ...linkFormData, megjegyzesek: e.target.value })
+              }
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+              rows={3}
+            />
+          </div>
+
+          <div>
+            <label className="flex items-center">
+              <input
+                type="checkbox"
+                checked={linkFormData.isPrimary}
+                onChange={(e) =>
+                  setLinkFormData({ ...linkFormData, isPrimary: e.target.checked })
+                }
+                className="mr-2"
+              />
+              <span className="text-sm font-medium text-gray-700">Elsődleges szállító</span>
+            </label>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-4">
+            <button
+              type="button"
+              onClick={() => setIsLinkItemModalOpen(false)}
+              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+              disabled={linking}
+            >
+              Mégse
+            </button>
+            <button
+              type="submit"
+              disabled={linking}
+              className="px-4 py-2 bg-mbit-blue text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+            >
+              {linking ? 'Hozzáadás...' : 'Hozzáadás'}
+            </button>
+          </div>
+        </form>
       </Modal>
     </div>
   );

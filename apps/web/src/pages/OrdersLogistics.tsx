@@ -19,9 +19,7 @@ const ORDER_STATUSES = [
 ];
 
 export default function OrdersLogistics() {
-  const [filters, setFilters] = useState<OrderFilters>({
-    allapot: 'IN_PROCESS', // Default: only show orders in process
-  });
+  const [filters, setFilters] = useState<OrderFilters>({});
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [error, setError] = useState<string>('');

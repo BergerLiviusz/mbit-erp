@@ -241,6 +241,7 @@ export default function ProductSuppliers({ itemId, showHeader = true }: ProductS
         onClose={handleCloseLinkModal}
         title="Szállító hozzáadása"
         size="md"
+        zIndex={60}
       >
         <form onSubmit={handleLinkSubmit} onClick={(e) => e.stopPropagation()} className="space-y-4">
           {error && (
