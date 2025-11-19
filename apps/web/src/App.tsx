@@ -5,6 +5,8 @@ import CRM from './pages/CRM';
 import Documents from './pages/Documents';
 import Warehouses from './pages/Warehouses';
 import Products from './pages/Products';
+import Returns from './pages/Returns';
+import Suppliers from './pages/Suppliers';
 import Settings from './pages/Settings';
 import Opportunities from './pages/Opportunities';
 import Quotes from './pages/Quotes';
@@ -193,7 +195,9 @@ function App() {
                   title="Logisztika"
                   items={[
                     { to: '/warehouses', label: 'Raktárak' },
-                    { to: '/products', label: 'Termékek' }
+                    { to: '/products', label: 'Termékek' },
+                    { to: '/returns', label: 'Visszárúk' },
+                    { to: '/suppliers', label: 'Szállítók' }
                   ]}
                 />
                 <Link 
@@ -237,6 +241,8 @@ function App() {
           <Route path="/team" element={<Team />} />
           <Route path="/warehouses" element={<Warehouses />} />
           <Route path="/products" element={<Products />} />
+          <Route path="/returns" element={<Returns />} />
+          <Route path="/suppliers" element={<Suppliers />} />
           <Route path="/settings" element={<Settings />} />
         </Routes>
       </main>

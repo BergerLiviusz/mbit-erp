@@ -53,6 +53,15 @@ export class ItemService {
             },
           },
         },
+        itemSuppliers: {
+          include: {
+            supplier: true,
+          },
+          orderBy: [
+            { isPrimary: 'desc' },
+            { createdAt: 'asc' },
+          ],
+        },
       },
     });
   }

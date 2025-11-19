@@ -436,3 +436,14 @@ export function useDashboardStats() {
   });
 }
 
+// Task Notification hook
+export function useTaskNotification() {
+  return useMutation({
+    mutationFn: async ({ taskId, userId }: { taskId: string; userId?: string }) => {
+      const params = userId ? `?userId=${userId}` : '';
+      const response = await axios.get(`/api/team/tasks/${taskId}/notify${params}`);
+      return response.data;
+    },
+  });
+}
+

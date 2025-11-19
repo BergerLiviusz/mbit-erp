@@ -1,5 +1,6 @@
 import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards } from '@nestjs/common';
 import { ItemService } from './item.service';
+import { SupplierService } from './supplier.service';
 import { Permissions } from '../common/rbac/rbac.decorator';
 import { Permission } from '../common/rbac/permission.enum';
 import { RbacGuard } from '../common/rbac/rbac.guard';
@@ -7,7 +8,10 @@ import { RbacGuard } from '../common/rbac/rbac.guard';
 @Controller('logistics/items')
 @UseGuards(RbacGuard)
 export class ItemController {
-  constructor(private itemService: ItemService) {}
+  constructor(
+    private itemService: ItemService,
+    private supplierService: SupplierService,
+  ) {}
 
   @Get()
   @Permissions(Permission.PRODUCT_VIEW)
@@ -45,5 +49,20 @@ export class ItemController {
   @Permissions(Permission.PRODUCT_DELETE)
   delete(@Param('id') id: string) {
     return this.itemService.delete(id);
+  }
+
+  @Get(':id/suppliers')
+  @Permissions(Permission.PRODUCT_VIEW)
+  getItemSuppliers(@Param('id') itemId: string) {
+    return this.supplierService.getItemSuppliers(itemId);
+  }
+
+  @Put(':id/suppliers/:supplierId/primary')
+  @Permissions(Permission.PRODUCT_EDIT)
+  setPrimarySupplier(
+    @Param('id') itemId: string,
+    @Param('supplierId') supplierId: string,
+  ) {
+    return this.supplierService.setPrimarySupplier(itemId, supplierId);
   }
 }

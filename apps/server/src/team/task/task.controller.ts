@@ -13,6 +13,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { TaskService } from './task.service';
+import { TaskNotificationService } from './task-notification.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { TaskFilterDto } from './dto/task-filter.dto';
@@ -24,7 +25,10 @@ import { RbacGuard } from '../../common/rbac/rbac.guard';
 @Controller('team/tasks')
 @UseGuards(RbacGuard)
 export class TaskController {
-  constructor(private taskService: TaskService) {}
+  constructor(
+    private taskService: TaskService,
+    private notificationService: TaskNotificationService,
+  ) {}
 
   @Get()
   @Permissions(Permission.TASK_VIEW)
@@ -150,6 +154,15 @@ export class TaskController {
     const isAdmin = req.user.roles?.includes('Admin') || false;
 
     return await this.taskService.move(id, dto, userId, isAdmin);
+  }
+
+  @Get(':id/notify')
+  @Permissions(Permission.TASK_NOTIFY)
+  async notify(
+    @Param('id') id: string,
+    @Query('userId') userId?: string,
+  ) {
+    return await this.notificationService.generateMailtoLink(id, userId);
   }
 }
 

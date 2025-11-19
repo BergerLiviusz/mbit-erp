@@ -1,6 +1,7 @@
 import { apiFetch } from '../lib/api';
 import { useState, useEffect } from 'react';
 import Modal from '../components/Modal';
+import InventoryReportModal from '../components/logistics/InventoryReportModal';
 
 interface Warehouse {
   id: string;
@@ -54,6 +55,7 @@ export default function Warehouses() {
   const [productError, setProductError] = useState<string>('');
   const [productSuccess, setProductSuccess] = useState<string>('');
   const [items, setItems] = useState<Item[]>([]);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
   const [formData, setFormData] = useState({
     nev: '',
@@ -518,6 +520,12 @@ export default function Warehouses() {
             </h2>
             <div className="flex gap-2">
               <button
+                onClick={() => setIsReportModalOpen(true)}
+                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 text-sm"
+              >
+                📄 Leltárív nyomtatása
+              </button>
+              <button
                 onClick={handleOpenProductModal}
                 className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 text-sm"
               >
@@ -774,6 +782,12 @@ export default function Warehouses() {
           </div>
         </form>
       </Modal>
+
+      <InventoryReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        defaultWarehouseId={selectedWarehouseId || undefined}
+      />
     </div>
   );
 }

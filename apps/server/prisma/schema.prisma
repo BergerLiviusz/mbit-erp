@@ -32,6 +32,8 @@ model User {
   taskActivities    TaskActivity[] @relation("TaskActivities")
   taskAttachments   TaskAttachment[] @relation("TaskAttachments")
   taskWatchers      TaskWatcher[]  @relation("TaskWatchers")
+  createdReturns    Return[]       @relation("ReturnCreatedBy")
+  approvedReturns   Return[]       @relation("ReturnApprovedBy")
 
   @@map("felhasznalok")
 }
@@ -335,6 +337,7 @@ model Order {
   invoiceStub      InvoiceStub?
   shipments        Shipment[]
   tasks            Task[]
+  returns          Return[]
 
   @@index([accountId])
   @@map("rendelesek")
@@ -420,6 +423,8 @@ model Item {
   stockLevels          StockLevel[]
   priceLists           PriceListItem[]
   purchaseOrderItems   PurchaseOrderItem[]
+  itemSuppliers        ItemSupplier[]
+  returns              Return[]
 
   @@index([itemGroupId])
   @@map("cikkek")
@@ -448,6 +453,7 @@ model Warehouse {
   stockLots   StockLot[]
   stockMoves  StockMove[]
   stockLevels StockLevel[]
+  returns     Return[]
 
   @@map("raktarak")
 }
@@ -541,6 +547,7 @@ model Supplier {
   updatedAt       DateTime        @updatedAt
   priceLists      PriceList[]
   purchaseOrders  PurchaseOrder[]
+  itemSuppliers   ItemSupplier[]
 
   @@map("szallitok")
 }
@@ -1069,4 +1076,55 @@ model TaskWatcher {
   
   @@unique([taskId, userId])
   @@map("task_figyelok")
+}
+
+model Return {
+  id            String    @id @default(uuid())
+  orderId       String?
+  itemId        String
+  warehouseId   String
+  mennyiseg     Float
+  ok            String
+  allapot       String    @default("PENDING")
+  visszaruDatum DateTime  @default(now())
+  megjegyzesek  String?
+  createdById   String?
+  approvedById  String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  order         Order?    @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  item          Item      @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  warehouse     Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+  createdBy     User?     @relation("ReturnCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  approvedBy    User?     @relation("ReturnApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
+  
+  @@index([orderId])
+  @@index([itemId])
+  @@index([warehouseId])
+  @@index([allapot])
+  @@index([createdAt])
+  @@map("visszaru")
+}
+
+model ItemSupplier {
+  id            String    @id @default(uuid())
+  itemId        String
+  supplierId    String
+  isPrimary     Boolean   @default(false)
+  beszerzesiAr  Float?
+  minMennyiseg  Float?
+  szallitasiIdo Int?
+  megjegyzesek  String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  item          Item      @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  supplier      Supplier  @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  
+  @@unique([itemId, supplierId])
+  @@index([itemId])
+  @@index([supplierId])
+  @@index([isPrimary])
+  @@map("aru_szallito")
 }

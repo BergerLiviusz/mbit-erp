@@ -3,6 +3,7 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { SystemModule } from '../system/system.module';
 import { TaskController, DashboardController } from './task/task.controller';
 import { TaskService } from './task/task.service';
+import { TaskNotificationService } from './task/task-notification.service';
 import { BoardController } from './board/board.controller';
 import { BoardService } from './board/board.service';
 import { CommentController } from './comment/comment.controller';
@@ -19,6 +20,7 @@ import { ActivityService } from './activity/activity.service';
   ],
   providers: [
     TaskService,
+    TaskNotificationService,
     BoardService,
     CommentService,
     ActivityService,

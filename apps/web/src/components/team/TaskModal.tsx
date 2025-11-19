@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { useTask, useTaskComments, useCreateComment, useUpdateTask, useBoard, Task, TaskColumn } from '../../lib/api/team';
+import { useTask, useTaskComments, useCreateComment, useUpdateTask, useBoard, useTaskNotification, Task, TaskColumn } from '../../lib/api/team';
 import { format } from 'date-fns';
 import { hu } from 'date-fns/locale';
-import { X, Calendar, User } from 'lucide-react';
+import { X, Calendar, User, Mail } from 'lucide-react';
 
 interface TaskModalProps {
   taskId: string;
@@ -15,7 +15,10 @@ export default function TaskModal({ taskId, onClose, onTaskUpdate }: TaskModalPr
   const { data: comments } = useTaskComments(taskId);
   const createComment = useCreateComment();
   const updateTask = useUpdateTask();
+  const taskNotification = useTaskNotification();
   const [commentText, setCommentText] = useState('');
+  const [notificationError, setNotificationError] = useState<string>('');
+  const [notificationSuccess, setNotificationSuccess] = useState<string>('');
   
   // Load board to get available columns
   const boardId = task?.boardId || '';
@@ -63,6 +66,33 @@ export default function TaskModal({ taskId, onClose, onTaskUpdate }: TaskModalPr
       CANCELLED: 'Törölve',
     };
     return labels[status] || status;
+  };
+
+  const handleSendNotification = async () => {
+    if (!task?.assignedToId) {
+      setNotificationError('Nincs hozzárendelt felhasználó a feladathoz');
+      return;
+    }
+
+    setNotificationError('');
+    setNotificationSuccess('');
+
+    try {
+      const result = await taskNotification.mutateAsync({
+        taskId: task.id,
+        userId: task.assignedToId,
+      });
+
+      // Open mailto link
+      window.location.href = result.mailtoUrl;
+      
+      setNotificationSuccess('Email kliens megnyitva!');
+      setTimeout(() => {
+        setNotificationSuccess('');
+      }, 3000);
+    } catch (error: any) {
+      setNotificationError(error.response?.data?.message || 'Hiba történt az értesítés küldése során');
+    }
   };
 
   if (isLoading) {
@@ -121,15 +151,40 @@ export default function TaskModal({ taskId, onClose, onTaskUpdate }: TaskModalPr
               </div>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
-          >
-            <X className="w-6 h-6" />
-          </button>
+          <div className="flex items-center gap-2">
+            {task.assignedToId && (
+              <button
+                onClick={handleSendNotification}
+                disabled={taskNotification.isPending}
+                className="flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 text-sm"
+                title="Email értesítés küldése"
+              >
+                <Mail className="w-4 h-4" />
+                Értesítés küldése
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </div>
         </div>
 
         <div className="p-6 space-y-6">
+          {notificationError && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded text-sm">
+              {notificationError}
+            </div>
+          )}
+
+          {notificationSuccess && (
+            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded text-sm">
+              {notificationSuccess}
+            </div>
+          )}
+
           {task.leiras && (
             <div>
               <h3 className="font-semibold text-gray-900 mb-2">Leírás</h3>

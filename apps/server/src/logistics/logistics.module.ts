@@ -14,6 +14,12 @@ import { InventoryController } from './inventory.controller';
 import { InventoryService } from './inventory.service';
 import { PurchaseOrderController } from './purchase-order.controller';
 import { PurchaseOrderService } from './purchase-order.service';
+import { ReturnController } from './return.controller';
+import { ReturnService } from './return.service';
+import { SupplierController } from './supplier.controller';
+import { SupplierService } from './supplier.service';
+import { InventoryReportController } from './inventory-report.controller';
+import { InventoryReportService } from './inventory-report.service';
 
 @Module({
   imports: [PrismaModule, AuditModule, StorageModule, SystemModule],
@@ -23,6 +29,9 @@ import { PurchaseOrderService } from './purchase-order.service';
     StockController,
     InventoryController,
     PurchaseOrderController,
+    ReturnController,
+    SupplierController,
+    InventoryReportController,
   ],
   providers: [
     ItemService,
@@ -30,6 +39,9 @@ import { PurchaseOrderService } from './purchase-order.service';
     StockService,
     InventoryService,
     PurchaseOrderService,
+    ReturnService,
+    SupplierService,
+    InventoryReportService,
   ],
   exports: [WarehouseService, InventoryService, PurchaseOrderService],
 })

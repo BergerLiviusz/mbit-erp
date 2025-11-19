@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import Modal from '../components/Modal';
 import { apiFetch } from '../lib/api';
+import ProductSuppliers from '../components/logistics/ProductSuppliers';
 
 interface Warehouse {
   id: string;
@@ -670,6 +671,13 @@ export default function Products() {
               )}
             </div>
           </div>
+
+          {/* Suppliers section - only show when editing existing product */}
+          {editingProductId && (
+            <div className="border-t pt-4 mt-4">
+              <ProductSuppliers itemId={editingProductId} />
+            </div>
+          )}
 
           <div className="flex justify-end space-x-3 pt-4">
             <button

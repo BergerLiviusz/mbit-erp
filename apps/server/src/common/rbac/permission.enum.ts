@@ -154,6 +154,25 @@ export enum Permission {
   BOARD_EDIT = 'board:edit',
   BOARD_DELETE = 'board:delete',
   BOARD_MANAGE_MEMBERS = 'board:manage_members',
+  
+  // Return specific
+  RETURN_VIEW = 'return:view',
+  RETURN_CREATE = 'return:create',
+  RETURN_EDIT = 'return:edit',
+  RETURN_APPROVE = 'return:approve',
+  RETURN_COMPLETE = 'return:complete',
+  
+  // Supplier specific
+  SUPPLIER_VIEW = 'supplier:view',
+  SUPPLIER_CREATE = 'supplier:create',
+  SUPPLIER_EDIT = 'supplier:edit',
+  SUPPLIER_DELETE = 'supplier:delete',
+  
+  // Inventory Report specific
+  INVENTORY_REPORT_PRINT = 'inventory:report_print',
+  
+  // Task Notification
+  TASK_NOTIFY = 'task:notify',
 }
 
 export const PermissionDescriptions: Record<Permission, { nev: string; modulo: string; leiras: string }> = {
@@ -290,4 +309,19 @@ export const PermissionDescriptions: Record<Permission, { nev: string; modulo: s
   [Permission.BOARD_EDIT]: { nev: 'Board szerkesztés', modulo: 'Csapat kommunikáció', leiras: 'Board-ok módosítása' },
   [Permission.BOARD_DELETE]: { nev: 'Board törlés', modulo: 'Csapat kommunikáció', leiras: 'Board-ok törlése' },
   [Permission.BOARD_MANAGE_MEMBERS]: { nev: 'Board tagok kezelése', modulo: 'Csapat kommunikáció', leiras: 'Board tagok hozzáadása és eltávolítása' },
+  
+  [Permission.RETURN_VIEW]: { nev: 'Visszárú megtekintése', modulo: 'Logisztika', leiras: 'Visszárúk böngészése' },
+  [Permission.RETURN_CREATE]: { nev: 'Visszárú létrehozás', modulo: 'Logisztika', leiras: 'Új visszárúk rögzítése' },
+  [Permission.RETURN_EDIT]: { nev: 'Visszárú szerkesztés', modulo: 'Logisztika', leiras: 'Visszárúk módosítása' },
+  [Permission.RETURN_APPROVE]: { nev: 'Visszárú jóváhagyás', modulo: 'Logisztika', leiras: 'Visszárúk jóváhagyása' },
+  [Permission.RETURN_COMPLETE]: { nev: 'Visszárú feldolgozás', modulo: 'Logisztika', leiras: 'Visszárúk feldolgozása és készlet visszaírás' },
+  
+  [Permission.SUPPLIER_VIEW]: { nev: 'Szállítók megtekintése', modulo: 'Logisztika', leiras: 'Szállítók böngészése' },
+  [Permission.SUPPLIER_CREATE]: { nev: 'Szállító létrehozás', modulo: 'Logisztika', leiras: 'Új szállítók rögzítése' },
+  [Permission.SUPPLIER_EDIT]: { nev: 'Szállító szerkesztés', modulo: 'Logisztika', leiras: 'Szállítók módosítása' },
+  [Permission.SUPPLIER_DELETE]: { nev: 'Szállító törlés', modulo: 'Logisztika', leiras: 'Szállítók törlése' },
+  
+  [Permission.INVENTORY_REPORT_PRINT]: { nev: 'Leltárív nyomtatás', modulo: 'Logisztika', leiras: 'Leltárív generálása és nyomtatása' },
+  
+  [Permission.TASK_NOTIFY]: { nev: 'Feladat értesítés', modulo: 'Csapat kommunikáció', leiras: 'Email értesítés küldése feladatokról' },
 };
