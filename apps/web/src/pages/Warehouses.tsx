@@ -400,7 +400,7 @@ export default function Warehouses() {
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-3xl font-bold">Raktárak</h1>
         <button 
-          onClick={handleOpenModal}
+          onClick={() => handleOpenModal()}
           className="bg-mbit-blue text-white px-4 py-2 rounded hover:bg-blue-600"
         >
           + Új raktár
