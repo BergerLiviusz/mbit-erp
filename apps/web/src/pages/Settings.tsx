@@ -295,6 +295,17 @@ export default function Settings() {
                     updateSetting(setting.kulcs, e.target.checked.toString());
                   }}
                 />
+              ) : setting.kulcs.includes('schedule') ? (
+                <input
+                  type="time"
+                  defaultValue={setting.ertek.includes(':') ? setting.ertek : '02:00'}
+                  className="border border-gray-300 rounded px-3 py-2"
+                  onBlur={(e) => {
+                    if (e.target.value !== setting.ertek) {
+                      updateSetting(setting.kulcs, e.target.value);
+                    }
+                  }}
+                />
               ) : (
                 <input
                   type="text"

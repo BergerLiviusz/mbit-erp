@@ -80,6 +80,18 @@ export class TaskController {
     return await this.taskService.getAssignedToTasks(userId, skip, take);
   }
 
+  @Get('upcoming-deadlines')
+  @Permissions(Permission.TASK_VIEW)
+  async getUpcomingDeadlines(
+    @Request() req: any,
+    @Query('daysAhead') daysAhead?: string,
+  ) {
+    const days = daysAhead ? parseInt(daysAhead, 10) : 7;
+    const userId = req.user.id;
+    const isAdmin = req.user.roles?.includes('Admin') || false;
+    return await this.taskService.getUpcomingDeadlines(userId, isAdmin, days);
+  }
+
   @Get(':id')
   @Permissions(Permission.TASK_VIEW)
   async findOne(@Request() req: any, @Param('id') id: string) {
@@ -163,13 +175,6 @@ export class TaskController {
     @Query('userId') userId?: string,
   ) {
     return await this.notificationService.generateMailtoLink(id, userId);
-  }
-
-  @Get('upcoming-deadlines')
-  @Permissions(Permission.TASK_VIEW)
-  async getUpcomingDeadlines(@Query('days') days?: string) {
-    const daysNumber = days ? parseInt(days) : 7;
-    return await this.taskService.getUpcomingDeadlines(daysNumber);
   }
 }
 

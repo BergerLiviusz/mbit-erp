@@ -11634,3 +11634,643 @@ Lint results
 
 ---
 
+
+Frissítem a TaskModal-t, hogy az állapotváltoztatás után frissüljön a board, és ellenőrzöm a drag & drop működését:
+
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Team.tsx</summary>
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="write" data-tool-name="search_replace">
+
+<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskModal.tsx</summary>
+
+**Chunk 1**
+Lines added: 2, lines removed: 1
+
+```diff
+@@ -8,7 +8,8 @@
+    taskId: string;
+    onClose: () =&gt; void;
++   onTaskUpdate?: () =&gt; void;
+  }
+  
+- export default function TaskModal({ taskId, onClose }: TaskModalProps) {
++ export default function TaskModal({ taskId, onClose, onTaskUpdate }: TaskModalProps) {
+    const { data: task, isLoading } = useTask(taskId);
+    const { data: comments } = useTaskComments(taskId);
+```
+
+</details>
+
+</tool-use>
+
+---
+
+<tool-use data-tool-type="write" data-tool-name="search_replace">
+
+<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskModal.tsx</summary>
+
+**Chunk 1**
+Lines added: 4, lines removed: undefined
+
+```diff
+@@ -45,4 +45,8 @@
+          },
+        });
++       // Notify parent component to refresh board
++       if (onTaskUpdate) {
++         onTaskUpdate();
++       }
+      } catch (error) {
+        console.error(&#39;Failed to update task status:&#39;, error);
+```
+
+</details>
+
+</tool-use>
+
+---
+
+<tool-use data-tool-type="write" data-tool-name="search_replace">
+
+<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Team.tsx</summary>
+
+**Chunk 1**
+Lines added: 5, lines removed: undefined
+
+```diff
+@@ -283,4 +283,9 @@
+            taskId={selectedTaskId}
+            onClose={() =&gt; setSelectedTaskId(null)}
++           onTaskUpdate={() =&gt; {
++             if (boardIdToLoad) {
++               refetchBoard();
++             }
++           }}
+          /&gt;
+        )}
+```
+
+</details>
+
+</tool-use>
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskColumn.tsx</summary>
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: /Users/liviuszberger/mbit-erp/apps/web/src/lib/api/team.ts</summary>
+
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+Frissítem a `useMoveTask` hook-ot, hogy invalidálja a specifikus board query-t, és ellenőrzöm a drag & drop működését:
+
+
+---
+
+The model provided an ambiguous search string to replace.
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskBoard.tsx</summary>
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskCard.tsx</summary>
+
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: /Users/liviuszberger/mbit-erp/apps/web/src/lib/api/team.ts</summary>
+
+</details>
+</tool-use>
+
+---
+
+
+
+
+
+---
+
+<tool-use data-tool-type="write" data-tool-name="search_replace">
+
+<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/lib/api/team.ts</summary>
+
+**Chunk 1**
+Lines added: 7, lines removed: 1
+
+```diff
+@@ -324,7 +324,13 @@
+        }
+      },
+-     onSuccess: () =&gt; {
++     onSuccess: (_, variables) =&gt; {
+        queryClient.invalidateQueries({ queryKey: [&#39;tasks&#39;] });
+        queryClient.invalidateQueries({ queryKey: [&#39;boards&#39;] });
++       // Invalidate specific board
++       if (variables.data.boardId) {
++         queryClient.invalidateQueries({ queryKey: [&#39;board&#39;, variables.data.boardId] });
++       }
++       queryClient.invalidateQueries({ queryKey: [&#39;task&#39;, variables.id] });
++       queryClient.invalidateQueries({ queryKey: [&#39;dashboard&#39;] });
+      },
+    });
+```
+
+</details>
+
+</tool-use>
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskBoard.tsx</summary>
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="write" data-tool-name="search_replace">
+
+<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskBoard.tsx</summary>
+
+**Chunk 1**
+Lines added: 1, lines removed: undefined
+
+```diff
+@@ -23,4 +23,5 @@
+    const [activeTask, setActiveTask] = useState&lt;Task | null&gt;(null);
+    const moveTask = useMoveTask();
++   const queryClient = useQueryClient();
+  
+    const sensors = useSensors(
+```
+
+</details>
+
+</tool-use>
+
+---
+
+<tool-use data-tool-type="grep" data-tool-name="grep">
+<details>
+<summary>Tool use: **grep** • Grep for "useQueryClient" in "apps/web/src/components/team/TaskBoard.tsx" • 1 match</summary>
+
+Output mode: content
+
+
+| File | Content | Line |
+|------|------|------|
+| `apps/web/src/components/team/TaskBoard.tsx` | `const queryClient = useQueryClient();` | L25 |
+
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="write" data-tool-name="search_replace">
+
+<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskBoard.tsx</summary>
+
+**Chunk 1**
+Lines added: 1, lines removed: undefined
+
+```diff
+@@ -10,4 +10,5 @@
+    closestCenter,
+  } from &#39;@dnd-kit/core&#39;;
++ import { useQueryClient } from &#39;@tanstack/react-query&#39;;
+  import { TaskBoard as TaskBoardType, Task } from &#39;../../lib/api/team&#39;;
+  import TaskColumn from &#39;./TaskColumn&#39;;
+```
+
+</details>
+
+</tool-use>
+
+---
+
+<tool-use data-tool-type="write" data-tool-name="search_replace">
+
+<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskBoard.tsx</summary>
+
+**Chunk 1**
+Lines added: 2, lines removed: undefined
+
+```diff
+@@ -69,4 +69,6 @@
+            },
+          });
++         // Refresh board data after move
++         queryClient.invalidateQueries({ queryKey: [&#39;board&#39;, board.id] });
+        } catch (error) {
+          console.error(&#39;Failed to move task:&#39;, error);
+```
+
+</details>
+
+</tool-use>
+
+---
+
+<tool-use data-tool-type="write" data-tool-name="search_replace">
+
+<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskBoard.tsx</summary>
+
+**Chunk 1**
+Lines added: 2, lines removed: undefined
+
+```diff
+@@ -95,4 +95,6 @@
+              },
+            });
++           // Refresh board data after reorder
++           queryClient.invalidateQueries({ queryKey: [&#39;board&#39;, board.id] });
+          } catch (error) {
+            console.error(&#39;Failed to reorder task:&#39;, error);
+```
+
+</details>
+
+</tool-use>
+
+---
+
+<tool-use data-tool-type="generic" data-tool-name="read_lints">
+<details>
+          <summary>Tool use: **read_lints** • Read lints for 1 file</summary>
+      
+Lint paths:
+
+- `apps/web/src/components/team`
+
+Lint results
+
+
+**No lint errors found**
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="bash" data-tool-name="run_terminal_cmd">
+<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp/apps/web && npm run build</summary>
+
+```bash
+cd /Users/liviuszberger/mbit-erp/apps/web && npm run build
+```
+
+```
+
+&gt; @mbit-erp/web@1.0.0 build
+&gt; tsc &amp;&amp; vite build
+
+src/components/team/TaskModal.tsx(5,29): error TS6133: &#39;CheckCircle2&#39; is declared but its value is never read.
+src/components/team/TaskModal.tsx(110,41): error TS7006: Parameter &#39;column&#39; implicitly has an &#39;any&#39; type.
+npm error Lifecycle script &#96;build&#96; failed with error:
+npm error code 2
+npm error path /Users/liviuszberger/mbit-erp/apps/web
+npm error workspace @mbit-erp/web@1.0.0
+npm error location /Users/liviuszberger/mbit-erp/apps/web
+npm error command failed
+npm error command sh -c tsc &amp;&amp; vite build
+
+```
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+Javítom a TypeScript hibákat:
+
+
+---
+
+<tool-use data-tool-type="write" data-tool-name="search_replace">
+
+<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskModal.tsx</summary>
+
+**Chunk 1**
+Lines added: 1, lines removed: 1
+
+```diff
+@@ -3,5 +3,5 @@
+  import { format } from &#39;date-fns&#39;;
+  import { hu } from &#39;date-fns/locale&#39;;
+- import { X, Calendar, User, CheckCircle2 } from &#39;lucide-react&#39;;
++ import { X, Calendar, User } from &#39;lucide-react&#39;;
+  
+  interface TaskModalProps {
+```
+
+</details>
+
+</tool-use>
+
+---
+
+<tool-use data-tool-type="write" data-tool-name="search_replace">
+
+<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskModal.tsx</summary>
+
+**Chunk 1**
+Lines added: 1, lines removed: 1
+
+```diff
+@@ -108,5 +108,5 @@
+                      disabled={updateTask.isPending}
+                    &gt;
+-                     {board.columns.map((column) =&gt; (
++                     {board.columns.map((column: any) =&gt; (
+                        &lt;option key={column.id} value={column.allapot}&gt;
+                          {column.nev}
+```
+
+</details>
+
+</tool-use>
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: /Users/liviuszberger/mbit-erp/apps/web/src/lib/api/team.ts</summary>
+
+</details>
+</tool-use>
+
+---
+
+Model supplied an ambiguous edit
+
+---
+
+<tool-use data-tool-type="write" data-tool-name="search_replace">
+
+<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskModal.tsx</summary>
+
+**Chunk 1**
+Lines added: 1, lines removed: 1
+
+```diff
+@@ -108,5 +108,5 @@
+                      disabled={updateTask.isPending}
+                    &gt;
+-                     {board.columns.map((column: any) =&gt; (
++                     {board.columns.map((column: TaskColumn) =&gt; (
+                        &lt;option key={column.id} value={column.allapot}&gt;
+                          {column.nev}
+```
+
+</details>
+
+</tool-use>
+
+---
+
+<tool-use data-tool-type="bash" data-tool-name="run_terminal_cmd">
+<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp/apps/web && npm run build</summary>
+
+```bash
+cd /Users/liviuszberger/mbit-erp/apps/web && npm run build
+```
+
+```
+
+&gt; @mbit-erp/web@1.0.0 build
+&gt; tsc &amp;&amp; vite build
+
+src/components/team/TaskModal.tsx(110,49): error TS2304: Cannot find name &#39;TaskColumn&#39;.
+npm error Lifecycle script &#96;build&#96; failed with error:
+npm error code 2
+npm error path /Users/liviuszberger/mbit-erp/apps/web
+npm error workspace @mbit-erp/web@1.0.0
+npm error location /Users/liviuszberger/mbit-erp/apps/web
+npm error command failed
+npm error command sh -c tsc &amp;&amp; vite build
+
+```
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskModal.tsx</summary>
+
+</details>
+</tool-use>
+
+---
+
+
+
+
+
+---
+
+<tool-use data-tool-type="write" data-tool-name="search_replace">
+
+<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskModal.tsx</summary>
+
+**Chunk 1**
+Lines added: 1, lines removed: 1
+
+```diff
+@@ -1,4 +1,4 @@
+  import { useState } from &#39;react&#39;;
+- import { useTask, useTaskComments, useCreateComment, useUpdateTask, useBoard, Task } from &#39;../../lib/api/team&#39;;
++ import { useTask, useTaskComments, useCreateComment, useUpdateTask, useBoard, Task, TaskColumn } from &#39;../../lib/api/team&#39;;
+  import { format } from &#39;date-fns&#39;;
+  import { hu } from &#39;date-fns/locale&#39;;
+```
+
+</details>
+
+</tool-use>
+
+---
+
+<tool-use data-tool-type="bash" data-tool-name="run_terminal_cmd">
+<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp/apps/web && npm run build</summary>
+
+```bash
+cd /Users/liviuszberger/mbit-erp/apps/web && npm run build
+```
+
+```
+
+&gt; @mbit-erp/web@1.0.0 build
+&gt; tsc &amp;&amp; vite build
+
+vite v5.4.21 building for production...
+transforming...
+✓ 2372 modules transformed.
+rendering chunks...
+[plugin:vite:reporter] [plugin vite:reporter] 
+(!) /Users/liviuszberger/mbit-erp/apps/web/src/components/DebugPanel.tsx is dynamically imported by /Users/liviuszberger/mbit-erp/apps/web/src/App.tsx, /Users/liviuszberger/mbit-erp/apps/web/src/App.tsx, /Users/liviuszberger/mbit-erp/apps/web/src/App.tsx, /Users/liviuszberger/mbit-erp/apps/web/src/App.tsx, /Users/liviuszberger/mbit-erp/apps/web/src/App.tsx, /Users/liviuszberger/mbit-erp/apps/web/src/App.tsx, /Users/liviuszberger/mbit-erp/apps/web/src/components/ErrorBoundary.tsx, /Users/liviuszberger/mbit-erp/apps/web/src/lib/api.ts, /Users/liviuszberger/mbit-erp/apps/web/src/pages/CRM.tsx, /Users/liviuszberger/mbit-erp/apps/web/src/pages/CRM.tsx but also statically imported by /Users/liviuszberger/mbit-erp/apps/web/src/App.tsx, dynamic import will not move module into another chunk.
+
+computing gzip size...
+dist/registerSW.js                0.13 kB
+dist/manifest.webmanifest         0.29 kB
+dist/index.html                   0.57 kB │ gzip:   0.34 kB
+dist/assets/index-CCcBO3Wp.css   25.97 kB │ gzip:   5.12 kB
+dist/assets/index-YMDaIej2.js   485.64 kB │ gzip: 135.69 kB
+✓ built in 1.24s
+
+PWA v0.17.5
+mode      generateSW
+precache  5 entries (502.09 KiB)
+files generated
+  dist/sw.js
+  dist/workbox-1be04862.js
+
+```
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+A build sikeres. Összefoglaló és commit:
+
+
+---
+
+<tool-use data-tool-type="bash" data-tool-name="run_terminal_cmd">
+<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git add -A && git commit -m "feat: Add drag & drop and status change functionality for tasks
+
+- Add drag handle (GripVertical icon) to TaskCard for better UX
+- Separate drag handle from click area to prevent conflicts
+- Add status change dropdown in TaskModal with board column options
+- Implement status change handler with board refresh callback
+- Update useMoveTask and useUpdateTask hooks to invalidate board queries
+- Add explicit board refresh after drag & drop operations
+- Fix TypeScript errors in TaskModal component
+- Improve drag & drop UX with visual feedback and proper cursor states" && git push origin main</summary>
+
+```bash
+cd /Users/liviuszberger/mbit-erp && git add -A && git commit -m "feat: Add drag & drop and status change functionality for tasks
+
+- Add drag handle (GripVertical icon) to TaskCard for better UX
+- Separate drag handle from click area to prevent conflicts
+- Add status change dropdown in TaskModal with board column options
+- Implement status change handler with board refresh callback
+- Update useMoveTask and useUpdateTask hooks to invalidate board queries
+- Add explicit board refresh after drag & drop operations
+- Fix TypeScript errors in TaskModal component
+- Improve drag & drop UX with visual feedback and proper cursor states" && git push origin main
+```
+
+```
+[main 2a2b833] feat: Add drag &amp; drop and status change functionality for tasks
+ 6 files changed, 1902 insertions(+), 10 deletions(-)
+To https://github.com/BergerLiviusz/mbit-erp.git
+   5da45af..2a2b833  main -&gt; main
+
+```
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+## Implementált funkciók
+
+### 1. Drag & Drop funkcionalitás
+- Drag handle: A TaskCard bal felső sarkában egy `GripVertical` ikon jelzi a húzható területet
+- Külön drag handle: A drag handle külön van az onClick területtől, így nincs ütközés
+- Cursor állapotok: `cursor-grab` és `cursor-grabbing` a drag során
+- Visual feedback: A húzás során a kártya 50% átlátszósággal jelenik meg
+
+### 2. Állapot változtatás a TaskModal-ban
+- Dropdown menü: A TaskModal headerjében egy dropdown menü az állapot változtatáshoz
+- Board oszlopok: A dropdown a board oszlopait jeleníti meg (Teendők, Folyamatban, Kész stb.)
+- Automatikus frissítés: Az állapot változtatás után a board automatikusan frissül
+- Loading állapot: A dropdown disabled állapotban van a frissítés során
+
+### 3. Query invalidation javítások
+- useMoveTask: Invalidálja a specifikus board query-t a drag & drop után
+- useUpdateTask: Invalidálja a board query-ket az állapot változtatás után
+- Explicit refresh: A TaskBoard komponens explicit board refresh-et végez a műveletek után
+
+## Használat
+
+### Drag & Drop
+1. Húzd a bal felső sarokban lévő grip ikont
+2. Dobd a kívánt oszlopba
+3. A feladat automatikusan átkerül az új oszlopba
+
+### Állapot változtatás
+1. Kattints egy feladatra a megnyitáshoz
+2. A modal headerjében válaszd ki az új állapotot a dropdown-ból
+3. A feladat automatikusan átkerül az új oszlopba
+
+A változtatások GitHub-ra kerültek. A CI build után az új verzióban:
+- Feladatokat húzhatsz oszlopok között
+- A TaskModal-ban változtathatod az állapotot
+- Mindkét módszer automatikusan frissíti a board-ot
+
+Teszteld az új build-et.
+
+---
+

@@ -154,10 +154,10 @@ export class SystemSettingsService {
       },
       {
         kulcs: 'backup.daily.schedule',
-        ertek: '0 2 * * *',
+        ertek: '02:00',
         tipus: 'string',
         kategoria: 'backup',
-        leiras: 'Napi mentés időpontja (cron)',
+        leiras: 'Napi mentés időpontja (HH:mm)',
       },
       {
         kulcs: 'backup.weekly.enabled',
@@ -168,10 +168,10 @@ export class SystemSettingsService {
       },
       {
         kulcs: 'backup.weekly.schedule',
-        ertek: '0 3 * * 0',
+        ertek: '03:00',
         tipus: 'string',
         kategoria: 'backup',
-        leiras: 'Heti mentés időpontja (cron)',
+        leiras: 'Heti mentés időpontja (HH:mm)',
       },
       {
         kulcs: 'backup.retention.count',

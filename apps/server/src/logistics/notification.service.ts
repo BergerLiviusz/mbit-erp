@@ -18,13 +18,7 @@ export class NotificationService {
         },
       },
       include: {
-        stockLots: {
-          where: {
-            createdAt: {
-              not: null,
-            },
-          },
-        },
+        stockLots: true,
       },
     });
 
