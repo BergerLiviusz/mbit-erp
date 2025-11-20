@@ -6,8 +6,9 @@
 2. [Első indítás és bejelentkezés](#első-indítás-és-bejelentkezés)
 3. [Főképernyő áttekintése](#főképernyő-áttekintése)
 4. [Alapvető funkciók használata](#alapvető-funkciók-használata)
-5. [Gyakori kérdések](#gyakori-kérdések)
-6. [Hibaelhárítás](#hibaelhárítás)
+5. [Értesítési rendszer](#értesítési-rendszer)
+6. [Gyakori kérdések](#gyakori-kérdések)
+7. [Hibaelhárítás](#hibaelhárítás)
 
 ---
 
@@ -104,7 +105,14 @@ A képernyő tetején található menüsorban érheti el a fő funkciókat:
 - **Logisztika** ⏷
   - Raktárak - Raktárak kezelése
   - Termékek - Termékkatalógus kezelése
+- **Csoportmunka** ⏷
+  - Feladatok - Task kezelés és követés
+  - Boardok - Kanban táblák projektmenedzsmenthez
 - **Beállítások** - Rendszerbeállítások és szervezeti adatok
+
+### 🔔 Értesítési panel
+
+A képernyő jobb alsó sarkában található egy harang ikon (🔔), amely az értesítési panelt nyitja meg. További információ: [Értesítési rendszer](#értesítési-rendszer)
 
 ---
 
@@ -152,6 +160,12 @@ A képernyő tetején található menüsorban érheti el a fő funkciókat:
    - **Fájl feltöltése** (kötelező) - Kattintson a **"Fájl kiválasztása"** gombra
 4. Kattintson a **"Feltöltés"** gombra
 
+**Dokumentum mappa megnyitása:**
+
+1. Keresse meg a dokumentumot a listában
+2. Kattintson a **"Mappa megnyitása"** gombra (mappa ikon)
+3. A Windows Explorer megnyílik a dokumentum tárolási helyével
+
 **OCR (szövegfelismerés) használata:**
 
 Az OCR funkció automatikusan felismeri a feltöltött dokumentumok szövegét.
@@ -176,6 +190,13 @@ Az OCR funkció automatikusan felismeri a feltöltött dokumentumok szövegét.
    - **Aktív** - Jelölje be, ha a raktár használatban van
 4. Kattintson a **"Létrehozás"** gombra
 
+**Raktár nevének szerkesztése:**
+
+1. Keresse meg a raktárt a listában
+2. Kattintson az **"Edit"** gombra (ceruza ikon)
+3. Módosítsa a raktár nevét
+4. Kattintson a **"Mentés"** gombra
+
 ### 📦 Termékek kezelése
 
 **Új termék hozzáadása:**
@@ -184,11 +205,32 @@ Az OCR funkció automatikusan felismeri a feltöltött dokumentumok szövegét.
 2. Kattintson a **"+ Új termék"** gombra
 3. Töltse ki az adatokat:
    - **Név** (kötelező) - Termék neve
+   - **Azonosító** - Egyedi termékazonosító
    - **Leírás** - Részletes termékleírás
-   - **Egységár** (kötelező) - Ár (Ft)
    - **Egység** (kötelező) - Pl. db, kg, m, stb.
-   - **Raktár** - Válassza ki a raktárt ahol a termék található
+   - **Beszerzési ár (Ft)** (kötelező) - Vételár
+   - **Eladási ár (Ft)** (kötelező) - Eladási ár
+   - **ÁFA kulcs (%)** (kötelező) - ÁFA százalék (pl. 27)
+   - **Szavatossági idő (nap)** - A termék szavatossági ideje napokban
+   - **Raktárak és készlet** - Adja meg a raktárakat és készletadatokat:
+     - Válassza ki a raktárt
+     - **Mennyiség** - Jelenlegi készlet
+     - **Minimum készlet** - Minimum készletszint (riasztás küszöb)
+     - **Maximum készlet** - Maximum készletszint
 4. Kattintson a **"Létrehozás"** gombra
+
+**Termék szerkesztése:**
+
+1. Keresse meg a terméket a listában
+2. Kattintson a **"Szerkesztés"** gombra
+3. Módosítsa a szükséges adatokat (név, ár, szavatossági idő, készlet szintek)
+4. Kattintson a **"Mentés"** gombra
+
+**Szavatossági idő és készlet szintek:**
+
+- **Szavatossági idő**: Ha megadja, a rendszer automatikusan figyelmeztetést küld, amikor a termék lejárási dátuma közeledik
+- **Minimum készlet**: Ha a készlet ezen érték alá csökken, a rendszer automatikusan értesítést küld
+- **Maximum készlet**: A rendszer figyelmeztetést küld, ha a készlet ezen érték fölé emelkedik
 
 ### 💼 Lehetőségek (üzleti esélyek)
 
@@ -224,6 +266,30 @@ Az OCR funkció automatikusan felismeri a feltöltött dokumentumok szövegét.
 5. Az összegek automatikusan számolódnak
 6. Kattintson a **"Létrehozás"** gombra
 
+### 👤 Felhasználók kezelése (Admin)
+
+**Új felhasználó létrehozása:**
+
+1. Kattintson a **"Beállítások"** menüre
+2. Válassza a **"Felhasználók"** fület
+3. Kattintson a **"+ Új felhasználó"** gombra
+4. Töltse ki az adatokat:
+   - **Név** (kötelező) - Felhasználó teljes neve
+   - **Email** (kötelező) - Bejelentkezési email cím
+   - **Jelszó** (kötelező) - Kezdeti jelszó
+   - **Aktív** - Jelölje be, ha a felhasználó aktív
+5. Kattintson a **"Létrehozás"** gombra
+
+**Felhasználó jelszavának módosítása (Admin):**
+
+1. Kattintson a **"Beállítások"** → **"Felhasználók"** menüre
+2. Keresse meg a felhasználót a listában
+3. Kattintson a **"Jelszó módosítása (Admin)"** gombra
+4. Írja be az új jelszót kétszer
+5. Kattintson a **"Mentés"** gombra
+
+⚠️ **Megjegyzés:** Csak adminisztrátorok módosíthatnak más felhasználók jelszavát. A felhasználók saját jelszavukat a profil beállításokban módosíthatják.
+
 ### ⚙️ Rendszerbeállítások
 
 **Szervezeti adatok módosítása:**
@@ -240,6 +306,19 @@ Az OCR funkció automatikusan felismeri a feltöltött dokumentumok szövegét.
    - Weboldal
 4. Kattintson a **"Mentés"** gombra
 
+**Biztonsági mentések beállítása:**
+
+1. Kattintson a **"Beállítások"** menüre
+2. Válassza a **"Biztonsági mentés"** fület
+3. **Azonnali mentés indítása:**
+   - Kattintson a **"Azonnali mentés létrehozása"** gombra
+   - Várja meg a mentés befejezését
+4. **Ütemezett mentések beállítása:**
+   - **Napi mentés engedélyezése**: Jelölje be a checkbox-ot
+   - **Napi mentés időpontja**: Válassza ki az időpontot (pl. 02:00)
+   - **Heti mentés engedélyezése**: Jelölje be a checkbox-ot
+   - **Heti mentés időpontja**: Válassza ki az időpontot (pl. 03:00)
+
 **Rendszer állapot ellenőrzése:**
 
 1. Kattintson a **"Beállítások"** menüre
@@ -252,32 +331,129 @@ Az OCR funkció automatikusan felismeri a feltöltött dokumentumok szövegét.
 
 ---
 
+## Értesítési rendszer
+
+Az Mbit ERP automatikus értesítési rendszert tartalmaz, amely figyelmezteti Önt fontos eseményekre.
+
+### Értesítési panel megnyitása
+
+A képernyő jobb alsó sarkában található egy harang ikon (🔔). Kattintson rá az értesítések megtekintéséhez.
+
+### Értesítés típusok
+
+**1. Lejáró termékek**
+
+A rendszer automatikusan értesítést küld, ha egy termék szavatossági ideje lejáróban van (alapértelmezett: 30 napon belül).
+
+- **Megjelenítés**: Termék neve, raktár, lejárati dátum, hátralévő napok száma
+- **Frissítés**: Automatikusan 5 percenként
+
+**2. Alacsony készlet**
+
+A rendszer értesítést küld, ha egy termék készlete a minimum szint alá csökken.
+
+- **Megjelenítés**: Termék neve, raktár, jelenlegi készlet, minimum készlet
+- **Frissítés**: Automatikusan 5 percenként
+
+**3. Közelgő feladat határidők**
+
+A rendszer értesítést küld a Csoportmunka modulból, ha egy feladat határideje közeledik (alapértelmezett: 7 napon belül).
+
+- **Megjelenítés**: Feladat címe, határidő, felelős személy
+- **Frissítés**: Automatikusan 5 percenként
+
+### Értesítések kezelése
+
+- **Összes értesítés száma**: A harang ikon mellett látható egy szám, amely az aktív értesítések számát mutatja
+- **Részletek megtekintése**: Kattintson az értesítési panelre a részletes információk megtekintéséhez
+- **Panel bezárása**: Kattintson újra a harang ikonra vagy a panelen kívülre a bezáráshoz
+
+---
+
 ## Gyakori kérdések
 
 ### Hogyan változtatom meg a jelszavamat?
 
+**Saját jelszó módosítása:**
+
 1. Kattintson a jobb felső sarokban a felhasználónevére
 2. Válassza a **"Profil beállítások"** menüt
-3. Írja be az új jelszót kétszer
-4. Kattintson a **"Jelszó módosítása"** gombra
+3. Írja be a jelenlegi jelszót
+4. Írja be az új jelszót kétszer
+5. Kattintson a **"Jelszó módosítása"** gombra
+
+**Más felhasználó jelszavának módosítása (Admin):**
+
+1. Kattintson a **"Beállítások"** → **"Felhasználók"** menüre
+2. Keresse meg a felhasználót
+3. Kattintson a **"Jelszó módosítása (Admin)"** gombra
+4. Írja be az új jelszót kétszer
+5. Kattintson a **"Mentés"** gombra
 
 ### Hol találom a feltöltött dokumentumokat?
 
 Minden feltöltött dokumentum a számítógépén helyben tárolódik:
 
-- **Windows:** `C:\Users\[FELHASZNÁLÓNÉV]\AppData\Roaming\mbit-erp\data\uploads`
+- **Windows:** `C:\Users\[FELHASZNÁLÓNÉV]\AppData\Roaming\@mbit-erp\desktop\data\uploads`
+
+**Gyors hozzáférés:**
+
+1. Nyissa meg a dokumentumot a **"Dokumentumok"** menüben
+2. Kattintson a **"Mappa megnyitása"** gombra
+3. A Windows Explorer automatikusan megnyílik a dokumentum mappájával
 
 ### Lehet több felhasználót létrehozni?
 
-Jelenleg a rendszer egyetlen adminisztrátori fiókkal működik. Több felhasználó kezelése egy későbbi verzióban lesz elérhető.
+Igen! Az adminisztrátorok létrehozhatnak új felhasználókat és kezelhetik a meglévőket.
+
+**Új felhasználó létrehozása:**
+
+1. **Beállítások** → **Felhasználók** fül
+2. Kattintson a **"+ Új felhasználó"** gombra
+3. Töltse ki az adatokat és kattintson a **"Létrehozás"** gombra
 
 ### Hogyan készíthetek biztonsági mentést?
 
-A biztonsági mentések automatikusan készülnek minden éjjel 2 órakor. Kézi mentést is indíthat:
+**Azonnali mentés:**
 
-1. **Beállítások** → **Rendszer** fül
-2. Kattintson a **"Biztonsági mentés most"** gombra
-3. A mentés a `backups` mappába kerül
+1. **Beállítások** → **Biztonsági mentés** fül
+2. Kattintson a **"Azonnali mentés létrehozása"** gombra
+3. Várja meg a mentés befejezését
+
+**Automatikus mentés beállítása:**
+
+1. **Beállítások** → **Biztonsági mentés** fül
+2. Jelölje be a **"Napi mentés engedélyezése"** checkbox-ot
+3. Válassza ki a mentés időpontját (pl. 02:00)
+4. A mentések automatikusan készülnek a megadott időpontban
+
+**Mentések helye:**
+
+- **Windows:** `C:\Users\[FELHASZNÁLÓNÉV]\AppData\Roaming\@mbit-erp\desktop\data\backups`
+
+### Mi a szavatossági idő mező a termékeknél?
+
+A szavatossági idő mező lehetővé teszi, hogy megadja egy termék szavatossági idejét napokban. A rendszer automatikusan értesítést küld, amikor a termék lejárati dátuma közeledik (30 napon belül).
+
+**Használat:**
+
+1. Termék létrehozásakor vagy szerkesztésekor adja meg a **"Szavatossági idő (nap)"** mezőt
+2. A rendszer kiszámolja a lejárati dátumot a készlet létrehozásának dátumából
+3. Az értesítési panelben láthatja a lejáró termékeket
+
+### Mi a minimum és maximum készlet?
+
+A minimum és maximum készlet értékek lehetővé teszik a készlet szintjének automatikus figyelését.
+
+- **Minimum készlet**: Ha a készlet ezen érték alá csökken, a rendszer automatikusan értesítést küld
+- **Maximum készlet**: Ha a készlet ezen érték fölé emelkedik, a rendszer értesítést küld
+
+**Beállítás:**
+
+1. Termék létrehozásakor vagy szerkesztésekor válassza ki a raktárt
+2. Adja meg a **"Minimum készlet"** értéket
+3. Adja meg a **"Maximum készlet"** értéket (opcionális)
+4. Az értesítési panelben láthatja az alacsony készletű termékeket
 
 ### Az adataim biztonságban vannak?
 
@@ -297,7 +473,7 @@ Igen, az alkalmazás teljesen internet nélkül is használható. Az összes fun
 
 **Megoldás 2:** 
 1. Távolítsa el az alkalmazást (Vezérlőpult → Programok eltávolítása)
-2. Törölje a `C:\Users\[FELHASZNÁLÓNÉV]\AppData\Roaming\mbit-erp` mappát
+2. Törölje a `C:\Users\[FELHASZNÁLÓNÉV]\AppData\Roaming\@mbit-erp` mappát
 3. Telepítse újra az alkalmazást
 
 ### "Nem lehet kapcsolódni az adatbázishoz" hibaüzenet
@@ -328,10 +504,33 @@ Ez általában azt jelenti, hogy az alkalmazás háttérszolgáltatása nem indu
 
 **Tipp:** A legjobb eredmény érdekében használjon szkennelt vagy elektronikus dokumentumokat.
 
+### Új termék létrehozásakor szerver hiba
+
+**Lehetséges okok:**
+1. A szavatossági idő mező formátuma hibás (csak szám lehet)
+2. A készlet értékek formátuma hibás (csak szám lehet)
+3. Az adatbázis migráció még nem futott le
+
+**Megoldás:**
+1. Ellenőrizze, hogy minden szám mező helyesen van kitöltve
+2. Indítsa újra az alkalmazást (ez automatikusan futtatja a migrációkat)
+3. Ha a probléma továbbra is fennáll, lépjen kapcsolatba a támogatással
+
+### Biztonsági mentés során hibaüzenet
+
+**Megoldás:**
+1. Ellenőrizze, hogy van-e elegendő hely a lemezen
+2. Indítsa újra az alkalmazást
+3. Próbálja újra a mentést
+
 ### Kijelentkeztem, de nem emlékszem a jelszóra
 
-Jelenleg nincs "Elfelejtett jelszó" funkció. Ha elfelejtette a jelszót:
+Ha adminisztrátor vagy, más adminisztrátor segítségével módosíthatja a jelszót:
 
+1. Kérje meg egy másik adminisztrátort, hogy jelentkezzen be
+2. Az adminisztrátor módosíthatja a jelszót a **"Beállítások"** → **"Felhasználók"** menüben
+
+Ha nincs más adminisztrátor:
 1. Lépjen kapcsolatba a rendszer adminisztrátorával (MB-IT Kft.)
 2. Vagy távolítsa el és telepítse újra az alkalmazást (ez törli az összes adatot!)
 
@@ -348,5 +547,5 @@ Ha további segítségre van szüksége:
 ---
 
 **Verzió:** 1.0.0  
-**Utolsó frissítés:** 2025. november 7.  
+**Utolsó frissítés:** 2025. november 20.  
 **MB-IT Kft.** - Minden jog fenntartva
