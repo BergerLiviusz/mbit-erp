@@ -569,5 +569,55 @@ export class TaskService {
       overdue,
     };
   }
+
+  async getUpcomingDeadlines(days: number = 7) {
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() + days);
+
+    const tasks = await this.prisma.task.findMany({
+      where: {
+        hataridoDatum: {
+          not: null,
+          lte: cutoffDate,
+          gte: new Date(),
+        },
+        allapot: {
+          notIn: ['DONE', 'CANCELLED'],
+        },
+      },
+      include: {
+        assignedTo: {
+          select: {
+            id: true,
+            nev: true,
+            email: true,
+          },
+        },
+        createdBy: {
+          select: {
+            id: true,
+            nev: true,
+            email: true,
+          },
+        },
+      },
+      orderBy: {
+        hataridoDatum: 'asc',
+      },
+    });
+
+    return tasks.map(task => ({
+      id: task.id,
+      cim: task.cim,
+      hataridoDatum: task.hataridoDatum?.toISOString(),
+      daysUntilDeadline: task.hataridoDatum 
+        ? Math.ceil((task.hataridoDatum.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
+        : null,
+      prioritas: task.prioritas,
+      allapot: task.allapot,
+      assignedTo: task.assignedTo,
+      createdBy: task.createdBy,
+    }));
+  }
 }
 

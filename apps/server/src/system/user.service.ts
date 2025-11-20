@@ -159,6 +159,22 @@ export class UserService {
     });
   }
 
+  async adminChangePassword(userId: string, newPassword: string) {
+    if (!newPassword || newPassword.length < 4) {
+      throw new BadRequestException('A jelszónak legalább 4 karakternek kell lennie');
+    }
+
+    const user = await this.findOne(userId);
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        password: hashedPassword,
+      },
+    });
+  }
+
   async delete(id: string) {
     const user = await this.findOne(id);
 

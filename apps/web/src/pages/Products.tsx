@@ -20,10 +20,13 @@ interface Product {
   eladasiAr: number;
   afaKulcs: number;
   aktiv: boolean;
+  szavatossagiIdoNap?: number | null;
   stockLevels?: Array<{
     id: string;
     warehouseId: string;
     mennyiseg: number;
+    minimum?: number | null;
+    maximum?: number | null;
     warehouse?: {
       id: string;
       nev: string;
@@ -55,7 +58,8 @@ export default function Products() {
     eladasiAr: '0',
     afaKulcs: '27',
     aktiv: true,
-    warehouses: [] as Array<{ warehouseId: string; mennyiseg: string }>,
+    szavatossagiIdoNap: '',
+    warehouses: [] as Array<{ warehouseId: string; mennyiseg: string; minimum: string; maximum: string }>,
   });
 
 
@@ -145,9 +149,12 @@ export default function Products() {
         eladasiAr: product.eladasiAr?.toString() || '0',
         afaKulcs: product.afaKulcs?.toString() || '27',
         aktiv: product.aktiv ?? true,
+        szavatossagiIdoNap: product.szavatossagiIdoNap?.toString() || '',
         warehouses: product.stockLevels?.map(sl => ({
           warehouseId: sl.warehouseId,
           mennyiseg: sl.mennyiseg.toString(),
+          minimum: sl.minimum?.toString() || '',
+          maximum: sl.maximum?.toString() || '',
         })) || [],
       });
     } else {
@@ -161,6 +168,7 @@ export default function Products() {
         eladasiAr: '0',
         afaKulcs: '27',
         aktiv: true,
+        szavatossagiIdoNap: '',
         warehouses: [],
       });
     }
@@ -181,6 +189,7 @@ export default function Products() {
       eladasiAr: '0',
       afaKulcs: '27',
       aktiv: true,
+      szavatossagiIdoNap: '',
       warehouses: [],
     });
     setError('');
@@ -190,7 +199,7 @@ export default function Products() {
   const handleAddWarehouse = () => {
     setFormData({
       ...formData,
-      warehouses: [...formData.warehouses, { warehouseId: '', mennyiseg: '0' }],
+      warehouses: [...formData.warehouses, { warehouseId: '', mennyiseg: '0', minimum: '', maximum: '' }],
     });
   };
 
@@ -201,7 +210,7 @@ export default function Products() {
     });
   };
 
-  const handleWarehouseChange = (index: number, field: 'warehouseId' | 'mennyiseg', value: string) => {
+  const handleWarehouseChange = (index: number, field: 'warehouseId' | 'mennyiseg' | 'minimum' | 'maximum', value: string) => {
     const newWarehouses = [...formData.warehouses];
     newWarehouses[index] = { ...newWarehouses[index], [field]: value };
     setFormData({ ...formData, warehouses: newWarehouses });
@@ -248,6 +257,8 @@ export default function Products() {
         : '/logistics/items';
       const method = editingProductId ? 'PUT' : 'POST';
 
+      const szavatossagiIdoNap = formData.szavatossagiIdoNap ? parseInt(formData.szavatossagiIdoNap) : null;
+
       const productData = {
         nev: formData.nev,
         azonosito: formData.azonosito || (editingProductId ? undefined : `PROD-${Date.now()}`),
@@ -257,6 +268,7 @@ export default function Products() {
         eladasiAr: eladasiAr,
         afaKulcs: afaKulcs,
         aktiv: formData.aktiv,
+        szavatossagiIdoNap: szavatossagiIdoNap && !isNaN(szavatossagiIdoNap) ? szavatossagiIdoNap : null,
       };
 
       const response = await apiFetch(url, {
@@ -296,6 +308,9 @@ export default function Products() {
             const mennyiseg = parseFloat(w.mennyiseg);
             if (isNaN(mennyiseg) || mennyiseg < 0) return null;
             
+            const minimum = w.minimum ? parseFloat(w.minimum) : null;
+            const maximum = w.maximum ? parseFloat(w.maximum) : null;
+            
             return apiFetch('/logistics/inventory/stock-levels', {
               method: 'POST',
               headers: {
@@ -305,6 +320,8 @@ export default function Products() {
                 itemId: productId,
                 warehouseId: w.warehouseId,
                 mennyiseg: mennyiseg,
+                minimum: minimum !== null && !isNaN(minimum) ? minimum : null,
+                maximum: maximum !== null && !isNaN(maximum) ? maximum : null,
               }),
             }).catch(err => {
               console.error('Hiba a készletszint létrehozásakor:', err);
@@ -604,6 +621,22 @@ export default function Products() {
             />
           </div>
 
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Szavatossági idő (nap)
+            </label>
+            <input
+              type="number"
+              min="0"
+              step="1"
+              value={formData.szavatossagiIdoNap}
+              onChange={(e) => setFormData({ ...formData, szavatossagiIdoNap: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-mbit-blue"
+              placeholder="pl. 365"
+            />
+            <p className="mt-1 text-xs text-gray-500">A termék szavatossági ideje napokban</p>
+          </div>
+
           <div className="flex items-center">
             <input
               type="checkbox"
@@ -630,7 +663,7 @@ export default function Products() {
                 + Raktár hozzáadása
               </button>
             </div>
-            <div className="space-y-3 max-h-48 overflow-y-auto">
+            <div className="space-y-3 max-h-64 overflow-y-auto">
               {formData.warehouses.map((warehouse, index) => (
                 <div key={index} className="flex gap-2 items-start border border-gray-200 rounded p-3 bg-gray-50">
                   <div className="flex-1 grid grid-cols-2 gap-2">
@@ -659,6 +692,34 @@ export default function Products() {
                         step="0.01"
                         value={warehouse.mennyiseg}
                         onChange={(e) => handleWarehouseChange(index, 'mennyiseg', e.target.value)}
+                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        placeholder="0"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                        Minimum készlet
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={warehouse.minimum}
+                        onChange={(e) => handleWarehouseChange(index, 'minimum', e.target.value)}
+                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        placeholder="0"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                        Maximum készlet
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={warehouse.maximum}
+                        onChange={(e) => handleWarehouseChange(index, 'maximum', e.target.value)}
                         className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
                         placeholder="0"
                       />

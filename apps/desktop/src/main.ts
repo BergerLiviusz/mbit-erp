@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, dialog } from 'electron';
+import { app, BrowserWindow, ipcMain, dialog, shell } from 'electron';
 import * as path from 'path';
 import * as url from 'url';
 import { fork, ChildProcess } from 'child_process';
@@ -661,6 +661,22 @@ ipcMain.handle('get-user-data-path', () => {
 
 ipcMain.handle('get-backend-url', () => {
   return `http://localhost:${BACKEND_PORT}`;
+});
+
+ipcMain.handle('open-folder-in-explorer', async (event, folderPath: string) => {
+  try {
+    if (!folderPath) {
+      throw new Error('Folder path is required');
+    }
+    
+    // Use shell.openPath for Windows - it opens the folder in Explorer
+    await shell.openPath(folderPath);
+    return { success: true };
+  } catch (error: any) {
+    console.error('[IPC] Error opening folder:', error);
+    writeLog(`[IPC] Error opening folder: ${error.message}`);
+    return { success: false, error: error.message };
+  }
 });
 
 app.whenReady().then(async () => {

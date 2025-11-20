@@ -47,6 +47,7 @@ export default function Warehouses() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [selectedWarehouseId, setSelectedWarehouseId] = useState<string | null>(null);
+  const [editingWarehouseId, setEditingWarehouseId] = useState<string | null>(null);
   const [warehouseStock, setWarehouseStock] = useState<any[]>([]);
   const [stockLoading, setStockLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -255,14 +256,52 @@ export default function Warehouses() {
     return warehouses.filter(w => w.aktiv).length;
   };
 
-  const handleOpenModal = () => {
+  const handleOpenModal = (warehouse?: Warehouse) => {
     setError('');
     setSuccess('');
+    if (warehouse) {
+      setEditingWarehouseId(warehouse.id);
+      // Parse address if it exists
+      let iranyitoszam = '';
+      let telepules = '';
+      let utca = '';
+      if (warehouse.cim) {
+        const parts = warehouse.cim.split(', ');
+        if (parts.length >= 1 && /^\d{4}$/.test(parts[0])) {
+          iranyitoszam = parts[0];
+        }
+        if (parts.length >= 2) {
+          telepules = parts[1];
+        }
+        if (parts.length >= 3) {
+          utca = parts.slice(2).join(', ');
+        }
+      }
+      setFormData({
+        nev: warehouse.nev,
+        azonosito: warehouse.azonosito,
+        iranyitoszam: iranyitoszam,
+        telepules: telepules,
+        utca: utca,
+        aktiv: warehouse.aktiv,
+      });
+    } else {
+      setEditingWarehouseId(null);
+      setFormData({
+        nev: '',
+        azonosito: '',
+        iranyitoszam: '',
+        telepules: '',
+        utca: '',
+        aktiv: true,
+      });
+    }
     setIsModalOpen(true);
   };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
+    setEditingWarehouseId(null);
     setFormData({
       nev: '',
       azonosito: '',
@@ -315,8 +354,13 @@ export default function Warehouses() {
         aktiv: formData.aktiv,
       };
 
-      const response = await apiFetch(`/logistics/warehouses`, {
-        method: 'POST',
+      const url = editingWarehouseId
+        ? `/logistics/warehouses/${editingWarehouseId}`
+        : `/logistics/warehouses`;
+      const method = editingWarehouseId ? 'PUT' : 'POST';
+
+      const response = await apiFetch(url, {
+        method: method,
         headers: {
           'Content-Type': 'application/json',
         },
@@ -335,11 +379,11 @@ export default function Warehouses() {
           throw new Error('Szerver hiba. Kérem próbálja újra később.');
         } else {
           const errorData = await response.json();
-          throw new Error(errorData.message || 'Hiba a raktár létrehozásakor');
+          throw new Error(errorData.message || (editingWarehouseId ? 'Hiba a raktár módosításakor' : 'Hiba a raktár létrehozásakor'));
         }
       }
 
-      setSuccess('Raktár sikeresen létrehozva!');
+      setSuccess(editingWarehouseId ? 'Raktár sikeresen módosítva!' : 'Raktár sikeresen létrehozva!');
       setTimeout(() => {
         handleCloseModal();
         loadWarehouses();
@@ -438,12 +482,20 @@ export default function Warehouses() {
                         )}
                       </td>
                       <td className="p-4 text-right">
-                        <button
-                          onClick={() => loadWarehouseStock(warehouse.id)}
-                          className="text-mbit-blue hover:text-blue-600 text-sm"
-                        >
-                          Részletek
-                        </button>
+                        <div className="flex gap-2 justify-end">
+                          <button
+                            onClick={() => handleOpenModal(warehouse)}
+                            className="px-3 py-1 rounded text-sm bg-blue-600 text-white hover:bg-blue-700"
+                          >
+                            Szerkesztés
+                          </button>
+                          <button
+                            onClick={() => loadWarehouseStock(warehouse.id)}
+                            className="text-mbit-blue hover:text-blue-600 text-sm"
+                          >
+                            Részletek
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -670,7 +722,7 @@ export default function Warehouses() {
         </form>
       </Modal>
 
-      <Modal isOpen={isModalOpen} onClose={handleCloseModal} title="Új raktár" size="lg">
+      <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={editingWarehouseId ? "Raktár szerkesztése" : "Új raktár"} size="lg">
         {error && (
           <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
             {error}
@@ -705,10 +757,14 @@ export default function Warehouses() {
                 type="text"
                 value={formData.azonosito}
                 onChange={(e) => setFormData({ ...formData, azonosito: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                 placeholder="Pl.: RKT-001"
                 required
+                disabled={!!editingWarehouseId}
               />
+              {editingWarehouseId && (
+                <p className="mt-1 text-xs text-gray-500">Az azonosító nem módosítható</p>
+              )}
             </div>
 
             <div>

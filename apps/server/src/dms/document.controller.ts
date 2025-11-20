@@ -198,6 +198,26 @@ export class DocumentController {
     return { message: 'Dokumentum sikeresen törölve' };
   }
 
+  @Get(':id/folder-path')
+  @Permissions(Permission.DOCUMENT_VIEW)
+  async getFolderPath(@Param('id') id: string) {
+    const document = await this.documentService.findOne(id);
+    
+    if (!document) {
+      throw new BadRequestException('Dokumentum nem található');
+    }
+
+    if (!document.fajlUtvonal) {
+      throw new BadRequestException('A dokumentumhoz nincs fájl társítva');
+    }
+
+    // Get the directory path (parent folder of the file)
+    const fullPath = this.storageService.getAbsolutePath(document.fajlUtvonal);
+    const folderPath = require('path').dirname(fullPath);
+
+    return { folderPath };
+  }
+
   @Get(':id/ocr/download')
   @Permissions(Permission.DOCUMENT_VIEW)
   async downloadOcrText(@Param('id') id: string, @Res() res: Response) {

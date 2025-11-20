@@ -413,6 +413,7 @@ model Item {
   suly                 Float?
   mertekEgyseg         String?
   vonalkod             String?
+  szavatossagiIdoNap   Int?
   createdAt            DateTime            @default(now())
   updatedAt            DateTime            @updatedAt
   itemGroup            ItemGroup?          @relation(fields: [itemGroupId], references: [id], onDelete: SetNull)

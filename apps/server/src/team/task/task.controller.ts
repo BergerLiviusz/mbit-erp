@@ -164,6 +164,13 @@ export class TaskController {
   ) {
     return await this.notificationService.generateMailtoLink(id, userId);
   }
+
+  @Get('upcoming-deadlines')
+  @Permissions(Permission.TASK_VIEW)
+  async getUpcomingDeadlines(@Query('days') days?: string) {
+    const daysNumber = days ? parseInt(days) : 7;
+    return await this.taskService.getUpcomingDeadlines(daysNumber);
+  }
 }
 
 @Controller('team/dashboard')

@@ -494,6 +494,42 @@ export default function Documents() {
     }
   };
 
+  const handleOpenFolder = async (documentId: string) => {
+    const isElectron = !!(window as any).electron;
+    
+    if (!isElectron) {
+      setError('Ez a funkció csak az asztali alkalmazásban érhető el');
+      return;
+    }
+
+    try {
+      const response = await apiFetch(`/dms/documents/${documentId}/folder-path`, {
+        method: 'GET',
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Nincs hitelesítve. Kérem jelentkezzen be újra.');
+        } else if (response.status === 403) {
+          throw new Error('Nincs jogosultsága ehhez a művelethez.');
+        } else if (response.status === 404) {
+          throw new Error('Dokumentum nem található vagy nincs fájl társítva.');
+        } else {
+          throw new Error('Nem sikerült lekérni a mappa elérési útját.');
+        }
+      }
+
+      const data = await response.json();
+      const result = await (window as any).electron.openFolder(data.folderPath);
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Nem sikerült megnyitni a mappát');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Hiba történt a mappa megnyitása során');
+    }
+  };
+
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
@@ -605,17 +641,28 @@ export default function Documents() {
                       <td className="p-4">
                         <div className="flex gap-2 flex-wrap">
                           {doc.fajlNev && (
-                            <button
-                              onClick={() => handleOcrTrigger(doc.id)}
-                              disabled={ocrLoading[doc.id]}
-                              className={`px-3 py-1 rounded text-sm ${
-                                ocrLoading[doc.id]
-                                  ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
-                                  : 'bg-mbit-blue text-white hover:bg-blue-600'
-                              }`}
-                            >
-                              {ocrLoading[doc.id] ? 'Feldolgozás...' : 'Szövegkinyerés'}
-                            </button>
+                            <>
+                              <button
+                                onClick={() => handleOcrTrigger(doc.id)}
+                                disabled={ocrLoading[doc.id]}
+                                className={`px-3 py-1 rounded text-sm ${
+                                  ocrLoading[doc.id]
+                                    ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
+                                    : 'bg-mbit-blue text-white hover:bg-blue-600'
+                                }`}
+                              >
+                                {ocrLoading[doc.id] ? 'Feldolgozás...' : 'Szövegkinyerés'}
+                              </button>
+                              {!!(window as any).electron && (
+                                <button
+                                  onClick={() => handleOpenFolder(doc.id)}
+                                  className="px-3 py-1 rounded text-sm bg-purple-600 text-white hover:bg-purple-700"
+                                  title="Mappa megnyitása Windows Explorerben"
+                                >
+                                  📁 Mappa megnyitása
+                                </button>
+                              )}
+                            </>
                           )}
                           {doc.ocrJob?.allapot === 'kesz' && doc.ocrJob?.txtFajlUtvonal && (
                             <button

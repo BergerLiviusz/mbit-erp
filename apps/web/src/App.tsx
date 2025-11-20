@@ -15,7 +15,7 @@ import OrdersLogistics from './pages/OrdersLogistics';
 import Team from './pages/Team';
 import Login from './pages/Login';
 import { BackendStatus } from './components/BackendStatus';
-import { DebugPanel } from './components/DebugPanel';
+import { NotificationPanel } from './components/NotificationPanel';
 import { LoadingScreen } from './components/LoadingScreen';
 import MbitLogo from './assets/logo.svg';
 import axios from './lib/axios';
@@ -235,7 +235,7 @@ function App() {
 
       <main className="container mx-auto px-4 py-8">
         {isElectron && <BackendStatus />}
-        {isElectron && <DebugPanel />}
+        {isElectron && <NotificationPanel />}
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/crm" element={<CRM />} />

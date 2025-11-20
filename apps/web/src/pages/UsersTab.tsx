@@ -34,6 +34,7 @@ export default function UsersTab({ currentUserId, isAdmin = false }: UsersTabPro
     newPassword: '',
     confirmPassword: '',
   });
+  const [isAdminPasswordChange, setIsAdminPasswordChange] = useState(false);
 
   useEffect(() => {
     loadUsers();
@@ -195,8 +196,9 @@ export default function UsersTab({ currentUserId, isAdmin = false }: UsersTabPro
     }
   };
 
-  const handleOpenPasswordChange = (userId: string) => {
+  const handleOpenPasswordChange = (userId: string, adminMode: boolean = false) => {
     setChangingPasswordUserId(userId);
+    setIsAdminPasswordChange(adminMode);
     setPasswordData({
       currentPassword: '',
       newPassword: '',
@@ -208,6 +210,7 @@ export default function UsersTab({ currentUserId, isAdmin = false }: UsersTabPro
 
   const handleClosePasswordChange = () => {
     setChangingPasswordUserId(null);
+    setIsAdminPasswordChange(false);
     setPasswordData({
       currentPassword: '',
       newPassword: '',
@@ -230,18 +233,31 @@ export default function UsersTab({ currentUserId, isAdmin = false }: UsersTabPro
       return;
     }
 
+    if (!isAdminPasswordChange && !passwordData.currentPassword) {
+      setError('A jelenlegi jelszó megadása kötelező');
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const response = await apiFetch(`/system/users/${changingPasswordUserId}/password`, {
+      const endpoint = isAdminPasswordChange
+        ? `/system/users/${changingPasswordUserId}/admin-password`
+        : `/system/users/${changingPasswordUserId}/password`;
+      
+      const body = isAdminPasswordChange
+        ? { newPassword: passwordData.newPassword }
+        : {
+            currentPassword: passwordData.currentPassword,
+            newPassword: passwordData.newPassword,
+          };
+
+      const response = await apiFetch(endpoint, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          currentPassword: passwordData.currentPassword,
-          newPassword: passwordData.newPassword,
-        }),
+        body: JSON.stringify(body),
       });
 
       if (!response.ok) {
@@ -340,10 +356,19 @@ export default function UsersTab({ currentUserId, isAdmin = false }: UsersTabPro
                       </button>
                       {user.id === currentUserId && (
                         <button
-                          onClick={() => handleOpenPasswordChange(user.id)}
+                          onClick={() => handleOpenPasswordChange(user.id, false)}
                           className="px-3 py-1 rounded text-sm bg-yellow-600 text-white hover:bg-yellow-700"
                         >
                           Jelszó
+                        </button>
+                      )}
+                      {isAdmin && (
+                        <button
+                          onClick={() => handleOpenPasswordChange(user.id, true)}
+                          className="px-3 py-1 rounded text-sm bg-purple-600 text-white hover:bg-purple-700"
+                          title="Admin jelszó módosítás"
+                        >
+                          Admin Jelszó
                         </button>
                       )}
                       {user.email !== 'admin@mbit.hu' && (
@@ -453,7 +478,7 @@ export default function UsersTab({ currentUserId, isAdmin = false }: UsersTabPro
       <Modal
         isOpen={changingPasswordUserId !== null}
         onClose={handleClosePasswordChange}
-        title="Jelszó módosítása"
+        title={isAdminPasswordChange ? 'Admin jelszó módosítása' : 'Jelszó módosítása'}
       >
         <form onSubmit={handleChangePassword}>
           {error && (
@@ -463,20 +488,27 @@ export default function UsersTab({ currentUserId, isAdmin = false }: UsersTabPro
           )}
 
           <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Jelenlegi jelszó <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="password"
-                value={passwordData.currentPassword}
-                onChange={(e) =>
-                  setPasswordData({ ...passwordData, currentPassword: e.target.value })
-                }
-                className="w-full border border-gray-300 rounded px-3 py-2"
-                required
-              />
-            </div>
+            {!isAdminPasswordChange && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Jelenlegi jelszó <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="password"
+                  value={passwordData.currentPassword}
+                  onChange={(e) =>
+                    setPasswordData({ ...passwordData, currentPassword: e.target.value })
+                  }
+                  className="w-full border border-gray-300 rounded px-3 py-2"
+                  required
+                />
+              </div>
+            )}
+            {isAdminPasswordChange && (
+              <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded mb-4">
+                Admin módban nem szükséges a jelenlegi jelszó megadása.
+              </div>
+            )}
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">

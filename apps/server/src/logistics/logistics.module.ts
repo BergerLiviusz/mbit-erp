@@ -20,6 +20,8 @@ import { SupplierController } from './supplier.controller';
 import { SupplierService } from './supplier.service';
 import { InventoryReportController } from './inventory-report.controller';
 import { InventoryReportService } from './inventory-report.service';
+import { NotificationController } from './notification.controller';
+import { NotificationService } from './notification.service';
 
 @Module({
   imports: [PrismaModule, AuditModule, StorageModule, SystemModule],
@@ -32,6 +34,7 @@ import { InventoryReportService } from './inventory-report.service';
     ReturnController,
     SupplierController,
     InventoryReportController,
+    NotificationController,
   ],
   providers: [
     ItemService,
@@ -42,6 +45,7 @@ import { InventoryReportService } from './inventory-report.service';
     ReturnService,
     SupplierService,
     InventoryReportService,
+    NotificationService,
   ],
   exports: [WarehouseService, InventoryService, PurchaseOrderService],
 })

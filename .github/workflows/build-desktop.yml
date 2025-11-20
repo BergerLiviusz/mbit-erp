@@ -40,6 +40,45 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Generate Prisma Client
+        run: |
+          cd apps/server
+          npx prisma generate
+
+      - name: Validate Prisma migrations
+        shell: pwsh
+        run: |
+          Write-Host "=== Validating Prisma migrations ==="
+          cd apps/server
+          
+          # Check if migration files exist
+          $migrationsDir = "prisma/migrations"
+          if (-not (Test-Path $migrationsDir)) {
+            Write-Host "❌ ERROR: Migrations directory not found!"
+            exit 1
+          }
+          
+          $migrations = Get-ChildItem $migrationsDir -Directory | Where-Object { $_.Name -match '^\d{14}_' }
+          Write-Host "Found $($migrations.Count) migration(s)"
+          
+          foreach ($migration in $migrations) {
+            $migrationFile = Join-Path $migration.FullName "migration.sql"
+            if (-not (Test-Path $migrationFile)) {
+              Write-Host "❌ ERROR: Migration SQL file not found: $($migration.Name)"
+              exit 1
+            }
+            Write-Host "✅ $($migration.Name)"
+          }
+          
+          Write-Host ""
+          Write-Host "=== Checking for new warranty period migration ==="
+          $warrantyMigration = Get-ChildItem $migrationsDir -Directory | Where-Object { $_.Name -like '*warranty*' }
+          if ($warrantyMigration) {
+            Write-Host "✅ Warranty period migration found: $($warrantyMigration.Name)"
+          } else {
+            Write-Host "⚠️ WARNING: Warranty period migration not found (may not be needed if already applied)"
+          }
+
       - name: Build server
         run: |
           cd apps/server

@@ -81,6 +81,30 @@ export class UserController {
     return { message: 'Jelszó sikeresen módosítva' };
   }
 
+  @Put(':id/admin-password')
+  @Permissions(Permission.USER_EDIT)
+  async adminChangePassword(
+    @Param('id') id: string,
+    @Body() body: { newPassword: string },
+    @Request() req: any,
+  ) {
+    // Only admins can use this endpoint
+    const currentUser = req.user;
+    const isAdmin = currentUser?.roles?.includes('Admin');
+    
+    if (!isAdmin) {
+      throw new BadRequestException('Csak adminisztrátorok használhatják ezt a funkciót');
+    }
+
+    if (!body.newPassword) {
+      throw new BadRequestException('Az új jelszó megadása kötelező');
+    }
+
+    await this.userService.adminChangePassword(id, body.newPassword);
+    await this.auditService.logUpdate('User', id, { password: '***' }, { password: '***' }, req.user?.id);
+    return { message: 'Jelszó sikeresen módosítva' };
+  }
+
   @Delete(':id')
   @Permissions(Permission.USER_DELETE)
   async delete(@Param('id') id: string, @Request() req: any) {
