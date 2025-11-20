@@ -40,18 +40,23 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Generate Prisma Client and apply migrations
+      - name: Generate Prisma Client and validate migrations
+        shell: pwsh
         run: |
+          Write-Host "=== Generating Prisma Client ==="
           cd apps/server
           npx prisma generate
-          # Apply migrations to ensure database schema is up to date
-          # Note: In CI we use migrate deploy (non-interactive) instead of migrate dev
-          if [ -f "prisma/migrations/20250119120000_add_item_warranty_period/migration.sql" ]; then
-            echo "Migration file found, applying migrations..."
-            # For CI, we'll validate the migration exists but won't apply it to a real DB
-            # The migration will be applied when the app runs for the first time
-            echo "Migration validation: OK"
-          fi
+          
+          Write-Host ""
+          Write-Host "=== Validating migration files ==="
+          $migrationFile = "prisma/migrations/20250119120000_add_item_warranty_period/migration.sql"
+          if (Test-Path $migrationFile) {
+            Write-Host "✅ Migration file found: $migrationFile"
+            Write-Host "Migration will be applied automatically when the app runs for the first time"
+          } else {
+            Write-Host "⚠️ WARNING: Migration file not found: $migrationFile"
+            Write-Host "This may cause issues if the database schema is not up to date"
+          }
 
       - name: Validate Prisma migrations
         shell: pwsh
