@@ -570,21 +570,32 @@ export class TaskService {
     };
   }
 
-  async getUpcomingDeadlines(days: number = 7) {
+  async getUpcomingDeadlines(userId: string, isAdmin: boolean, days: number = 7) {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() + days);
 
-    const tasks = await this.prisma.task.findMany({
-      where: {
-        hataridoDatum: {
-          not: null,
-          lte: cutoffDate,
-          gte: new Date(),
-        },
-        allapot: {
-          notIn: ['DONE', 'CANCELLED'],
-        },
+    const where: any = {
+      hataridoDatum: {
+        not: null,
+        lte: cutoffDate,
+        gte: new Date(),
       },
+      allapot: {
+        notIn: ['DONE', 'CANCELLED'],
+      },
+    };
+
+    // Jogosultság ellenőrzés: Admin mindent lát, User csak saját + hozzárendelt + board tagként látható
+    if (!isAdmin) {
+      where.OR = [
+        { assignedToId: userId },
+        { createdById: userId },
+        { board: { members: { some: { userId } } } },
+      ];
+    }
+
+    const tasks = await this.prisma.task.findMany({
+      where,
       include: {
         assignedTo: {
           select: {
