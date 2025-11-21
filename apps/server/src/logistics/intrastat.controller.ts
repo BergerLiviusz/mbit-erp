@@ -176,7 +176,7 @@ export class IntrastatController {
   }
 
   @Delete(':id/items/:itemId')
-  @Permissions(Permission.STOCK_DELETE)
+  @Permissions(Permission.LOGISTICS_DELETE)
   async deleteItem(
     @Param('id') declarationId: string,
     @Param('itemId') itemId: string,
@@ -195,7 +195,7 @@ export class IntrastatController {
   }
 
   @Delete(':id')
-  @Permissions(Permission.STOCK_DELETE)
+  @Permissions(Permission.LOGISTICS_DELETE)
   async delete(@Param('id') id: string, @Request() req: any) {
     const oldDeclaration = await this.intrastatService.findOne(id);
     await this.intrastatService.delete(id);

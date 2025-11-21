@@ -333,7 +333,6 @@ export class InventorySheetService {
             data: {
               itemId: item.itemId,
               warehouseId: sheet.warehouseId,
-              locationId: item.locationId,
               tipus: 'LELTAR_KORREKCIO',
               mennyiseg: item.kulonbseg,
               megjegyzesek: `Leltárív korrekció: ${sheet.azonosito}`,

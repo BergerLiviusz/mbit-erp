@@ -202,7 +202,7 @@ export class InvoiceService {
       }
 
       // Check if order already has an invoice
-      const existingInvoice = await this.prisma.invoice.findUnique({
+      const existingInvoice = await this.prisma.invoice.findFirst({
         where: { orderId: dto.orderId },
       });
 
@@ -298,7 +298,7 @@ export class InvoiceService {
     }
 
     // Check if invoice already exists
-    const existingInvoice = await this.prisma.invoice.findUnique({
+    const existingInvoice = await this.prisma.invoice.findFirst({
       where: { orderId },
     });
 

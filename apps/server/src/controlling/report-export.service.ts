@@ -57,7 +57,7 @@ export class ReportExportService {
       column.width = maxLength < 10 ? 10 : maxLength + 2;
     });
 
-    return await workbook.xlsx.writeBuffer();
+    return await workbook.xlsx.writeBuffer() as Buffer;
   }
 
   async exportToCsv(data: ExportData): Promise<string> {

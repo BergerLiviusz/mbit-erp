@@ -52,13 +52,13 @@ export class CampaignController {
   @Permissions(Permission.CAMPAIGN_VIEW)
   async exportCampaigns(
     @Param('format') format: 'csv' | 'excel',
+    @Res() res: Response,
     @Query('tipus') tipus?: string,
     @Query('allapot') allapot?: string,
     @Query('iparag') iparag?: string,
     @Query('regio') regio?: string,
     @Query('kezdetDatum') kezdetDatum?: string,
     @Query('befejezesDatum') befejezesDatum?: string,
-    @Res() res: Response,
   ) {
     const filters: CampaignFilters = {};
     if (tipus) filters.tipus = tipus;

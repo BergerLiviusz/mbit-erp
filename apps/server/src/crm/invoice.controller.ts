@@ -80,8 +80,8 @@ export class InvoiceController {
   @Permissions(Permission.CRM_CREATE)
   async createFromOrder(
     @Param('orderId') orderId: string,
-    @Body() dto?: Partial<CreateInvoiceDto>,
     @Request() req: any,
+    @Body() dto?: Partial<CreateInvoiceDto>,
   ) {
     const invoice = await this.invoiceService.createFromOrder(orderId, dto);
     

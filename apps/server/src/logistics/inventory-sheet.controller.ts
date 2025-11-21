@@ -195,7 +195,7 @@ export class InventorySheetController {
   }
 
   @Delete(':id')
-  @Permissions(Permission.STOCK_DELETE)
+  @Permissions(Permission.LOGISTICS_DELETE)
   async delete(@Param('id') id: string, @Request() req: any) {
     const oldSheet = await this.inventorySheetService.findOne(id);
     await this.inventorySheetService.delete(id);

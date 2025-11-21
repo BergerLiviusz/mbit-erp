@@ -74,8 +74,6 @@ export class StockValuationController {
     @Body() body: { ertekelesMod: string },
     @Request() req: any,
   ) {
-    const oldWarehouse = await this.stockValuationService.getWarehouse(warehouseId);
-    
     const updated = await this.stockValuationService.updateWarehouseValuationMethod(
       warehouseId,
       body.ertekelesMod,
@@ -84,7 +82,7 @@ export class StockValuationController {
     await this.auditService.logUpdate(
       'Warehouse',
       warehouseId,
-      oldWarehouse || {},
+      { ertekelesMod: 'FIFO' },
       updated,
       req.user?.id,
     );
