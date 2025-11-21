@@ -1649,7 +1649,7 @@ model IntrastatItem {
   szallitasiMod         String              // 1-9 kódok
   statisztikaiErtek     Float
   nettoSuly             Float?              // kg
-  kiegeszitoEgység      String?             // pl. db, m2
+  kiegeszitoEgyseg      String?             // pl. db, m2
   kiegeszitoMennyiseg   Float?
   termekkod             String?             // CN8 kód
   megjegyzesek          String?

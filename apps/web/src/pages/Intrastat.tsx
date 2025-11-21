@@ -27,7 +27,7 @@ interface IntrastatItem {
   szallitasiMod: string;
   statisztikaiErtek: number;
   nettoSuly?: number | null;
-  kiegeszitoEgység?: string | null;
+  kiegeszitoEgyseg?: string | null;
   kiegeszitoMennyiseg?: number | null;
   termekkod?: string | null;
   megjegyzesek?: string | null;
@@ -91,7 +91,7 @@ export default function Intrastat() {
     szallitasiMod: '3',
     statisztikaiErtek: '',
     nettoSuly: '',
-    kiegeszitoEgység: '',
+    kiegeszitoEgyseg: '',
     kiegeszitoMennyiseg: '',
     termekkod: '',
     megjegyzesek: '',
@@ -214,7 +214,7 @@ export default function Intrastat() {
         szallitasiMod: item.szallitasiMod,
         statisztikaiErtek: item.statisztikaiErtek.toString(),
         nettoSuly: item.nettoSuly?.toString() || '',
-        kiegeszitoEgység: item.kiegeszitoEgység || '',
+        kiegeszitoEgyseg: item.kiegeszitoEgyseg || '',
         kiegeszitoMennyiseg: item.kiegeszitoMennyiseg?.toString() || '',
         termekkod: item.termekkod || '',
         megjegyzesek: item.megjegyzesek || '',
@@ -228,7 +228,7 @@ export default function Intrastat() {
         szallitasiMod: '3',
         statisztikaiErtek: '',
         nettoSuly: '',
-        kiegeszitoEgység: '',
+        kiegeszitoEgyseg: '',
         kiegeszitoMennyiseg: '',
         termekkod: '',
         megjegyzesek: '',
@@ -273,7 +273,7 @@ export default function Intrastat() {
           szallitasiMod: itemFormData.szallitasiMod,
           statisztikaiErtek: parseFloat(itemFormData.statisztikaiErtek),
           nettoSuly: itemFormData.nettoSuly ? parseFloat(itemFormData.nettoSuly) : undefined,
-          kiegeszitoEgység: itemFormData.kiegeszitoEgység || undefined,
+          kiegeszitoEgyseg: itemFormData.kiegeszitoEgyseg || undefined,
           kiegeszitoMennyiseg: itemFormData.kiegeszitoMennyiseg ? parseFloat(itemFormData.kiegeszitoMennyiseg) : undefined,
           termekkod: itemFormData.termekkod || undefined,
           megjegyzesek: itemFormData.megjegyzesek || undefined,
@@ -284,7 +284,7 @@ export default function Intrastat() {
           szallitasiMod: itemFormData.szallitasiMod,
           statisztikaiErtek: parseFloat(itemFormData.statisztikaiErtek),
           nettoSuly: itemFormData.nettoSuly ? parseFloat(itemFormData.nettoSuly) : undefined,
-          kiegeszitoEgység: itemFormData.kiegeszitoEgység || undefined,
+          kiegeszitoEgyseg: itemFormData.kiegeszitoEgyseg || undefined,
           kiegeszitoMennyiseg: itemFormData.kiegeszitoMennyiseg ? parseFloat(itemFormData.kiegeszitoMennyiseg) : undefined,
           termekkod: itemFormData.termekkod || undefined,
           megjegyzesek: itemFormData.megjegyzesek || undefined,
@@ -740,8 +740,8 @@ export default function Intrastat() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Kiegészítő egység</label>
                 <input
                   type="text"
-                  value={itemFormData.kiegeszitoEgység}
-                  onChange={(e) => setItemFormData({ ...itemFormData, kiegeszitoEgység: e.target.value })}
+                  value={itemFormData.kiegeszitoEgyseg}
+                  onChange={(e) => setItemFormData({ ...itemFormData, kiegeszitoEgyseg: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="pl. db, m2"
                 />

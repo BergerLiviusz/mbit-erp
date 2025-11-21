@@ -14,7 +14,7 @@ export interface CreateIntrastatItemDto {
   szallitasiMod: string;
   statisztikaiErtek: number;
   nettoSuly?: number;
-  kiegeszitoEgység?: string;
+  kiegeszitoEgyseg?: string;
   kiegeszitoMennyiseg?: number;
   termekkod?: string;
   megjegyzesek?: string;
@@ -25,7 +25,7 @@ export interface UpdateIntrastatItemDto {
   szallitasiMod?: string;
   statisztikaiErtek?: number;
   nettoSuly?: number;
-  kiegeszitoEgység?: string;
+  kiegeszitoEgyseg?: string;
   kiegeszitoMennyiseg?: number;
   termekkod?: string;
   megjegyzesek?: string;
@@ -188,7 +188,7 @@ export class IntrastatService {
         szallitasiMod: dto.szallitasiMod,
         statisztikaiErtek: dto.statisztikaiErtek,
         nettoSuly: dto.nettoSuly || undefined,
-        kiegeszitoEgység: dto.kiegeszitoEgység || undefined,
+        kiegeszitoEgyseg: dto.kiegeszitoEgyseg || undefined,
         kiegeszitoMennyiseg: dto.kiegeszitoMennyiseg || undefined,
         termekkod: dto.termekkod || undefined,
         megjegyzesek: dto.megjegyzesek,
@@ -316,7 +316,7 @@ export class IntrastatService {
         item.szallitasiMod,
         item.statisztikaiErtek.toFixed(2),
         item.nettoSuly?.toFixed(2) || '',
-        item.kiegeszitoEgység || '',
+        item.kiegeszitoEgyseg || '',
         item.kiegeszitoMennyiseg?.toFixed(2) || '',
         item.termekkod || '',
         item.item?.azonosito || '',
@@ -347,8 +347,8 @@ export class IntrastatService {
       if (item.nettoSuly) {
         xml += `      <NetWeight>${item.nettoSuly}</NetWeight>\n`;
       }
-      if (item.kiegeszitoEgység) {
-        xml += `      <SupplementaryUnit>${item.kiegeszitoEgység}</SupplementaryUnit>\n`;
+      if (item.kiegeszitoEgyseg) {
+        xml += `      <SupplementaryUnit>${item.kiegeszitoEgyseg}</SupplementaryUnit>\n`;
       }
       if (item.kiegeszitoMennyiseg) {
         xml += `      <SupplementaryQuantity>${item.kiegeszitoMennyiseg}</SupplementaryQuantity>\n`;
