@@ -590,16 +590,16 @@ export default function InventorySheets() {
                               />
                             ) : (
                               <span>
-                                {item.tenylegesKeszlet !== null ? item.tenylegesKeszlet.toLocaleString('hu-HU') : '-'} {item.item?.egyseg || ''}
+                                {item.tenylegesKeszlet !== null && item.tenylegesKeszlet !== undefined ? item.tenylegesKeszlet.toLocaleString('hu-HU') : '-'} {item.item?.egyseg || ''}
                               </span>
                             )}
                           </td>
                           <td className={`p-2 text-right font-medium ${
-                            item.kulonbseg && item.kulonbseg !== 0
+                            item.kulonbseg !== null && item.kulonbseg !== undefined && item.kulonbseg !== 0
                               ? item.kulonbseg > 0 ? 'text-green-600' : 'text-red-600'
                               : ''
                           }`}>
-                            {item.kulonbseg !== null && item.kulonbseg !== 0
+                            {item.kulonbseg !== null && item.kulonbseg !== undefined && item.kulonbseg !== 0
                               ? `${item.kulonbseg > 0 ? '+' : ''}${item.kulonbseg.toLocaleString('hu-HU')} ${item.item?.egyseg || ''}`
                               : '-'}
                           </td>

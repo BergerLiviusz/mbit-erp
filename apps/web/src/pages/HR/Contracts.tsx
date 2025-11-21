@@ -441,8 +441,6 @@ export default function Contracts() {
               </thead>
               <tbody className="divide-y">
                 {contracts.map((contract) => {
-                  const isActive = !contract.vegDatum || new Date(contract.vegDatum) > new Date();
-                  
                   return (
                     <tr key={contract.id} className="hover:bg-gray-50">
                       <td className="p-4 font-medium text-gray-900">{contract.szerzodesSzam}</td>

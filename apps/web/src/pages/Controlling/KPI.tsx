@@ -314,11 +314,11 @@ export default function KPI() {
                       {TIPUSOK.find(t => t.kod === kpi.tipus)?.nev || kpi.tipus}
                     </td>
                     <td className="p-4 text-sm text-gray-600">
-                      {kpi.celErtek !== null ? kpi.celErtek.toLocaleString('hu-HU') : '-'}
+                      {kpi.celErtek !== null && kpi.celErtek !== undefined ? kpi.celErtek.toLocaleString('hu-HU') : '-'}
                     </td>
                     <td className="p-4 text-sm font-medium">
-                      {kpi.aktualisErtek !== null ? (
-                        <span className={kpi.celErtek && kpi.aktualisErtek >= kpi.celErtek ? 'text-green-600' : 'text-gray-600'}>
+                      {kpi.aktualisErtek !== null && kpi.aktualisErtek !== undefined ? (
+                        <span className={kpi.celErtek !== null && kpi.celErtek !== undefined && kpi.aktualisErtek >= kpi.celErtek ? 'text-green-600' : 'text-gray-600'}>
                           {kpi.aktualisErtek.toLocaleString('hu-HU')}
                         </span>
                       ) : (

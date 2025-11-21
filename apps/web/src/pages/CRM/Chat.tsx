@@ -82,11 +82,6 @@ export default function Chat() {
     externalParticipants: [] as string[],
   });
 
-  const [participantFormData, setParticipantFormData] = useState({
-    userId: '',
-    externalName: '',
-  });
-
   const [filters, setFilters] = useState({
     accountId: '',
     allapot: '',
@@ -212,6 +207,7 @@ export default function Chat() {
       const newRoom = await response.json();
       setSuccess('Chat szoba sikeresen létrehozva!');
       setTimeout(() => {
+        setSuccess('');
         setIsRoomModalOpen(false);
         setRoomFormData({
           accountId: '',
@@ -249,7 +245,7 @@ export default function Chat() {
         throw new Error('Hiba az üzenet küldésekor');
       }
 
-      const message = await response.json();
+      await response.json();
       setNewMessage('');
       
       // Reload room details to get updated messages
@@ -286,6 +282,9 @@ export default function Chat() {
       }
 
       setSuccess('Chat szoba lezárva!');
+      setTimeout(() => {
+        setSuccess('');
+      }, 3000);
       loadRooms();
       if (selectedRoom?.id === roomId) {
         setSelectedRoom(null);
@@ -498,6 +497,12 @@ export default function Chat() {
             {error && (
               <div className="p-3 bg-red-100 border border-red-400 text-red-700 rounded text-sm">
                 {error}
+              </div>
+            )}
+
+            {success && (
+              <div className="p-3 bg-green-100 border border-green-400 text-green-700 rounded text-sm">
+                {success}
               </div>
             )}
 

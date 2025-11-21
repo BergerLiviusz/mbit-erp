@@ -382,29 +382,8 @@ export default function Invoices() {
     }
   };
 
-  const handleCreateFromOrder = async (orderId: string) => {
-    setError('');
-    setSuccess('');
-
-    try {
-      const response = await apiFetch(`/crm/invoices/from-order/${orderId}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Hiba a számla létrehozásakor');
-      }
-
-      setSuccess('Számla sikeresen létrehozva a rendelésből!');
-      loadInvoices();
-    } catch (err: any) {
-      setError(err.message || 'Hiba történt');
-    }
-  };
+  // Note: handleCreateFromOrder is available for future use when order-to-invoice conversion is needed
+  // Currently not used in the UI but kept for API compatibility
 
   const handleMarkAsIssued = async (id: string) => {
     try {
