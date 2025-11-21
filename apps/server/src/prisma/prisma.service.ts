@@ -52,13 +52,20 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
     await this.$connect();
     this.logger.log('✅ Adatbázis kapcsolat létrejött');
     
-    // In Electron mode, check if schema needs to be initialized
+    // In Electron mode, always ensure schema is up-to-date
     const isElectron = process.env.ELECTRON_RUN_AS_NODE === '1';
     if (isElectron) {
       try {
-        await this.ensureSchema();
-      } catch (error) {
-        this.logger.warn('Schema initialization check failed:', error);
+        // Always run db push in Electron to ensure schema is synced
+        await this.ensureSchemaSync();
+      } catch (error: any) {
+        this.logger.warn('Schema sync check failed:', error.message);
+        // Try fallback method
+        try {
+          await this.ensureSchema();
+        } catch (fallbackError: any) {
+          this.logger.warn('Fallback schema initialization also failed:', fallbackError.message);
+        }
       }
     }
     
@@ -257,6 +264,66 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
           // If schema doesn't exist, seed will fail gracefully
         }
       }
+    }
+  }
+
+  private async ensureSchemaSync() {
+    // Always run db push in Electron to ensure schema is synced with Prisma schema
+    try {
+      const { execSync } = require('child_process');
+      const { join } = require('path');
+      
+      const isElectron = process.env.ELECTRON_RUN_AS_NODE === '1';
+      const resourcesPath = (process as any).resourcesPath;
+      const schemaDir = isElectron && resourcesPath
+        ? join(resourcesPath, 'backend', 'prisma')
+        : join(__dirname, '..', '..', 'prisma');
+      
+      const schemaPath = join(schemaDir, 'schema.prisma');
+      
+      if (!existsSync(schemaPath)) {
+        this.logger.error('Prisma schema file not found at:', schemaPath);
+        throw new Error('Schema file not found');
+      }
+      
+      const nodeModulesDir = isElectron && resourcesPath
+        ? join(resourcesPath, 'backend', 'node_modules')
+        : join(__dirname, '..', '..', 'node_modules');
+      
+      const prismaCliJs = join(nodeModulesDir, 'prisma', 'build', 'index.js');
+      
+      if (!existsSync(prismaCliJs)) {
+        this.logger.warn('Prisma CLI not found, skipping schema sync');
+        return;
+      }
+      
+      this.logger.log('🔄 Syncing database schema with Prisma schema...');
+      
+      const env = {
+        ...process.env,
+        DATABASE_URL: process.env.DATABASE_URL,
+      };
+      
+      // Run prisma db push to sync schema
+      const command = `"${process.execPath}" "${prismaCliJs}" db push --skip-generate --accept-data-loss`;
+      
+      execSync(command, {
+        cwd: schemaDir,
+        stdio: 'pipe',
+        env,
+        shell: true,
+      });
+      
+      this.logger.log('✅ Database schema synced successfully');
+    } catch (error: any) {
+      this.logger.error('Schema sync failed:', error.message);
+      if (error.stdout) {
+        this.logger.error('stdout:', error.stdout.toString());
+      }
+      if (error.stderr) {
+        this.logger.error('stderr:', error.stderr.toString());
+      }
+      throw error;
     }
   }
 
