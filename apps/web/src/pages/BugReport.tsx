@@ -10,9 +10,10 @@ export default function BugReport() {
                  'Köszönjük a részletes leírást!';
 
     // Check if we're in Electron
-    if (window.electron && window.electron.openEmailClient) {
+    const electron = (window as any).electron;
+    if (electron && electron.openEmailClient) {
       try {
-        await window.electron.openEmailClient('contact@mbit.hu', subject, body);
+        await electron.openEmailClient('contact@mbit.hu', subject, body);
       } catch (error) {
         console.error('Hiba az email kliens megnyitásakor:', error);
         // Fallback to mailto link
