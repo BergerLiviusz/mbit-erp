@@ -42,6 +42,8 @@ jobs:
 
       - name: Generate Prisma Client and validate schema
         shell: pwsh
+        env:
+          DATABASE_URL: "file:./prisma/dev.db"
         run: |
           Write-Host "=== Generating Prisma Client ==="
           cd apps/server
@@ -49,6 +51,7 @@ jobs:
           
           Write-Host ""
           Write-Host "=== Validating Prisma schema ==="
+          $env:DATABASE_URL = "file:./prisma/dev.db"
           npx prisma validate
           
           Write-Host ""
