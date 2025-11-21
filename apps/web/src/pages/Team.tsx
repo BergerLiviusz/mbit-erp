@@ -296,6 +296,7 @@ export default function Team() {
         onClose={handleCloseCreateTaskModal}
         title="Új feladat"
         size="lg"
+        zIndex={100}
       >
         <form onSubmit={handleSubmitTask}>
           {error && (
@@ -309,7 +310,7 @@ export default function Team() {
             </div>
           )}
 
-          <div className="space-y-4">
+          <div className="space-y-4" style={{ position: 'relative', zIndex: 101 }}>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Cím <span className="text-red-500">*</span>
@@ -319,6 +320,7 @@ export default function Team() {
                 value={taskFormData.cim}
                 onChange={(e) => setTaskFormData({ ...taskFormData, cim: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                style={{ position: 'relative', zIndex: 102 }}
                 required
               />
             </div>

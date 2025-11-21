@@ -266,6 +266,8 @@ export default function Invoices() {
       megjegyzesek: '',
       items: [],
     });
+    // Load orders when opening modal for new invoice
+    loadOrders();
     setIsModalOpen(true);
   };
 

@@ -679,6 +679,18 @@ ipcMain.handle('open-folder-in-explorer', async (event, folderPath: string) => {
   }
 });
 
+ipcMain.handle('open-email-client', async (event, to: string, subject: string, body?: string) => {
+  try {
+    const mailtoUrl = `mailto:${to}?subject=${encodeURIComponent(subject)}${body ? `&body=${encodeURIComponent(body)}` : ''}`;
+    await shell.openExternal(mailtoUrl);
+    return { success: true };
+  } catch (error: any) {
+    console.error('[IPC] Error opening email client:', error);
+    writeLog(`[IPC] Error opening email client: ${error.message}`);
+    return { success: false, error: error.message };
+  }
+});
+
 app.whenReady().then(async () => {
   console.log('[App] Starting Mbit ERP Desktop...');
   console.log('[App] User Data Path:', getUserDataPath());

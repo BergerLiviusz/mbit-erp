@@ -29,8 +29,8 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md', z
 
         <span className="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
 
-        <div className={`inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle w-full ${sizeClasses[size]}`}>
-          <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+        <div className={`inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle w-full ${sizeClasses[size]}`} style={{ position: 'relative', zIndex: zIndex + 1 }}>
+          <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4" style={{ position: 'relative', zIndex: zIndex + 2 }}>
             <div className="flex items-start justify-between mb-4">
               <h3 className="text-lg font-medium leading-6 text-gray-900">
                 {title}
@@ -46,7 +46,7 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md', z
                 </svg>
               </button>
             </div>
-            <div className="mt-2">
+            <div className="mt-2" style={{ position: 'relative', zIndex: zIndex + 2 }}>
               {children}
             </div>
           </div>

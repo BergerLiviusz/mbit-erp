@@ -729,7 +729,7 @@ export default function Documents() {
         )}
       </div>
 
-      <Modal isOpen={isModalOpen} onClose={handleCloseModal} title="Új dokumentum" size="lg">
+      <Modal isOpen={isModalOpen} onClose={handleCloseModal} title="Új dokumentum" size="lg" zIndex={100}>
         <form onSubmit={handleSubmit}>
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
@@ -742,7 +742,7 @@ export default function Documents() {
             </div>
           )}
 
-          <div className="space-y-4">
+          <div className="space-y-4" style={{ position: 'relative', zIndex: 101 }}>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Név <span className="text-red-500">*</span>
@@ -752,6 +752,7 @@ export default function Documents() {
                 value={formData.nev}
                 onChange={(e) => setFormData({ ...formData, nev: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                style={{ position: 'relative', zIndex: 102 }}
                 required
               />
             </div>
