@@ -156,6 +156,46 @@ export default function Warehouses() {
     setWarehouseStock([]);
   };
 
+  const handleDownloadInventorySheetPdf = async (warehouseId: string) => {
+    try {
+      const response = await apiFetch(`/logistics/inventory/warehouse/${warehouseId}/inventory-sheet/pdf`);
+      if (!response.ok) {
+        throw new Error('Hiba a PDF generálása során');
+      }
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `leltar_${warehouses.find(w => w.id === warehouseId)?.azonosito || warehouseId}_${new Date().toISOString().split('T')[0]}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error: any) {
+      setError(error.message || 'Hiba a PDF letöltése során');
+    }
+  };
+
+  const handleDownloadInventorySheetExcel = async (warehouseId: string) => {
+    try {
+      const response = await apiFetch(`/logistics/inventory/warehouse/${warehouseId}/inventory-sheet/excel`);
+      if (!response.ok) {
+        throw new Error('Hiba az Excel generálása során');
+      }
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `leltar_${warehouses.find(w => w.id === warehouseId)?.azonosito || warehouseId}_${new Date().toISOString().split('T')[0]}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error: any) {
+      setError(error.message || 'Hiba az Excel letöltése során');
+    }
+  };
+
   const handleOpenProductModal = () => {
     if (!selectedWarehouseId) {
       setProductError('Először válasszon ki egy raktárt!');
@@ -491,9 +531,23 @@ export default function Warehouses() {
                           </button>
                           <button
                             onClick={() => loadWarehouseStock(warehouse.id)}
-                            className="text-mbit-blue hover:text-blue-600 text-sm"
+                            className="text-mbit-blue hover:text-blue-600 text-sm cursor-pointer underline"
                           >
                             Részletek
+                          </button>
+                          <button
+                            onClick={() => handleDownloadInventorySheetPdf(warehouse.id)}
+                            className="px-2 py-1 rounded text-sm bg-red-600 text-white hover:bg-red-700"
+                            title="Leltár ív PDF letöltése"
+                          >
+                            📄 PDF
+                          </button>
+                          <button
+                            onClick={() => handleDownloadInventorySheetExcel(warehouse.id)}
+                            className="px-2 py-1 rounded text-sm bg-green-600 text-white hover:bg-green-700"
+                            title="Leltár ív Excel letöltése"
+                          >
+                            📊 Excel
                           </button>
                         </div>
                       </td>
@@ -571,6 +625,18 @@ export default function Warehouses() {
               Raktár részletek: {warehouses.find(w => w.id === selectedWarehouseId)?.nev}
             </h2>
             <div className="flex gap-2">
+              <button
+                onClick={() => handleDownloadInventorySheetPdf(selectedWarehouseId!)}
+                className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 text-sm"
+              >
+                📄 PDF letöltése
+              </button>
+              <button
+                onClick={() => handleDownloadInventorySheetExcel(selectedWarehouseId!)}
+                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 text-sm"
+              >
+                📊 Excel letöltése
+              </button>
               <button
                 onClick={() => setIsReportModalOpen(true)}
                 className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 text-sm"

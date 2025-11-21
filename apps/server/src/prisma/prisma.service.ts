@@ -73,24 +73,94 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
   private async applyMigrations() {
     try {
       // Check if txtFajlUtvonal column exists in OCRJob table
-      const tableInfo = await this.$queryRaw<Array<{ name: string }>>`
-        PRAGMA table_info(ocr_feladatok);
-      `;
-      
-      const hasTxtFajlUtvonal = tableInfo.some(col => col.name === 'txtFajlUtvonal');
-      
-      if (!hasTxtFajlUtvonal) {
-        this.logger.log('Adding missing column txtFajlUtvonal to ocr_feladatok table...');
-        await this.$executeRaw`
-          ALTER TABLE ocr_feladatok ADD COLUMN txtFajlUtvonal TEXT;
+      try {
+        const tableInfo = await this.$queryRaw<Array<{ name: string }>>`
+          PRAGMA table_info(ocr_feladatok);
         `;
-        this.logger.log('✅ Column txtFajlUtvonal added successfully');
+        
+        const hasTxtFajlUtvonal = tableInfo.some(col => col.name === 'txtFajlUtvonal');
+        
+        if (!hasTxtFajlUtvonal) {
+          this.logger.log('Adding missing column txtFajlUtvonal to ocr_feladatok table...');
+          await this.$executeRaw`
+            ALTER TABLE ocr_feladatok ADD COLUMN txtFajlUtvonal TEXT;
+          `;
+          this.logger.log('✅ Column txtFajlUtvonal added successfully');
+        }
+      } catch (ocrError: any) {
+        // OCR table might not exist yet, which is fine
+        if (!ocrError.message?.includes('no such table')) {
+          this.logger.warn('OCR table migration check error:', ocrError.message);
+        }
+      }
+
+      // Check if task_boardok table exists
+      try {
+        await this.$queryRaw`SELECT 1 FROM task_boardok LIMIT 1`;
+        this.logger.debug('Task board table exists');
+      } catch (boardError: any) {
+        if (boardError.message?.includes('no such table') || boardError.message?.includes('does not exist')) {
+          this.logger.warn('⚠️ Task board table does not exist - migrations may not have run');
+          this.logger.warn('This may cause errors when creating boards. Please run: npx prisma migrate deploy');
+          
+          // Try to run migrations programmatically if in Electron mode
+          const isElectron = process.env.ELECTRON_RUN_AS_NODE === '1';
+          if (isElectron) {
+            try {
+              await this.runMigrationsProgrammatically();
+            } catch (migrateError: any) {
+              this.logger.error('Failed to run migrations programmatically:', migrateError.message);
+            }
+          }
+        }
       }
     } catch (error: any) {
-      // Table might not exist yet, which is fine
-      if (!error.message?.includes('no such table')) {
-        this.logger.warn('Migration check error:', error.message);
+      this.logger.warn('Migration check error:', error.message);
+    }
+  }
+
+  private async runMigrationsProgrammatically() {
+    try {
+      const { execSync } = require('child_process');
+      const { join } = require('path');
+      
+      const isElectron = process.env.ELECTRON_RUN_AS_NODE === '1';
+      const resourcesPath = (process as any).resourcesPath;
+      const prismaDir = isElectron && resourcesPath
+        ? join(resourcesPath, 'backend', 'prisma')
+        : join(__dirname, '..', '..', 'prisma');
+      
+      const nodeModulesDir = isElectron && resourcesPath
+        ? join(resourcesPath, 'backend', 'node_modules')
+        : join(__dirname, '..', '..', 'node_modules');
+      
+      const prismaCliJs = join(nodeModulesDir, 'prisma', 'build', 'index.js');
+      
+      if (!existsSync(prismaCliJs)) {
+        this.logger.warn('Prisma CLI not found, skipping migrations');
+        return;
       }
+      
+      this.logger.log('Running prisma migrate deploy...');
+      
+      const env = {
+        ...process.env,
+        DATABASE_URL: process.env.DATABASE_URL,
+      };
+      
+      const command = `"${process.execPath}" "${prismaCliJs}" migrate deploy`;
+      
+      execSync(command, {
+        cwd: prismaDir,
+        stdio: 'pipe',
+        env,
+        shell: true,
+      });
+      
+      this.logger.log('✅ Migrations applied successfully');
+    } catch (error: any) {
+      this.logger.warn('Failed to run migrations:', error.message);
+      throw error;
     }
   }
 

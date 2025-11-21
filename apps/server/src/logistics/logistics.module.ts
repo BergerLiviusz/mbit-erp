@@ -22,6 +22,14 @@ import { InventoryReportController } from './inventory-report.controller';
 import { InventoryReportService } from './inventory-report.service';
 import { NotificationController } from './notification.controller';
 import { NotificationService } from './notification.service';
+import { InventorySheetController } from './inventory-sheet.controller';
+import { InventorySheetService } from './inventory-sheet.service';
+import { IntrastatController } from './intrastat.controller';
+import { IntrastatService } from './intrastat.service';
+import { StockValuationController } from './stock-valuation.controller';
+import { StockValuationService } from './stock-valuation.service';
+import { StockReservationController } from './stock-reservation.controller';
+import { StockReservationService } from './stock-reservation.service';
 
 @Module({
   imports: [PrismaModule, AuditModule, StorageModule, SystemModule],
@@ -35,6 +43,10 @@ import { NotificationService } from './notification.service';
     SupplierController,
     InventoryReportController,
     NotificationController,
+    InventorySheetController,
+    IntrastatController,
+    StockValuationController,
+    StockReservationController,
   ],
   providers: [
     ItemService,
@@ -46,7 +58,11 @@ import { NotificationService } from './notification.service';
     SupplierService,
     InventoryReportService,
     NotificationService,
+    InventorySheetService,
+    IntrastatService,
+    StockValuationService,
+    StockReservationService,
   ],
-  exports: [WarehouseService, InventoryService, PurchaseOrderService],
+  exports: [WarehouseService, InventoryService, PurchaseOrderService, StockValuationService, StockReservationService],
 })
 export class LogisticsModule {}

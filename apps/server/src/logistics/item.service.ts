@@ -67,10 +67,54 @@ export class ItemService {
   }
 
   async create(data: any) {
-    return this.prisma.item.create({
-      data,
-      include: { itemGroup: true },
+    // Validate required fields
+    if (!data.nev || !data.azonosito) {
+      throw new Error('Termék név és azonosító megadása kötelező');
+    }
+
+    // Validate numeric fields
+    if (data.beszerzesiAr !== undefined && (isNaN(parseFloat(data.beszerzesiAr)) || parseFloat(data.beszerzesiAr) < 0)) {
+      throw new Error('Érvénytelen beszerzési ár');
+    }
+
+    if (data.eladasiAr !== undefined && (isNaN(parseFloat(data.eladasiAr)) || parseFloat(data.eladasiAr) < 0)) {
+      throw new Error('Érvénytelen eladási ár');
+    }
+
+    if (data.afaKulcs !== undefined && (isNaN(parseFloat(data.afaKulcs)) || parseFloat(data.afaKulcs) < 0 || parseFloat(data.afaKulcs) > 100)) {
+      throw new Error('Érvénytelen ÁFA kulcs (0-100% között kell lennie)');
+    }
+
+    // Validate szavatossagiIdoNap if provided
+    if (data.szavatossagiIdoNap !== undefined && data.szavatossagiIdoNap !== null) {
+      const warrantyDays = parseInt(data.szavatossagiIdoNap);
+      if (isNaN(warrantyDays) || warrantyDays < 0) {
+        throw new Error('Érvénytelen szavatossági idő (pozitív szám kell legyen)');
+      }
+      data.szavatossagiIdoNap = warrantyDays;
+    }
+
+    // Ensure azonosito is unique
+    const existingItem = await this.prisma.item.findUnique({
+      where: { azonosito: data.azonosito },
     });
+
+    if (existingItem) {
+      throw new Error(`Már létezik termék ezzel az azonosítóval: ${data.azonosito}`);
+    }
+
+    try {
+      return await this.prisma.item.create({
+        data,
+        include: { itemGroup: true },
+      });
+    } catch (error: any) {
+      // Check for database schema errors
+      if (error.message?.includes('no such column') || error.message?.includes('does not exist')) {
+        throw new Error('Adatbázis séma hiba: hiányzó oszlop. Kérem futtassa a migrációkat.');
+      }
+      throw error;
+    }
   }
 
   async update(id: string, data: any) {

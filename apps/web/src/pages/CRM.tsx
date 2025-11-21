@@ -56,6 +56,12 @@ export default function CRM() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [campaignFilters, setCampaignFilters] = useState({
+    tipus: '',
+    allapot: '',
+    iparag: '',
+    regio: '',
+  });
 
   const { data: accounts, isLoading: accountsLoading, error: accountsError } = useQuery({
     queryKey: ['accounts'],
@@ -76,13 +82,49 @@ export default function CRM() {
   });
 
   const { data: campaigns, isLoading: campaignsLoading } = useQuery({
-    queryKey: ['campaigns'],
+    queryKey: ['campaigns', campaignFilters],
     queryFn: async () => {
-      const response = await axios.get('/api/crm/campaigns');
+      const params = new URLSearchParams();
+      if (campaignFilters.tipus) params.append('tipus', campaignFilters.tipus);
+      if (campaignFilters.allapot) params.append('allapot', campaignFilters.allapot);
+      if (campaignFilters.iparag) params.append('iparag', campaignFilters.iparag);
+      if (campaignFilters.regio) params.append('regio', campaignFilters.regio);
+      const response = await axios.get(`/api/crm/campaigns?${params.toString()}`);
       return response.data;
     },
     enabled: activeTab === 'campaigns',
   });
+
+  const handleExportCampaigns = async () => {
+    try {
+      const params = new URLSearchParams();
+      if (campaignFilters.tipus) params.append('tipus', campaignFilters.tipus);
+      if (campaignFilters.allapot) params.append('allapot', campaignFilters.allapot);
+      if (campaignFilters.iparag) params.append('iparag', campaignFilters.iparag);
+      if (campaignFilters.regio) params.append('regio', campaignFilters.regio);
+
+      const response = await apiFetch(`/crm/campaigns/export/excel?${params.toString()}`, {
+        method: 'GET',
+      });
+
+      if (!response.ok) {
+        throw new Error('Hiba az exportálás során');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `kampanyok_${new Date().toISOString().split('T')[0]}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      setSuccess('Kampányok sikeresen exportálva!');
+    } catch (err: any) {
+      setError(err.message || 'Hiba az exportálás során');
+    }
+  };
 
   const { data: tickets, isLoading: ticketsLoading } = useQuery({
     queryKey: ['tickets'],
@@ -502,33 +544,111 @@ export default function CRM() {
       )}
 
       {activeTab === 'campaigns' && (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
-            <h2 className="text-lg font-semibold">Kampánymenedzsment</h2>
-          </div>
-          {campaignsLoading ? (
-            <div className="p-6">Betöltés...</div>
-          ) : (
-            <div className="p-6">
-              {campaigns?.items?.length === 0 ? (
-                <div className="text-center text-gray-500 py-8">Nincs kampány</div>
-              ) : (
-                campaigns?.items?.map((campaign: any) => (
-                  <div key={campaign.id} className="mb-4 p-4 border rounded">
-                    <h3 className="font-bold text-lg">{campaign.nev}</h3>
-                    <p className="text-gray-600 text-sm">{campaign.leiras}</p>
-                    <div className="mt-2 flex gap-4 text-sm">
-                      <span className="text-gray-500">Típus: {campaign.tipus}</span>
-                      <span className="text-gray-500">Állapot: {campaign.allapot}</span>
-                      {campaign.koltsegvetes && (
-                        <span className="text-gray-500">Költségvetés: {campaign.koltsegvetes.toLocaleString('hu-HU')} HUF</span>
-                      )}
-                    </div>
-                  </div>
-                ))
-              )}
+        <div>
+          {/* Szűrők */}
+          <div className="bg-white rounded-lg shadow p-4 mb-4">
+            <div className="grid grid-cols-4 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Típus</label>
+                <select
+                  value={campaignFilters.tipus || ''}
+                  onChange={(e) => setCampaignFilters({ ...campaignFilters, tipus: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded"
+                >
+                  <option value="">Összes</option>
+                  <option value="email">Email</option>
+                  <option value="sms">SMS</option>
+                  <option value="social">Közösségi média</option>
+                  <option value="other">Egyéb</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Állapot</label>
+                <select
+                  value={campaignFilters.allapot || ''}
+                  onChange={(e) => setCampaignFilters({ ...campaignFilters, allapot: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded"
+                >
+                  <option value="">Összes</option>
+                  <option value="tervezett">Tervezett</option>
+                  <option value="folyamatban">Folyamatban</option>
+                  <option value="befejezett">Befejezett</option>
+                  <option value="lezart">Lezárt</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Iparág</label>
+                <input
+                  type="text"
+                  value={campaignFilters.iparag || ''}
+                  onChange={(e) => setCampaignFilters({ ...campaignFilters, iparag: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded"
+                  placeholder="pl. IT, Építőipar"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Régió</label>
+                <input
+                  type="text"
+                  value={campaignFilters.regio || ''}
+                  onChange={(e) => setCampaignFilters({ ...campaignFilters, regio: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded"
+                  placeholder="pl. Budapest, Pest megye"
+                />
+              </div>
             </div>
-          )}
+            <div className="mt-4 flex gap-2">
+              <button
+                onClick={() => {
+                  setCampaignFilters({ tipus: '', allapot: '', iparag: '', regio: '' });
+                }}
+                className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
+              >
+                Szűrők törlése
+              </button>
+              <button
+                onClick={handleExportCampaigns}
+                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+              >
+                Exportálás (Excel)
+              </button>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow overflow-hidden">
+            <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
+              <h2 className="text-lg font-semibold">Kampánymenedzsment</h2>
+            </div>
+            {campaignsLoading ? (
+              <div className="p-6">Betöltés...</div>
+            ) : (
+              <div className="p-6">
+                {campaigns?.items?.length === 0 ? (
+                  <div className="text-center text-gray-500 py-8">Nincs kampány</div>
+                ) : (
+                  campaigns?.items?.map((campaign: any) => (
+                    <div key={campaign.id} className="mb-4 p-4 border rounded">
+                      <h3 className="font-bold text-lg">{campaign.nev}</h3>
+                      <p className="text-gray-600 text-sm">{campaign.leiras}</p>
+                      <div className="mt-2 flex gap-4 text-sm">
+                        <span className="text-gray-500">Típus: {campaign.tipus}</span>
+                        <span className="text-gray-500">Állapot: {campaign.allapot}</span>
+                        {campaign.koltsegvetes && (
+                          <span className="text-gray-500">Költségvetés: {campaign.koltsegvetes.toLocaleString('hu-HU')} HUF</span>
+                        )}
+                        {campaign._count && (
+                          <>
+                            <span className="text-gray-500">Célcsoportok: {campaign._count.accounts || 0}</span>
+                            <span className="text-gray-500">Leadek: {campaign._count.leads || 0}</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
         </div>
       )}
 

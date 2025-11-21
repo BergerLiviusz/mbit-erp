@@ -5,6 +5,7 @@ export interface CreateWarehouseDto {
   azonosito: string;
   nev: string;
   cim?: string;
+  ertekelesMod?: string;
   aktiv?: boolean;
 }
 
@@ -12,6 +13,7 @@ export interface UpdateWarehouseDto {
   azonosito?: string;
   nev?: string;
   cim?: string;
+  ertekelesMod?: string;
   aktiv?: boolean;
 }
 

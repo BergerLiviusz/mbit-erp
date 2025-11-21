@@ -34,6 +34,13 @@ model User {
   taskWatchers      TaskWatcher[]  @relation("TaskWatchers")
   createdReturns    Return[]       @relation("ReturnCreatedBy")
   approvedReturns   Return[]       @relation("ReturnApprovedBy")
+  bugReports        BugReport[]    @relation("BugReports")
+  bugReportComments BugReportComment[] @relation("BugReportComments")
+  createdInventorySheets InventorySheet[] @relation("InventorySheetCreatedBy")
+  approvedInventorySheets InventorySheet[] @relation("InventorySheetApprovedBy")
+  adHocQueries           AdHocQuery[]    @relation("AdHocQueryCreatedBy")
+  chatMessages           ChatMessage[]   @relation("ChatMessages")
+  chatParticipants       ChatParticipant[] @relation("ChatParticipants")
 
   @@map("felhasznalok")
 }
@@ -127,6 +134,8 @@ model Account {
   cim                 String?
   email               String?
   telefon             String?
+  iparag              String?
+  regio               String?
   megjegyzesek        String?
   aktiv               Boolean       @default(true)
   createdAt           DateTime      @default(now())
@@ -140,12 +149,16 @@ model Account {
   quotes              Quote[]
   orders              Order[]
   invoiceStubs        InvoiceStub[]
+  invoices            Invoice[]
   tickets             Ticket[]
   documents           Document[]
+  chatRooms           ChatRoom[]
   customFields        AccountCustomField[]
   tasks               Task[]
 
   @@index([ownerId])
+  @@index([iparag])
+  @@index([regio])
   @@map("ugyfelek")
 }
 
@@ -335,6 +348,7 @@ model Order {
   items            OrderItem[]
   discounts        Discount[]
   invoiceStub      InvoiceStub?
+  invoice          Invoice?      @relation("OrderInvoice")
   shipments        Shipment[]
   tasks            Task[]
   returns          Return[]
@@ -398,6 +412,79 @@ model InvoiceStub {
   @@map("szamla_meta")
 }
 
+model Invoice {
+  id                String       @id @default(uuid())
+  accountId         String
+  orderId           String?
+  szamlaSzam        String       @unique
+  kiallitasDatum    DateTime     @default(now())
+  teljesitesDatum   DateTime
+  fizetesiHataridoDatum DateTime
+  fizetesiDatum     DateTime?
+  osszeg            Float
+  afa               Float
+  vegosszeg         Float
+  tipus             String       // NORMAL, STORNO, ELOSZAMLA, SZALLITASI
+  allapot           String       // VAZLAT, KIALLITVA, ELKULDVE, KIFIZETVE, STORNO, LEJART
+  fizetesiMod       String?      // BANK, KESZPENZ, KARTYA, ATUTALAS
+  szamlaNyomtatva   Boolean      @default(false)
+  navOnlineSzamlaId String?      // NAV online számla ID
+  megjegyzesek      String?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  account           Account      @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  order             Order?        @relation("OrderInvoice", fields: [orderId], references: [id], onDelete: SetNull)
+  items             InvoiceItem[]
+  payments          InvoicePayment[]
+
+  @@index([accountId])
+  @@index([orderId])
+  @@index([szamlaSzam])
+  @@index([allapot])
+  @@index([kiallitasDatum])
+  @@map("szamlak")
+}
+
+model InvoiceItem {
+  id          String   @id @default(uuid())
+  invoiceId   String
+  itemId      String?
+  nev         String
+  azonosito  String?
+  mennyiseg   Float
+  egyseg      String
+  egysegAr    Float
+  kedvezmeny  Float    @default(0)
+  afaKulcs    Float
+  nettoOsszeg Float
+  afaOsszeg   Float
+  bruttoOsszeg Float
+  megjegyzes  String?
+  sorrend     Int      @default(0)
+  createdAt   DateTime @default(now())
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  item        Item?    @relation("InvoiceItem", fields: [itemId], references: [id], onDelete: SetNull)
+
+  @@index([invoiceId])
+  @@index([itemId])
+  @@map("szamla_tetelek")
+}
+
+model InvoicePayment {
+  id              String   @id @default(uuid())
+  invoiceId       String
+  fizetesiDatum   DateTime  @default(now())
+  osszeg          Float
+  fizetesiMod     String    // BANK, KESZPENZ, KARTYA, ATUTALAS
+  tranzakcioSzam  String?
+  megjegyzesek    String?
+  createdAt       DateTime  @default(now())
+  invoice         Invoice   @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId])
+  @@map("szamla_fizetesek")
+}
+
 model Item {
   id                   String              @id @default(uuid())
   azonosito            String              @unique
@@ -426,6 +513,11 @@ model Item {
   purchaseOrderItems   PurchaseOrderItem[]
   itemSuppliers        ItemSupplier[]
   returns              Return[]
+  inventorySheetItems  InventorySheetItem[]
+  intrastatItems       IntrastatItem[]
+  invoiceItems         InvoiceItem[] @relation("InvoiceItem")
+  stockReservations    StockReservation[]
+  expectedReceiptItems ExpectedReceiptItem[]
 
   @@index([itemGroupId])
   @@map("cikkek")
@@ -447,6 +539,8 @@ model Warehouse {
   azonosito   String              @unique
   nev         String
   cim         String?
+  ertekelesMod String             @default("FIFO") // FIFO, LIFO, AVG
+  konszignacios Boolean           @default(false) // Konszignációs raktár
   aktiv       Boolean             @default(true)
   createdAt   DateTime            @default(now())
   updatedAt   DateTime            @updatedAt
@@ -455,6 +549,9 @@ model Warehouse {
   stockMoves  StockMove[]
   stockLevels StockLevel[]
   returns     Return[]
+  inventorySheets InventorySheet[]
+  reservations StockReservation[]
+  expectedReceipts ExpectedReceipt[]
 
   @@map("raktarak")
 }
@@ -473,6 +570,7 @@ model WarehouseLocation {
   updatedAt   DateTime     @updatedAt
   warehouse   Warehouse    @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
   stockLevels StockLevel[]
+  inventorySheetItems InventorySheetItem[]
 
   @@unique([warehouseId, azonosito])
   @@index([warehouseId])
@@ -485,6 +583,7 @@ model StockLevel {
   warehouseId String
   locationId String?
   mennyiseg  Float              @default(0)
+  foglaltMennyiseg Float        @default(0) // Foglalt mennyiség rendelésekhez
   minimum    Float?
   maximum    Float?
   createdAt  DateTime           @default(now())
@@ -492,6 +591,7 @@ model StockLevel {
   item       Item               @relation(fields: [itemId], references: [id])
   warehouse  Warehouse          @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
   location   WarehouseLocation? @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  reservations StockReservation[]
 
   @@unique([itemId, warehouseId, locationId])
   @@index([itemId])
@@ -505,6 +605,7 @@ model StockLot {
   warehouseId         String
   sarzsGyartasiSzam   String?
   mennyiseg           Float
+  beszerzesiAr        Float        // Beszerzési ár ezen a sarzson
   minKeszlet          Float        @default(0)
   maxKeszlet          Float?
   lejarat             DateTime?
@@ -515,6 +616,7 @@ model StockLot {
 
   @@index([itemId, warehouseId])
   @@index([sarzsGyartasiSzam])
+  @@index([createdAt])
   @@map("keszlet_tetelek")
 }
 
@@ -534,6 +636,63 @@ model StockMove {
   @@index([warehouseId])
   @@index([createdAt])
   @@map("keszlet_mozgasok")
+}
+
+model StockReservation {
+  id            String    @id @default(uuid())
+  itemId        String
+  warehouseId   String
+  locationId    String?
+  orderId       String?   // CRM rendelés ID
+  purchaseOrderId String? // Beszerzési rendelés ID
+  mennyiseg     Float
+  allapot       String    @default("FOGLALT") // FOGLALT, KISZALLITVA, TOROLVE
+  megjegyzesek  String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  item          Item      @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  warehouse     Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+
+  @@index([itemId])
+  @@index([warehouseId])
+  @@index([orderId])
+  @@index([purchaseOrderId])
+  @@index([allapot])
+  @@map("keszlet_foglaltsagok")
+}
+
+model ExpectedReceipt {
+  id            String    @id @default(uuid())
+  warehouseId   String
+  purchaseOrderId String?
+  vartBeerkezes DateTime
+  allapot       String    @default("VAR") // VAR, ERKEZETT, TOROLVE
+  megjegyzesek  String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  warehouse     Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+  items         ExpectedReceiptItem[]
+
+  @@index([warehouseId])
+  @@index([purchaseOrderId])
+  @@index([vartBeerkezes])
+  @@map("vart_beerkezesek")
+}
+
+model ExpectedReceiptItem {
+  id                String          @id @default(uuid())
+  expectedReceiptId String
+  itemId            String
+  mennyiseg         Float
+  egysegAr          Float?
+  megjegyzesek      String?
+  createdAt         DateTime        @default(now())
+  expectedReceipt   ExpectedReceipt @relation(fields: [expectedReceiptId], references: [id], onDelete: Cascade)
+  item              Item            @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@index([expectedReceiptId])
+  @@index([itemId])
+  @@map("vart_beerkezes_tetelek")
 }
 
 model Supplier {
@@ -621,6 +780,60 @@ model Message {
 
   @@index([ticketId])
   @@map("uzenetek")
+}
+
+model ChatRoom {
+  id              String        @id @default(uuid())
+  accountId       String
+  nev             String?
+  allapot         String        @default("NYITOTT") // NYITOTT, LEZART
+  utolsoUzenetId String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  account         Account       @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  messages        ChatMessage[]
+  participants    ChatParticipant[]
+
+  @@index([accountId])
+  @@index([allapot])
+  @@map("chat_szobak")
+}
+
+model ChatMessage {
+  id          String    @id @default(uuid())
+  chatRoomId String
+  userId      String?
+  felhaszCsak String?   // Felhasználó neve, ha külső
+  szoveg      String
+  tipus       String    @default("TEXT") // TEXT, FILE, IMAGE, SYSTEM
+  fajlUtvonal String?
+  olvasva     Boolean   @default(false)
+  olvasvaDatum DateTime?
+  createdAt   DateTime  @default(now())
+  chatRoom    ChatRoom  @relation(fields: [chatRoomId], references: [id], onDelete: Cascade)
+  user        User?     @relation("ChatMessages", fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([chatRoomId])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("chat_uzenetek")
+}
+
+model ChatParticipant {
+  id          String    @id @default(uuid())
+  chatRoomId String
+  userId      String?
+  felhaszCsak String?   // Külső felhasználó neve
+  szerep      String    @default("PARTICIPANT") // PARTICIPANT, ADMIN
+  csatlakozott DateTime @default(now())
+  elhagyott   DateTime?
+  chatRoom    ChatRoom  @relation(fields: [chatRoomId], references: [id], onDelete: Cascade)
+  user        User?     @relation("ChatParticipants", fields: [userId], references: [id], onDelete: SetNull)
+
+  @@unique([chatRoomId, userId])
+  @@index([chatRoomId])
+  @@index([userId])
+  @@map("chat_resztvevok")
 }
 
 model Task {
@@ -1128,4 +1341,466 @@ model ItemSupplier {
   @@index([supplierId])
   @@index([isPrimary])
   @@map("aru_szallito")
+}
+
+model InventorySheet {
+  id              String              @id @default(uuid())
+  warehouseId     String
+  azonosito       String              @unique
+  leltarDatum     DateTime            @default(now())
+  allapot         String              @default("NYITOTT") // NYITOTT, FOLYAMATBAN, BEFEJEZETT, JOVAHAGYVA, LEZARVA
+  megjegyzesek    String?
+  createdById     String?
+  approvedById    String?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  
+  warehouse       Warehouse           @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+  createdBy       User?               @relation("InventorySheetCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  approvedBy      User?               @relation("InventorySheetApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
+  items           InventorySheetItem[]
+  
+  @@index([warehouseId])
+  @@index([allapot])
+  @@index([leltarDatum])
+  @@index([createdAt])
+  @@map("leltarivek")
+}
+
+model InventorySheetItem {
+  id                String         @id @default(uuid())
+  inventorySheetId  String
+  itemId            String
+  locationId        String?
+  konyvKeszlet      Float         // Könyv szerinti készlet
+  tenylegesKeszlet  Float?        // Tényleges készlet (leltározás során)
+  kulonbseg          Float?        // Különbség (tenylegesKeszlet - konyvKeszlet)
+  megjegyzesek      String?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  
+  inventorySheet    InventorySheet @relation(fields: [inventorySheetId], references: [id], onDelete: Cascade)
+  item              Item           @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  location          WarehouseLocation? @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  
+  @@unique([inventorySheetId, itemId, locationId])
+  @@index([inventorySheetId])
+  @@index([itemId])
+  @@map("leltariv_tetelek")
+}
+
+model BugReport {
+  id            String    @id @default(uuid())
+  cim           String
+  leiras        String
+  lepesek       String?   // Lépések a hiba reprodukálásához
+  vartEredmeny  String?   // Várt eredmény
+  tenylegesEredmeny String? // Tényleges eredmény
+  prioritas     String    @default("MEDIUM") // LOW, MEDIUM, HIGH, CRITICAL
+  allapot       String    @default("OPEN") // OPEN, IN_PROGRESS, RESOLVED, CLOSED
+  kategoria     String?   // CRM, DMS, LOGISTICS, HR, CONTROLLING, SYSTEM, OTHER
+  modul         String?   // Konkrét modul vagy oldal
+  bongeszo      String?   // Böngésző információ
+  operaciosRendszer String? // Operációs rendszer
+  screenshotUtvonal String? // Screenshot fájl elérési út
+  userId        String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  user          User?     @relation("BugReports", fields: [userId], references: [id], onDelete: SetNull)
+  comments      BugReportComment[]
+  
+  @@index([allapot])
+  @@index([prioritas])
+  @@index([kategoria])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("hibabejelentesek")
+}
+
+model BugReportComment {
+  id            String    @id @default(uuid())
+  bugReportId   String
+  userId        String?
+  szoveg        String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  bugReport     BugReport @relation(fields: [bugReportId], references: [id], onDelete: Cascade)
+  user          User?     @relation("BugReportComments", fields: [userId], references: [id], onDelete: SetNull)
+  
+  @@index([bugReportId])
+  @@index([createdAt])
+  @@map("hibabejelentes_kommentek")
+}
+
+model JobPosition {
+  id          String      @id @default(uuid())
+  azonosito   String      @unique
+  nev         String
+  leiras      String?
+  feladatok   String?     // JSON vagy szöveg formátumban
+  hataskorok  String?     // JSON vagy szöveg formátumban
+  osztaly     String?     // Szervezeti besorolás - osztály
+  reszleg     String?     // Szervezeti besorolás - részleg
+  aktiv       Boolean      @default(true)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  employees   Employee[]
+  
+  @@index([osztaly])
+  @@index([reszleg])
+  @@map("munkakorok")
+}
+
+model Employee {
+  id                    String                @id @default(uuid())
+  azonosito             String                @unique
+  vezetekNev            String
+  keresztNev            String
+  szuletesiDatum        DateTime?
+  szuletesiHely         String?
+  tajSzam               String?               @unique
+  szemelyiIgazolvanySzam String?
+  lakcim                String?
+  tartozkodasiCim       String?
+  telefon               String?
+  email                 String?
+  munkaviszonyKezdete   DateTime?
+  munkaviszonyVege       DateTime?
+  munkaviszonyTipusa     String?               // HATAROZATLAN, HATAROZOTT, RESZIDOS, STB.
+  jobPositionId         String?
+  osztaly               String?
+  reszleg               String?
+  aktiv                 Boolean                @default(true)
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+  
+  jobPosition           JobPosition?          @relation(fields: [jobPositionId], references: [id], onDelete: SetNull)
+  educations            Education[]
+  languageSkills        LanguageSkill[]
+  medicalExaminations    MedicalExamination[]
+  disciplinaryActions   DisciplinaryAction[]
+  studyContracts        StudyContract[]
+  employmentContracts   EmploymentContract[]
+  
+  @@index([jobPositionId])
+  @@index([osztaly])
+  @@index([reszleg])
+  @@index([aktiv])
+  @@map("dolgozok")
+}
+
+model Education {
+  id              String    @id @default(uuid())
+  employeeId      String
+  tipus           String    // ALAPFOKU, KOZEPFOKU, FELSOFOKU, STB.
+  iskolaNev       String
+  szak            String?
+  vegzesEve       Int?
+  megjegyzesek    String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  employee        Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  
+  @@index([employeeId])
+  @@map("iskolai_vegzettsegek")
+}
+
+model LanguageSkill {
+  id              String    @id @default(uuid())
+  employeeId      String
+  nyelv           String
+  szint           String    // ALAP, KOZEP, FELSO, ANYANYELVI
+  nyelvvizsga     String?
+  megjegyzesek    String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  employee        Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  
+  @@index([employeeId])
+  @@map("nyelvtudas")
+}
+
+model MedicalExamination {
+  id              String    @id @default(uuid())
+  employeeId      String
+  vizsgalatTipusa String    // MUNKAORVOSI, PERIODIKUS, STB.
+  vizsgalatDatuma DateTime
+  ervenyessegVege DateTime?
+  eredmeny        String?   // MEGFELEL, NEM_MEGFELEL, FELTETELES
+  megjegyzesek    String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  employee        Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  
+  @@index([employeeId])
+  @@index([vizsgalatDatuma])
+  @@map("orvosi_vizsgalatok")
+}
+
+model DisciplinaryAction {
+  id              String    @id @default(uuid())
+  employeeId      String
+  datum           DateTime
+  tipus           String    // FIGYELMEZTETES, MEGROVAS, FELFUGGESZTES, STB.
+  indok            String
+  hatarozatSzam   String?
+  megjegyzesek    String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  employee        Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  
+  @@index([employeeId])
+  @@index([datum])
+  @@map("fegyelmi_elemek")
+}
+
+model StudyContract {
+  id              String    @id @default(uuid())
+  employeeId      String
+  szerzodesSzam   String
+  kezdetDatum     DateTime
+  vegDatum        DateTime?
+  tanulmanyiIntezmeny String
+  szak            String?
+  koltseg          Float?
+  visszafizetesiKotelezettseg Boolean @default(false)
+  megjegyzesek    String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  employee        Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  
+  @@index([employeeId])
+  @@index([kezdetDatum])
+  @@map("tanulmanyi_szerzodesek")
+}
+
+model EmploymentContract {
+  id              String                @id @default(uuid())
+  employeeId      String
+  szerzodesSzam   String                @unique
+  tipus           String                // HATAROZATLAN, HATAROZOTT, RESZIDOS, STB.
+  kezdetDatum     DateTime
+  vegDatum        DateTime?
+  probaidoVege    DateTime?
+  fizetes         Float?
+  megjegyzesek    String?
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+  
+  employee        Employee              @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  amendments      ContractAmendment[]
+  
+  @@index([employeeId])
+  @@index([kezdetDatum])
+  @@index([vegDatum])
+  @@map("munkaszerzodesek")
+}
+
+model ContractAmendment {
+  id                    String              @id @default(uuid())
+  employmentContractId  String
+  datum                 DateTime
+  tipus                 String              // MODOSITAS, KIEGESZITES, MEGSZUNES, STB.
+  leiras                String
+  ujFizetes             Float?
+  ujVegDatum            DateTime?
+  megjegyzesek          String?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+  
+  employmentContract    EmploymentContract  @relation(fields: [employmentContractId], references: [id], onDelete: Cascade)
+  
+  @@index([employmentContractId])
+  @@index([datum])
+  @@map("szerzodes_modositasok")
+}
+
+model IntrastatDeclaration {
+  id                String                @id @default(uuid())
+  ev                Int
+  honap             Int
+  allapot           String                @default("NYITOTT") // NYITOTT, KULDESRE_KESZ, KULDOOTT, VISSZAIGAZOLT
+  kuldesDatuma      DateTime?
+  visszaigazolasDatuma DateTime?
+  megjegyzesek      String?
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
+  items             IntrastatItem[]
+  
+  @@unique([ev, honap])
+  @@index([ev, honap])
+  @@index([allapot])
+  @@map("intrastat_bejelentesek")
+}
+
+model IntrastatItem {
+  id                    String              @id @default(uuid())
+  intrastatDeclarationId String
+  itemId                String?
+  irany                 String              // BEVETEL, KIVETEL
+  partnerOrszagKod      String              // ISO 3166-1 alpha-2 (pl. DE, FR)
+  szallitasiMod         String              // 1-9 kódok
+  statisztikaiErtek     Float
+  nettoSuly             Float?              // kg
+  kiegeszitoEgység      String?             // pl. db, m2
+  kiegeszitoMennyiseg   Float?
+  termekkod             String?             // CN8 kód
+  megjegyzesek          String?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+  
+  intrastatDeclaration  IntrastatDeclaration @relation(fields: [intrastatDeclarationId], references: [id], onDelete: Cascade)
+  item                  Item?                @relation(fields: [itemId], references: [id], onDelete: SetNull)
+  
+  @@index([intrastatDeclarationId])
+  @@index([itemId])
+  @@index([partnerOrszagKod])
+  @@map("intrastat_tetelek")
+}
+
+model DatabaseConnection {
+  id              String    @id @default(uuid())
+  nev             String
+  tipus           String    // SQLITE, POSTGRESQL, MYSQL, MSSQL, ORACLE
+  host            String?
+  port            Int?
+  database        String?
+  username        String?
+  password        String?   // Encrypted
+  connectionString String?  // Full connection string
+  aktiv           Boolean   @default(true)
+  megjegyzesek    String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  @@index([aktiv])
+  @@map("adatbazis_kapcsolatok")
+}
+
+model KPI {
+  id              String    @id @default(uuid())
+  azonosito       String    @unique
+  nev             String
+  leiras          String?
+  tipus           String    // NUMBER, PERCENTAGE, CURRENCY, NATURAL
+  formula         String?   // Képlet vagy lekérdezés
+  parameterek     String?   // JSON formátumban
+  egyseg          String?   // Mértékegység
+  celErtek        Float?
+  aktualisErtek   Float?
+  utolsoFrissites DateTime?
+  aktiv           Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  @@index([aktiv])
+  @@map("kpi_kulcsszervezo")
+}
+
+model QueryTemplate {
+  id              String    @id @default(uuid())
+  azonosito       String    @unique
+  nev             String
+  leiras          String?
+  query           String    // SQL vagy ad-hoc lekérdezés
+  parameterek     String?   // JSON formátumban a paraméterek definíciója
+  kategoria       String?
+  aktiv           Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  @@index([kategoria])
+  @@index([aktiv])
+  @@map("lekerdezes_sablonok")
+}
+
+model AdHocQuery {
+  id              String    @id @default(uuid())
+  nev             String
+  leiras          String?
+  query           String
+  parameterek     String?   // JSON formátumban a paraméter értékek
+  eredmeny        String?   // JSON formátumban az eredmények
+  createdById     String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  createdBy       User?     @relation("AdHocQueryCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  
+  @@index([createdById])
+  @@index([createdAt])
+  @@map("ad_hoc_lekerdezesek")
+}
+
+model CostModel {
+  id              String    @id @default(uuid())
+  azonosito       String    @unique
+  nev             String
+  leiras          String?
+  tipus           String    // FIXED, VARIABLE, MIXED
+  parameterek     String?   // JSON formátumban
+  formula         String?   // Költségképlet
+  aktiv           Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  @@index([aktiv])
+  @@map("koltseg_modellek")
+}
+
+model QuantityModel {
+  id              String    @id @default(uuid())
+  azonosito       String    @unique
+  nev             String
+  leiras          String?
+  parameterek     String?   // JSON formátumban
+  formula         String?   // Mennyiségi képlet
+  aktiv           Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  @@index([aktiv])
+  @@map("mennyisegi_modellek")
+}
+
+model DataSource {
+  id              String    @id @default(uuid())
+  nev             String
+  tipus           String    // DATABASE, FILE, API, MANUAL
+  connectionId   String?   // DatabaseConnection ID ha tipus = DATABASE
+  konfiguracio    String?   // JSON formátumban
+  aktiv           Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  connection      DatabaseConnection? @relation(fields: [connectionId], references: [id], onDelete: SetNull)
+  
+  @@index([aktiv])
+  @@map("adatforrasok")
+}
+
+model DataLoadJob {
+  id              String    @id @default(uuid())
+  dataSourceId    String
+  nev             String
+  schedule        String?   // Cron format vagy "MANUAL"
+  utolsoFuttatas DateTime?
+  kovetkezoFuttatas DateTime?
+  allapot         String    @default("INACTIVE") // ACTIVE, INACTIVE, ERROR
+  hibaUzenet      String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  dataSource      DataSource @relation(fields: [dataSourceId], references: [id], onDelete: Cascade)
+  
+  @@index([dataSourceId])
+  @@index([allapot])
+  @@map("adatbetoltes_feladatok")
 }

@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { SystemSettingsService } from '../system/settings.service';
+import PDFDocument from 'pdfkit';
+import ExcelJS from 'exceljs';
+import { Response } from 'express';
 
 export interface StockLevelDto {
   id: string;
@@ -214,5 +217,208 @@ export class InventoryService {
     return await this.prisma.stockLevel.delete({
       where: { id },
     });
+  }
+
+  async generateInventorySheetPdf(warehouseId: string, res: Response) {
+    const warehouse = await this.prisma.warehouse.findUnique({
+      where: { id: warehouseId },
+    });
+
+    if (!warehouse) {
+      throw new Error('Raktár nem található');
+    }
+
+    const stockLevels = await this.prisma.stockLevel.findMany({
+      where: { warehouseId },
+      include: {
+        item: true,
+        location: true,
+      },
+      orderBy: [
+        { item: { nev: 'asc' } },
+      ],
+    });
+
+    const doc = new PDFDocument({ margin: 50 });
+    
+    // Set response headers
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="leltar_${warehouse.azonosito}_${new Date().toISOString().split('T')[0]}.pdf"`);
+    
+    doc.pipe(res);
+
+    // Header
+    doc.fontSize(20).text('Leltár Ív', { align: 'center' });
+    doc.moveDown();
+    
+    // Warehouse info
+    doc.fontSize(12);
+    doc.text(`Raktár: ${warehouse.nev}`, { align: 'left' });
+    doc.text(`Azonosító: ${warehouse.azonosito}`, { align: 'left' });
+    if (warehouse.cim) {
+      doc.text(`Cím: ${warehouse.cim}`, { align: 'left' });
+    }
+    doc.text(`Dátum: ${new Date().toLocaleDateString('hu-HU')}`, { align: 'left' });
+    doc.moveDown();
+
+    // Table header
+    const tableTop = doc.y;
+    const itemHeight = 20;
+    const pageWidth = doc.page.width;
+    const pageMargins = doc.page.margins;
+    const tableWidth = pageWidth - pageMargins.left - pageMargins.right;
+    
+    const colWidths = {
+      nev: tableWidth * 0.25,
+      azonosito: tableWidth * 0.15,
+      mennyiseg: tableWidth * 0.12,
+      hely: tableWidth * 0.15,
+      minimum: tableWidth * 0.11,
+      maximum: tableWidth * 0.11,
+      egyseg: tableWidth * 0.11,
+    };
+
+    let y = tableTop;
+    
+    // Header row
+    doc.fontSize(10).font('Helvetica-Bold');
+    doc.text('Terméknév', pageMargins.left, y, { width: colWidths.nev });
+    doc.text('Azonosító', pageMargins.left + colWidths.nev, y, { width: colWidths.azonosito });
+    doc.text('Készlet', pageMargins.left + colWidths.nev + colWidths.azonosito, y, { width: colWidths.mennyiseg });
+    doc.text('Hely', pageMargins.left + colWidths.nev + colWidths.azonosito + colWidths.mennyiseg, y, { width: colWidths.hely });
+    doc.text('Minimum', pageMargins.left + colWidths.nev + colWidths.azonosito + colWidths.mennyiseg + colWidths.hely, y, { width: colWidths.minimum });
+    doc.text('Maximum', pageMargins.left + colWidths.nev + colWidths.azonosito + colWidths.mennyiseg + colWidths.hely + colWidths.minimum, y, { width: colWidths.maximum });
+    doc.text('Egység', pageMargins.left + colWidths.nev + colWidths.azonosito + colWidths.mennyiseg + colWidths.hely + colWidths.minimum + colWidths.maximum, y, { width: colWidths.egyseg });
+    
+    y += itemHeight;
+    doc.moveTo(pageMargins.left, y).lineTo(pageMargins.left + tableWidth, y).stroke();
+    y += 5;
+
+    // Data rows
+    doc.fontSize(9).font('Helvetica');
+    for (const stock of stockLevels) {
+      if (y > doc.page.height - pageMargins.bottom - itemHeight) {
+        doc.addPage();
+        y = pageMargins.top;
+      }
+
+      doc.text(stock.item?.nev || '-', pageMargins.left, y, { width: colWidths.nev });
+      doc.text(stock.item?.azonosito || '-', pageMargins.left + colWidths.nev, y, { width: colWidths.azonosito });
+      doc.text(stock.mennyiseg?.toLocaleString('hu-HU') || '0', pageMargins.left + colWidths.nev + colWidths.azonosito, y, { width: colWidths.mennyiseg });
+      doc.text(stock.location?.nev || '-', pageMargins.left + colWidths.nev + colWidths.azonosito + colWidths.mennyiseg, y, { width: colWidths.hely });
+      doc.text(stock.minimum !== null && stock.minimum !== undefined ? stock.minimum.toLocaleString('hu-HU') : '-', pageMargins.left + colWidths.nev + colWidths.azonosito + colWidths.mennyiseg + colWidths.hely, y, { width: colWidths.minimum });
+      doc.text(stock.maximum !== null && stock.maximum !== undefined ? stock.maximum.toLocaleString('hu-HU') : '-', pageMargins.left + colWidths.nev + colWidths.azonosito + colWidths.mennyiseg + colWidths.hely + colWidths.minimum, y, { width: colWidths.maximum });
+      doc.text(stock.item?.egyseg || '-', pageMargins.left + colWidths.nev + colWidths.azonosito + colWidths.mennyiseg + colWidths.hely + colWidths.minimum + colWidths.maximum, y, { width: colWidths.egyseg });
+      
+      y += itemHeight;
+    }
+
+    // Footer
+    doc.fontSize(8).font('Helvetica');
+    doc.text(`Összesen: ${stockLevels.length} tétel`, pageMargins.left, doc.page.height - pageMargins.bottom - 20);
+
+    doc.end();
+  }
+
+  async generateInventorySheetExcel(warehouseId: string, res: Response) {
+    const warehouse = await this.prisma.warehouse.findUnique({
+      where: { id: warehouseId },
+    });
+
+    if (!warehouse) {
+      throw new Error('Raktár nem található');
+    }
+
+    const stockLevels = await this.prisma.stockLevel.findMany({
+      where: { warehouseId },
+      include: {
+        item: true,
+        location: true,
+      },
+      orderBy: [
+        { item: { nev: 'asc' } },
+      ],
+    });
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Leltár Ív');
+
+    // Header
+    worksheet.mergeCells('A1:H1');
+    worksheet.getCell('A1').value = 'Leltár Ív';
+    worksheet.getCell('A1').font = { size: 16, bold: true };
+    worksheet.getCell('A1').alignment = { horizontal: 'center', vertical: 'middle' };
+
+    // Warehouse info
+    worksheet.getCell('A3').value = 'Raktár:';
+    worksheet.getCell('B3').value = warehouse.nev;
+    worksheet.getCell('A4').value = 'Azonosító:';
+    worksheet.getCell('B4').value = warehouse.azonosito;
+    if (warehouse.cim) {
+      worksheet.getCell('A5').value = 'Cím:';
+      worksheet.getCell('B5').value = warehouse.cim;
+    }
+    worksheet.getCell('A6').value = 'Dátum:';
+    worksheet.getCell('B6').value = new Date().toLocaleDateString('hu-HU');
+
+    // Table header
+    const headerRow = 8;
+    worksheet.getCell(`A${headerRow}`).value = 'Terméknév';
+    worksheet.getCell(`B${headerRow}`).value = 'Azonosító';
+    worksheet.getCell(`C${headerRow}`).value = 'Készlet';
+    worksheet.getCell(`D${headerRow}`).value = 'Hely';
+    worksheet.getCell(`E${headerRow}`).value = 'Minimum';
+    worksheet.getCell(`F${headerRow}`).value = 'Maximum';
+    worksheet.getCell(`G${headerRow}`).value = 'Egység';
+    worksheet.getCell(`H${headerRow}`).value = 'Beszerzési ár';
+    worksheet.getCell(`I${headerRow}`).value = 'Eladási ár';
+    worksheet.getCell(`J${headerRow}`).value = 'ÁFA kulcs';
+    worksheet.getCell(`K${headerRow}`).value = 'Szavatossági idő (nap)';
+
+    // Style header
+    worksheet.getRow(headerRow).font = { bold: true };
+    worksheet.getRow(headerRow).fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FFE0E0E0' },
+    };
+
+    // Data rows
+    stockLevels.forEach((stock, index) => {
+      const row = headerRow + 1 + index;
+      worksheet.getCell(`A${row}`).value = stock.item?.nev || '-';
+      worksheet.getCell(`B${row}`).value = stock.item?.azonosito || '-';
+      worksheet.getCell(`C${row}`).value = stock.mennyiseg || 0;
+      worksheet.getCell(`C${row}`).numFmt = '#,##0.00';
+      worksheet.getCell(`D${row}`).value = stock.location?.nev || '-';
+      worksheet.getCell(`E${row}`).value = stock.minimum !== null && stock.minimum !== undefined ? stock.minimum : '-';
+      if (stock.minimum !== null && stock.minimum !== undefined) {
+        worksheet.getCell(`E${row}`).numFmt = '#,##0.00';
+      }
+      worksheet.getCell(`F${row}`).value = stock.maximum !== null && stock.maximum !== undefined ? stock.maximum : '-';
+      if (stock.maximum !== null && stock.maximum !== undefined) {
+        worksheet.getCell(`F${row}`).numFmt = '#,##0.00';
+      }
+      worksheet.getCell(`G${row}`).value = stock.item?.egyseg || '-';
+      worksheet.getCell(`H${row}`).value = stock.item?.beszerzesiAr || 0;
+      worksheet.getCell(`H${row}`).numFmt = '#,##0';
+      worksheet.getCell(`I${row}`).value = stock.item?.eladasiAr || 0;
+      worksheet.getCell(`I${row}`).numFmt = '#,##0';
+      worksheet.getCell(`J${row}`).value = stock.item?.afaKulcs || 0;
+      worksheet.getCell(`J${row}`).numFmt = '0.00%';
+      worksheet.getCell(`K${row}`).value = stock.item?.szavatossagiIdoNap !== null && stock.item?.szavatossagiIdoNap !== undefined ? stock.item.szavatossagiIdoNap : '-';
+    });
+
+    // Auto-fit columns
+    worksheet.columns.forEach((column) => {
+      column.width = 15;
+    });
+
+    // Set response headers
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="leltar_${warehouse.azonosito}_${new Date().toISOString().split('T')[0]}.xlsx"`);
+
+    await workbook.xlsx.write(res);
+    res.end();
   }
 }

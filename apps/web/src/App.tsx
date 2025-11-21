@@ -14,6 +14,20 @@ import Orders from './pages/Orders';
 import OrdersLogistics from './pages/OrdersLogistics';
 import Team from './pages/Team';
 import Login from './pages/Login';
+import BugReport from './pages/BugReport';
+import InventorySheets from './pages/InventorySheets';
+import JobPositions from './pages/HR/JobPositions';
+import Employees from './pages/HR/Employees';
+import Contracts from './pages/HR/Contracts';
+import HrReports from './pages/HR/Reports';
+import Intrastat from './pages/Intrastat';
+import DatabaseConnections from './pages/Controlling/DatabaseConnections';
+import KPI from './pages/Controlling/KPI';
+import Queries from './pages/Controlling/Queries';
+import Invoices from './pages/CRM/Invoices';
+import Chat from './pages/CRM/Chat';
+import StockValuation from './pages/Logistics/StockValuation';
+import StockReservations from './pages/Logistics/StockReservations';
 import { BackendStatus } from './components/BackendStatus';
 import { NotificationPanel } from './components/NotificationPanel';
 import { LoadingScreen } from './components/LoadingScreen';
@@ -165,7 +179,9 @@ function App() {
                     { to: '/crm', label: 'Partnerek' },
                     { to: '/opportunities', label: 'Lehetőségek' },
                     { to: '/quotes', label: 'Árajánlatok' },
-                    { to: '/orders', label: 'Rendelések' }
+                    { to: '/orders', label: 'Rendelések' },
+                    { to: '/crm/invoices', label: 'Számlák' },
+                    { to: '/crm/chat', label: 'Chat' }
                   ]}
                 />
                 <Link 
@@ -201,7 +217,28 @@ function App() {
                     { to: '/products', label: 'Termékek' },
                     { to: '/returns', label: 'Visszárúk' },
                     { to: '/suppliers', label: 'Szállítók' },
-                    { to: '/orders-logistics', label: 'Rendelések' }
+                    { to: '/orders-logistics', label: 'Rendelések' },
+                    { to: '/inventory-sheets', label: 'Leltárívek' },
+                    { to: '/intrastat', label: 'INTRASTAT' },
+                    { to: '/logistics/stock-valuation', label: 'Készletérték értékelés' },
+                    { to: '/logistics/stock-reservations', label: 'Foglaltság és konszignáció' }
+                  ]}
+                />
+                <DropdownMenu 
+                  title="HR"
+                  items={[
+                    { to: '/hr/job-positions', label: 'Munkakörök' },
+                    { to: '/hr/employees', label: 'Dolgozók' },
+                    { to: '/hr/contracts', label: 'Munkaszerződések' },
+                    { to: '/hr/reports', label: 'Riportok' }
+                  ]}
+                />
+                <DropdownMenu 
+                  title="Kontrolling"
+                  items={[
+                    { to: '/controlling/database-connections', label: 'Adatbázis kapcsolatok' },
+                    { to: '/controlling/kpi', label: 'KPI mutatószámok' },
+                    { to: '/controlling/queries', label: 'Lekérdezések' }
                   ]}
                 />
                 <Link 
@@ -216,6 +253,19 @@ function App() {
                   }}
                 >
                   Beállítások
+                </Link>
+                <Link 
+                  to="/bug-report" 
+                  className="hover:bg-gray-800 px-3 py-2 rounded"
+                  onClick={() => {
+                    if (isElectron) {
+                      import('./components/DebugPanel').then(module => {
+                        module.addLog('info', 'Navigation: Clicked Hibabejelentés', { to: '/bug-report' });
+                      }).catch(() => {});
+                    }
+                  }}
+                >
+                  Hibabejelentés
                 </Link>
               </div>
             </div>
@@ -242,6 +292,8 @@ function App() {
           <Route path="/opportunities" element={<Opportunities />} />
           <Route path="/quotes" element={<Quotes />} />
           <Route path="/orders" element={<Orders />} />
+          <Route path="/crm/invoices" element={<Invoices />} />
+          <Route path="/crm/chat" element={<Chat />} />
           <Route path="/documents" element={<Documents />} />
           <Route path="/team" element={<Team />} />
           <Route path="/warehouses" element={<Warehouses />} />
@@ -249,7 +301,19 @@ function App() {
           <Route path="/returns" element={<Returns />} />
           <Route path="/suppliers" element={<Suppliers />} />
           <Route path="/orders-logistics" element={<OrdersLogistics />} />
+          <Route path="/inventory-sheets" element={<InventorySheets />} />
+          <Route path="/intrastat" element={<Intrastat />} />
+          <Route path="/logistics/stock-valuation" element={<StockValuation />} />
+          <Route path="/logistics/stock-reservations" element={<StockReservations />} />
+          <Route path="/hr/job-positions" element={<JobPositions />} />
+          <Route path="/hr/employees" element={<Employees />} />
+          <Route path="/hr/contracts" element={<Contracts />} />
+          <Route path="/hr/reports" element={<HrReports />} />
+          <Route path="/controlling/database-connections" element={<DatabaseConnections />} />
+          <Route path="/controlling/kpi" element={<KPI />} />
+          <Route path="/controlling/queries" element={<Queries />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/bug-report" element={<BugReport />} />
         </Routes>
       </main>
     </div>

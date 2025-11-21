@@ -116,6 +116,13 @@ export enum Permission {
   SYSTEM_AUDIT_EXPORT = 'system:audit_export',
   SYSTEM_DIAGNOSTICS = 'system:diagnostics',
   
+  // HR Permissions
+  HR_VIEW = 'hr:view',
+  HR_CREATE = 'hr:create',
+  HR_EDIT = 'hr:edit',
+  HR_DELETE = 'hr:delete',
+  HR_REPORT = 'hr:report',
+  
   // User Management
   USER_VIEW = 'user:view',
   USER_CREATE = 'user:create',
@@ -132,6 +139,8 @@ export enum Permission {
   // Report Permissions
   REPORT_VIEW = 'report:view',
   REPORT_CREATE = 'report:create',
+  REPORT_EDIT = 'report:edit',
+  REPORT_DELETE = 'report:delete',
   REPORT_EXPORT = 'report:export',
   
   // Team Communication Permissions
@@ -277,6 +286,12 @@ export const PermissionDescriptions: Record<Permission, { nev: string; modulo: s
   [Permission.SYSTEM_AUDIT_EXPORT]: { nev: 'Audit exportálás', modulo: 'Rendszer', leiras: 'Audit naplók exportálása' },
   [Permission.SYSTEM_DIAGNOSTICS]: { nev: 'Diagnosztika', modulo: 'Rendszer', leiras: 'Rendszer diagnosztika futtatása' },
   
+  [Permission.HR_VIEW]: { nev: 'HR adatok megtekintése', modulo: 'HR', leiras: 'Dolgozói adatok böngészése' },
+  [Permission.HR_CREATE]: { nev: 'HR adat létrehozás', modulo: 'HR', leiras: 'Új dolgozók, munkakörök felvétele' },
+  [Permission.HR_EDIT]: { nev: 'HR adat szerkesztés', modulo: 'HR', leiras: 'Dolgozói adatok módosítása' },
+  [Permission.HR_DELETE]: { nev: 'HR adat törlés', modulo: 'HR', leiras: 'Dolgozói adatok törlése' },
+  [Permission.HR_REPORT]: { nev: 'HR riportok', modulo: 'HR', leiras: 'NAV, KSH riportok generálása' },
+  
   [Permission.USER_VIEW]: { nev: 'Felhasználók megtekintése', modulo: 'Felhasználók', leiras: 'Felhasználók listázása' },
   [Permission.USER_CREATE]: { nev: 'Felhasználó létrehozás', modulo: 'Felhasználók', leiras: 'Új felhasználók felvétele' },
   [Permission.USER_EDIT]: { nev: 'Felhasználó szerkesztés', modulo: 'Felhasználók', leiras: 'Felhasználók módosítása' },
@@ -290,6 +305,8 @@ export const PermissionDescriptions: Record<Permission, { nev: string; modulo: s
   
   [Permission.REPORT_VIEW]: { nev: 'Jelentések megtekintése', modulo: 'Jelentések', leiras: 'Riportok böngészése' },
   [Permission.REPORT_CREATE]: { nev: 'Jelentés készítés', modulo: 'Jelentések', leiras: 'Új riportok generálása' },
+  [Permission.REPORT_EDIT]: { nev: 'Jelentés szerkesztés', modulo: 'Jelentések', leiras: 'Riportok módosítása' },
+  [Permission.REPORT_DELETE]: { nev: 'Jelentés törlés', modulo: 'Jelentések', leiras: 'Riportok törlése' },
   [Permission.REPORT_EXPORT]: { nev: 'Jelentés exportálás', modulo: 'Jelentések', leiras: 'Riportok exportálása' },
   
   [Permission.TEAM_VIEW]: { nev: 'Csapat kommunikáció megtekintése', modulo: 'Csapat kommunikáció', leiras: 'Csapat kommunikáció modulban való böngészés' },

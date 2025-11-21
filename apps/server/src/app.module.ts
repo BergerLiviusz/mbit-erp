@@ -14,6 +14,8 @@ import { BackupModule } from './common/backup/backup.module';
 import { SystemModule } from './system/system.module';
 import { SeedModule } from './seed/seed.module';
 import { TeamModule } from './team/team.module';
+import { HrModule } from './hr/hr.module';
+import { ControllingModule } from './controlling/controlling.module';
 
 @Module({
   imports: [
@@ -30,6 +32,8 @@ import { TeamModule } from './team/team.module';
     OldAuditModule,
     SystemModule,
     TeamModule,
+    HrModule,
+    ControllingModule,
   ],
   controllers: [AppController],
   providers: [AppService],

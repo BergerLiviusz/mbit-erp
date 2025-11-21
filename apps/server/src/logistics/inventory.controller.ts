@@ -1,9 +1,10 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards, Res } from '@nestjs/common';
 import { InventoryService } from './inventory.service';
 import { Permissions } from '../common/rbac/rbac.decorator';
 import { Permission } from '../common/rbac/permission.enum';
 import { RbacGuard } from '../common/rbac/rbac.guard';
 import { AuditService } from '../common/audit/audit.service';
+import { Response } from 'express';
 
 @Controller('logistics/inventory')
 @UseGuards(RbacGuard)
@@ -79,5 +80,23 @@ export class InventoryController {
       await this.auditService.logDelete('StockLevel', id, oldStockLevel);
     }
     return { message: 'Készletszint törölve' };
+  }
+
+  @Get('warehouse/:warehouseId/inventory-sheet/pdf')
+  @Permissions(Permission.STOCK_VIEW)
+  async generateInventorySheetPdf(
+    @Param('warehouseId') warehouseId: string,
+    @Res() res: Response,
+  ) {
+    await this.inventoryService.generateInventorySheetPdf(warehouseId, res);
+  }
+
+  @Get('warehouse/:warehouseId/inventory-sheet/excel')
+  @Permissions(Permission.STOCK_VIEW)
+  async generateInventorySheetExcel(
+    @Param('warehouseId') warehouseId: string,
+    @Res() res: Response,
+  ) {
+    await this.inventoryService.generateInventorySheetExcel(warehouseId, res);
   }
 }

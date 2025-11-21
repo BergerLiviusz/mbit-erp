@@ -40,7 +40,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Generate Prisma Client and validate migrations
+      - name: Generate Prisma Client and validate schema
         shell: pwsh
         run: |
           Write-Host "=== Generating Prisma Client ==="
@@ -48,54 +48,45 @@ jobs:
           npx prisma generate
           
           Write-Host ""
-          Write-Host "=== Validating migration files ==="
-          $migrationFile = "prisma/migrations/20250119120000_add_item_warranty_period/migration.sql"
-          if (Test-Path $migrationFile) {
-            Write-Host "✅ Migration file found: $migrationFile"
-            Write-Host "Migration will be applied automatically when the app runs for the first time"
-          } else {
-            Write-Host "⚠️ WARNING: Migration file not found: $migrationFile"
-            Write-Host "This may cause issues if the database schema is not up to date"
-          }
-
-      - name: Validate Prisma migrations
-        shell: pwsh
-        run: |
-          Write-Host "=== Validating Prisma migrations ==="
-          cd apps/server
-          
-          # Check if migration files exist
-          $migrationsDir = "prisma/migrations"
-          if (-not (Test-Path $migrationsDir)) {
-            Write-Host "❌ ERROR: Migrations directory not found!"
-            exit 1
-          }
-          
-          $migrations = Get-ChildItem $migrationsDir -Directory | Where-Object { $_.Name -match '^\d{14}_' }
-          Write-Host "Found $($migrations.Count) migration(s)"
-          
-          foreach ($migration in $migrations) {
-            $migrationFile = Join-Path $migration.FullName "migration.sql"
-            if (-not (Test-Path $migrationFile)) {
-              Write-Host "❌ ERROR: Migration SQL file not found: $($migration.Name)"
-              exit 1
-            }
-            Write-Host "✅ $($migration.Name)"
-          }
+          Write-Host "=== Validating Prisma schema ==="
+          npx prisma validate
           
           Write-Host ""
-          Write-Host "=== Checking for new warranty period migration ==="
-          $warrantyMigration = Get-ChildItem $migrationsDir -Directory | Where-Object { $_.Name -like '*warranty*' }
-          if ($warrantyMigration) {
-            Write-Host "✅ Warranty period migration found: $($warrantyMigration.Name)"
+          Write-Host "=== Checking for migration files ==="
+          $migrationsDir = "prisma/migrations"
+          if (Test-Path $migrationsDir) {
+            $migrations = Get-ChildItem $migrationsDir -Directory | Where-Object { $_.Name -match '^\d{14}_' }
+            Write-Host "Found $($migrations.Count) migration(s)"
+            
+            foreach ($migration in $migrations) {
+              $migrationFile = Join-Path $migration.FullName "migration.sql"
+              if (Test-Path $migrationFile) {
+                Write-Host "✅ $($migration.Name)"
+              } else {
+                Write-Host "⚠️ WARNING: Migration SQL file not found: $($migration.Name)"
+              }
+            }
           } else {
-            Write-Host "⚠️ WARNING: Warranty period migration not found (may not be needed if already applied)"
+            Write-Host "⚠️ WARNING: Migrations directory not found"
+            Write-Host "Note: Prisma will use db push for schema synchronization in Electron environment"
           }
 
       - name: Build server
+        shell: pwsh
         run: |
+          Write-Host "=== Building server ==="
           cd apps/server
           npm run build
+          
+          Write-Host ""
+          Write-Host "=== Verifying build output ==="
+          if (-not (Test-Path "dist")) {
+            Write-Host "❌ ERROR: Build output directory not found!"
+            exit 1
+          }
+          
+          $distFiles = Get-ChildItem dist -Recurse -File | Measure-Object
+          Write-Host "✅ Build completed: $($distFiles.Count) files in dist/"
 
       - name: Install server dependencies in HOISTED mode for packaging
         shell: pwsh
@@ -179,6 +170,42 @@ jobs:
           $size = (Get-ChildItem node_modules -Recurse -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum).Sum / 1MB
           Write-Host ("{0:N2} MB" -f $size)
 
+      - name: Build frontend
+        shell: pwsh
+        run: |
+          Write-Host "=== Building frontend ==="
+          cd apps/web
+          $env:ELECTRON_BUILD = "true"
+          npm run build
+          
+          Write-Host ""
+          Write-Host "=== Verifying frontend build output ==="
+          if (-not (Test-Path "dist")) {
+            Write-Host "❌ ERROR: Frontend build output directory not found!"
+            exit 1
+          }
+          
+          $distFiles = Get-ChildItem dist -Recurse -File | Measure-Object
+          Write-Host "✅ Frontend build completed: $($distFiles.Count) files in dist/"
+
+      - name: Build Electron main process
+        shell: pwsh
+        run: |
+          Write-Host "=== Building Electron main process ==="
+          cd apps/desktop
+          npx rimraf tsconfig.tsbuildinfo
+          npx tsc
+          
+          Write-Host ""
+          Write-Host "=== Verifying Electron build output ==="
+          if (-not (Test-Path "dist-electron")) {
+            Write-Host "❌ ERROR: Electron build output directory not found!"
+            exit 1
+          }
+          
+          $electronFiles = Get-ChildItem dist-electron -Recurse -File | Measure-Object
+          Write-Host "✅ Electron build completed: $($electronFiles.Count) files in dist-electron/"
+
       - name: Verify icon files exist
         shell: pwsh
         run: |
@@ -219,10 +246,22 @@ jobs:
             Write-Host "✅ icon.png found: $size KB"
           }
 
-      - name: Build desktop app
+      - name: Package desktop app
+        shell: pwsh
         run: |
+          Write-Host "=== Packaging desktop app ==="
           cd apps/desktop
           npm run package:${{ matrix.platform }}
+          
+          Write-Host ""
+          Write-Host "=== Verifying package output ==="
+          if (-not (Test-Path "release")) {
+            Write-Host "❌ ERROR: Release folder not found!"
+            exit 1
+          }
+          
+          $releaseFiles = Get-ChildItem release -Recurse -File | Measure-Object
+          Write-Host "✅ Package completed: $($releaseFiles.Count) files in release/"
 
       - name: Verify packaged build (Windows)
         if: matrix.os == 'windows-latest'
@@ -303,6 +342,23 @@ jobs:
           }
           
           Write-Host ""
+          Write-Host "=== Verifying Prisma schema and client in packaged build ==="
+          $prismaSchema = "$unpackedBackend/prisma/schema.prisma"
+          $prismaClient = "$unpackedBackend/node_modules/.prisma/client"
+          
+          if (-not (Test-Path $prismaSchema)) {
+            Write-Host "❌ CRITICAL ERROR: Prisma schema not found in packaged build!"
+            exit 1
+          }
+          Write-Host "✅ Prisma schema found"
+          
+          if (-not (Test-Path $prismaClient)) {
+            Write-Host "❌ CRITICAL ERROR: Prisma client not found in packaged build!"
+            exit 1
+          }
+          Write-Host "✅ Prisma client found"
+          
+          Write-Host ""
           Write-Host "✅ Backend dependencies successfully bundled (all real files with content)"
           
           $nodeModulesSize = (Get-ChildItem "$unpackedBackend/node_modules" -Recurse -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum).Sum / 1MB
@@ -311,6 +367,18 @@ jobs:
           Write-Host ""
           Write-Host "Sample packages in bundle:"
           Get-ChildItem "$unpackedBackend/node_modules/" | Select-Object -First 10
+          
+          Write-Host ""
+          Write-Host "=== Verifying frontend in packaged build ==="
+          $unpackedFrontend = "apps/desktop/release/win-unpacked/resources/frontend"
+          if (-not (Test-Path $unpackedFrontend)) {
+            Write-Host "❌ CRITICAL ERROR: Frontend not found in packaged build!"
+            exit 1
+          }
+          Write-Host "✅ Frontend found"
+          
+          $frontendFiles = Get-ChildItem $unpackedFrontend -Recurse -File | Measure-Object
+          Write-Host ("Frontend files: {0}" -f $frontendFiles.Count)
           
           Write-Host ""
           Write-Host "=== Verifying icon file in packaged build ==="
@@ -419,21 +487,13 @@ jobs:
             apps/desktop/release/*Portable*.zip
           retention-days: 30
 
-      - name: Upload artifacts (macOS)
-        if: matrix.os == 'macos-latest'
-        uses: actions/upload-artifact@v4
-        with:
-          name: mbit-erp-macos-installer
-          path: |
-            apps/desktop/release/*.dmg
-          retention-days: 30
-
       - name: Create Release (on tag)
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v1
         with:
           files: |
             apps/desktop/release/*.exe
+            apps/desktop/release/*Portable*.zip
           draft: false
           prerelease: false
         env:
