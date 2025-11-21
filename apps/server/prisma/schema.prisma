@@ -347,8 +347,8 @@ model Order {
   quote            Quote?        @relation(fields: [quoteId], references: [id], onDelete: SetNull)
   items            OrderItem[]
   discounts        Discount[]
+  invoices         Invoice[]      @relation("OrderInvoices")
   invoiceStub      InvoiceStub?
-  invoice          Invoice?      @relation("OrderInvoice")
   shipments        Shipment[]
   tasks            Task[]
   returns          Return[]
@@ -433,7 +433,7 @@ model Invoice {
   createdAt         DateTime     @default(now())
   updatedAt         DateTime     @updatedAt
   account           Account      @relation(fields: [accountId], references: [id], onDelete: Cascade)
-  order             Order?        @relation("OrderInvoice", fields: [orderId], references: [id], onDelete: SetNull)
+  order             Order?        @relation("OrderInvoices", fields: [orderId], references: [id], onDelete: SetNull)
   items             InvoiceItem[]
   payments          InvoicePayment[]
 
@@ -591,7 +591,6 @@ model StockLevel {
   item       Item               @relation(fields: [itemId], references: [id])
   warehouse  Warehouse          @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
   location   WarehouseLocation? @relation(fields: [locationId], references: [id], onDelete: SetNull)
-  reservations StockReservation[]
 
   @@unique([itemId, warehouseId, locationId])
   @@index([itemId])
@@ -1679,6 +1678,7 @@ model DatabaseConnection {
   megjegyzesek    String?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
+  dataSources     DataSource[]
   
   @@index([aktiv])
   @@map("adatbazis_kapcsolatok")
@@ -1779,8 +1779,8 @@ model DataSource {
   aktiv           Boolean   @default(true)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
-  
   connection      DatabaseConnection? @relation(fields: [connectionId], references: [id], onDelete: SetNull)
+  dataLoadJobs    DataLoadJob[]
   
   @@index([aktiv])
   @@map("adatforrasok")
