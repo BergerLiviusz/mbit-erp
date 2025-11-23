@@ -19,10 +19,15 @@ interface HealthStatus {
 }
 
 import UsersTab from './UsersTab';
+import BugReport from './BugReport';
 
-type TabType = 'organization' | 'backup' | 'system' | 'users';
+type TabType = 'organization' | 'backup' | 'system' | 'users' | 'bugreport';
 
-export default function Settings() {
+interface SettingsProps {
+  onLogout?: () => void;
+}
+
+export default function Settings({ onLogout }: SettingsProps = {} as SettingsProps) {
   const [activeTab, setActiveTab] = useState<TabType>('organization');
   const [settings, setSettings] = useState<SystemSetting[]>([]);
   const [health, setHealth] = useState<HealthStatus | null>(null);
@@ -404,6 +409,16 @@ export default function Settings() {
     );
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    if (onLogout) {
+      onLogout();
+    } else {
+      window.location.reload();
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto">
       <h2 className="text-2xl font-bold mb-6">Beállítások</h2>
@@ -458,6 +473,16 @@ export default function Settings() {
           >
             Felhasználók
           </button>
+          <button
+            onClick={() => setActiveTab('bugreport')}
+            className={`py-4 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'bugreport'
+                ? 'border-mbit-blue text-mbit-blue'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            Hibabejelentés
+          </button>
         </nav>
       </div>
 
@@ -471,6 +496,22 @@ export default function Settings() {
             isAdmin={JSON.parse(localStorage.getItem('user') || '{}')?.roles?.includes('Admin')}
           />
         )}
+        {activeTab === 'bugreport' && (
+          <div className="p-4">
+            <BugReport />
+          </div>
+        )}
+      </div>
+
+      <div className="mt-6 pt-6 border-t border-gray-200">
+        <div className="flex justify-end">
+          <button
+            onClick={handleLogout}
+            className="bg-red-600 text-white px-6 py-2 rounded hover:bg-red-700 font-medium"
+          >
+            Kijelentkezés
+          </button>
+        </div>
       </div>
     </div>
   );

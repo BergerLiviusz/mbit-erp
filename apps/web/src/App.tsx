@@ -254,31 +254,8 @@ function App() {
                 >
                   Beállítások
                 </Link>
-                <Link 
-                  to="/bug-report" 
-                  className="hover:bg-gray-800 px-3 py-2 rounded"
-                  onClick={() => {
-                    if (isElectron) {
-                      import('./components/DebugPanel').then(module => {
-                        module.addLog('info', 'Navigation: Clicked Hibabejelentés', { to: '/bug-report' });
-                      }).catch(() => {});
-                    }
-                  }}
-                >
-                  Hibabejelentés
-                </Link>
               </div>
             </div>
-            <button
-              onClick={() => {
-                localStorage.removeItem('token');
-                localStorage.removeItem('user');
-                setIsAuthenticated(false);
-              }}
-              className="hover:bg-gray-800 px-4 py-2 rounded"
-            >
-              Kijelentkezés
-            </button>
           </div>
         </div>
       </nav>
@@ -312,7 +289,7 @@ function App() {
           <Route path="/controlling/database-connections" element={<DatabaseConnections />} />
           <Route path="/controlling/kpi" element={<KPI />} />
           <Route path="/controlling/queries" element={<Queries />} />
-          <Route path="/settings" element={<Settings />} />
+          <Route path="/settings" element={<Settings onLogout={() => setIsAuthenticated(false)} />} />
           <Route path="/bug-report" element={<BugReport />} />
         </Routes>
       </main>
