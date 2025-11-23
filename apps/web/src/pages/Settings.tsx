@@ -1,5 +1,6 @@
 import { apiFetch } from '../lib/api';
 import { useState, useEffect } from 'react';
+import BugReport from './BugReport';
 
 interface SystemSetting {
   id: number;
@@ -19,15 +20,10 @@ interface HealthStatus {
 }
 
 import UsersTab from './UsersTab';
-import BugReport from './BugReport';
 
-type TabType = 'organization' | 'backup' | 'system' | 'users' | 'bugreport';
+type TabType = 'organization' | 'backup' | 'system' | 'users' | 'bug-report';
 
-interface SettingsProps {
-  onLogout?: () => void;
-}
-
-export default function Settings({ onLogout }: SettingsProps = {} as SettingsProps) {
+export default function Settings() {
   const [activeTab, setActiveTab] = useState<TabType>('organization');
   const [settings, setSettings] = useState<SystemSetting[]>([]);
   const [health, setHealth] = useState<HealthStatus | null>(null);
@@ -409,16 +405,6 @@ export default function Settings({ onLogout }: SettingsProps = {} as SettingsPro
     );
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    if (onLogout) {
-      onLogout();
-    } else {
-      window.location.reload();
-    }
-  };
-
   return (
     <div className="max-w-4xl mx-auto">
       <h2 className="text-2xl font-bold mb-6">Beállítások</h2>
@@ -474,9 +460,9 @@ export default function Settings({ onLogout }: SettingsProps = {} as SettingsPro
             Felhasználók
           </button>
           <button
-            onClick={() => setActiveTab('bugreport')}
+            onClick={() => setActiveTab('bug-report')}
             className={`py-4 px-1 border-b-2 font-medium text-sm ${
-              activeTab === 'bugreport'
+              activeTab === 'bug-report'
                 ? 'border-mbit-blue text-mbit-blue'
                 : 'border-transparent text-gray-500 hover:text-gray-700'
             }`}
@@ -496,22 +482,27 @@ export default function Settings({ onLogout }: SettingsProps = {} as SettingsPro
             isAdmin={JSON.parse(localStorage.getItem('user') || '{}')?.roles?.includes('Admin')}
           />
         )}
-        {activeTab === 'bugreport' && (
-          <div className="p-4">
+        {activeTab === 'bug-report' && (
+          <div>
             <BugReport />
+            <div className="mt-8 pt-6 border-t border-gray-200">
+              <h3 className="text-lg font-semibold mb-4">Kijelentkezés</h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Ha be szeretne jelentkezni egy másik fiókkal, vagy biztonsági okokból szeretné bezárni a munkamenetet, kattintson a kijelentkezés gombra.
+              </p>
+              <button
+                onClick={() => {
+                  localStorage.removeItem('token');
+                  localStorage.removeItem('user');
+                  window.location.href = '/login';
+                }}
+                className="bg-red-600 text-white px-6 py-2 rounded hover:bg-red-700 font-medium"
+              >
+                Kijelentkezés
+              </button>
+            </div>
           </div>
         )}
-      </div>
-
-      <div className="mt-6 pt-6 border-t border-gray-200">
-        <div className="flex justify-end">
-          <button
-            onClick={handleLogout}
-            className="bg-red-600 text-white px-6 py-2 rounded hover:bg-red-700 font-medium"
-          >
-            Kijelentkezés
-          </button>
-        </div>
       </div>
     </div>
   );

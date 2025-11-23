@@ -289,7 +289,7 @@ function App() {
           <Route path="/controlling/database-connections" element={<DatabaseConnections />} />
           <Route path="/controlling/kpi" element={<KPI />} />
           <Route path="/controlling/queries" element={<Queries />} />
-          <Route path="/settings" element={<Settings onLogout={() => setIsAuthenticated(false)} />} />
+          <Route path="/settings" element={<Settings />} />
           <Route path="/bug-report" element={<BugReport />} />
         </Routes>
       </main>
