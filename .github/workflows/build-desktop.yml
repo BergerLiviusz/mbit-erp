@@ -254,6 +254,28 @@ jobs:
         run: |
           Write-Host "=== Packaging desktop app ==="
           cd apps/desktop
+          
+          # Clean release directory to avoid file locking issues on Windows
+          Write-Host "Cleaning release directory..."
+          if (Test-Path "release") {
+            Remove-Item -Recurse -Force "release" -ErrorAction SilentlyContinue
+            Start-Sleep -Seconds 2
+          }
+          
+          # Ensure icon file is not locked
+          $iconPath = "resources/icon.ico"
+          if (Test-Path $iconPath) {
+            Write-Host "Verifying icon.ico is accessible..."
+            try {
+              $file = [System.IO.File]::Open($iconPath, 'Open', 'Read', 'Read')
+              $file.Close()
+              Write-Host "✅ icon.ico is accessible"
+            } catch {
+              Write-Host "⚠️ Warning: Could not verify icon.ico accessibility: $_"
+            }
+          }
+          
+          Write-Host "Starting packaging..."
           npm run package:${{ matrix.platform }}
           
           Write-Host ""
