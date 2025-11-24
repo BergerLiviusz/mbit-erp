@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Modal from '../components/Modal';
 import {
   useOrders,
   useOrderStatusChange,
+  useCreateOrder,
   Order,
   OrderFilters,
+  CreateOrderDto,
 } from '../lib/api/crm';
 import { useReturns } from '../lib/api/logistics';
 import { apiFetch } from '../lib/api';
@@ -18,14 +20,73 @@ const ORDER_STATUSES = [
   { kod: 'CANCELLED', nev: 'Visszavonva', szin: 'bg-red-100 text-red-800' },
 ];
 
+interface Account {
+  id: string;
+  nev: string;
+  azonosito: string;
+}
+
+interface Quote {
+  id: string;
+  azonosito: string;
+  allapot: string;
+  items: Array<{
+    itemId: string;
+    mennyiseg: number;
+    egysegAr: number;
+    kedvezmeny: number;
+    item: {
+      id: string;
+      nev: string;
+      azonosito: string;
+    };
+  }>;
+}
+
+interface Item {
+  id: string;
+  nev: string;
+  azonosito: string;
+  eladasiAr: number;
+}
+
+interface OrderItem {
+  itemId: string;
+  mennyiseg: number;
+  egysegAr: number;
+  kedvezmeny: number;
+}
+
 export default function OrdersLogistics() {
   const [filters, setFilters] = useState<OrderFilters>({});
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [quotes, setQuotes] = useState<Quote[]>([]);
+  const [items, setItems] = useState<Item[]>([]);
+  const [saving, setSaving] = useState(false);
 
   const { data: ordersData, isLoading, refetch } = useOrders(filters, 0, 100);
+  const createOrder = useCreateOrder();
+
+  const [formData, setFormData] = useState<CreateOrderDto>({
+    accountId: '',
+    quoteId: '',
+    szallitasiDatum: '',
+    megjegyzesek: '',
+    items: [{ itemId: '', mennyiseg: 1, egysegAr: 0, kedvezmeny: 0 }],
+  });
+
+  useEffect(() => {
+    if (isModalOpen) {
+      loadAccounts();
+      loadQuotes();
+      loadItems();
+    }
+  }, [isModalOpen]);
 
   // Get returns for selected order
   const { data: returnsData } = useReturns(
@@ -33,6 +94,135 @@ export default function OrdersLogistics() {
   );
 
   const changeStatus = useOrderStatusChange();
+
+  const loadAccounts = async () => {
+    try {
+      const response = await apiFetch('/crm/accounts?skip=0&take=100');
+      if (response.ok) {
+        const data = await response.json();
+        setAccounts(data.items || data.data || []);
+      }
+    } catch (error) {
+      console.error('Hiba az ügyfelek betöltésekor:', error);
+    }
+  };
+
+  const loadQuotes = async () => {
+    try {
+      const response = await apiFetch('/crm/quotes?allapot=jovahagyott&skip=0&take=100');
+      if (response.ok) {
+        const data = await response.json();
+        setQuotes(data.data || []);
+      }
+    } catch (error) {
+      console.error('Hiba az árajánlatok betöltésekor:', error);
+    }
+  };
+
+  const loadItems = async () => {
+    try {
+      const response = await apiFetch('/logistics/items?skip=0&take=100');
+      if (response.ok) {
+        const data = await response.json();
+        setItems(data.items || []);
+      }
+    } catch (error) {
+      console.error('Hiba a termékek betöltésekor:', error);
+    }
+  };
+
+  const handleOpenModal = () => {
+    setError('');
+    setSuccess('');
+    setFormData({
+      accountId: '',
+      quoteId: '',
+      szallitasiDatum: '',
+      megjegyzesek: '',
+      items: [{ itemId: '', mennyiseg: 1, egysegAr: 0, kedvezmeny: 0 }],
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setError('');
+    setSuccess('');
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const submitData: CreateOrderDto = {
+        ...formData,
+        quoteId: formData.quoteId || undefined,
+        szallitasiDatum: formData.szallitasiDatum || undefined,
+        megjegyzesek: formData.megjegyzesek || undefined,
+        items: formData.items.filter((item) => item.itemId),
+      };
+
+      await createOrder.mutateAsync(submitData);
+      setSuccess('Rendelés sikeresen létrehozva!');
+
+      setTimeout(() => {
+        handleCloseModal();
+        refetch();
+      }, 1500);
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Hiba történt a mentés során');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleAddItem = () => {
+    setFormData({
+      ...formData,
+      items: [...formData.items, { itemId: '', mennyiseg: 1, egysegAr: 0, kedvezmeny: 0 }],
+    });
+  };
+
+  const handleRemoveItem = (index: number) => {
+    const newItems = formData.items.filter((_, i) => i !== index);
+    setFormData({
+      ...formData,
+      items: newItems.length > 0 ? newItems : [{ itemId: '', mennyiseg: 1, egysegAr: 0, kedvezmeny: 0 }],
+    });
+  };
+
+  const handleItemChange = (index: number, field: keyof OrderItem, value: string | number) => {
+    const newItems = [...formData.items];
+    newItems[index] = { ...newItems[index], [field]: value };
+
+    // Auto-fill price when item is selected
+    if (field === 'itemId' && typeof value === 'string') {
+      const selectedItem = items.find((item) => item.id === value);
+      if (selectedItem) {
+        newItems[index].egysegAr = selectedItem.eladasiAr;
+      }
+    }
+
+    setFormData({ ...formData, items: newItems });
+  };
+
+  const handleLoadFromQuote = (quoteId: string) => {
+    const selectedQuote = quotes.find((q) => q.id === quoteId);
+    if (selectedQuote && selectedQuote.items) {
+      setFormData({
+        ...formData,
+        items: selectedQuote.items.map((item) => ({
+          itemId: item.itemId,
+          mennyiseg: item.mennyiseg,
+          egysegAr: item.egysegAr,
+          kedvezmeny: item.kedvezmeny || 0,
+        })),
+      });
+    }
+  };
 
   const handleStatusChange = async (id: string, newStatus: string) => {
     if (!confirm(`Biztosan megváltoztatja a rendelés státuszát ${getStatusLabel(newStatus)}-re?`)) {
@@ -138,6 +328,12 @@ export default function OrdersLogistics() {
             title="CSV export"
           >
             📥 Export CSV
+          </button>
+          <button
+            onClick={handleOpenModal}
+            className="bg-mbit-blue text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+          >
+            + Új rendelés
           </button>
         </div>
       </div>
@@ -326,6 +522,219 @@ export default function OrdersLogistics() {
           </table>
         )}
       </div>
+
+      {/* Create Order Modal */}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        title="Új rendelés"
+        size="xl"
+      >
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+              {error}
+            </div>
+          )}
+
+          {success && (
+            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded">
+              {success}
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Ügyfél <span className="text-red-500">*</span>
+              </label>
+              <select
+                value={formData.accountId}
+                onChange={(e) => setFormData({ ...formData, accountId: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                required
+              >
+                <option value="">Válasszon ügyfelet</option>
+                {accounts.map((account) => (
+                  <option key={account.id} value={account.id}>
+                    {account.nev} ({account.azonosito})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Árajánlat (opcionális)
+              </label>
+              <select
+                value={formData.quoteId}
+                onChange={(e) => {
+                  setFormData({ ...formData, quoteId: e.target.value });
+                  if (e.target.value) {
+                    handleLoadFromQuote(e.target.value);
+                  }
+                }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+              >
+                <option value="">Nincs árajánlat</option>
+                {quotes.map((quote) => (
+                  <option key={quote.id} value={quote.id}>
+                    {quote.azonosito}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Szállítási dátum
+            </label>
+            <input
+              type="date"
+              value={formData.szallitasiDatum}
+              onChange={(e) =>
+                setFormData({ ...formData, szallitasiDatum: e.target.value })
+              }
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Megjegyzések</label>
+            <textarea
+              value={formData.megjegyzesek}
+              onChange={(e) => setFormData({ ...formData, megjegyzesek: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+              rows={3}
+            />
+          </div>
+
+          <div className="border-t pt-4">
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-medium text-gray-700">Rendelés tételek</label>
+              <button
+                type="button"
+                onClick={handleAddItem}
+                className="text-sm bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
+              >
+                + Tétel hozzáadása
+              </button>
+            </div>
+            <div className="space-y-3 max-h-64 overflow-y-auto">
+              {formData.items.map((item, index) => (
+                <div
+                  key={index}
+                  className="flex gap-2 items-start border border-gray-200 rounded p-3 bg-gray-50"
+                >
+                  <div className="flex-1 grid grid-cols-4 gap-2">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                        Termék
+                      </label>
+                      <select
+                        value={item.itemId}
+                        onChange={(e) => handleItemChange(index, 'itemId', e.target.value)}
+                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        required
+                      >
+                        <option value="">-- Válasszon --</option>
+                        {items.map((i) => (
+                          <option key={i.id} value={i.id}>
+                            {i.azonosito} - {i.nev}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                        Mennyiség
+                      </label>
+                      <input
+                        type="number"
+                        min="0.01"
+                        step="0.01"
+                        value={item.mennyiseg}
+                        onChange={(e) =>
+                          handleItemChange(index, 'mennyiseg', parseFloat(e.target.value) || 0)
+                        }
+                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                        Egységár
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={item.egysegAr}
+                        onChange={(e) =>
+                          handleItemChange(index, 'egysegAr', parseFloat(e.target.value) || 0)
+                        }
+                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                        Kedvezmény (%)
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.01"
+                        value={item.kedvezmeny}
+                        onChange={(e) =>
+                          handleItemChange(index, 'kedvezmeny', parseFloat(e.target.value) || 0)
+                        }
+                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveItem(index)}
+                    className="mt-5 text-red-500 hover:text-red-700"
+                    title="Tétel eltávolítása"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex justify-end space-x-3 pt-4">
+            <button
+              type="button"
+              onClick={handleCloseModal}
+              className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+              disabled={saving}
+            >
+              Mégse
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 bg-mbit-blue text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400"
+              disabled={saving}
+            >
+              {saving ? 'Mentés...' : 'Létrehozás'}
+            </button>
+          </div>
+        </form>
+      </Modal>
 
       {/* Details Modal */}
       <Modal

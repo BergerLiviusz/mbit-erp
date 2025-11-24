@@ -99,10 +99,16 @@ export default function InventorySheets() {
       const response = await apiFetch('/logistics/warehouses');
       if (response.ok) {
         const data = await response.json();
-        setWarehouses(data.items || []);
+        // Handle both 'data' and 'items' response formats
+        const warehousesList = data.items || data.data || [];
+        setWarehouses(warehousesList);
+      } else {
+        console.error('Hiba a raktárak betöltésekor: HTTP error', response.status);
+        setError('Nem sikerült betölteni a raktárakat');
       }
     } catch (err) {
       console.error('Hiba a raktárak betöltésekor:', err);
+      setError('Hiba történt a raktárak betöltésekor');
     }
   };
 
