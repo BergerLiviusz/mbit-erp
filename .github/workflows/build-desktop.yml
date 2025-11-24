@@ -272,7 +272,7 @@ jobs:
                 $retryCount++
                 if ($retryCount -lt $maxRetries) {
                   $delay = $retryCount * 2
-                  Write-Host "⚠️ Retry $retryCount/$maxRetries: Waiting $delay seconds before retry..."
+                  Write-Host "⚠️ Retry ${retryCount}/${maxRetries}: Waiting $delay seconds before retry..."
                   Start-Sleep -Seconds $delay
                   
                   # Try to unlock files by forcing garbage collection
