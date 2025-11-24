@@ -258,8 +258,35 @@ jobs:
           # Clean release directory to avoid file locking issues on Windows
           Write-Host "Cleaning release directory..."
           if (Test-Path "release") {
-            Remove-Item -Recurse -Force "release" -ErrorAction SilentlyContinue
-            Start-Sleep -Seconds 2
+            # Try multiple times with increasing delays
+            $maxRetries = 5
+            $retryCount = 0
+            $removed = $false
+            
+            while ($retryCount -lt $maxRetries -and -not $removed) {
+              try {
+                Remove-Item -Recurse -Force "release" -ErrorAction Stop
+                $removed = $true
+                Write-Host "✅ Release directory removed successfully"
+              } catch {
+                $retryCount++
+                if ($retryCount -lt $maxRetries) {
+                  $delay = $retryCount * 2
+                  Write-Host "⚠️ Retry $retryCount/$maxRetries: Waiting $delay seconds before retry..."
+                  Start-Sleep -Seconds $delay
+                  
+                  # Try to unlock files by forcing garbage collection
+                  [System.GC]::Collect()
+                  [System.GC]::WaitForPendingFinalizers()
+                } else {
+                  Write-Host "❌ Failed to remove release directory after $maxRetries attempts"
+                  throw
+                }
+              }
+            }
+            
+            # Final wait to ensure file system has released all locks
+            Start-Sleep -Seconds 3
           }
           
           # Ensure icon file is not locked
