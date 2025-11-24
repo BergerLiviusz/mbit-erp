@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { apiFetch } from '../lib/api';
 import Modal from '../components/Modal';
+import ConfirmModal from '../components/ConfirmModal';
 
 interface InventorySheet {
   id: string;
@@ -77,6 +78,20 @@ export default function InventorySheets() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedSheet, setSelectedSheet] = useState<InventorySheet | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    confirmText?: string;
+    cancelText?: string;
+    confirmButtonClass?: string;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+  });
 
   const [formData, setFormData] = useState({
     warehouseId: '',
@@ -214,104 +229,128 @@ export default function InventorySheets() {
     }
   };
 
-  const handleApprove = async (id: string) => {
-    if (!confirm('Biztosan jóváhagyja ezt a leltárívet? A készletszintek frissülnek.')) {
-      return;
-    }
+  const handleApprove = (id: string) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Leltárív jóváhagyása',
+      message: 'Biztosan jóváhagyja ezt a leltárívet? A készletszintek frissülnek.',
+      confirmText: 'Jóváhagyás',
+      cancelText: 'Mégse',
+      confirmButtonClass: 'bg-green-600 hover:bg-green-700',
+      onConfirm: async () => {
+        try {
+          const response = await apiFetch(`/logistics/inventory-sheets/${id}/approve`, {
+            method: 'POST',
+          });
 
-    try {
-      const response = await apiFetch(`/logistics/inventory-sheets/${id}/approve`, {
-        method: 'POST',
-      });
+          if (!response.ok) {
+            throw new Error('Hiba a jóváhagyás során');
+          }
 
-      if (!response.ok) {
-        throw new Error('Hiba a jóváhagyás során');
-      }
-
-      setSuccess('Leltárív sikeresen jóváhagyva!');
-      loadInventorySheets();
-      if (selectedSheet?.id === id) {
-        loadSheetDetails(id);
-      }
-    } catch (err: any) {
-      setError(err.message || 'Hiba történt');
-    }
+          setSuccess('Leltárív sikeresen jóváhagyva!');
+          loadInventorySheets();
+          if (selectedSheet?.id === id) {
+            loadSheetDetails(id);
+          }
+        } catch (err: any) {
+          setError(err.message || 'Hiba történt');
+        }
+      },
+    });
   };
 
-  const handleClose = async (id: string) => {
-    if (!confirm('Biztosan lezárja ezt a leltárívet?')) {
-      return;
-    }
+  const handleClose = (id: string) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Leltárív lezárása',
+      message: 'Biztosan lezárja ezt a leltárívet?',
+      confirmText: 'Lezárás',
+      cancelText: 'Mégse',
+      confirmButtonClass: 'bg-gray-600 hover:bg-gray-700',
+      onConfirm: async () => {
+        try {
+          const response = await apiFetch(`/logistics/inventory-sheets/${id}/close`, {
+            method: 'POST',
+          });
 
-    try {
-      const response = await apiFetch(`/logistics/inventory-sheets/${id}/close`, {
-        method: 'POST',
-      });
+          if (!response.ok) {
+            throw new Error('Hiba a lezárás során');
+          }
 
-      if (!response.ok) {
-        throw new Error('Hiba a lezárás során');
-      }
-
-      setSuccess('Leltárív sikeresen lezárva!');
-      loadInventorySheets();
-      if (selectedSheet?.id === id) {
-        loadSheetDetails(id);
-      }
-    } catch (err: any) {
-      setError(err.message || 'Hiba történt');
-    }
+          setSuccess('Leltárív sikeresen lezárva!');
+          loadInventorySheets();
+          if (selectedSheet?.id === id) {
+            loadSheetDetails(id);
+          }
+        } catch (err: any) {
+          setError(err.message || 'Hiba történt');
+        }
+      },
+    });
   };
 
-  const handleRevertStatus = async (id: string, newStatus: string) => {
-    if (!confirm(`Biztosan visszaállítja a leltárív állapotát "${getAllapotBadge(newStatus).nev}"-re?`)) {
-      return;
-    }
+  const handleRevertStatus = (id: string, newStatus: string) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Állapot visszaállítása',
+      message: `Biztosan visszaállítja a leltárív állapotát "${getAllapotBadge(newStatus).nev}"-re?`,
+      confirmText: 'Visszaállítás',
+      cancelText: 'Mégse',
+      confirmButtonClass: 'bg-yellow-600 hover:bg-yellow-700',
+      onConfirm: async () => {
+        try {
+          const response = await apiFetch(`/logistics/inventory-sheets/${id}/status`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ allapot: newStatus }),
+          });
 
-    try {
-      const response = await apiFetch(`/logistics/inventory-sheets/${id}/status`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ allapot: newStatus }),
-      });
+          if (!response.ok) {
+            throw new Error('Hiba az állapot visszaállításakor');
+          }
 
-      if (!response.ok) {
-        throw new Error('Hiba az állapot visszaállításakor');
-      }
-
-      setSuccess('Állapot sikeresen visszaállítva!');
-      loadInventorySheets();
-      if (selectedSheet?.id === id) {
-        loadSheetDetails(id);
-      }
-    } catch (err: any) {
-      setError(err.message || 'Hiba történt');
-    }
+          setSuccess('Állapot sikeresen visszaállítva!');
+          loadInventorySheets();
+          if (selectedSheet?.id === id) {
+            loadSheetDetails(id);
+          }
+        } catch (err: any) {
+          setError(err.message || 'Hiba történt');
+        }
+      },
+    });
   };
 
-  const handleRevertApproval = async (id: string) => {
-    if (!confirm('Biztosan visszavonja a jóváhagyást? Ez visszaállítja a készletszinteket is.')) {
-      return;
-    }
+  const handleRevertApproval = (id: string) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Jóváhagyás visszavonása',
+      message: 'Biztosan visszavonja a jóváhagyást? Ez visszaállítja a készletszinteket is.',
+      confirmText: 'Visszavonás',
+      cancelText: 'Mégse',
+      confirmButtonClass: 'bg-yellow-600 hover:bg-yellow-700',
+      onConfirm: async () => {
+        try {
+          const response = await apiFetch(`/logistics/inventory-sheets/${id}/revert-approval`, {
+            method: 'POST',
+          });
 
-    try {
-      const response = await apiFetch(`/logistics/inventory-sheets/${id}/revert-approval`, {
-        method: 'POST',
-      });
+          if (!response.ok) {
+            throw new Error('Hiba a jóváhagyás visszavonásakor');
+          }
 
-      if (!response.ok) {
-        throw new Error('Hiba a jóváhagyás visszavonásakor');
-      }
-
-      setSuccess('Jóváhagyás sikeresen visszavonva!');
-      loadInventorySheets();
-      if (selectedSheet?.id === id) {
-        loadSheetDetails(id);
-      }
-    } catch (err: any) {
-      setError(err.message || 'Hiba történt');
-    }
+          setSuccess('Jóváhagyás sikeresen visszavonva!');
+          loadInventorySheets();
+          if (selectedSheet?.id === id) {
+            loadSheetDetails(id);
+          }
+        } catch (err: any) {
+          setError(err.message || 'Hiba történt');
+        }
+      },
+    });
   };
 
   const handleUpdateItem = async (sheetId: string, itemId: string, tenylegesKeszlet: number) => {
@@ -716,6 +755,17 @@ export default function InventorySheets() {
           </div>
         )}
       </Modal>
+
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+        onConfirm={confirmModal.onConfirm}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        confirmText={confirmModal.confirmText}
+        cancelText={confirmModal.cancelText}
+        confirmButtonClass={confirmModal.confirmButtonClass}
+      />
     </div>
   );
 }
