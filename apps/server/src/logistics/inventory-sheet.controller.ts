@@ -99,14 +99,13 @@ export class InventorySheetController {
   ) {
     const oldSheet = await this.inventorySheetService.findOne(id);
     
-    let updated;
-    if (body.allapot === 'BEFEJEZETT') {
-      updated = await this.inventorySheetService.update(id, { allapot: 'BEFEJEZETT' });
-    } else if (body.allapot === 'FOLYAMATBAN') {
-      updated = await this.inventorySheetService.update(id, { allapot: 'FOLYAMATBAN' });
-    } else {
+    // Allow status changes: NYITOTT, FOLYAMATBAN, BEFEJEZETT, JOVAHAGYVA
+    const allowedStatuses = ['NYITOTT', 'FOLYAMATBAN', 'BEFEJEZETT', 'JOVAHAGYVA'];
+    if (!allowedStatuses.includes(body.allapot)) {
       throw new Error('Érvénytelen állapot');
     }
+    
+    const updated = await this.inventorySheetService.update(id, { allapot: body.allapot });
     
     await this.auditService.logUpdate(
       'InventorySheet',
@@ -151,6 +150,23 @@ export class InventorySheetController {
     );
 
     return closed;
+  }
+
+  @Post(':id/revert-approval')
+  @Permissions(Permission.STOCK_EDIT)
+  async revertApproval(@Param('id') id: string, @Request() req: any) {
+    const oldSheet = await this.inventorySheetService.findOne(id);
+    const reverted = await this.inventorySheetService.revertApproval(id);
+    
+    await this.auditService.logUpdate(
+      'InventorySheet',
+      id,
+      oldSheet,
+      reverted,
+      req.user?.id,
+    );
+
+    return reverted;
   }
 
   @Post(':id/items')

@@ -413,6 +413,80 @@ export class InventorySheetService {
     });
   }
 
+  async revertApproval(sheetId: string) {
+    const sheet = await this.findOne(sheetId);
+
+    if (sheet.allapot !== 'JOVAHAGYVA') {
+      throw new BadRequestException('Csak jóváhagyott leltárív jóváhagyása vonható vissza');
+    }
+
+    // Revert stock levels back to original (konyvKeszlet)
+    for (const item of sheet.items) {
+      if (item.tenylegesKeszlet !== null && item.kulonbseg !== null && item.kulonbseg !== 0) {
+        const stockLevel = await this.prisma.stockLevel.findFirst({
+          where: {
+            itemId: item.itemId,
+            warehouseId: sheet.warehouseId,
+            locationId: item.locationId || null,
+          },
+        });
+
+        if (stockLevel) {
+          // Revert to original stock level (konyvKeszlet)
+          await this.prisma.stockLevel.update({
+            where: { id: stockLevel.id },
+            data: {
+              mennyiseg: item.konyvKeszlet,
+            },
+          });
+
+          // Create stock move for audit trail (revert)
+          await this.prisma.stockMove.create({
+            data: {
+              itemId: item.itemId,
+              warehouseId: sheet.warehouseId,
+              tipus: 'LELTAR_VISSZAVONAS',
+              mennyiseg: -item.kulonbseg,
+              megjegyzesek: `Leltárív jóváhagyás visszavonása: ${sheet.azonosito}`,
+            },
+          });
+        }
+      }
+    }
+
+    // Update sheet status to BEFEJEZETT and clear approvedBy
+    return this.prisma.inventorySheet.update({
+      where: { id: sheetId },
+      data: {
+        allapot: 'BEFEJEZETT',
+        approvedById: null,
+      },
+      include: {
+        warehouse: true,
+        createdBy: {
+          select: {
+            id: true,
+            nev: true,
+            email: true,
+          },
+        },
+        approvedBy: {
+          select: {
+            id: true,
+            nev: true,
+            email: true,
+          },
+        },
+        items: {
+          include: {
+            item: true,
+            location: true,
+          },
+        },
+      },
+    });
+  }
+
   async delete(id: string) {
     const sheet = await this.findOne(id);
 

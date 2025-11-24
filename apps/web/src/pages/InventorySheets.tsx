@@ -262,6 +262,58 @@ export default function InventorySheets() {
     }
   };
 
+  const handleRevertStatus = async (id: string, newStatus: string) => {
+    if (!confirm(`Biztosan visszaállítja a leltárív állapotát "${getAllapotBadge(newStatus).nev}"-re?`)) {
+      return;
+    }
+
+    try {
+      const response = await apiFetch(`/logistics/inventory-sheets/${id}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ allapot: newStatus }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Hiba az állapot visszaállításakor');
+      }
+
+      setSuccess('Állapot sikeresen visszaállítva!');
+      loadInventorySheets();
+      if (selectedSheet?.id === id) {
+        loadSheetDetails(id);
+      }
+    } catch (err: any) {
+      setError(err.message || 'Hiba történt');
+    }
+  };
+
+  const handleRevertApproval = async (id: string) => {
+    if (!confirm('Biztosan visszavonja a jóváhagyást? Ez visszaállítja a készletszinteket is.')) {
+      return;
+    }
+
+    try {
+      const response = await apiFetch(`/logistics/inventory-sheets/${id}/revert-approval`, {
+        method: 'POST',
+      });
+
+      if (!response.ok) {
+        throw new Error('Hiba a jóváhagyás visszavonásakor');
+      }
+
+      setSuccess('Jóváhagyás sikeresen visszavonva!');
+      loadInventorySheets();
+      if (selectedSheet?.id === id) {
+        loadSheetDetails(id);
+      }
+    } catch (err: any) {
+      setError(err.message || 'Hiba történt');
+    }
+  };
+
   const handleUpdateItem = async (sheetId: string, itemId: string, tenylegesKeszlet: number) => {
     try {
       const response = await apiFetch(`/logistics/inventory-sheets/${sheetId}/items/${itemId}`, {
@@ -515,7 +567,7 @@ export default function InventorySheets() {
             )}
 
             {/* Műveletek */}
-            <div className="flex gap-2 pt-2 border-t">
+            <div className="flex gap-2 pt-2 border-t flex-wrap">
               {selectedSheet.allapot === 'NYITOTT' && (
                 <button
                   onClick={() => handleUpdateStatus(selectedSheet.id, 'FOLYAMATBAN')}
@@ -525,27 +577,59 @@ export default function InventorySheets() {
                 </button>
               )}
               {selectedSheet.allapot === 'FOLYAMATBAN' && (
-                <button
-                  onClick={() => handleUpdateStatus(selectedSheet.id, 'BEFEJEZETT')}
-                  className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 text-sm"
-                >
-                  Befejezett állapot
-                </button>
+                <>
+                  <button
+                    onClick={() => handleUpdateStatus(selectedSheet.id, 'BEFEJEZETT')}
+                    className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 text-sm"
+                  >
+                    Befejezett állapot
+                  </button>
+                  <button
+                    onClick={() => handleRevertStatus(selectedSheet.id, 'NYITOTT')}
+                    className="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 text-sm"
+                  >
+                    Visszaállítás: Nyitott
+                  </button>
+                </>
               )}
               {selectedSheet.allapot === 'BEFEJEZETT' && (
-                <button
-                  onClick={() => handleApprove(selectedSheet.id)}
-                  className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
-                >
-                  Jóváhagyás
-                </button>
+                <>
+                  <button
+                    onClick={() => handleApprove(selectedSheet.id)}
+                    className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
+                  >
+                    Jóváhagyás
+                  </button>
+                  <button
+                    onClick={() => handleRevertStatus(selectedSheet.id, 'FOLYAMATBAN')}
+                    className="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 text-sm"
+                  >
+                    Visszaállítás: Folyamatban
+                  </button>
+                </>
               )}
               {selectedSheet.allapot === 'JOVAHAGYVA' && (
+                <>
+                  <button
+                    onClick={() => handleClose(selectedSheet.id)}
+                    className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 text-sm"
+                  >
+                    Lezárás
+                  </button>
+                  <button
+                    onClick={() => handleRevertApproval(selectedSheet.id)}
+                    className="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 text-sm"
+                  >
+                    Visszavonás: Befejezett
+                  </button>
+                </>
+              )}
+              {selectedSheet.allapot === 'LEZARVA' && (
                 <button
-                  onClick={() => handleClose(selectedSheet.id)}
-                  className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 text-sm"
+                  onClick={() => handleRevertStatus(selectedSheet.id, 'JOVAHAGYVA')}
+                  className="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 text-sm"
                 >
-                  Lezárás
+                  Visszaállítás: Jóváhagyva
                 </button>
               )}
             </div>
