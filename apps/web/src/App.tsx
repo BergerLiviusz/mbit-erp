@@ -31,8 +31,10 @@ import StockReservations from './pages/Logistics/StockReservations';
 import { BackendStatus } from './components/BackendStatus';
 import { NotificationPanel } from './components/NotificationPanel';
 import { LoadingScreen } from './components/LoadingScreen';
+import { ModuleRouteGuard } from './components/ModuleRouteGuard';
 import MbitLogo from './assets/logo.svg';
 import axios from './lib/axios';
+import { isModuleEnabled, getModuleMenuItems } from './config/modules';
 
 function DropdownMenu({ title, items }: { title: string; items: Array<{ to: string; label: string }> }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -173,17 +175,14 @@ function App() {
                 >
                   Főoldal
                 </Link>
-                <DropdownMenu 
-                  title="Ügyfélkezelés"
-                  items={[
-                    { to: '/crm', label: 'Partnerek' },
-                    { to: '/opportunities', label: 'Lehetőségek' },
-                    { to: '/quotes', label: 'Árajánlatok' },
-                    { to: '/orders', label: 'Rendelések' },
-                    { to: '/crm/invoices', label: 'Számlák' },
-                    { to: '/crm/chat', label: 'Chat' }
-                  ]}
-                />
+                {/* Ügyfélkezelés - csak ha CRM modul engedélyezve */}
+                {isModuleEnabled('crm') && (
+                  <DropdownMenu 
+                    title="Ügyfélkezelés"
+                    items={getModuleMenuItems('crm')}
+                  />
+                )}
+                {/* Dokumentumok - mindig látható */}
                 <Link 
                   to="/documents" 
                   className="hover:bg-gray-800 px-3 py-2 rounded"
@@ -197,33 +196,30 @@ function App() {
                 >
                   Dokumentumok
                 </Link>
-                <Link 
-                  to="/team" 
-                  className="hover:bg-gray-800 px-3 py-2 rounded"
-                  onClick={() => {
-                    if (isElectron) {
-                      import('./components/DebugPanel').then(module => {
-                        module.addLog('info', 'Navigation: Clicked Csapat kommunikáció', { to: '/team' });
-                      }).catch(() => {});
-                    }
-                  }}
-                >
-                  Csapat kommunikáció
-                </Link>
-                <DropdownMenu 
-                  title="Logisztika"
-                  items={[
-                    { to: '/warehouses', label: 'Raktárak' },
-                    { to: '/products', label: 'Termékek' },
-                    { to: '/returns', label: 'Visszárúk' },
-                    { to: '/suppliers', label: 'Szállítók' },
-                    { to: '/orders-logistics', label: 'Rendelések' },
-                    { to: '/inventory-sheets', label: 'Leltárívek' },
-                    { to: '/intrastat', label: 'INTRASTAT' },
-                    { to: '/logistics/stock-valuation', label: 'Készletérték értékelés' },
-                    { to: '/logistics/stock-reservations', label: 'Foglaltság és konszignáció' }
-                  ]}
-                />
+                {/* Csapat kommunikáció - csak ha Team modul engedélyezve */}
+                {isModuleEnabled('team') && (
+                  <Link 
+                    to="/team" 
+                    className="hover:bg-gray-800 px-3 py-2 rounded"
+                    onClick={() => {
+                      if (isElectron) {
+                        import('./components/DebugPanel').then(module => {
+                          module.addLog('info', 'Navigation: Clicked Csapat kommunikáció', { to: '/team' });
+                        }).catch(() => {});
+                      }
+                    }}
+                  >
+                    Csapat kommunikáció
+                  </Link>
+                )}
+                {/* Logisztika - csak ha Logistics modul engedélyezve */}
+                {isModuleEnabled('logistics') && (
+                  <DropdownMenu 
+                    title="Logisztika"
+                    items={getModuleMenuItems('logistics')}
+                  />
+                )}
+                {/* HR - mindig látható (nem szerepel a modul konfigurációban) */}
                 <DropdownMenu 
                   title="HR"
                   items={[
@@ -233,14 +229,13 @@ function App() {
                     { to: '/hr/reports', label: 'Riportok' }
                   ]}
                 />
-                <DropdownMenu 
-                  title="Kontrolling"
-                  items={[
-                    { to: '/controlling/database-connections', label: 'Adatbázis kapcsolatok' },
-                    { to: '/controlling/kpi', label: 'KPI mutatószámok' },
-                    { to: '/controlling/queries', label: 'Lekérdezések' }
-                  ]}
-                />
+                {/* Kontrolling - csak ha Controlling modul engedélyezve */}
+                {isModuleEnabled('controlling') && (
+                  <DropdownMenu 
+                    title="Kontrolling"
+                    items={getModuleMenuItems('controlling')}
+                  />
+                )}
                 <Link 
                   to="/settings" 
                   className="hover:bg-gray-800 px-3 py-2 rounded"
@@ -265,30 +260,58 @@ function App() {
         {isElectron && <NotificationPanel />}
         <Routes>
           <Route path="/" element={<Dashboard />} />
-          <Route path="/crm" element={<CRM />} />
-          <Route path="/opportunities" element={<Opportunities />} />
-          <Route path="/quotes" element={<Quotes />} />
-          <Route path="/orders" element={<Orders />} />
-          <Route path="/crm/invoices" element={<Invoices />} />
-          <Route path="/crm/chat" element={<Chat />} />
+          
+          {/* CRM routes - csak ha engedélyezve */}
+          {isModuleEnabled('crm') ? (
+            <>
+              <Route path="/crm" element={<ModuleRouteGuard module="crm"><CRM /></ModuleRouteGuard>} />
+              <Route path="/opportunities" element={<ModuleRouteGuard module="crm"><Opportunities /></ModuleRouteGuard>} />
+              <Route path="/quotes" element={<ModuleRouteGuard module="crm"><Quotes /></ModuleRouteGuard>} />
+              <Route path="/orders" element={<ModuleRouteGuard module="crm"><Orders /></ModuleRouteGuard>} />
+              <Route path="/crm/invoices" element={<ModuleRouteGuard module="crm"><Invoices /></ModuleRouteGuard>} />
+              <Route path="/crm/chat" element={<ModuleRouteGuard module="crm"><Chat /></ModuleRouteGuard>} />
+            </>
+          ) : null}
+          
+          {/* Dokumentumok - mindig elérhető */}
           <Route path="/documents" element={<Documents />} />
-          <Route path="/team" element={<Team />} />
-          <Route path="/warehouses" element={<Warehouses />} />
-          <Route path="/products" element={<Products />} />
-          <Route path="/returns" element={<Returns />} />
-          <Route path="/suppliers" element={<Suppliers />} />
-          <Route path="/orders-logistics" element={<OrdersLogistics />} />
-          <Route path="/inventory-sheets" element={<InventorySheets />} />
-          <Route path="/intrastat" element={<Intrastat />} />
-          <Route path="/logistics/stock-valuation" element={<StockValuation />} />
-          <Route path="/logistics/stock-reservations" element={<StockReservations />} />
+          
+          {/* Team route - csak ha engedélyezve */}
+          {isModuleEnabled('team') ? (
+            <Route path="/team" element={<ModuleRouteGuard module="team"><Team /></ModuleRouteGuard>} />
+          ) : null}
+          
+          {/* Logistics routes - csak ha engedélyezve */}
+          {isModuleEnabled('logistics') ? (
+            <>
+              <Route path="/warehouses" element={<ModuleRouteGuard module="logistics"><Warehouses /></ModuleRouteGuard>} />
+              <Route path="/products" element={<ModuleRouteGuard module="logistics"><Products /></ModuleRouteGuard>} />
+              <Route path="/returns" element={<ModuleRouteGuard module="logistics"><Returns /></ModuleRouteGuard>} />
+              <Route path="/suppliers" element={<ModuleRouteGuard module="logistics"><Suppliers /></ModuleRouteGuard>} />
+              <Route path="/orders-logistics" element={<ModuleRouteGuard module="logistics"><OrdersLogistics /></ModuleRouteGuard>} />
+              <Route path="/inventory-sheets" element={<ModuleRouteGuard module="logistics"><InventorySheets /></ModuleRouteGuard>} />
+              <Route path="/intrastat" element={<ModuleRouteGuard module="logistics"><Intrastat /></ModuleRouteGuard>} />
+              <Route path="/logistics/stock-valuation" element={<ModuleRouteGuard module="logistics"><StockValuation /></ModuleRouteGuard>} />
+              <Route path="/logistics/stock-reservations" element={<ModuleRouteGuard module="logistics"><StockReservations /></ModuleRouteGuard>} />
+            </>
+          ) : null}
+          
+          {/* HR routes - mindig elérhető (nem szerepel a modul konfigurációban) */}
           <Route path="/hr/job-positions" element={<JobPositions />} />
           <Route path="/hr/employees" element={<Employees />} />
           <Route path="/hr/contracts" element={<Contracts />} />
           <Route path="/hr/reports" element={<HrReports />} />
-          <Route path="/controlling/database-connections" element={<DatabaseConnections />} />
-          <Route path="/controlling/kpi" element={<KPI />} />
-          <Route path="/controlling/queries" element={<Queries />} />
+          
+          {/* Controlling routes - csak ha engedélyezve */}
+          {isModuleEnabled('controlling') ? (
+            <>
+              <Route path="/controlling/database-connections" element={<ModuleRouteGuard module="controlling"><DatabaseConnections /></ModuleRouteGuard>} />
+              <Route path="/controlling/kpi" element={<ModuleRouteGuard module="controlling"><KPI /></ModuleRouteGuard>} />
+              <Route path="/controlling/queries" element={<ModuleRouteGuard module="controlling"><Queries /></ModuleRouteGuard>} />
+            </>
+          ) : null}
+          
+          {/* Mindig elérhető */}
           <Route path="/settings" element={<Settings />} />
           <Route path="/bug-report" element={<BugReport />} />
         </Routes>

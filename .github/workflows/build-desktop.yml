@@ -5,6 +5,10 @@ on:
     branches:
       - main
       - master
+      - package-1
+      - package-2
+      - package-3
+      - package-4
     tags:
       - 'v*'
   pull_request:
@@ -12,6 +16,18 @@ on:
       - main
       - master
   workflow_dispatch:
+    inputs:
+      package:
+        description: 'Package to build'
+        required: false
+        type: choice
+        options:
+          - full
+          - package-1
+          - package-2
+          - package-3
+          - package-4
+        default: 'full'
 
 permissions:
   contents: write
@@ -39,6 +55,36 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Determine package from branch
+        id: package
+        shell: pwsh
+        run: |
+          if ("${{ github.event_name }}" -eq "workflow_dispatch" -and "${{ github.event.inputs.package }}") {
+            $package = "${{ github.event.inputs.package }}"
+            Write-Host "Using package from workflow_dispatch input: $package"
+          } elseif ("${{ github.ref }}" -eq "refs/heads/package-1") {
+            $package = "package-1"
+            Write-Host "Detected package-1 branch"
+          } elseif ("${{ github.ref }}" -eq "refs/heads/package-2") {
+            $package = "package-2"
+            Write-Host "Detected package-2 branch"
+          } elseif ("${{ github.ref }}" -eq "refs/heads/package-3") {
+            $package = "package-3"
+            Write-Host "Detected package-3 branch"
+          } elseif ("${{ github.ref }}" -eq "refs/heads/package-4") {
+            $package = "package-4"
+            Write-Host "Detected package-4 branch"
+          } elseif ("${{ github.ref }}" -eq "refs/heads/main" -or "${{ github.ref }}" -eq "refs/heads/master") {
+            $package = "full"
+            Write-Host "Detected main/master branch, using full package"
+          } else {
+            $package = "full"
+            Write-Host "Defaulting to full package"
+          }
+          
+          Write-Host "Active package: $package"
+          echo "package=$package" >> $env:GITHUB_OUTPUT
 
       - name: Generate Prisma Client and validate schema
         shell: pwsh
@@ -175,8 +221,10 @@ jobs:
 
       - name: Build frontend
         shell: pwsh
+        env:
+          VITE_ACTIVE_PACKAGE: ${{ steps.package.outputs.package }}
         run: |
-          Write-Host "=== Building frontend ==="
+          Write-Host "=== Building frontend for package: $env:VITE_ACTIVE_PACKAGE ==="
           cd apps/web
           $env:ELECTRON_BUILD = "true"
           npm run build
@@ -533,7 +581,7 @@ jobs:
         if: matrix.os == 'windows-latest'
         uses: actions/upload-artifact@v4
         with:
-          name: mbit-erp-windows-installer
+          name: mbit-erp-${{ steps.package.outputs.package }}-windows-installer
           path: |
             apps/desktop/release/*Setup*.exe
             apps/desktop/release/*Portable*.zip

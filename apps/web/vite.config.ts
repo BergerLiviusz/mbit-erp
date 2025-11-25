@@ -4,9 +4,15 @@ import { VitePWA } from 'vite-plugin-pwa';
 import path from 'path';
 
 const isElectronBuild = process.env.ELECTRON_BUILD === 'true';
+// Csomag meghatározása environment változóból vagy default 'full'
+const activePackage = process.env.VITE_ACTIVE_PACKAGE || 'full';
 
 export default defineConfig({
   base: isElectronBuild ? './' : '/',
+  define: {
+    // Build-time változó beállítása
+    'import.meta.env.VITE_ACTIVE_PACKAGE': JSON.stringify(activePackage),
+  },
   plugins: [
     react(),
     VitePWA({
