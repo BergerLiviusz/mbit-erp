@@ -224,9 +224,22 @@ jobs:
         env:
           VITE_ACTIVE_PACKAGE: ${{ steps.package.outputs.package }}
         run: |
-          Write-Host "=== Building frontend for package: $env:VITE_ACTIVE_PACKAGE ==="
+          Write-Host "=== Building frontend for package: ${{ steps.package.outputs.package }} ==="
+          Write-Host "VITE_ACTIVE_PACKAGE environment variable: $env:VITE_ACTIVE_PACKAGE"
+          
+          # Verify the environment variable is set
+          if (-not $env:VITE_ACTIVE_PACKAGE) {
+            Write-Host "❌ ERROR: VITE_ACTIVE_PACKAGE is not set!"
+            exit 1
+          }
+          
           cd apps/web
           $env:ELECTRON_BUILD = "true"
+          
+          # Verify the variable is available before build
+          Write-Host "Environment variables before build:"
+          Get-ChildItem Env: | Where-Object { $_.Name -like "VITE_*" } | Format-Table
+          
           npm run build
           
           Write-Host ""

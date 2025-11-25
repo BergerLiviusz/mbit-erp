@@ -154,11 +154,19 @@ export const PACKAGE_CONFIGS: Record<string, PackageConfig> = {
 // Aktuális csomag meghatározása build-time változóból
 export function getActivePackage(): keyof typeof PACKAGE_CONFIGS {
   // Vite build-time változó: VITE_ACTIVE_PACKAGE
+  // Vite automatikusan elérhetővé teszi a VITE_ prefixű environment változókat
   const packageName = import.meta.env.VITE_ACTIVE_PACKAGE || 'full';
+  
+  // Debug információ (csak development módban)
+  if (import.meta.env.DEV) {
+    console.log('[Module Config] Active package:', packageName);
+    console.log('[Module Config] VITE_ACTIVE_PACKAGE env:', import.meta.env.VITE_ACTIVE_PACKAGE);
+    console.log('[Module Config] All env vars:', Object.keys(import.meta.env).filter(k => k.startsWith('VITE_')));
+  }
   
   // Validálás: ha nem létező package, akkor default 'full'
   if (!PACKAGE_CONFIGS[packageName]) {
-    console.warn(`Unknown package: ${packageName}, falling back to 'full'`);
+    console.warn(`[Module Config] Unknown package: ${packageName}, falling back to 'full'`);
     return 'full';
   }
   

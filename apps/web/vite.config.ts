@@ -5,14 +5,25 @@ import path from 'path';
 
 const isElectronBuild = process.env.ELECTRON_BUILD === 'true';
 // Csomag meghatározása environment változóból vagy default 'full'
+// Vite automatikusan elérhetővé teszi a VITE_ prefixű változókat import.meta.env-ben
 const activePackage = process.env.VITE_ACTIVE_PACKAGE || 'full';
 
-export default defineConfig({
-  base: isElectronBuild ? './' : '/',
-  define: {
-    // Build-time változó beállítása
-    'import.meta.env.VITE_ACTIVE_PACKAGE': JSON.stringify(activePackage),
-  },
+// Debug log a build során
+console.log('[Vite Config] VITE_ACTIVE_PACKAGE from env:', process.env.VITE_ACTIVE_PACKAGE);
+console.log('[Vite Config] Active package:', activePackage);
+
+export default defineConfig(({ mode }) => {
+  // A Vite automatikusan elérhetővé teszi a VITE_ prefixű environment változókat
+  // De biztosítjuk, hogy ha nincs beállítva, akkor a define segítségével beállítjuk
+  const packageValue = process.env.VITE_ACTIVE_PACKAGE || activePackage;
+  
+  return {
+    base: isElectronBuild ? './' : '/',
+    define: {
+      // Build-time változó beállítása - a Vite automatikusan kezeli a VITE_ prefixű változókat,
+      // de a define biztosítja, hogy mindig legyen érték (akár undefined is)
+      'import.meta.env.VITE_ACTIVE_PACKAGE': JSON.stringify(packageValue),
+    },
   plugins: [
     react(),
     VitePWA({
@@ -54,10 +65,11 @@ export default defineConfig({
       },
     },
   },
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
-      '@assets': path.resolve(__dirname, './src/assets'),
+    resolve: {
+      alias: {
+        '@': path.resolve(__dirname, './src'),
+        '@assets': path.resolve(__dirname, './src/assets'),
+      },
     },
-  },
+  };
 });
