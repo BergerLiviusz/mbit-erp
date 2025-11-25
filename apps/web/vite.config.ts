@@ -2,27 +2,50 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import path from 'path';
+import { execSync } from 'child_process';
 
 const isElectronBuild = process.env.ELECTRON_BUILD === 'true';
-// Csomag meghatározása environment változóból vagy default 'full'
-// Vite automatikusan elérhetővé teszi a VITE_ prefixű változókat import.meta.env-ben
-const activePackage = process.env.VITE_ACTIVE_PACKAGE || 'full';
+
+// Csomag meghatározása: először environment változóból, majd git branch nevéből, végül default 'full'
+function getActivePackage(): string {
+  // 1. Próbáljuk az environment változóból
+  if (process.env.VITE_ACTIVE_PACKAGE) {
+    return process.env.VITE_ACTIVE_PACKAGE;
+  }
+  
+  // 2. Próbáljuk a git branch nevéből (build-time)
+  try {
+    const gitBranch = execSync('git rev-parse --abbrev-ref HEAD', { encoding: 'utf-8' }).trim();
+    console.log('[Vite Config] Git branch:', gitBranch);
+    
+    // Branch nevek -> package nevek mapping
+    if (gitBranch === 'package-1' || gitBranch === 'package-2' || gitBranch === 'package-3' || gitBranch === 'package-4') {
+      return gitBranch;
+    }
+    if (gitBranch === 'main' || gitBranch === 'master') {
+      return 'full';
+    }
+  } catch (error) {
+    // Ha nem sikerül a git parancs (pl. nincs git vagy nem git repo), akkor folytatjuk
+    console.log('[Vite Config] Could not determine git branch, using default');
+  }
+  
+  // 3. Default érték
+  return 'full';
+}
+
+const activePackage = getActivePackage();
 
 // Debug log a build során
 console.log('[Vite Config] VITE_ACTIVE_PACKAGE from env:', process.env.VITE_ACTIVE_PACKAGE);
-console.log('[Vite Config] Active package:', activePackage);
+console.log('[Vite Config] Active package (determined):', activePackage);
 
 export default defineConfig(({ mode }) => {
-  // A Vite automatikusan elérhetővé teszi a VITE_ prefixű environment változókat
-  // De biztosítjuk, hogy ha nincs beállítva, akkor a define segítségével beállítjuk
-  const packageValue = process.env.VITE_ACTIVE_PACKAGE || activePackage;
-  
   return {
     base: isElectronBuild ? './' : '/',
     define: {
-      // Build-time változó beállítása - a Vite automatikusan kezeli a VITE_ prefixű változókat,
-      // de a define biztosítja, hogy mindig legyen érték (akár undefined is)
-      'import.meta.env.VITE_ACTIVE_PACKAGE': JSON.stringify(packageValue),
+      // Build-time változó beállítása
+      'import.meta.env.VITE_ACTIVE_PACKAGE': JSON.stringify(activePackage),
     },
   plugins: [
     react(),
