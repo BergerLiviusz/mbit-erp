@@ -17,7 +17,6 @@ export interface CreateDocumentDto {
   ervenyessegKezdet?: string;
   ervenyessegVeg?: string;
   lejarat?: string;
-  tagIds?: string[]; // Címszó ID-k
 }
 
 export interface UpdateDocumentDto {
@@ -31,7 +30,6 @@ export interface UpdateDocumentDto {
   ervenyessegKezdet?: string;
   ervenyessegVeg?: string;
   lejarat?: string;
-  tagIds?: string[]; // Címszó ID-k
 }
 
 export interface DocumentFilters {
@@ -234,7 +232,7 @@ export class DocumentService {
     if (!isAdmin && userId) {
       const hasAccess = 
         document.createdById === userId ||
-        (document.access && document.access.length > 0 && document.access.some(acc => acc.userId === userId));
+        (document.access && document.access.some(acc => acc.userId === userId));
       
       if (!hasAccess) {
         return null;
