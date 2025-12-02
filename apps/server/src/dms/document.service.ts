@@ -269,9 +269,6 @@ export class DocumentService {
             jogosultsag: 'FULL_ACCESS',
           },
         } : undefined,
-        tags: dto.tagIds ? {
-          create: dto.tagIds.map(tagId => ({ tagId })),
-        } : undefined,
       },
     });
 
