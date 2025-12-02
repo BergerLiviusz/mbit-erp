@@ -629,19 +629,13 @@ export default function Warehouses() {
                 onClick={() => handleDownloadInventorySheetPdf(selectedWarehouseId!)}
                 className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 text-sm"
               >
-                📄 PDF letöltése
+                📄 Leltárív PDF letöltése
               </button>
               <button
                 onClick={() => handleDownloadInventorySheetExcel(selectedWarehouseId!)}
                 className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 text-sm"
               >
-                📊 Excel letöltése
-              </button>
-              <button
-                onClick={() => setIsReportModalOpen(true)}
-                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 text-sm"
-              >
-                📄 Leltárív nyomtatása
+                📊 Leltárív Excel letöltése
               </button>
               <button
                 onClick={handleOpenProductModal}

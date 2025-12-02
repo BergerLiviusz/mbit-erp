@@ -5,11 +5,6 @@ import Modal from '../components/Modal';
 import axios from '../lib/axios';
 import { Plus, Trash2, Eye } from 'lucide-react';
 
-interface Role {
-  id: string;
-  nev: string;
-}
-
 export default function Workflows() {
   const { data: workflows, isLoading } = useWorkflows();
   const createWorkflow = useCreateWorkflow();
@@ -18,7 +13,6 @@ export default function Workflows() {
   const [selectedWorkflow, setSelectedWorkflow] = useState<Workflow | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-  const [roles, setRoles] = useState<Role[]>([]);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
@@ -29,17 +23,7 @@ export default function Workflows() {
     steps: [],
   });
 
-  const loadRoles = async () => {
-    try {
-      const response = await axios.get('/api/system/users/roles');
-      setRoles(response.data || []);
-    } catch (err: any) {
-      console.error('Failed to load roles:', err);
-    }
-  };
-
   const handleOpenCreateModal = () => {
-    loadRoles();
     setFormData({
       nev: '',
       leiras: '',
@@ -59,7 +43,8 @@ export default function Workflows() {
           nev: '',
           leiras: '',
           sorrend: newStepNumber,
-          jogosultsag: 'READ',
+          lepesTipus: '',
+          szin: '#3B82F6',
           kotelezo: false,
         },
       ],
@@ -300,27 +285,36 @@ export default function Workflows() {
                       placeholder="Lépés leírása"
                     />
                     <div className="grid grid-cols-2 gap-2">
-                      <select
-                        value={step.szerepkorId || ''}
-                        onChange={(e) => handleStepChange(index, 'szerepkorId', e.target.value || undefined)}
-                        className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                      >
-                        <option value="">Szerepkör (opcionális)</option>
-                        {roles.map((role) => (
-                          <option key={role.id} value={role.id}>
-                            {role.nev}
-                          </option>
-                        ))}
-                      </select>
-                      <select
-                        value={step.jogosultsag}
-                        onChange={(e) => handleStepChange(index, 'jogosultsag', e.target.value)}
-                        className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                      >
-                        <option value="READ">Olvasás</option>
-                        <option value="WRITE">Írás</option>
-                        <option value="APPROVE">Jóváhagyás</option>
-                      </select>
+                      <div>
+                        <label className="block text-xs text-gray-600 mb-1">Lépés típusa</label>
+                        <input
+                          type="text"
+                          value={step.lepesTipus || ''}
+                          onChange={(e) => handleStepChange(index, 'lepesTipus', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                          placeholder="Pl. Ellenőrzés, Jóváhagyás, Archiválás..."
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-600 mb-1">Szín</label>
+                        <div className="flex gap-2">
+                          <input
+                            type="color"
+                            value={step.szin || '#3B82F6'}
+                            onChange={(e) => handleStepChange(index, 'szin', e.target.value)}
+                            className="h-10 w-16 border border-gray-300 rounded cursor-pointer"
+                            title="Szín választása"
+                          />
+                          <input
+                            type="text"
+                            value={step.szin || '#3B82F6'}
+                            onChange={(e) => handleStepChange(index, 'szin', e.target.value)}
+                            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                            placeholder="#3B82F6"
+                            pattern="^#[0-9A-Fa-f]{6}$"
+                          />
+                        </div>
+                      </div>
                     </div>
                     <label className="flex items-center gap-2">
                       <input

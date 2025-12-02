@@ -47713,12 +47713,3217 @@ Lint results
 ```bash
 cd /Users/liviuszberger/mbit-erp/apps/web && npm run build 2>&1 | tail -40
 ```
+
+```
+
+&gt; @mbit-erp/web@1.0.0 build
+&gt; tsc &amp;&amp; vite build
+
+src/pages/Documents.tsx(1334,38): error TS2339: Property 'createdBy' does not exist on type 'Document'.
+src/pages/Warehouses.tsx(682,29): error TS2322: Type 'unknown[]' is not assignable to type 'string[]'.
+  Type 'unknown' is not assignable to type 'string'.
+src/pages/Warehouses.tsx(682,131): error TS7006: Parameter 'x' implicitly has an 'any' type.
+src/pages/Workflows.tsx(33,5): error TS2304: Cannot find name 'setLoadingRoles'.
+src/pages/Workflows.tsx(40,7): error TS2304: Cannot find name 'setLoadingRoles'.
+npm error Lifecycle script &#96;build&#96; failed with error:
+npm error code 2
+npm error path /Users/liviuszberger/mbit-erp/apps/web
+npm error workspace @mbit-erp/web@1.0.0
+npm error location /Users/liviuszberger/mbit-erp/apps/web
+npm error command failed
+npm error command sh -c tsc &amp;&amp; vite build
+
+```
 </details>
 </tool-use>
 
 ---
 
 
+
+---
+
+
+Javítom a maradék hibákat:
+
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: apps/web/src/pages/Documents.tsx</summary>
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="write" data-tool-name="search_replace">
+
+<details><summary>Tool use: **search_replace** • Edit file: apps/web/src/pages/Documents.tsx</summary>
+
+**Chunk 1**
+Lines added: 5, lines removed: undefined
+
+```diff
+@@ -56,4 +56,9 @@
+      createdAt: string;
+    }&gt;;
++   createdBy?: {
++     id: string;
++     nev: string;
++     email: string;
++   } | null;
+    createdAt: string;
+    updatedAt: string;
+```
+
+</details>
+
+</tool-use>
+
+---
+
+<tool-use data-tool-type="write" data-tool-name="search_replace">
+
+<details><summary>Tool use: **search_replace** • Edit file: apps/web/src/pages/Warehouses.tsx</summary>
+
+**Chunk 1**
+Lines added: 1, lines removed: 1
+
+```diff
+@@ -680,5 +680,5 @@
+                      {warehouseStock.map((stock: any) =&gt; {
+                        const stockLots = stock.item?.stockLots || [];
+-                       const uniqueBatchNumbers: string[] = [...new Set(stockLots.map((lot: any) =&gt; lot.sarzsGyartasiSzam).filter((x): x is string =&gt; Boolean(x)))];
++                       const uniqueBatchNumbers: string[] = [...new Set(stockLots.map((lot: any) =&gt; lot.sarzsGyartasiSzam).filter((x: any): x is string =&gt; Boolean(x)))];
+                        
+                        return (
+```
+
+</details>
+
+</tool-use>
+
+---
+
+<tool-use data-tool-type="search" data-tool-name="grep">
+<details>
+<summary>Tool use: **grep** • Grep for "setLoadingRoles" in "apps/web/src/pages/Workflows.tsx" • 2 matches</summary>
+
+Output mode: content
+
+
+| File | Content | Line |
+|------|------|------|
+| `apps/web/src/pages/Workflows.tsx` | `setLoadingRoles(true);` | L33 |
+| `apps/web/src/pages/Workflows.tsx` | `setLoadingRoles(false);` | L40 |
+
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: apps/web/src/pages/Workflows.tsx</summary>
+
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+Javítom a maradék hibákat:
+
+
+---
+
+<tool-use data-tool-type="write" data-tool-name="search_replace">
+
+<details><summary>Tool use: **search_replace** • Edit file: apps/web/src/pages/Workflows.tsx</summary>
+
+**Chunk 1**
+Lines added: undefined, lines removed: 3
+
+```diff
+@@ -31,12 +31,9 @@
+  
+    const loadRoles = async () =&gt; {
+-     setLoadingRoles(true);
+      try {
+        const response = await axios.get('/api/system/users/roles');
+        setRoles(response.data || []);
+      } catch (err: any) {
+        console.error('Failed to load roles:', err);
+-     } finally {
+-       setLoadingRoles(false);
+      }
+    };
+```
+
+</details>
+
+</tool-use>
+
+---
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp/apps/web && npm run build 2>&1 | tail -30</summary>
+
+```bash
+cd /Users/liviuszberger/mbit-erp/apps/web && npm run build 2>&1 | tail -30
+```
+
+```
+
+&gt; @mbit-erp/web@1.0.0 build
+&gt; tsc &amp;&amp; vite build
+
+src/pages/Warehouses.tsx(682,29): error TS2322: Type 'unknown[]' is not assignable to type 'string[]'.
+  Type 'unknown' is not assignable to type 'string'.
+npm error Lifecycle script &#96;build&#96; failed with error:
+npm error code 2
+npm error path /Users/liviuszberger/mbit-erp/apps/web
+npm error workspace @mbit-erp/web@1.0.0
+npm error location /Users/liviuszberger/mbit-erp/apps/web
+npm error command failed
+npm error command sh -c tsc &amp;&amp; vite build
+
+```
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+Javítom a típuskonverziót:
+
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: apps/web/src/pages/Warehouses.tsx</summary>
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="write" data-tool-name="search_replace">
+
+<details><summary>Tool use: **search_replace** • Edit file: apps/web/src/pages/Warehouses.tsx</summary>
+
+**Chunk 1**
+Lines added: 2, lines removed: 1
+
+```diff
+@@ -680,5 +680,6 @@
+                      {warehouseStock.map((stock: any) =&gt; {
+                        const stockLots = stock.item?.stockLots || [];
+-                       const uniqueBatchNumbers: string[] = [...new Set(stockLots.map((lot: any) =&gt; lot.sarzsGyartasiSzam).filter((x: any): x is string =&gt; Boolean(x)))];
++                       const batchNumbers = stockLots.map((lot: any) =&gt; lot.sarzsGyartasiSzam).filter((x: any) =&gt; Boolean(x)) as string[];
++                       const uniqueBatchNumbers: string[] = [...new Set(batchNumbers)];
+                        
+                        return (
+```
+
+</details>
+
+</tool-use>
+
+---
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp/apps/web && npm run build 2>&1 | tail -20</summary>
+
+```bash
+cd /Users/liviuszberger/mbit-erp/apps/web && npm run build 2>&1 | tail -20
+```
+
+```
+computing gzip size...
+dist/registerSW.js                    0.13 kB
+dist/manifest.webmanifest             0.29 kB
+dist/index.html                       0.57 kB │ gzip:   0.34 kB
+dist/assets/index-Dsf1cLOK.css       31.63 kB │ gzip:   5.86 kB
+dist/assets/DebugPanel-Cp6cj3i2.js    3.11 kB │ gzip:   1.27 kB
+dist/assets/index-DLQkj5Hy.js       826.62 kB │ gzip: 186.71 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 1.49s
+
+PWA v0.17.5
+mode      generateSW
+precache  6 entries (847.18 KiB)
+files generated
+  dist/sw.js
+  dist/workbox-1be04862.js
+
+```
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+A build sikeres. Commitolom és pusholom a javításokat:
+
+
+---
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && git add -A && git commit -m "fix: Frontend TypeScript build hibák javítása - WorkflowStep import, File null check, getAllapotNev helper, createdBy interface, uniqueBatchNumbers type, setLoadingRoles removal"</summary>
+
+```bash
+cd /Users/liviuszberger/mbit-erp && git add -A && git commit -m "fix: Frontend TypeScript build hibák javítása - WorkflowStep import, File null check, getAllapotNev helper, createdBy interface, uniqueBatchNumbers type, setLoadingRoles removal"
+```
+
+```
+[main aad2af2] fix: Frontend TypeScript build hibák javítása - WorkflowStep import, File null check, getAllapotNev helper, createdBy interface, uniqueBatchNumbers type, setLoadingRoles removal
+ 5 files changed, 1116 insertions(+), 12 deletions(-)
+
+```
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && git push origin main</summary>
+
+```bash
+cd /Users/liviuszberger/mbit-erp && git push origin main
+```
+
+```
+To https://github.com/BergerLiviusz/mbit-erp.git
+   46eeb58..aad2af2  main -&gt; main
+
+```
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && for branch in package-1 package-2 package-3 package-4; do echo "=== $branch ===" && git checkout $branch && git merge main --no-edit && git push origin $branch && echo ""; done && git checkout main</summary>
+
+```bash
+cd /Users/liviuszberger/mbit-erp && for branch in package-1 package-2 package-3 package-4; do echo "=== $branch ===" && git checkout $branch && git merge main --no-edit && git push origin $branch && echo ""; done && git checkout main
+```
+
+```
+=== package-1 ===
+Your branch is up to date with 'origin/package-1'.
+Updating 46eeb58..aad2af2
+Fast-forward
+Switched to branch 'package-1'
+ ...303\251si-\303\266tletek-kidolgoz\303\241sa.md" | 1095 +++++++++++++++++++-
+ apps/web/src/components/team/WorkflowDiagram.tsx   |    2 +-
+ apps/web/src/pages/Documents.tsx                   |   20 +-
+ apps/web/src/pages/Warehouses.tsx                  |    5 +-
+ apps/web/src/pages/Workflows.tsx                   |    6 +-
+ 5 files changed, 1116 insertions(+), 12 deletions(-)
+To https://github.com/BergerLiviusz/mbit-erp.git
+   46eeb58..aad2af2  package-1 -&gt; package-1
+
+=== package-2 ===
+Your branch is up to date with 'origin/package-2'.
+Updating 46eeb58..aad2af2
+Fast-forward
+ ...303\251si-\303\266tletek-kidolgoz\303\241sa.md" | 1095 +++++++++++++++++++-
+ apps/web/src/components/team/WorkflowDiagram.tsx   |    2 +-
+ apps/web/src/pages/Documents.tsx                   |   20 +-
+ apps/web/src/pages/Warehouses.tsx                  |    5 +-
+ apps/web/src/pages/Workflows.tsx                   |    6 +-
+ 5 files changed, 1116 insertions(+), 12 deletions(-)
+Switched to branch 'package-2'
+To https://github.com/BergerLiviusz/mbit-erp.git
+   46eeb58..aad2af2  package-2 -&gt; package-2
+
+=== package-3 ===
+Your branch is up to date with 'origin/package-3'.
+Updating 46eeb58..aad2af2
+Fast-forward
+ ...303\251si-\303\266tletek-kidolgoz\303\241sa.md" | 1095 +++++++++++++++++++-
+ apps/web/src/components/team/WorkflowDiagram.tsx   |    2 +-
+ apps/web/src/pages/Documents.tsx                   |   20 +-
+ apps/web/src/pages/Warehouses.tsx                  |    5 +-
+ apps/web/src/pages/Workflows.tsx                   |    6 +-
+ 5 files changed, 1116 insertions(+), 12 deletions(-)
+Switched to branch 'package-3'
+To https://github.com/BergerLiviusz/mbit-erp.git
+   46eeb58..aad2af2  package-3 -&gt; package-3
+
+=== package-4 ===
+Your branch is up to date with 'origin/package-4'.
+Merge made by the 'ort' strategy.
+ ...303\251si-\303\266tletek-kidolgoz\303\241sa.md" | 1095 +++++++++++++++++++-
+ apps/web/src/components/team/WorkflowDiagram.tsx   |    2 +-
+ apps/web/src/pages/Documents.tsx                   |   20 +-
+ apps/web/src/pages/Warehouses.tsx                  |    5 +-
+ apps/web/src/pages/Workflows.tsx                   |    6 +-
+ 5 files changed, 1116 insertions(+), 12 deletions(-)
+Switched to branch 'package-4'
+To https://github.com/BergerLiviusz/mbit-erp.git
+   8867f57..eec23fa  package-4 -&gt; package-4
+
+Your branch is up to date with 'origin/main'.
+Switched to branch 'main'
+
+```
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+## Frontend TypeScript build hibák javítva
+
+### Javított problémák
+
+1. `WorkflowDiagram.tsx`:
+   - Eltávolítva a nem használt `WorkflowStep` import
+
+2. `Documents.tsx`:
+   - `selectedFile` null ellenőrzés hozzáadva az upload előtt
+   - `handleOpenModal` onClick handler javítva: `() => handleOpenModal()`
+   - `getAllapotNev` helper függvény hozzáadva a workflow logokhoz
+   - `createdBy` property hozzáadva a `Document` interface-hez
+
+3. `Warehouses.tsx`:
+   - `uniqueBatchNumbers` típuskonverzió javítva explicit `string[]` típusra
+
+4. `Workflows.tsx`:
+   - Eltávolítva a nem használt `Edit` import
+   - Eltávolítva a `setLoadingRoles` használata
+
+### Git műveletek
+
+- Main branch: commit és push sikeres (`aad2af2`)
+- Package-1, Package-2, Package-3: merge és push sikeres
+- Package-4: merge és push sikeres
+
+### Build állapot
+
+- Lokális frontend build sikeres (`npm run build`)
+- Minden branch frissítve a javításokkal
+- A GitHub Actions CI-nek most már működnie kellene
+
+A CI build-eknek most már sikeresnek kell lenniük. A GitHub Actions automatikusan elindítja a build-eket minden push után.
+
+---
+
+_**User (2025-12-02 21:06Z)**_
+
+oké lefutottak a CI-k sikeresen.
+
+Melyik package tartalmazza a Dokumentum kezelés, Csapatmunka és Logisztika modulokat?
+
+---
+
+_**Agent (model composer-1, mode Ask)**_
+
+
+
+---
+
+
+A package konfiguráció ellenőrzése:
+
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: apps/web/src/config/modules.ts</summary>
+
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+A konfiguráció alapján:
+
+**Package-4** tartalmazza mindhárom modult:
+- Dokumentum kezelés (`documents: true`)
+- Csapatmunka (`team: true`)
+- Logisztika (`logistics: true`)
+
+Összefoglalás a package-ekről:
+
+| Package | Dokumentum | Csapatmunka | Logisztika | CRM | Kontrolling |
+|---------|------------|-------------|------------|-----|-------------|
+| **package-1** | ✅ | ✅ | ❌ | ❌ | ✅ |
+| **package-2** | ✅ | ❌ | ✅ | ✅ | ❌ |
+| **package-3** | ✅ | ✅ | ❌ | ✅ | ❌ |
+| **package-4** | ✅ | ✅ | ✅ | ✅ | ❌ |
+| **full** | ✅ | ✅ | ✅ | ✅ | ✅ |
+
+**Package-4** tartalmazza a Dokumentum kezelés, Csapatmunka és Logisztika modulokat.
+
+---
+
+_**User (2025-12-02 21:06Z)**_
+
+viszont tartalmazza a CRM ügyfélkezelés modult is. Nekem olyan package kellene amiben csak a felsorolt 3 modul van benne.
+
+---
+
+_**Agent (model composer-1, mode Ask)**_
+
+
+
+---
+
+
+Jelenleg nincs olyan package, amely csak a Dokumentum kezelés, Csapatmunka és Logisztika modulokat tartalmazza CRM nélkül.
+
+A jelenlegi package-ek:
+- package-1: Dokumentum + Csapatmunka + Kontrolling (nincs Logisztika)
+- package-2: Dokumentum + CRM + Logisztika (nincs Csapatmunka)
+- package-3: Dokumentum + Csapatmunka + CRM (nincs Logisztika)
+- package-4: Dokumentum + Csapatmunka + CRM + Logisztika (van CRM)
+- full: minden modul
+
+Hozzá kell adni egy új package-et (pl. `package-5`) vagy módosítani egy meglévőt. Módosítási javaslat:
+
+**1. Új package hozzáadása (`package-5`):**
+
+```typescript
+// apps/web/src/config/modules.ts fájlban, a PACKAGE_CONFIGS objektumban:
+
+'package-5': {
+  name: 'Csomag 5',
+  modules: {
+    documents: true,
+    team: true,
+    controlling: false,
+    crm: false,
+    logistics: true
+  }
+},
+```
+
+**2. Vagy módosítani a `package-4`-et:**
+
+```typescript
+'package-4': {
+  name: 'Csomag 4',
+  modules: {
+    documents: true,
+    team: true,
+    controlling: false,
+    crm: false,  // <-- false-ra változtatva
+    logistics: true
+  }
+},
+```
+
+**3. És frissíteni a CI workflow-t:**
+
+A `.github/workflows/build-desktop.yml` fájlban hozzá kell adni a `package-5` branch-et (ha új package-et hozunk létre), vagy módosítani a `package-4` logikát.
+
+Melyik megoldást választod? Hozzam létre az új `package-5`-öt, vagy módosítsam a `package-4`-et?
+
+---
+
+_**User (2025-12-02 21:06Z)**_
+
+Teszteltem a nagy változtatásokat:
+
+
+
+Az új "folyamatleltár" workflow csinálásnál:
+
+-nem lehet szerepkört megadni mert csak az a lehetőség van hogy "szerepkör (opcionális)"
+
+-valamint csak "olvasás" "írás" "jóváhagyás" van amit nem igazán értek hogy tudunk applikálni egy ilyen funkcióban. Helyette inkább egy szabadon beírható tag zóna kellene vagy mondjuk "adja meg a lépés tipusát" és egy field amibe beírhat bármit és színt adhat neki mint tag. Ezt a modult kicsit tovább kell gondolnunk, egyszerű és használható kell hogy legyen egy workflow leírás elkészítéséhez, amit mondjuk egy munkatársnak megtudnak csinálni egy adott munkafolyamat szemléltetéséhez.
+
+-a logisztika modulon belül a "termékek" szekcióban amikor létrehozok egy terméket és szállítót akarok hozzá adni a modal ablak ami feljön a szállító hozzáadásához rendkívül vékony sávban látható csak horizontálisan, így nem mutatja a teljes ablakot, mezőket, így nagyon nehezen kezelhető. Feltehetően az előző "termék szállítói" modal méret keretében látható csak ez a modal ami akkor nyílik meg ha rányomunk ott hogy "+szállító hozzáadása". Ezt javítanunk kell hogy teljes méretében mutassa a modal overlay-t. Ehhez csatoltam egy screenshotot is ami megmutatja hogyan néz ki jelenleg.
+
+-a raktáraknál ha rányomok hogy "részletek" majd megjelenik alul a raktár részletek - szedjük ki a "leltárív nyomtatása" gombot és inkább a "pdf nyomtatása" valamint az "excel nyomtatása" gombokhoz írjuk oda vagy indikáljuk hogy "leltárív" mert azok generálnak ugyan ugy leltárívet.
+
+-a főoldalnál az irányítópult összesítő kártyái nem frissülnek ha hozzáadok egy ügyfelet (partner) vagy cikket (termék) vagy bármi egyebet, mindig 0 marad.
+
+-a logisztika-készletfoglaltság konszignáció modulon belül a "várható beérkezések" lapnál "Hiba a várható beérkezések betöltésekor" hiba jelentést ír ki felül amikor rányomok és megnyitom. 
+
+
+
+Csináljuk meg ezeket a hiányosságokat és változtatásokat a packagekben és a mainben is egyaránt majd futtasuk rajtuk a CI-t.
+
+csatolom az app log-ot ami a háttérba készült a tesztelésem során, hátha valami egyéb is kiderül számodra ezekről vagy ezeken az észrevételeken kívül:
+
+[2025-12-02T22:23:44.957Z] [Cleanup] Checking for legacy nested node_modules directories...
+
+[2025-12-02T22:23:45.224Z] [Cleanup] ✓ No legacy nested node_modules found
+
+[2025-12-02T22:23:45.228Z] [App] Creating window immediately...
+
+[2025-12-02T22:23:45.234Z] [Window] Found icon at: C:\Users\liviuszberger\Desktop\Mbit\resources\icon.ico
+
+[2025-12-02T22:23:45.235Z] [Window] Creating BrowserWindow...
+
+[2025-12-02T22:23:45.949Z] [Window] BrowserWindow created, showing...
+
+[2025-12-02T22:23:45.951Z] [Window] Loading frontend from: C:\Users\liviuszberger\Desktop\Mbit\resources\frontend\index.html
+
+[2025-12-02T22:23:45.955Z] [Window] Loading from URL: file:///C:/Users/liviuszberger/Desktop/Mbit/resources/frontend/index.html
+
+[2025-12-02T22:23:46.074Z] [Window] Window setup complete
+
+[2025-12-02T22:23:46.075Z] [App] Starting backend server in background...
+
+[2025-12-02T22:23:46.080Z] [Backend] Environment: PORT=3000, DATA_DIR=C:\Users\liviuszberger\AppData\Roaming\@mbit-erp\desktop\data, DATABASE_URL=file:***mbit-erp.db
+
+[2025-12-02T22:23:46.081Z] [Backend] Backend path: C:\Users\liviuszberger\Desktop\Mbit\resources\backend\main.js
+
+[2025-12-02T22:23:46.081Z] [Backend] Backend directory: C:\Users\liviuszberger\Desktop\Mbit\resources\backend
+
+[2025-12-02T22:23:46.081Z] [Backend] Node modules path: C:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules
+
+[2025-12-02T22:23:46.082Z] [Backend] Resources path: C:\Users\liviuszberger\Desktop\Mbit\resources
+
+[2025-12-02T22:23:46.082Z] [Backend] Using Electron bundled Node.js runtime via fork()
+
+[2025-12-02T22:23:46.082Z] [Backend] NODE_PATH set to: C:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules
+
+[2025-12-02T22:23:46.103Z] [Backend] Waiting for backend to be ready (max 120s)...
+
+[2025-12-02T22:23:47.260Z] [Backend] 🔧 Electron mode detected - skipping .env file loading (using Electron-provided environment variables)
+
+
+
+[2025-12-02T22:23:47.349Z] [Window] Window finished loading
+
+[2025-12-02T22:23:47.356Z] [Window] Window ready-to-show event fired
+
+[2025-12-02T22:23:54.359Z] [Backend] Still waiting... (attempt 5/60, 10s elapsed)
+
+[2025-12-02T22:23:56.112Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:24:04.432Z] [Backend] Still waiting... (attempt 10/60, 20s elapsed)
+
+[2025-12-02T22:24:06.119Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:24:14.502Z] [Backend] Still waiting... (attempt 15/60, 30s elapsed)
+
+[2025-12-02T22:24:16.124Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:24:17.881Z] [Backend] 🔍 Environment check:
+
+  - ELECTRON_RUN_AS_NODE: 1
+
+  - DATABASE_URL: ***SET***
+
+  - PORT: 3000
+
+
+
+[2025-12-02T22:24:17.882Z] [Backend]   - NODE_ENV: production
+
+
+
+[2025-12-02T22:24:17.891Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:17 PM [32m    LOG[39m [38;5;3m[NestFactory] [39m[32mStarting Nest application...[39m
+
+
+
+[2025-12-02T22:24:17.972Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:17 PM [32m    LOG[39m [38;5;3m[StorageService] [39m[32mData directory: C:\Users\liviuszberger\mbit-data[39m
+
+
+
+[2025-12-02T22:24:18.056Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPrismaModule dependencies initialized[39m[38;5;3m +84ms[39m
+
+
+
+[2025-12-02T22:24:18.057Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mStorageModule dependencies initialized[39m[38;5;3m +1ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPassportModule dependencies initialized[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.102Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mJwtModule dependencies initialized[39m[38;5;3m +45ms[39m
+
+
+
+[2025-12-02T22:24:18.110Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAppModule dependencies initialized[39m[38;5;3m +8ms[39m
+
+
+
+[2025-12-02T22:24:18.111Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mSeedModule dependencies initialized[39m[38;5;3m +1ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAuditModule dependencies initialized[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.114Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAuditModule dependencies initialized[39m[38;5;3m +3ms[39m
+
+
+
+[2025-12-02T22:24:18.115Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mBackupModule dependencies initialized[39m[38;5;3m +1ms[39m
+
+
+
+[2025-12-02T22:24:18.120Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mRbacModule dependencies initialized[39m[38;5;3m +5ms[39m
+
+
+
+[2025-12-02T22:24:18.123Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAuthModule dependencies initialized[39m[38;5;3m +3ms[39m
+
+
+
+[2025-12-02T22:24:18.135Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mSystemModule dependencies initialized[39m[38;5;3m +11ms[39m
+
+
+
+[2025-12-02T22:24:18.135Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mHrModule dependencies initialized[39m[38;5;3m +1ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mControllingModule dependencies initialized[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.139Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mTeamModule dependencies initialized[39m[38;5;3m +4ms[39m
+
+
+
+[2025-12-02T22:24:18.140Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mDmsModule dependencies initialized[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mCrmModule dependencies initialized[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.141Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mLogisticsModule dependencies initialized[39m[38;5;3m +2ms[39m
+
+
+
+[2025-12-02T22:24:18.162Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAppController {/}:[39m[38;5;3m +20ms[39m
+
+
+
+[2025-12-02T22:24:18.166Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/, GET} route[39m[38;5;3m +5ms[39m
+
+
+
+[2025-12-02T22:24:18.167Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/health, GET} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.167Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAuthController {/auth}:[39m[38;5;3m +1ms[39m
+
+
+
+[2025-12-02T22:24:18.169Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/auth/login, POST} route[39m[38;5;3m +1ms[39m
+
+
+
+[2025-12-02T22:24:18.169Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/auth/register, POST} route[39m[38;5;3m +1ms[39m
+
+
+
+[2025-12-02T22:24:18.170Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAccountController {/crm/accounts}:[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.172Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/accounts, GET} route[39m[38;5;3m +2ms[39m
+
+
+
+[2025-12-02T22:24:18.174Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/accounts/:id, GET} route[39m[38;5;3m +2ms[39m
+
+
+
+[2025-12-02T22:24:18.175Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/accounts, POST} route[39m[38;5;3m +1ms[39m
+
+
+
+[2025-12-02T22:24:18.175Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/accounts/:id, PUT} route[39m[38;5;3m +1ms[39m
+
+
+
+[2025-12-02T22:24:18.176Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/accounts/:id, DELETE} route[39m[38;5;3m +1ms[39m
+
+
+
+[2025-12-02T22:24:18.176Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mCampaignController {/crm/campaigns}:[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.183Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/campaigns, GET} route[39m[38;5;3m +6ms[39m
+
+
+
+[2025-12-02T22:24:18.184Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/campaigns/export/:format, GET} route[39m[38;5;3m +1ms[39m
+
+
+
+[2025-12-02T22:24:18.184Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/campaigns/:id, GET} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.184Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/campaigns, POST} route[39m[38;5;3m +1ms[39m
+
+
+
+[2025-12-02T22:24:18.185Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/campaigns/:id, PUT} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.185Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/campaigns/:id, DELETE} route[39m[38;5;3m +1ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mTicketController {/crm/tickets}:[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.185Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/tickets, GET} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.186Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/tickets/:id, GET} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.186Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/tickets, POST} route[39m[38;5;3m +1ms[39m
+
+
+
+[2025-12-02T22:24:18.187Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/tickets/:id, PUT} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.187Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/tickets/:id, DELETE} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mOpportunityController {/crm/opportunities}:[39m[38;5;3m +1ms[39m
+
+
+
+[2025-12-02T22:24:18.187Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/opportunities, GET} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.188Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/opportunities/stats, GET} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.188Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/opportunities/:id, GET} route[39m[38;5;3m +1ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/opportunities, POST} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.188Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/opportunities/:id, PUT} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/opportunities/:id, DELETE} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.189Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mQuoteController {/crm/quotes}:[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/quotes, GET} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.189Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/quotes/:id, GET} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.189Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/quotes, POST} route[39m[38;5;3m +1ms[39m
+
+
+
+[2025-12-02T22:24:18.189Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/quotes/:id, PUT} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.191Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/quotes/:id/approve, POST} route[39m[38;5;3m +2ms[39m
+
+
+
+[2025-12-02T22:24:18.192Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/quotes/:id/reject, POST} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/quotes/:id, DELETE} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mOrderController {/crm/orders}:[39m[38;5;3m +1ms[39m
+
+
+
+[2025-12-02T22:24:18.192Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/orders, POST} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.192Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/orders, GET} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.193Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/orders/:id, GET} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.193Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/orders/:id, PUT} route[39m[38;5;3m +1ms[39m
+
+
+
+[2025-12-02T22:24:18.193Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/orders/:id/status, POST} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.194Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/orders/:id/cancel, POST} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.194Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/orders/:id, DELETE} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mInvoiceController {/crm/invoices}:[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.194Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/invoices, GET} route[39m[38;5;3m +1ms[39m
+
+
+
+[2025-12-02T22:24:18.194Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/invoices/:id, GET} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.194Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/invoices, POST} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.195Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/invoices/from-order/:orderId, POST} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/invoices/:id, PUT} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.195Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/invoices/:id/mark-issued, POST} route[39m[38;5;3m +1ms[39m
+
+
+
+[2025-12-02T22:24:18.196Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/invoices/:id/mark-sent, POST} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.196Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/invoices/:id/payments, POST} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/invoices/:id/storno, POST} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.196Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/invoices/:id, DELETE} route[39m[38;5;3m +1ms[39m
+
+
+
+[2025-12-02T22:24:18.197Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mChatController {/crm/chat}:[39m[38;5;3m +1ms[39m
+
+
+
+[2025-12-02T22:24:18.198Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/chat/rooms, GET} route[39m[38;5;3m +1ms[39m
+
+
+
+[2025-12-02T22:24:18.199Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/chat/rooms/:id, GET} route[39m[38;5;3m +1ms[39m
+
+
+
+[2025-12-02T22:24:18.200Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/chat/rooms, POST} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.200Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/chat/rooms/:id, PUT} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.200Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/chat/rooms/:id/participants, POST} route[39m[38;5;3m +1ms[39m
+
+
+
+[2025-12-02T22:24:18.201Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/chat/rooms/:id/participants, DELETE} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.201Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/chat/rooms/:id/messages, GET} route[39m[38;5;3m +1ms[39m
+
+
+
+[2025-12-02T22:24:18.202Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/chat/rooms/:id/messages, POST} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.202Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/chat/rooms/:id/mark-read, POST} route[39m[38;5;3m +1ms[39m
+
+
+
+[2025-12-02T22:24:18.202Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/chat/rooms/:id/unread-count, GET} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.202Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/chat/rooms/:id/close, POST} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/chat/rooms/:id, DELETE} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.202Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mSystemSettingsController {/system/settings}:[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.203Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/settings, GET} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.203Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/settings/category/:category, GET} route[39m[38;5;3m +1ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/settings/:key, GET} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.203Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/settings, POST} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.203Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/settings/:key, PUT} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/settings/bulk, POST} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.204Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/settings/:key, DELETE} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.204Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/settings/initialize, POST} route[39m[38;5;3m +1ms[39m
+
+
+
+[2025-12-02T22:24:18.204Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mHealthController {/health}:[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.205Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/health, GET} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.205Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/health/detailed, GET} route[39m[38;5;3m +1ms[39m
+
+
+
+[2025-12-02T22:24:18.205Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mDiagnosticsController {/system/diagnostics}:[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.206Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/diagnostics/logs/download, GET} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.206Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/diagnostics/stats, GET} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.206Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/diagnostics/backup/now, POST} route[39m[38;5;3m +1ms[39m
+
+
+
+[2025-12-02T22:24:18.206Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/diagnostics/backup/list, GET} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/diagnostics/permissions/check-admin, GET} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.207Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/diagnostics/permissions/fix-admin, POST} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.207Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mUserController {/system/users}:[39m[38;5;3m +1ms[39m
+
+
+
+[2025-12-02T22:24:18.208Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/users, GET} route[39m[38;5;3m +1ms[39m
+
+
+
+[2025-12-02T22:24:18.208Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/users/:id, GET} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.209Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/users, POST} route[39m[38;5;3m +1ms[39m
+
+
+
+[2025-12-02T22:24:18.209Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/users/:id, PUT} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/users/:id/password, PUT} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.210Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/users/:id/admin-password, PUT} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.210Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/users/:id, DELETE} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mBugReportController {/system/bug-reports}:[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.211Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/bug-reports, GET} route[39m[38;5;3m +1ms[39m
+
+
+
+[2025-12-02T22:24:18.211Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/bug-reports/stats, GET} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/bug-reports/:id, GET} route[39m[38;5;3m +1ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/bug-reports, POST} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.211Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/bug-reports/:id, PUT} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.212Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/bug-reports/:id/comments, POST} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.212Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mDocumentController {/dms/documents}:[39m[38;5;3m +1ms[39m
+
+
+
+[2025-12-02T22:24:18.213Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/documents, GET} route[39m[38;5;3m +1ms[39m
+
+
+
+[2025-12-02T22:24:18.214Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/documents/:id, GET} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.216Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/documents, POST} route[39m[38;5;3m +1ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/documents/:id, PUT} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.217Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/documents/:id/upload, POST} route[39m[38;5;3m +2ms[39m
+
+
+
+[2025-12-02T22:24:18.219Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/documents/:id, DELETE} route[39m[38;5;3m +1ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/documents/:id/folder-path, GET} route[39m[38;5;3m +1ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/documents/:id/ocr/download, GET} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.220Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/documents/:id/ocr, POST} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/documents/:id/access, POST} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/documents/:id/access/:userId, DELETE} route[39m[38;5;3m +1ms[39m
+
+
+
+[2025-12-02T22:24:18.221Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mDocumentCategoryController {/dms/categories}:[39m[38;5;3m +2ms[39m
+
+
+
+[2025-12-02T22:24:18.222Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/categories, GET} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/categories/:id, GET} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.222Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/categories, POST} route[39m[38;5;3m +1ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/categories/:id, PUT} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mDocumentNotificationController {/dms/document-notifications}:[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.225Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/document-notifications/expiring, GET} route[39m[38;5;3m +2ms[39m
+
+
+
+[2025-12-02T22:24:18.225Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/document-notifications/check, GET} route[39m[38;5;3m +1ms[39m
+
+
+
+[2025-12-02T22:24:18.226Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mTagController {/dms/tags}:[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.226Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/tags, GET} route[39m[38;5;3m +1ms[39m
+
+
+
+[2025-12-02T22:24:18.227Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/tags, POST} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.227Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/tags/:id, PUT} route[39m[38;5;3m +1ms[39m
+
+
+
+[2025-12-02T22:24:18.228Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/tags/:id, DELETE} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mItemController {/logistics/items}:[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.228Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/items, GET} route[39m[38;5;3m +1ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/items/:id, GET} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.228Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/items, POST} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/items/:id, PUT} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.229Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/items/:id, DELETE} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.229Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/items/:id/suppliers, GET} route[39m[38;5;3m +1ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/items/:id/suppliers/:supplierId/primary, PUT} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mItemGroupController {/logistics/item-groups}:[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.230Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/item-groups, GET} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mWarehouseController {/logistics/warehouses}:[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.230Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/warehouses, GET} route[39m[38;5;3m +1ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/warehouses/:id, GET} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.231Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/warehouses, POST} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.231Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/warehouses/:id, PUT} route[39m[38;5;3m +1ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mStockController {/logistics/stock}:[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.232Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/stock, GET} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.233Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/stock/low-stock, GET} route[39m[38;5;3m +1ms[39m
+
+
+
+[2025-12-02T22:24:18.234Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/stock/move, POST} route[39m[38;5;3m +1ms[39m
+
+
+
+[2025-12-02T22:24:18.234Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/stock/movements, GET} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.234Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mInventoryController {/logistics/inventory}:[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.235Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/inventory, GET} route[39m[38;5;3m +1ms[39m
+
+
+
+[2025-12-02T22:24:18.235Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/inventory/warehouse/:warehouseId, GET} route[39m[38;5;3m +1ms[39m
+
+
+
+[2025-12-02T22:24:18.235Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/inventory/alerts, GET} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.236Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/inventory/stock-levels, POST} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/inventory/stock-levels/:id, PUT} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.236Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/inventory/stock-levels/:id, DELETE} route[39m[38;5;3m +1ms[39m
+
+
+
+[2025-12-02T22:24:18.236Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/inventory/warehouse/:warehouseId/inventory-sheet/pdf, GET} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.237Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/inventory/warehouse/:warehouseId/inventory-sheet/excel, GET} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mPurchaseOrderController {/logistics/purchase-orders}:[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.237Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/purchase-orders, GET} route[39m[38;5;3m +1ms[39m
+
+
+
+[2025-12-02T22:24:18.237Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/purchase-orders/:id, GET} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.239Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/purchase-orders, POST} route[39m[38;5;3m +1ms[39m
+
+
+
+[2025-12-02T22:24:18.239Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/purchase-orders/:id, PUT} route[39m[38;5;3m +1ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mReturnController {/logistics/returns}:[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.240Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/returns, GET} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/returns/:id, GET} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.241Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/returns, POST} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.242Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/returns/:id, PUT} route[39m[38;5;3m +1ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/returns/:id/approve, POST} route[39m[38;5;3m +1ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/returns/:id/reject, POST} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/returns/:id/complete, POST} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mSupplierController {/logistics/suppliers}:[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.242Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/suppliers, GET} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/suppliers/:id, GET} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/suppliers, POST} route[39m[38;5;3m +1ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/suppliers/:id, PUT} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.243Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/suppliers/:id, DELETE} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.243Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/suppliers/:id/items/:itemId/link, POST} route[39m[38;5;3m +1ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/suppliers/:id/items/:itemId/unlink, DELETE} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/suppliers/:id/items, GET} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mInventoryReportController {/logistics/inventory/reports}:[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.244Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/inventory/reports/print, GET} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/inventory/reports/by-item-group, GET} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mNotificationController {/logistics/notifications}:[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/notifications/products, GET} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.245Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/notifications/stock, GET} route[39m[38;5;3m +1ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mInventorySheetController {/logistics/inventory-sheets}:[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/inventory-sheets, GET} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/inventory-sheets/:id, GET} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/inventory-sheets, POST} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/inventory-sheets/:id, PUT} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.246Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/inventory-sheets/:id/status, PUT} route[39m[38;5;3m +1ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/inventory-sheets/:id/approve, POST} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/inventory-sheets/:id/close, POST} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/inventory-sheets/:id/revert-approval, POST} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/inventory-sheets/:id/items, POST} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.246Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/inventory-sheets/:id/items/:itemId, PUT} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.247Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/inventory-sheets/:id, DELETE} route[39m[38;5;3m +1ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/inventory-sheets/:id/pdf, GET} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mIntrastatController {/logistics/intrastat}:[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.247Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/intrastat, GET} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/intrastat/ev/:ev/honap/:honap, GET} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/intrastat/:id, GET} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.248Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/intrastat/:id/export/nav, GET} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.249Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/intrastat/:id/export/xml, GET} route[39m[38;5;3m +2ms[39m
+
+
+
+[2025-12-02T22:24:18.250Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/intrastat, POST} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/intrastat/:id/items, POST} route[39m[38;5;3m +1ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/intrastat/:id/items/:itemId, PUT} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.250Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/intrastat/:id/mark-ready, POST} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/intrastat/:id/mark-sent, POST} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/intrastat/:id/items/:itemId, DELETE} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.250Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/intrastat/:id, DELETE} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mStockValuationController {/logistics/stock-valuation}:[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.251Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/stock-valuation/calculate/:itemId/:warehouseId, GET} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/stock-valuation/calculate-sale, POST} route[39m[38;5;3m +1ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/stock-valuation/report, GET} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.251Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/stock-valuation/warehouse/:warehouseId/method, PUT} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mStockReservationController {/logistics/stock-reservations}:[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.252Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/stock-reservations, GET} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.252Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/stock-reservations/available/:itemId/:warehouseId, GET} route[39m[38;5;3m +1ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/stock-reservations/:id, GET} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.253Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/stock-reservations, POST} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/stock-reservations/:id, PUT} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/stock-reservations/:id, DELETE} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/stock-reservations/expected-receipts, GET} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.254Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/stock-reservations/expected-receipts/:id, GET} route[39m[38;5;3m +1ms[39m
+
+
+
+[2025-12-02T22:24:18.254Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/stock-reservations/expected-receipts, POST} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/stock-reservations/expected-receipts/:id/mark-received, POST} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/stock-reservations/expected-receipts/:id, DELETE} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.254Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mTaskController {/team/tasks}:[39m[38;5;3m +1ms[39m
+
+
+
+[2025-12-02T22:24:18.254Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/tasks, GET} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/tasks/my, GET} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/tasks/assigned-to/:userId, GET} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.255Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/tasks/upcoming-deadlines, GET} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/tasks/:id, GET} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/tasks, POST} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.255Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/tasks/:id, PUT} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/tasks/:id, DELETE} route[39m[38;5;3m +1ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/tasks/:id/status, PATCH} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.256Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/tasks/:id/assign, PATCH} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/tasks/:id/move, PATCH} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.256Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/tasks/:id/notify, GET} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mDashboardController {/team/dashboard}:[39m[38;5;3m +1ms[39m
+
+
+
+[2025-12-02T22:24:18.258Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/dashboard/stats, GET} route[39m[38;5;3m +1ms[39m
+
+
+
+[2025-12-02T22:24:18.259Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/dashboard/my-tasks, GET} route[39m[38;5;3m +1ms[39m
+
+
+
+[2025-12-02T22:24:18.259Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mBoardController {/team/boards}:[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.260Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/boards, GET} route[39m[38;5;3m +1ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/boards/:id, GET} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/boards, POST} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.261Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/boards/:id, PUT} route[39m[38;5;3m +1ms[39m
+
+
+
+[2025-12-02T22:24:18.261Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/boards/:id, DELETE} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/boards/:id/members, POST} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/boards/:id/members/:userId, DELETE} route[39m[38;5;3m +1ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/boards/:id/columns, GET} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.262Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/boards/:id/columns, POST} route[39m[38;5;3m +1ms[39m
+
+
+
+[2025-12-02T22:24:18.263Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/boards/:id/columns/:columnId, PUT} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/boards/:id/columns/:columnId, DELETE} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mCommentController {/team/tasks}:[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.263Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/tasks/:taskId/comments, GET} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/tasks/:taskId/comments, POST} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/tasks/comments/:id, PUT} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/tasks/comments/:id, DELETE} route[39m[38;5;3m +1ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mWorkflowController {/team/workflows}:[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.264Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/workflows, GET} route[39m[38;5;3m +1ms[39m
+
+
+
+[2025-12-02T22:24:18.265Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/workflows/:id, GET} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/workflows, POST} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.268Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/workflows/:id, PUT} route[39m[38;5;3m +3ms[39m
+
+
+
+[2025-12-02T22:24:18.270Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/workflows/:id, DELETE} route[39m[38;5;3m +2ms[39m
+
+
+
+[2025-12-02T22:24:18.270Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/workflows/:id/steps, POST} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/workflows/:id/steps/:stepId, PUT} route[39m[38;5;3m +1ms[39m
+
+
+
+[2025-12-02T22:24:18.271Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/workflows/:id/steps/:stepId, DELETE} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.271Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mJobPositionController {/hr/job-positions}:[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.275Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/hr/job-positions, GET} route[39m[38;5;3m +5ms[39m
+
+
+
+[2025-12-02T22:24:18.277Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/hr/job-positions/:id, GET} route[39m[38;5;3m +1ms[39m
+
+
+
+[2025-12-02T22:24:18.277Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/hr/job-positions, POST} route[39m[38;5;3m +1ms[39m
+
+
+
+[2025-12-02T22:24:18.278Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/hr/job-positions/:id, PUT} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.278Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/hr/job-positions/:id, DELETE} route[39m[38;5;3m +1ms[39m
+
+
+
+[2025-12-02T22:24:18.278Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mEmployeeController {/hr/employees}:[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.279Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/hr/employees, GET} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.284Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/hr/employees/:id, GET} route[39m[38;5;3m +5ms[39m
+
+
+
+[2025-12-02T22:24:18.284Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/hr/employees, POST} route[39m[38;5;3m +1ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/hr/employees/:id, PUT} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.285Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/hr/employees/:id, DELETE} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mContractController {/hr/contracts}:[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.285Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/hr/contracts, GET} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/hr/contracts/expiring, GET} route[39m[38;5;3m +1ms[39m
+
+
+
+[2025-12-02T22:24:18.285Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/hr/contracts/:id, GET} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.285Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/hr/contracts, POST} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/hr/contracts/:id, PUT} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.286Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/hr/contracts/:id/amendments, POST} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/hr/contracts/:id, DELETE} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mHrReportController {/hr/reports}:[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.290Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/hr/reports/nav/payroll, POST} route[39m[38;5;3m +4ms[39m
+
+
+
+[2025-12-02T22:24:18.291Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/hr/reports/nav/tax, POST} route[39m[38;5;3m +2ms[39m
+
+
+
+[2025-12-02T22:24:18.292Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/hr/reports/ksh/employment, POST} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.292Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/hr/reports/ksh/wage, POST} route[39m[38;5;3m +1ms[39m
+
+
+
+[2025-12-02T22:24:18.292Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/hr/reports/ksh/contract, POST} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mDatabaseConnectionController {/controlling/database-connections}:[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.293Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/database-connections, GET} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.293Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/database-connections/:id, GET} route[39m[38;5;3m +1ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/database-connections/:id/test, POST} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.294Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/database-connections, POST} route[39m[38;5;3m +1ms[39m
+
+
+
+[2025-12-02T22:24:18.294Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/database-connections/:id, PUT} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.295Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/database-connections/:id, DELETE} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.296Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mKpiController {/controlling/kpi}:[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/kpi, GET} route[39m[38;5;3m +1ms[39m
+
+
+
+[2025-12-02T22:24:18.296Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/kpi/:id, GET} route[39m[38;5;3m +1ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/kpi/:id/calculate, POST} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.297Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/kpi, POST} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/kpi/:id, PUT} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/kpi/:id, DELETE} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mQueryController {/controlling/queries}:[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.298Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/queries/templates, GET} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/queries/templates/:id, GET} route[39m[38;5;3m +1ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/queries/templates, POST} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/queries/templates/:id, PUT} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/queries/templates/:id, DELETE} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/queries/ad-hoc, GET} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/queries/ad-hoc/:id, GET} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.299Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/queries/ad-hoc, POST} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/queries/execute, POST} route[39m[38;5;3m +1ms[39m
+
+
+
+[2025-12-02T22:24:18.300Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/queries/ad-hoc/:id, DELETE} route[39m[38;5;3m +2ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mReportExportController {/controlling/reports/export}:[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.302Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/reports/export/excel, POST} route[39m[38;5;3m +2ms[39m
+
+
+
+[2025-12-02T22:24:18.303Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/reports/export/csv, POST} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.303Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/reports/export/txt, POST} route[39m[38;5;3m +1ms[39m
+
+
+
+[2025-12-02T22:24:18.304Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/reports/export/xml, POST} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mModelAnalysisController {/controlling/models}:[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/models/cost, GET} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.304Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/models/cost/:id, GET} route[39m[38;5;3m +1ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/models/cost, POST} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.304Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/models/cost/:id, PUT} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.305Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/models/cost/:id/run, POST} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/models/cost/:id, DELETE} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.305Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/models/quantity, GET} route[39m[38;5;3m +1ms[39m
+
+
+
+[2025-12-02T22:24:18.306Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/models/quantity/:id, GET} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.306Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/models/quantity, POST} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.306Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/models/quantity/:id, PUT} route[39m[38;5;3m +1ms[39m
+
+
+
+[2025-12-02T22:24:18.307Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/models/quantity/:id/run, POST} route[39m[38;5;3m +1ms[39m
+
+
+
+[2025-12-02T22:24:18.308Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/models/quantity/:id, DELETE} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.308Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mDataSourceController {/controlling/data-sources}:[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.308Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/data-sources, GET} route[39m[38;5;3m +1ms[39m
+
+
+
+[2025-12-02T22:24:18.309Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/data-sources/:id, GET} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/data-sources, POST} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/data-sources/:id, PUT} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.309Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/data-sources/:id, DELETE} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/data-sources/:id/jobs, GET} route[39m[38;5;3m +1ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/data-sources/jobs/:jobId, GET} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/data-sources/:id/jobs, POST} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/data-sources/jobs/:jobId, PUT} route[39m[38;5;3m +0ms[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/data-sources/jobs/:jobId, DELETE} route[39m[38;5;3m +0ms[39m
+
+
+
+[2025-12-02T22:24:18.349Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[PrismaService] [39m[32m✅ Adatbázis kapcsolat létrejött[39m
+
+
+
+[2025-12-02T22:24:18.385Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[PrismaService] [39m[32m🌱 New database detected - initializing schema...[39m
+
+
+
+[2025-12-02T22:24:18.386Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[PrismaService] [39m[32mRunning prisma db push to create tables...[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[PrismaService] [39m[32mSchema path:[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[PrismaService] [39m[32mC:\Users\liviuszberger\Desktop\Mbit\resources\backend\prisma\schema.prisma[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[PrismaService] [39m[32mWorking directory:[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[PrismaService] [39m[32mC:\Users\liviuszberger\Desktop\Mbit\resources\backend\prisma[39m
+
+
+
+[2025-12-02T22:24:18.386Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[PrismaService] [39m[32mPrisma CLI:[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[PrismaService] [39m[32mC:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules\prisma\build\index.js[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[PrismaService] [39m[32mNode executable:[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[PrismaService] [39m[32mC:\Users\liviuszberger\Desktop\Mbit\Mbit ERP.exe[39m
+
+
+
+[2025-12-02T22:24:18.386Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[PrismaService] [39m[32mExecuting command:[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:18 PM [32m    LOG[39m [38;5;3m[PrismaService] [39m[32m"C:\Users\liviuszberger\Desktop\Mbit\Mbit ERP.exe" "C:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules\prisma\build\index.js" db push --skip-generate --accept-data-loss[39m
+
+
+
+[2025-12-02T22:24:21.945Z] [Backend] Prisma schema loaded from schema.prisma
+
+
+
+[2025-12-02T22:24:22.054Z] [Backend] Datasource "db": SQLite database "mbit-erp.db" at "file:C:/Users/liviuszberger/AppData/Roaming/@mbit-erp/desktop/data/mbit-erp.db"
+
+
+
+[2025-12-02T22:24:22.744Z] [Backend] 
+
+Your database is now in sync with your Prisma schema. Done in 574ms
+
+
+
+[2025-12-02T22:24:22.746Z] [Backend] 
+
+
+
+[2025-12-02T22:24:22.905Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:22 PM [32m    LOG[39m [38;5;3m[PrismaService] [39m[32m✅ Database schema created successfully[39m
+
+
+
+[2025-12-02T22:24:22.943Z] [Backend] [95m[Nest] 11744  - [39m12/02/2025, 11:24:22 PM [95m  DEBUG[39m [38;5;3m[PrismaService] [39m[95mTask board table exists[39m
+
+
+
+[2025-12-02T22:24:22.980Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:22 PM [32m    LOG[39m [38;5;3m[SeedService] [39m[32m🌱 Üres adatbázis észlelve, seed indítása...[39m
+
+
+
+[2025-12-02T22:24:22.980Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:22 PM [32m    LOG[39m [38;5;3m[SeedService] [39m[32m🔑 Jogosultságok létrehozása...[39m
+
+
+
+[2025-12-02T22:24:23.440Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:23 PM [32m    LOG[39m [38;5;3m[SeedService] [39m[32m✅ 130 jogosultság létrehozva[39m
+
+
+
+[2025-12-02T22:24:23.449Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:23 PM [32m    LOG[39m [38;5;3m[SeedService] [39m[32m👥 Szerepkörök létrehozása...[39m
+
+
+
+[2025-12-02T22:24:23.835Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:23 PM [32m    LOG[39m [38;5;3m[SeedService] [39m[32m✅ Szerepkörök létrehozva[39m
+
+
+
+[2025-12-02T22:24:23.836Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:23 PM [32m    LOG[39m [38;5;3m[SeedService] [39m[32m👤 Admin felhasználó létrehozása...[39m
+
+
+
+[2025-12-02T22:24:23.922Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:23 PM [32m    LOG[39m [38;5;3m[SeedService] [39m[32m⚙️ Rendszerbeállítások inicializálása...[39m
+
+
+
+[2025-12-02T22:24:23.988Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:23 PM [32m    LOG[39m [38;5;3m[SeedService] [39m[32m✅ 24 rendszerbeállítás inicializálva[39m
+
+
+
+[2025-12-02T22:24:23.988Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:24 PM [32m    LOG[39m [38;5;3m[SeedService] [39m[32m📋 Alapértelmezett board létrehozása...[39m
+
+
+
+[2025-12-02T22:24:24.007Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:24 PM [32m    LOG[39m [38;5;3m[SeedService] [39m[32m✅ Alapértelmezett board létrehozva[39m
+
+[32m[Nest] 11744  - [39m12/02/2025, 11:24:24 PM [32m    LOG[39m [38;5;3m[SeedService] [39m[32m✅ Admin felhasználó létrehozva: admin / 1234[39m
+
+
+
+[2025-12-02T22:24:24.007Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:24 PM [32m    LOG[39m [38;5;3m[SeedService] [39m[32m🎉 Adatbázis seed sikeres![39m
+
+
+
+[2025-12-02T22:24:24.023Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:24 PM [32m    LOG[39m [38;5;3m[DocumentNotificationService] [39m[32mDocument deadline notification scheduler initialized[39m
+
+
+
+[2025-12-02T22:24:24.031Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:24:24 PM [32m    LOG[39m [38;5;3m[NestApplication] [39m[32mNest application successfully started[39m[38;5;3m +7ms[39m
+
+
+
+[2025-12-02T22:24:24.048Z] [Backend] 🚀 Mbit ERP szerver fut: http://127.0.0.1:3000
+
+
+
+[2025-12-02T22:24:24.599Z] [Health Check] Backend is ready on 127.0.0.1
+
+[2025-12-02T22:24:24.600Z] [Backend] ✓ Ready after 20 attempt(s) (~40s)
+
+[2025-12-02T22:24:24.600Z] [Backend] Started successfully - health check passed
+
+[2025-12-02T22:24:24.600Z] [App] Backend started successfully
+
+[2025-12-02T22:24:24.600Z] [App] Reloading window now that backend is ready...
+
+[2025-12-02T22:24:24.706Z] [Window] Window finished loading
+
+[2025-12-02T22:24:26.124Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:24:36.125Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:24:46.165Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:24:56.155Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:25:06.174Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:25:16.184Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:25:26.187Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:25:32.378Z] [Backend Error] [31m[Nest] 11744  - [39m12/02/2025, 11:25:32 PM [31m  ERROR[39m [38;5;3m[AllExceptionsFilter] [39m[31mHTTP 404 Error: GET /system/users/roles[39m
+
+NotFoundException: Felhasználó nem található
+
+    at UserService.findOne (C:\Users\liviuszberger\Desktop\Mbit\resources\backend\system\user.service.js:83:19)
+
+    at async C:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules\@nestjs\core\router\router-execution-context.js:46:28
+
+    at async C:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules\@nestjs\core\router\router-proxy.js:9:17
+
+
+
+[2025-12-02T22:25:32.380Z] [Backend Error] === EXCEPTION DETAILS ===
+
+{
+
+  "statusCode": 404,
+
+  "timestamp": "2025-12-02T22:25:32.376Z",
+
+  "path": "/system/users/roles",
+
+  "method": "GET",
+
+  "message": "Felhasználó nem található",
+
+  "error": "NotFoundException: Felhasználó nem található\n    at UserService.findOne (C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\system\\user.service.js:83:19)\n    at async C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\node_modules\\@nestjs\\core\\router\\router-execution-context.js:46:28\n    at async C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\node_modules\\@nestjs\\core\\router\\router-proxy.js:9:17"
+
+}
+
+========================
+
+
+
+[2025-12-02T22:25:36.193Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:25:46.193Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:25:55.088Z] [Backend Error] [31m[Nest] 11744  - [39m12/02/2025, 11:25:55 PM [31m  ERROR[39m [38;5;3m[AllExceptionsFilter] [39m[31mHTTP 404 Error: GET /system/users/roles[39m
+
+
+
+[2025-12-02T22:25:55.089Z] [Backend Error] NotFoundException: Felhasználó nem található
+
+    at UserService.findOne (C:\Users\liviuszberger\Desktop\Mbit\resources\backend\system\user.service.js:83:19)
+
+    at async C:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules\@nestjs\core\router\router-execution-context.js:46:28
+
+    at async C:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules\@nestjs\core\router\router-proxy.js:9:17
+
+=== EXCEPTION DETAILS ===
+
+{
+
+  "statusCode": 404,
+
+  "timestamp": "2025-12-02T22:25:55.087Z",
+
+  "path": "/system/users/roles",
+
+  "method": "GET",
+
+  "message": "Felhasználó nem található",
+
+  "error": "NotFoundException: Felhasználó nem található\n    at UserService.findOne (C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\system\\user.service.js:83:19)\n    at async C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\node_modules\\@nestjs\\core\\router\\router-execution-context.js:46:28\n    at async C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\node_modules\\@nestjs\\core\\router\\router-proxy.js:9:17"
+
+}
+
+========================
+
+
+
+[2025-12-02T22:25:56.193Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:26:06.201Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:26:16.267Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:26:26.298Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:26:36.315Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:26:46.334Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:26:56.332Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:27:06.366Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:27:16.400Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:27:26.433Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:27:36.444Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:27:46.459Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:27:56.501Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:28:06.571Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:28:16.584Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:28:26.619Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:28:36.676Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:28:46.679Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:28:56.746Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:29:06.776Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:29:16.831Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:29:26.846Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:29:36.850Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:29:46.881Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:29:56.904Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:30:06.972Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:30:16.976Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:30:26.978Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:30:37.041Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:30:47.052Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:30:57.114Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:31:07.154Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:31:17.208Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:31:27.271Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:31:37.273Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:31:47.287Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:31:57.362Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:32:07.400Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:32:17.421Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:32:27.432Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:32:37.432Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:32:47.453Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:32:57.479Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:33:07.523Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:33:17.535Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:33:27.566Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:33:37.580Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:33:47.611Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:33:57.634Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:34:07.635Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:34:17.638Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:34:27.648Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:34:37.692Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:34:47.698Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:34:57.706Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:35:07.737Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:35:17.779Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:35:27.824Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:35:37.872Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:35:47.890Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:35:57.903Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:36:07.909Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:36:17.938Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:36:27.950Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:36:37.953Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:36:47.613Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:36:47 PM [32m    LOG[39m [38;5;3m[AuditService] [39m[32mAudit: create Supplier 81f822b7-bea9-4d22-a1a6-1e8eaba136ce[39m
+
+
+
+[2025-12-02T22:36:47.956Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:36:57.960Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:37:07.969Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:37:17.975Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:37:22.155Z] [Backend Error] [31m[Nest] 11744  - [39m12/02/2025, 11:37:22 PM [31m  ERROR[39m [38;5;3m[AllExceptionsFilter] [39m[31mHTTP 404 Error: GET /system/users/roles[39m
+
+NotFoundException: Felhasználó nem található
+
+    at UserService.findOne (C:\Users\liviuszberger\Desktop\Mbit\resources\backend\system\user.service.js:83:19)
+
+    at async C:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules\@nestjs\core\router\router-execution-context.js:46:28
+
+    at async C:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules\@nestjs\core\router\router-proxy.js:9:17
+
+=== EXCEPTION DETAILS ===
+
+{
+
+  "statusCode": 404,
+
+  "timestamp": "2025-12-02T22:37:22.154Z",
+
+  "path": "/system/users/roles",
+
+  "method": "GET",
+
+  "message": "Felhasználó nem található",
+
+  "error": "NotFoundException: Felhasználó nem található\n    at UserService.findOne (C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\system\\user.service.js:83:19)\n    at async C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\node_modules\\@nestjs\\core\\router\\router-execution-context.js:46:28\n    at async C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\node_modules\\@nestjs\\core\\router\\router-proxy.js:9:17"
+
+}
+
+========================
+
+
+
+[2025-12-02T22:37:27.983Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:37:37.987Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:37:47.992Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:37:58.010Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:38:08.028Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:38:18.045Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:38:28.050Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:38:38.055Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:38:48.068Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:38:58.071Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:39:08.089Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:39:18.094Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:39:28.099Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:39:38.102Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:39:48.124Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:39:58.123Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:40:08.132Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:40:18.135Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:40:20.002Z] [Backend Error] [31m[Nest] 11744  - [39m12/02/2025, 11:40:20 PM [31m  ERROR[39m [38;5;3m[AllExceptionsFilter] [39m[31mHTTP 404 Error: GET /system/users/roles[39m
+
+NotFoundException: Felhasználó nem található
+
+    at UserService.findOne (C:\Users\liviuszberger\Desktop\Mbit\resources\backend\system\user.service.js:83:19)
+
+    at async C:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules\@nestjs\core\router\router-execution-context.js:46:28
+
+    at async C:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules\@nestjs\core\router\router-proxy.js:9:17
+
+
+
+[2025-12-02T22:40:20.003Z] [Backend Error] === EXCEPTION DETAILS ===
+
+{
+
+  "statusCode": 404,
+
+  "timestamp": "2025-12-02T22:40:20.001Z",
+
+  "path": "/system/users/roles",
+
+  "method": "GET",
+
+  "message": "Felhasználó nem található",
+
+  "error": "NotFoundException: Felhasználó nem található\n    at UserService.findOne (C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\system\\user.service.js:83:19)\n    at async C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\node_modules\\@nestjs\\core\\router\\router-execution-context.js:46:28\n    at async C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\node_modules\\@nestjs\\core\\router\\router-proxy.js:9:17"
+
+}
+
+========================
+
+
+
+[2025-12-02T22:40:28.140Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:40:38.158Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:40:46.448Z] [Backend Error] [31m[Nest] 11744  - [39m12/02/2025, 11:40:46 PM [31m  ERROR[39m [38;5;3m[AllExceptionsFilter] [39m[31mHTTP 404 Error: GET /system/users/roles[39m
+
+NotFoundException: Felhasználó nem található
+
+    at UserService.findOne (C:\Users\liviuszberger\Desktop\Mbit\resources\backend\system\user.service.js:83:19)
+
+    at async C:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules\@nestjs\core\router\router-execution-context.js:46:28
+
+    at async C:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules\@nestjs\core\router\router-proxy.js:9:17
+
+=== EXCEPTION DETAILS ===
+
+{
+
+  "statusCode": 404,
+
+  "timestamp": "2025-12-02T22:40:46.446Z",
+
+  "path": "/system/users/roles",
+
+  "method": "GET",
+
+  "message": "Felhasználó nem található",
+
+  "error": "NotFoundException: Felhasználó nem található\n    at UserService.findOne (C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\system\\user.service.js:83:19)\n    at async C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\node_modules\\@nestjs\\core\\router\\router-execution-context.js:46:28\n    at async C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\node_modules\\@nestjs\\core\\router\\router-proxy.js:9:17"
+
+}
+
+========================
+
+
+
+[2025-12-02T22:40:48.165Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:40:58.166Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:41:08.175Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:41:18.181Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:41:28.188Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:41:38.190Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:41:48.206Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:41:58.209Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:42:08.248Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:42:18.258Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:42:28.276Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:42:38.339Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:42:48.398Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:42:50.651Z] [Backend Error] [31m[Nest] 11744  - [39m12/02/2025, 11:42:50 PM [31m  ERROR[39m [38;5;3m[AllExceptionsFilter] [39m[31mHTTP 404 Error: GET /system/users/roles[39m
+
+NotFoundException: Felhasználó nem található
+
+    at UserService.findOne (C:\Users\liviuszberger\Desktop\Mbit\resources\backend\system\user.service.js:83:19)
+
+    at async C:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules\@nestjs\core\router\router-execution-context.js:46:28
+
+    at async C:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules\@nestjs\core\router\router-proxy.js:9:17
+
+
+
+[2025-12-02T22:42:50.652Z] [Backend Error] === EXCEPTION DETAILS ===
+
+{
+
+  "statusCode": 404,
+
+  "timestamp": "2025-12-02T22:42:50.650Z",
+
+  "path": "/system/users/roles",
+
+  "method": "GET",
+
+  "message": "Felhasználó nem található",
+
+  "error": "NotFoundException: Felhasználó nem található\n    at UserService.findOne (C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\system\\user.service.js:83:19)\n    at async C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\node_modules\\@nestjs\\core\\router\\router-execution-context.js:46:28\n    at async C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\node_modules\\@nestjs\\core\\router\\router-proxy.js:9:17"
+
+}
+
+========================
+
+
+
+[2025-12-02T22:42:58.408Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:43:08.424Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:43:18.472Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:43:28.490Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:43:38.547Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:43:48.612Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:43:58.682Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:44:08.740Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:44:18.766Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:44:28.792Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:44:38.824Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:44:48.891Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:44:58.958Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:45:08.960Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:45:18.984Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:45:29.021Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:45:39.069Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:45:49.072Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:45:59.075Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:46:09.079Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:46:19.117Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:46:29.159Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:46:39.233Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:46:49.276Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:46:59.283Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:47:09.287Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:47:19.301Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:47:29.308Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:47:39.310Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:47:49.320Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:47:59.321Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:48:09.345Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:48:19.359Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:48:28.004Z] [Backend Error] [31m[Nest] 11744  - [39m12/02/2025, 11:48:28 PM [31m  ERROR[39m [38;5;3m[AllExceptionsFilter] [39m[31mHTTP 404 Error: GET /system/users/roles[39m
+
+
+
+[2025-12-02T22:48:28.005Z] [Backend Error] NotFoundException: Felhasználó nem található
+
+    at UserService.findOne (C:\Users\liviuszberger\Desktop\Mbit\resources\backend\system\user.service.js:83:19)
+
+    at async C:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules\@nestjs\core\router\router-execution-context.js:46:28
+
+    at async C:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules\@nestjs\core\router\router-proxy.js:9:17
+
+=== EXCEPTION DETAILS ===
+
+{
+
+  "statusCode": 404,
+
+  "timestamp": "2025-12-02T22:48:28.003Z",
+
+  "path": "/system/users/roles",
+
+  "method": "GET",
+
+  "message": "Felhasználó nem található",
+
+  "error": "NotFoundException: Felhasználó nem található\n    at UserService.findOne (C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\system\\user.service.js:83:19)\n    at async C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\node_modules\\@nestjs\\core\\router\\router-execution-context.js:46:28\n    at async C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\node_modules\\@nestjs\\core\\router\\router-proxy.js:9:17"
+
+}
+
+========================
+
+
+
+[2025-12-02T22:48:29.360Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:48:39.366Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:48:49.426Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:48:59.483Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:49:09.525Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:49:19.567Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:49:29.583Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:49:39.656Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:49:49.683Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:49:59.705Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:50:09.711Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:50:19.731Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:50:29.804Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:50:39.805Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:50:49.841Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:50:59.842Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:51:09.851Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:51:19.851Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:51:29.858Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:51:39.912Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:51:49.958Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:51:59.964Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:52:09.966Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:52:19.975Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:52:30.033Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:52:40.075Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:52:50.101Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:53:00.115Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:53:10.116Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:53:20.174Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:53:30.252Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:53:40.254Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:53:50.257Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:54:00.273Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:54:10.280Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:54:20.279Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:54:30.290Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:54:40.290Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:54:42.110Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:54:42 PM [32m    LOG[39m [38;5;3m[AuditService] [39m[32mAudit: create Supplier 718e956f-af34-4a76-bf15-3abb8a5d93dc[39m
+
+
+
+[2025-12-02T22:54:50.291Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:55:00.292Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:55:10.306Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:55:13.110Z] [Backend Error] [31m[Nest] 11744  - [39m12/02/2025, 11:55:13 PM [31m  ERROR[39m [38;5;3m[AllExceptionsFilter] [39m[31mHTTP 404 Error: GET /logistics/stock-reservations/expected-receipts?skip=0&take=100&[39m
+
+NotFoundException: Készletfoglalás nem található
+
+    at StockReservationService.findOneReservation (C:\Users\liviuszberger\Desktop\Mbit\resources\backend\logistics\stock-reservation.service.js:72:19)
+
+    at async C:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules\@nestjs\core\router\router-execution-context.js:46:28
+
+    at async C:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules\@nestjs\core\router\router-proxy.js:9:17
+
+
+
+[2025-12-02T22:55:13.111Z] [Backend Error] === EXCEPTION DETAILS ===
+
+{
+
+  "statusCode": 404,
+
+  "timestamp": "2025-12-02T22:55:13.109Z",
+
+  "path": "/logistics/stock-reservations/expected-receipts?skip=0&take=100&",
+
+  "method": "GET",
+
+  "message": "Készletfoglalás nem található",
+
+  "error": "NotFoundException: Készletfoglalás nem található\n    at StockReservationService.findOneReservation (C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\logistics\\stock-reservation.service.js:72:19)\n    at async C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\node_modules\\@nestjs\\core\\router\\router-execution-context.js:46:28\n    at async C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\node_modules\\@nestjs\\core\\router\\router-proxy.js:9:17"
+
+}
+
+========================
+
+
+
+[2025-12-02T22:55:16.937Z] [Backend Error] [31m[Nest] 11744  - [39m12/02/2025, 11:55:16 PM [31m  ERROR[39m [38;5;3m[AllExceptionsFilter] [39m[31mHTTP 404 Error: GET /logistics/stock-reservations/expected-receipts?skip=0&take=100&[39m
+
+
+
+[2025-12-02T22:55:16.938Z] [Backend Error] NotFoundException: Készletfoglalás nem található
+
+    at StockReservationService.findOneReservation (C:\Users\liviuszberger\Desktop\Mbit\resources\backend\logistics\stock-reservation.service.js:72:19)
+
+    at async C:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules\@nestjs\core\router\router-execution-context.js:46:28
+
+    at async C:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules\@nestjs\core\router\router-proxy.js:9:17
+
+=== EXCEPTION DETAILS ===
+
+{
+
+  "statusCode": 404,
+
+  "timestamp": "2025-12-02T22:55:16.936Z",
+
+  "path": "/logistics/stock-reservations/expected-receipts?skip=0&take=100&",
+
+  "method": "GET",
+
+  "message": "Készletfoglalás nem található",
+
+  "error": "NotFoundException: Készletfoglalás nem található\n    at StockReservationService.findOneReservation (C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\logistics\\stock-reservation.service.js:72:19)\n    at async C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\node_modules\\@nestjs\\core\\router\\router-execution-context.js:46:28\n    at async C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\node_modules\\@nestjs\\core\\router\\router-proxy.js:9:17"
+
+}
+
+========================
+
+
+
+[2025-12-02T22:55:20.317Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:55:30.323Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:55:30.528Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:55:30 PM [32m    LOG[39m [38;5;3m[AuditService] [39m[32mAudit: create warehouse 0f47aa02-8cfe-4159-abbc-a90e30ced0b3[39m
+
+
+
+[2025-12-02T22:55:35.916Z] [Backend Error] [31m[Nest] 11744  - [39m12/02/2025, 11:55:35 PM [31m  ERROR[39m [38;5;3m[AllExceptionsFilter] [39m[31mHTTP 404 Error: GET /logistics/stock-reservations/expected-receipts?skip=0&take=100&[39m
+
+NotFoundException: Készletfoglalás nem található
+
+    at StockReservationService.findOneReservation (C:\Users\liviuszberger\Desktop\Mbit\resources\backend\logistics\stock-reservation.service.js:72:19)
+
+    at async C:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules\@nestjs\core\router\router-execution-context.js:46:28
+
+    at async C:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules\@nestjs\core\router\router-proxy.js:9:17
+
+=== EXCEPTION DETAILS ===
+
+
+
+[2025-12-02T22:55:35.918Z] [Backend Error] {
+
+  "statusCode": 404,
+
+  "timestamp": "2025-12-02T22:55:35.914Z",
+
+  "path": "/logistics/stock-reservations/expected-receipts?skip=0&take=100&",
+
+  "method": "GET",
+
+  "message": "Készletfoglalás nem található",
+
+  "error": "NotFoundException: Készletfoglalás nem található\n    at StockReservationService.findOneReservation (C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\logistics\\stock-reservation.service.js:72:19)\n    at async C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\node_modules\\@nestjs\\core\\router\\router-execution-context.js:46:28\n    at async C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\node_modules\\@nestjs\\core\\router\\router-proxy.js:9:17"
+
+}
+
+========================
+
+
+
+[2025-12-02T22:55:40.325Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:55:50.331Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:55:51.437Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:55:51 PM [32m    LOG[39m [38;5;3m[AuditService] [39m[32mAudit: create ExpectedReceipt e5b80ebb-26f5-468b-8c66-2aa648fd9b7f[39m
+
+
+
+[2025-12-02T22:55:52.959Z] [Backend Error] [31m[Nest] 11744  - [39m12/02/2025, 11:55:52 PM [31m  ERROR[39m [38;5;3m[AllExceptionsFilter] [39m[31mHTTP 404 Error: GET /logistics/stock-reservations/expected-receipts?skip=0&take=100&[39m
+
+
+
+[2025-12-02T22:55:52.960Z] [Backend Error] NotFoundException: Készletfoglalás nem található
+
+    at StockReservationService.findOneReservation (C:\Users\liviuszberger\Desktop\Mbit\resources\backend\logistics\stock-reservation.service.js:72:19)
+
+    at async C:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules\@nestjs\core\router\router-execution-context.js:46:28
+
+    at async C:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules\@nestjs\core\router\router-proxy.js:9:17
+
+=== EXCEPTION DETAILS ===
+
+{
+
+  "statusCode": 404,
+
+  "timestamp": "2025-12-02T22:55:52.959Z",
+
+  "path": "/logistics/stock-reservations/expected-receipts?skip=0&take=100&",
+
+  "method": "GET",
+
+  "message": "Készletfoglalás nem található",
+
+  "error": "NotFoundException: Készletfoglalás nem található\n    at StockReservationService.findOneReservation (C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\logistics\\stock-reservation.service.js:72:19)\n    at async C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\node_modules\\@nestjs\\core\\router\\router-execution-context.js:46:28\n    at async C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\node_modules\\@nestjs\\core\\router\\router-proxy.js:9:17"
+
+}
+
+========================
+
+
+
+[2025-12-02T22:56:00.348Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:56:06.862Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:56:06 PM [32m    LOG[39m [38;5;3m[SystemSettingsService] [39m[32mDefault settings initialized[39m
+
+
+
+[2025-12-02T22:56:10.364Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:56:18.057Z] [Backend] [32m[Nest] 11744  - [39m12/02/2025, 11:56:18 PM [32m    LOG[39m [38;5;3m[AuditService] [39m[32mAudit: create User 8999273d-368c-4bfd-a130-c38866026500[39m
+
+
+
+[2025-12-02T22:56:20.375Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:56:30.392Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:56:40.400Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:56:50.405Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:57:00.410Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:57:10.413Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:57:20.415Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:57:30.416Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:57:40.422Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:57:50.424Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:58:00.424Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:58:10.430Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:58:20.452Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:58:30.453Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:58:40.455Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:58:50.455Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:59:00.464Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:59:10.465Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:59:20.467Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:59:30.472Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:59:40.488Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T22:59:50.538Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:00:00.574Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:00:10.579Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:00:20.578Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:00:27.434Z] [Backend] [32m[Nest] 11744  - [39m12/03/2025, 12:00:27 AM [32m    LOG[39m [38;5;3m[AuditService] [39m[32mAudit: create StockLevel 01a3985d-527c-49ae-8f50-215889f30029[39m
+
+
+
+[2025-12-02T23:00:30.597Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:00:40.615Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:00:41.219Z] [Backend] [32m[Nest] 11744  - [39m12/03/2025, 12:00:41 AM [32m    LOG[39m [38;5;3m[AuditService] [39m[32mAudit: create StockLevel f03f1361-382b-472b-9fa3-e09ff9d1a116[39m
+
+
+
+[2025-12-02T23:00:50.631Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:01:00.645Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:01:10.650Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:01:20.665Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:01:30.667Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:01:40.670Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:01:50.672Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:02:00.686Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:02:10.697Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:02:20.700Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:02:30.711Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:02:40.721Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:02:50.722Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:03:00.726Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:03:10.780Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:03:20.783Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:03:30.842Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:03:40.855Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:03:50.870Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:04:00.878Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:04:10.920Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:04:20.970Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:04:30.987Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:04:41.056Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:04:51.070Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:05:01.085Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:05:11.117Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:05:21.127Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:05:31.129Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:05:41.195Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:05:51.270Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:06:01.283Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:06:11.295Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:06:21.363Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:06:31.417Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:06:41.436Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:06:51.469Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:07:01.482Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:07:11.494Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:07:21.497Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:07:31.501Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:07:41.501Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:07:51.502Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:07:53.170Z] [Backend] [32m[Nest] 11744  - [39m12/03/2025, 12:07:53 AM [32m    LOG[39m [38;5;3m[AuditService] [39m[32mAudit: create Task 5ec64e98-fdf3-49c4-bf68-b100990625cb[39m
+
+
+
+[2025-12-02T23:08:01.509Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:08:11.513Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:08:21.515Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:08:23.527Z] [Backend] [32m[Nest] 11744  - [39m12/03/2025, 12:08:23 AM [32m    LOG[39m [38;5;3m[AuditService] [39m[32mAudit: create Account 2ead34b0-7d7f-4944-b937-efc6e98ee802[39m
+
+
+
+[2025-12-02T23:08:31.531Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:08:41.601Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:08:51.603Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:09:01.625Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:09:11.677Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:09:21.718Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:09:31.734Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:09:41.777Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:09:51.782Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:09:56.390Z] [Backend] [32m[Nest] 11744  - [39m12/03/2025, 12:09:56 AM [32m    LOG[39m [38;5;3m[AuditService] [39m[32mAudit: create ChatRoom d6c63316-33f9-4d88-9afe-8edc23922ec1[39m
+
+
+
+[2025-12-02T23:10:01.794Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:10:11.797Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:10:21.810Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:10:24.592Z] [Backend] [32m[Nest] 11744  - [39m12/03/2025, 12:10:24 AM [32m    LOG[39m [38;5;3m[AuditService] [39m[32mAudit: create ChatMessage c98ae2d7-2aba-4a8d-9cad-2d62a15d3591[39m
+
+
+
+[2025-12-02T23:10:31.812Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:10:41.817Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:10:51.825Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:11:01.825Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:11:09.019Z] [Backend] [32m[Nest] 11744  - [39m12/03/2025, 12:11:09 AM [32m    LOG[39m [38;5;3m[SystemSettingsService] [39m[32mDefault settings initialized[39m
+
+
+
+[2025-12-02T23:11:11.831Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:11:21.836Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:11:31.840Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:11:41.851Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:11:51.853Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:12:01.858Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:12:01.956Z] [Backend] [32m[Nest] 11744  - [39m12/03/2025, 12:12:01 AM [32m    LOG[39m [38;5;3m[AuditService] [39m[32mAudit: create order d2eeadb1-6b33-4d85-8f7b-03bc1d898445[39m
+
+
+
+[2025-12-02T23:12:09.909Z] [Backend Error] [31m[Nest] 11744  - [39m12/03/2025, 12:12:09 AM [31m  ERROR[39m [38;5;3m[AllExceptionsFilter] [39m[31mHTTP 404 Error: GET /logistics/stock-reservations/expected-receipts?skip=0&take=100&[39m
+
+NotFoundException: Készletfoglalás nem található
+
+    at StockReservationService.findOneReservation (C:\Users\liviuszberger\Desktop\Mbit\resources\backend\logistics\stock-reservation.service.js:72:19)
+
+    at async C:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules\@nestjs\core\router\router-execution-context.js:46:28
+
+    at async C:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules\@nestjs\core\router\router-proxy.js:9:17
+
+
+
+[2025-12-02T23:12:09.910Z] [Backend Error] === EXCEPTION DETAILS ===
+
+{
+
+  "statusCode": 404,
+
+  "timestamp": "2025-12-02T23:12:09.908Z",
+
+  "path": "/logistics/stock-reservations/expected-receipts?skip=0&take=100&",
+
+  "method": "GET",
+
+  "message": "Készletfoglalás nem található",
+
+  "error": "NotFoundException: Készletfoglalás nem található\n    at StockReservationService.findOneReservation (C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\logistics\\stock-reservation.service.js:72:19)\n    at async C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\node_modules\\@nestjs\\core\\router\\router-execution-context.js:46:28\n    at async C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\node_modules\\@nestjs\\core\\router\\router-proxy.js:9:17"
+
+}
+
+========================
+
+
+
+[2025-12-02T23:12:11.875Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:12:21.876Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:12:31.924Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:12:41.929Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:12:51.973Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:13:01.998Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:13:12.006Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:13:14.297Z] [Backend Error] [31m[Nest] 11744  - [39m12/03/2025, 12:13:14 AM [31m  ERROR[39m [38;5;3m[AllExceptionsFilter] [39m[31mHTTP 404 Error: GET /crm/orders&skip=0&take=100[39m
+
+NotFoundException: Cannot GET /crm/orders&skip=0&take=100
+
+    at callback (C:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules\@nestjs\core\router\routes-resolver.js:77:19)
+
+    at C:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules\@nestjs\core\router\router-proxy.js:9:23
+
+    at Layer.handle [as handle_request] (C:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules\express\lib\router\layer.js:95:5)
+
+    at trim_prefix (C:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules\express\lib\router\index.js:328:13)
+
+    at C:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules\express\lib\router\index.js:286:9
+
+    at Function.process_params (C:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules\express\lib\router\index.js:346:12)
+
+    at next (C:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules\express\lib\router\index.js:280:10)
+
+    at urlencodedParser (C:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules\body-parser\lib\types\urlencoded.js:94:7)
+
+    at Layer.handle [as handle_request] (C:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules\express\lib\router\layer.js:95:5)
+
+    at trim_prefix (C:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules\express\lib\router\index.js:328:13)
+
+    at C:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules\express\lib\router\index.js:286:9
+
+    at Function.process_params (C:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules\express\lib\router\index.js:346:12)
+
+    at next (C:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules\express\lib\router\index.js:280:10)
+
+    at jsonParser (C:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules\body-parser\lib\types\json.js:113:7)
+
+    at Layer.handle [as handle_request] (C:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules\express\lib\router\layer.js:95:5)
+
+    at trim_prefix (C:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules\express\lib\router\index.js:328:13)
+
+=== EXCEPTION DETAILS ===
+
+{
+
+  "statusCode": 404,
+
+  "timestamp": "2025-12-02T23:13:14.291Z",
+
+  "path": "/crm/orders&skip=0&take=100",
+
+  "method": "GET",
+
+  "message": "Cannot GET /crm/orders&skip=0&take=100",
+
+  "error": "NotFoundException: Cannot GET /crm/orders&skip=0&take=100\n    at callback (C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\node_modules\\@nestjs\\core\\router\\routes-resolver.js:77:19)\n    at C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\node_modules\\@nestjs\\core\\router\\router-proxy.js:9:23\n    at Layer.handle [as handle_request] (C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\node_modules\\express\\lib\\router\\layer.js:95:5)\n    at trim_prefix (C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\node_modules\\express\\lib\\router\\index.js:328:13)\n    at C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\node_modules\\express\\lib\\router\\index.js:286:9\n    at Function.process_params (C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\node_modules\\express\\lib\\router\\index.js:346:12)\n    at next (C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\node_modules\\express\\lib\\router\\index.js:280:10)\n    at urlencodedParser (C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\node_modules\\body-parser\\lib\\types\\urlencoded.js:94:7)\n    at Layer.handle [as handle_request] (C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\node_modules\\express\\lib\\router\\layer.js:95:5)\n    at trim_prefix (C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\node_modules\\express\\lib\\router\\index.js:328:13)\n    at C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\node_modules\\express\\lib\\router\\index.js:286:9\n    at Function.process_params (C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\node_modules\\express\\lib\\router\\index.js:346:12)\n    at next (C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\node_modules\\express\\lib\\router\\index.js:280:10)\n    at jsonParser (C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\node_modules\\body-parser\\lib\\types\\json.js:113:7)\n    at Layer.handle [as handle_request] (C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\node_modules\\express\\lib\\router\\layer.js:95:5)\n    at trim_prefix (C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\node_modules\\express\\lib\\router\\index.js:328:13)"
+
+}
+
+========================
+
+
+
+[2025-12-02T23:13:22.019Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:13:32.031Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:13:42.033Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:13:52.039Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:14:02.114Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:14:12.189Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:14:22.217Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:14:32.258Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:14:42.259Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:14:52.306Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:15:02.314Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:15:12.322Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:15:22.337Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:15:32.347Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:15:42.355Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:15:52.416Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:16:02.422Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:16:12.438Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:16:22.476Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:16:32.489Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:16:42.528Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:16:52.588Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:17:02.604Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:17:12.621Z] [Backend] Health check: PID 11744 is alive
+
+[2025-12-02T23:17:20.989Z] [Window] Window close event fired
+
+[2025-12-02T23:17:21.036Z] [Window] Window closed event fired
+
+[2025-12-02T23:17:21.043Z] [App] window-all-closed event fired
+
+[2025-12-02T23:17:22.062Z] [App] No windows remaining, quitting...
+
+[2025-12-02T23:17:22.064Z] [App] Stopping backend process gracefully...
+
+[2025-12-02T23:17:22.064Z] [App] Backend process PID: 11744
+
+[2025-12-02T23:17:22.069Z] [App] before-quit event fired
+
+
+
+
+
+---
+
+_**Agent (model composer-1, mode Agent)**_
+
+
+
+---
+
+
+Összeállítom a javítási tervet, majd megkezdem a munkát:
+
+
+---
+
+<tool-use data-tool-type="task" data-tool-name="todo_write">
+<details><summary>Tool use: **todo_write** • Todo List</summary>
+
+- [ ] Workflow lépés típus mező: szabadon beírható mező színnel (tag-szerű) a szerepkör és jogosultság helyett
+- [ ] Termékek szállító hozzáadása modal méret javítása - teljes overlay megjelenítés
+- [ ] Raktárak részletek: leltárív nyomtatása gomb eltávolítása, PDF/Excel gombokhoz leltárív címke
+- [ ] Főoldal irányítópult összesítő kártyák frissítése - dinamikus adatok betöltése
+- [ ] Készletfoglaltság várható beérkezések endpoint javítása - rossz route/controller
+- [ ] Workflows.tsx - /system/users/roles endpoint javítása vagy eltávolítása
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="search" data-tool-name="codebase_search">
+<details>
+                <summary>Tool use: **codebase_search** • Searched codebase "How is the workflow step form implemented? Where are szerepkor and jogosultsag fields?" • **15** results</summary>
+            
+| File | Lines |
+|------|-------|
+| `apps/web/src/pages/Workflows.tsx` | L285-324 |
+| `apps/web/src/pages/Workflows.tsx` | L11-83 |
+| `apps/web/src/pages/Workflows.tsx` | L259-285 |
+| `apps/web/src/pages/HR/Employees.tsx` | L601-635 |
+| `apps/web/src/pages/Opportunities.tsx` | L418-455 |
+| `apps/web/src/pages/HR/JobPositions.tsx` | L349-371 |
+| `apps/web/src/pages/Intrastat.tsx` | L694-736 |
+| `apps/web/src/pages/Opportunities.tsx` | L455-500 |
+| `apps/web/src/pages/Workflows.tsx` | L324-370 |
+| `apps/web/src/pages/CRM.tsx` | L949-989 |
+| `apps/web/src/pages/HR/Employees.tsx` | L566-601 |
+| `apps/web/src/pages/Products.tsx` | L153-226 |
+| `apps/web/src/pages/HR/JobPositions.tsx` | L371-406 |
+| `apps/web/src/pages/HR/Employees.tsx` | L504-545 |
+| `apps/web/src/pages/Workflows.tsx` | L216-259 |
+
+</details>
+</tool-use>
 
 ---
 

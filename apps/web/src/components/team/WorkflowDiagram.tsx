@@ -7,31 +7,6 @@ interface WorkflowDiagramProps {
 export default function WorkflowDiagram({ workflow }: WorkflowDiagramProps) {
   const sortedSteps = [...workflow.steps].sort((a, b) => a.sorrend - b.sorrend);
 
-  const getPermissionColor = (jogosultsag: string) => {
-    switch (jogosultsag) {
-      case 'READ':
-        return 'bg-blue-100 border-blue-300 text-blue-800';
-      case 'WRITE':
-        return 'bg-yellow-100 border-yellow-300 text-yellow-800';
-      case 'APPROVE':
-        return 'bg-green-100 border-green-300 text-green-800';
-      default:
-        return 'bg-gray-100 border-gray-300 text-gray-800';
-    }
-  };
-
-  const getPermissionLabel = (jogosultsag: string) => {
-    switch (jogosultsag) {
-      case 'READ':
-        return 'Olvasás';
-      case 'WRITE':
-        return 'Írás';
-      case 'APPROVE':
-        return 'Jóváhagyás';
-      default:
-        return jogosultsag;
-    }
-  };
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
@@ -75,14 +50,18 @@ export default function WorkflowDiagram({ workflow }: WorkflowDiagramProps) {
                       <p className="text-sm text-gray-600 ml-10 mb-2">{step.leiras}</p>
                     )}
                     <div className="flex flex-wrap gap-2 ml-10">
-                      {step.szerepkor && (
-                        <span className="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded">
-                          {step.szerepkor.nev}
+                      {step.lepesTipus && (
+                        <span 
+                          className="px-2 py-1 text-xs rounded border font-medium"
+                          style={{
+                            backgroundColor: step.szin ? `${step.szin}20` : '#3B82F620',
+                            borderColor: step.szin || '#3B82F6',
+                            color: step.szin || '#3B82F6',
+                          }}
+                        >
+                          {step.lepesTipus}
                         </span>
                       )}
-                      <span className={`px-2 py-1 text-xs rounded border ${getPermissionColor(step.jogosultsag)}`}>
-                        {getPermissionLabel(step.jogosultsag)}
-                      </span>
                     </div>
                   </div>
                 </div>

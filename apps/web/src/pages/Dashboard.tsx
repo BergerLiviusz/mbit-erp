@@ -8,11 +8,11 @@ export default function Dashboard() {
     queryFn: async () => {
       try {
         const [accounts, items, documents, returns, suppliers] = await Promise.all([
-          axios.get('/api/crm/accounts?take=1').catch(() => ({ data: { total: 0 } })),
-          axios.get('/api/logistics/items?take=1').catch(() => ({ data: { total: 0 } })),
-          axios.get('/api/dms/documents?take=1').catch(() => ({ data: { total: 0 } })),
-          axios.get('/api/logistics/returns?take=1').catch(() => ({ data: { total: 0 } })),
-          axios.get('/api/logistics/suppliers?take=1').catch(() => ({ data: { total: 0 } })),
+          axios.get('/api/crm/accounts?skip=0&take=1').catch(() => ({ data: { total: 0 } })),
+          axios.get('/api/logistics/items?skip=0&take=1').catch(() => ({ data: { total: 0 } })),
+          axios.get('/api/dms/documents?skip=0&take=1').catch(() => ({ data: { total: 0 } })),
+          axios.get('/api/logistics/returns?skip=0&take=1').catch(() => ({ data: { total: 0 } })),
+          axios.get('/api/logistics/suppliers?skip=0&take=1').catch(() => ({ data: { total: 0 } })),
         ]);
         return {
           accounts: accounts.data?.total || 0,
@@ -35,6 +35,9 @@ export default function Dashboard() {
     },
     retry: 1,
     retryDelay: 1000,
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    staleTime: 30000, // 30 seconds - refresh stats every 30 seconds
   });
 
   // Dinamikus modul lista generálása a bevezető szöveghez

@@ -65,65 +65,7 @@ export class StockReservationController {
     );
   }
 
-  @Get(':id')
-  @Permissions(Permission.LOGISTICS_VIEW)
-  findOneReservation(@Param('id') id: string) {
-    return this.stockReservationService.findOneReservation(id);
-  }
-
-  @Post()
-  @Permissions(Permission.LOGISTICS_CREATE)
-  async createReservation(@Body() dto: CreateStockReservationDto, @Request() req: any) {
-    const reservation = await this.stockReservationService.createReservation(dto);
-    
-    await this.auditService.logCreate(
-      'StockReservation',
-      reservation.id,
-      reservation,
-      req.user?.id,
-    );
-
-    return reservation;
-  }
-
-  @Put(':id')
-  @Permissions(Permission.LOGISTICS_EDIT)
-  async updateReservation(
-    @Param('id') id: string,
-    @Body() dto: UpdateStockReservationDto,
-    @Request() req: any,
-  ) {
-    const oldReservation = await this.stockReservationService.findOneReservation(id);
-    const updated = await this.stockReservationService.updateReservation(id, dto);
-    
-    await this.auditService.logUpdate(
-      'StockReservation',
-      id,
-      oldReservation,
-      updated,
-      req.user?.id,
-    );
-
-    return updated;
-  }
-
-  @Delete(':id')
-  @Permissions(Permission.LOGISTICS_DELETE)
-  async deleteReservation(@Param('id') id: string, @Request() req: any) {
-    const oldReservation = await this.stockReservationService.findOneReservation(id);
-    await this.stockReservationService.deleteReservation(id);
-    
-    await this.auditService.logDelete(
-      'StockReservation',
-      id,
-      oldReservation,
-      req.user?.id,
-    );
-
-    return { message: 'Készletfoglalás törölve' };
-  }
-
-  // Expected Receipts
+  // Expected Receipts - Must be before :id route to avoid route conflicts
   @Get('expected-receipts')
   @Permissions(Permission.LOGISTICS_VIEW)
   findAllExpectedReceipts(
@@ -199,6 +141,64 @@ export class StockReservationController {
     );
 
     return { message: 'Várható beérkezés törölve' };
+  }
+
+  @Get(':id')
+  @Permissions(Permission.LOGISTICS_VIEW)
+  findOneReservation(@Param('id') id: string) {
+    return this.stockReservationService.findOneReservation(id);
+  }
+
+  @Post()
+  @Permissions(Permission.LOGISTICS_CREATE)
+  async createReservation(@Body() dto: CreateStockReservationDto, @Request() req: any) {
+    const reservation = await this.stockReservationService.createReservation(dto);
+    
+    await this.auditService.logCreate(
+      'StockReservation',
+      reservation.id,
+      reservation,
+      req.user?.id,
+    );
+
+    return reservation;
+  }
+
+  @Put(':id')
+  @Permissions(Permission.LOGISTICS_EDIT)
+  async updateReservation(
+    @Param('id') id: string,
+    @Body() dto: UpdateStockReservationDto,
+    @Request() req: any,
+  ) {
+    const oldReservation = await this.stockReservationService.findOneReservation(id);
+    const updated = await this.stockReservationService.updateReservation(id, dto);
+    
+    await this.auditService.logUpdate(
+      'StockReservation',
+      id,
+      oldReservation,
+      updated,
+      req.user?.id,
+    );
+
+    return updated;
+  }
+
+  @Delete(':id')
+  @Permissions(Permission.LOGISTICS_DELETE)
+  async deleteReservation(@Param('id') id: string, @Request() req: any) {
+    const oldReservation = await this.stockReservationService.findOneReservation(id);
+    await this.stockReservationService.deleteReservation(id);
+    
+    await this.auditService.logDelete(
+      'StockReservation',
+      id,
+      oldReservation,
+      req.user?.id,
+    );
+
+    return { message: 'Készletfoglalás törölve' };
   }
 }
 

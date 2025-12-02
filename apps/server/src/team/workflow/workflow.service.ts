@@ -12,8 +12,8 @@ export interface CreateWorkflowStepDto {
   nev: string;
   leiras?: string;
   sorrend: number;
-  szerepkorId?: string;
-  jogosultsag?: string; // READ, WRITE, APPROVE
+  lepesTipus?: string; // Szabadon beírható lépés típusa
+  szin?: string; // Szín hex kódban
   kotelezo?: boolean;
 }
 
@@ -27,8 +27,8 @@ export interface UpdateWorkflowStepDto {
   nev?: string;
   leiras?: string;
   sorrend?: number;
-  szerepkorId?: string;
-  jogosultsag?: string;
+  lepesTipus?: string;
+  szin?: string;
   kotelezo?: boolean;
 }
 
@@ -39,29 +39,9 @@ export class WorkflowService {
   async findAll(userId?: string, isAdmin: boolean = false) {
     const where: any = {};
 
-    // Non-admin users only see workflows they participate in (via role)
+    // Non-admin users only see workflows they created
     if (!isAdmin && userId) {
-      const user = await this.prisma.user.findUnique({
-        where: { id: userId },
-        include: {
-          roles: {
-            include: {
-              role: true,
-            },
-          },
-        },
-      });
-
-      if (user) {
-        const roleIds = user.roles.map(ur => ur.roleId);
-        where.steps = {
-          some: {
-            szerepkorId: {
-              in: roleIds,
-            },
-          },
-        };
-      }
+      where.createdById = userId;
     }
 
     return this.prisma.workflow.findMany({
@@ -69,14 +49,6 @@ export class WorkflowService {
       include: {
         steps: {
           orderBy: { sorrend: 'asc' },
-          include: {
-            szerepkor: {
-              select: {
-                id: true,
-                nev: true,
-              },
-            },
-          },
         },
         createdBy: {
           select: {
@@ -96,14 +68,6 @@ export class WorkflowService {
       include: {
         steps: {
           orderBy: { sorrend: 'asc' },
-          include: {
-            szerepkor: {
-              select: {
-                id: true,
-                nev: true,
-              },
-            },
-          },
         },
         createdBy: {
           select: {
@@ -119,29 +83,9 @@ export class WorkflowService {
       throw new NotFoundException('Workflow nem található');
     }
 
-    // Check permissions: admin can see all, others only if they participate
-    if (!isAdmin && userId) {
-      const user = await this.prisma.user.findUnique({
-        where: { id: userId },
-        include: {
-          roles: {
-            include: {
-              role: true,
-            },
-          },
-        },
-      });
-
-      if (user) {
-        const roleIds = user.roles.map(ur => ur.roleId);
-        const hasAccess = workflow.steps.some(step => 
-          step.szerepkorId && roleIds.includes(step.szerepkorId)
-        );
-
-        if (!hasAccess) {
-          throw new NotFoundException('Nincs hozzáférése ehhez a workflow-hoz');
-        }
-      }
+    // Check permissions: admin can see all, others only if they created it
+    if (!isAdmin && userId && workflow.createdById !== userId) {
+      throw new NotFoundException('Nincs hozzáférése ehhez a workflow-hoz');
     }
 
     return workflow;
@@ -171,8 +115,8 @@ export class WorkflowService {
             nev: step.nev,
             leiras: step.leiras,
             sorrend: step.sorrend,
-            szerepkorId: step.szerepkorId,
-            jogosultsag: step.jogosultsag || 'READ',
+            lepesTipus: step.lepesTipus,
+            szin: step.szin || '#3B82F6',
             kotelezo: step.kotelezo ?? false,
           })),
         },
@@ -180,14 +124,6 @@ export class WorkflowService {
       include: {
         steps: {
           orderBy: { sorrend: 'asc' },
-          include: {
-            szerepkor: {
-              select: {
-                id: true,
-                nev: true,
-              },
-            },
-          },
         },
         createdBy: {
           select: {
@@ -219,14 +155,6 @@ export class WorkflowService {
       include: {
         steps: {
           orderBy: { sorrend: 'asc' },
-          include: {
-            szerepkor: {
-              select: {
-                id: true,
-                nev: true,
-              },
-            },
-          },
         },
         createdBy: {
           select: {
@@ -279,17 +207,9 @@ export class WorkflowService {
         nev: dto.nev,
         leiras: dto.leiras,
         sorrend: dto.sorrend,
-        szerepkorId: dto.szerepkorId,
-        jogosultsag: dto.jogosultsag || 'READ',
+        lepesTipus: dto.lepesTipus,
+        szin: dto.szin || '#3B82F6',
         kotelezo: dto.kotelezo ?? false,
-      },
-      include: {
-        szerepkor: {
-          select: {
-            id: true,
-            nev: true,
-          },
-        },
       },
     });
   }
@@ -309,17 +229,9 @@ export class WorkflowService {
         nev: dto.nev,
         leiras: dto.leiras,
         sorrend: dto.sorrend,
-        szerepkorId: dto.szerepkorId,
-        jogosultsag: dto.jogosultsag,
+        lepesTipus: dto.lepesTipus,
+        szin: dto.szin,
         kotelezo: dto.kotelezo,
-      },
-      include: {
-        szerepkor: {
-          select: {
-            id: true,
-            nev: true,
-          },
-        },
       },
     });
   }
