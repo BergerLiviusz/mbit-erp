@@ -1,4 +1,4 @@
-import { Workflow, WorkflowStep } from '../../lib/api/workflow';
+import { Workflow } from '../../lib/api/workflow';
 
 interface WorkflowDiagramProps {
   workflow: Workflow;

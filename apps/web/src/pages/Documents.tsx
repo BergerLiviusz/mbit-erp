@@ -55,6 +55,11 @@ interface Document {
     megjegyzes?: string | null;
     createdAt: string;
   }>;
+  createdBy?: {
+    id: string;
+    nev: string;
+    email: string;
+  } | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -418,6 +423,10 @@ export default function Documents() {
 
       const createdDocument = await createResponse.json();
 
+      if (!selectedFile) {
+        throw new Error('Nincs kiválasztott fájl');
+      }
+
       const uploadFormData = new FormData();
       uploadFormData.append('file', selectedFile);
 
@@ -487,6 +496,11 @@ export default function Documents() {
         {a.nev}
       </span>
     );
+  };
+
+  const getAllapotNev = (allapot: string): string => {
+    const a = ALLAPOTOK.find(a => a.kod === allapot);
+    return a ? a.nev : allapot;
   };
 
   const countByAllapot = (allapot: string) => {
@@ -689,7 +703,7 @@ export default function Documents() {
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-3xl font-bold">Dokumentumok</h1>
         <button 
-          onClick={handleOpenModal}
+          onClick={() => handleOpenModal()}
           className="bg-mbit-blue text-white px-4 py-2 rounded hover:bg-blue-600"
         >
           + Új dokumentum
@@ -1377,9 +1391,9 @@ export default function Documents() {
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium">{getAllapotBadge(log.regiAllapot).nev}</span>
+                            <span className="text-sm font-medium">{getAllapotNev(log.regiAllapot)}</span>
                             <span className="text-gray-400">→</span>
-                            <span className="text-sm font-medium">{getAllapotBadge(log.ujAllapot).nev}</span>
+                            <span className="text-sm font-medium">{getAllapotNev(log.ujAllapot)}</span>
                           </div>
                           {log.megjegyzes && (
                             <div className="text-sm text-gray-600 mt-1">{log.megjegyzes}</div>
