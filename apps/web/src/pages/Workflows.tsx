@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useWorkflows, useCreateWorkflow, useDeleteWorkflow, Workflow, CreateWorkflowDto } from '../lib/api/workflow';
 import WorkflowDiagram from '../components/team/WorkflowDiagram';
 import Modal from '../components/Modal';
-import axios from '../lib/axios';
 import { Plus, Trash2, Eye } from 'lucide-react';
 
 export default function Workflows() {
