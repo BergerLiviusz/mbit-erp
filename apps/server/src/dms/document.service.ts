@@ -17,6 +17,7 @@ export interface CreateDocumentDto {
   ervenyessegKezdet?: string;
   ervenyessegVeg?: string;
   lejarat?: string;
+  tagIds?: string[]; // Címszó ID-k
 }
 
 export interface UpdateDocumentDto {
@@ -30,6 +31,7 @@ export interface UpdateDocumentDto {
   ervenyessegKezdet?: string;
   ervenyessegVeg?: string;
   lejarat?: string;
+  tagIds?: string[]; // Címszó ID-k
 }
 
 export interface DocumentFilters {
@@ -203,15 +205,6 @@ export class DocumentService {
         versions: {
           orderBy: { createdAt: 'desc' },
           take: 10,
-          include: {
-            createdBy: {
-              select: {
-                id: true,
-                nev: true,
-                email: true,
-              },
-            },
-          },
         },
         workflowLogs: {
           orderBy: { createdAt: 'desc' },
@@ -241,7 +234,7 @@ export class DocumentService {
     if (!isAdmin && userId) {
       const hasAccess = 
         document.createdById === userId ||
-        document.access.some(acc => acc.userId === userId);
+        (document.access && document.access.length > 0 && document.access.some(acc => acc.userId === userId));
       
       if (!hasAccess) {
         return null;
@@ -271,8 +264,20 @@ export class DocumentService {
         ervenyessegVeg: dto.ervenyessegVeg ? new Date(dto.ervenyessegVeg) : null,
         lejarat: dto.lejarat ? new Date(dto.lejarat) : null,
         iktatoSzam,
+        createdById: userId,
+        access: userId ? {
+          create: {
+            userId: userId,
+            jogosultsag: 'FULL_ACCESS',
+          },
+        } : undefined,
+        tags: dto.tagIds ? {
+          create: dto.tagIds.map(tagId => ({ tagId })),
+        } : undefined,
       },
     });
+
+    return document;
   }
 
   async update(id: string, dto: UpdateDocumentDto) {
