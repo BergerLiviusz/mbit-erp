@@ -7,12 +7,8 @@ export interface WorkflowStep {
   nev: string;
   leiras?: string | null;
   sorrend: number;
-  szerepkorId?: string | null;
-  szerepkor?: {
-    id: string;
-    nev: string;
-  } | null;
-  jogosultsag: string;
+  lepesTipus?: string | null;
+  szin?: string | null;
   kotelezo: boolean;
   createdAt: string;
   updatedAt: string;
@@ -45,8 +41,8 @@ export interface CreateWorkflowStepDto {
   nev: string;
   leiras?: string;
   sorrend: number;
-  szerepkorId?: string;
-  jogosultsag?: string;
+  lepesTipus?: string;
+  szin?: string;
   kotelezo?: boolean;
 }
 
@@ -60,8 +56,8 @@ export interface UpdateWorkflowStepDto {
   nev?: string;
   leiras?: string;
   sorrend?: number;
-  szerepkorId?: string;
-  jogosultsag?: string;
+  lepesTipus?: string;
+  szin?: string;
   kotelezo?: boolean;
 }
 

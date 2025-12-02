@@ -194,7 +194,8 @@ export default function StockReservations() {
       const queryParams = new URLSearchParams();
       if (filters.warehouseId) queryParams.append('warehouseId', filters.warehouseId);
 
-      const response = await apiFetch(`/logistics/stock-reservations/expected-receipts?skip=0&take=100&${queryParams.toString()}`);
+      const url = `/logistics/stock-reservations/expected-receipts?skip=0&take=100${queryParams.toString() ? '&' + queryParams.toString() : ''}`;
+      const response = await apiFetch(url);
       if (response.ok) {
         const data = await response.json();
         setExpectedReceipts(data.items || []);
