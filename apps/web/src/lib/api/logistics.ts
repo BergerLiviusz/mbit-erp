@@ -130,6 +130,7 @@ export interface LinkItemSupplierDto {
 
 export interface InventoryReportFilters {
   warehouseId?: string;
+  itemGroupId?: string;
   date?: string;
   format?: 'pdf' | 'csv' | 'excel';
   lowStockOnly?: boolean;
@@ -402,6 +403,9 @@ export async function downloadInventoryReport(filters: InventoryReportFilters) {
   const params = new URLSearchParams();
   if (filters.warehouseId) {
     params.append('warehouseId', filters.warehouseId);
+  }
+  if (filters.itemGroupId) {
+    params.append('itemGroupId', filters.itemGroupId);
   }
   if (filters.date) {
     params.append('date', filters.date);

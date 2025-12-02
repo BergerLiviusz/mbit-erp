@@ -21,6 +21,7 @@ export class InventoryReportController {
   @Permissions(Permission.INVENTORY_REPORT_PRINT)
   async print(
     @Query('warehouseId') warehouseId?: string,
+    @Query('itemGroupId') itemGroupId?: string,
     @Query('format') format: 'pdf' | 'csv' | 'excel' = 'pdf',
     @Query('date') date?: string,
     @Query('lowStockOnly') lowStockOnly?: string,
@@ -28,6 +29,7 @@ export class InventoryReportController {
   ) {
     const filters = {
       warehouseId,
+      itemGroupId,
       date,
       lowStockOnly: lowStockOnly === 'true',
     };
@@ -74,6 +76,24 @@ export class InventoryReportController {
         message: error instanceof Error ? error.message : 'Ismeretlen hiba',
       });
     }
+  }
+
+  @Get('by-item-group')
+  @Permissions(Permission.INVENTORY_REPORT_PRINT)
+  async getByItemGroup(
+    @Query('warehouseId') warehouseId?: string,
+    @Query('itemGroupId') itemGroupId?: string,
+    @Query('date') date?: string,
+    @Query('lowStockOnly') lowStockOnly?: string,
+  ) {
+    const filters = {
+      warehouseId,
+      itemGroupId,
+      date,
+      lowStockOnly: lowStockOnly === 'true',
+    };
+
+    return await this.reportService.getReportDataByItemGroup(filters);
   }
 }
 

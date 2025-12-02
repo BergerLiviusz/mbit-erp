@@ -18,9 +18,11 @@ import { useMoveTask } from '../../lib/api/team';
 interface TaskBoardProps {
   board: TaskBoardType;
   onTaskClick: (task: Task) => void;
+  currentUserId?: string;
+  showOnlyMyTasks?: boolean;
 }
 
-export default function TaskBoard({ board, onTaskClick }: TaskBoardProps) {
+export default function TaskBoard({ board, onTaskClick, currentUserId, showOnlyMyTasks }: TaskBoardProps) {
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const moveTask = useMoveTask();
   const queryClient = useQueryClient();
@@ -120,6 +122,8 @@ export default function TaskBoard({ board, onTaskClick }: TaskBoardProps) {
             tasks={board.tasks || []}
             onTaskClick={onTaskClick}
             boardColor={board.szin}
+            currentUserId={currentUserId}
+            showOnlyMyTasks={showOnlyMyTasks}
           />
         ))}
       </div>

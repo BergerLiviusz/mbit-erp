@@ -9,6 +9,8 @@ import { BoardService } from './board/board.service';
 import { CommentController } from './comment/comment.controller';
 import { CommentService } from './comment/comment.service';
 import { ActivityService } from './activity/activity.service';
+import { WorkflowController } from './workflow/workflow.controller';
+import { WorkflowService } from './workflow/workflow.service';
 
 @Module({
   imports: [PrismaModule, SystemModule],
@@ -17,6 +19,7 @@ import { ActivityService } from './activity/activity.service';
     DashboardController,
     BoardController,
     CommentController,
+    WorkflowController,
   ],
   providers: [
     TaskService,
@@ -24,6 +27,7 @@ import { ActivityService } from './activity/activity.service';
     BoardService,
     CommentService,
     ActivityService,
+    WorkflowService,
   ],
   exports: [TaskService, BoardService, CommentService, ActivityService],
 })

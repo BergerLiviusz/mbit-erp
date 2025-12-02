@@ -110,7 +110,7 @@ A készletnyilvántartás és logisztika modulok jelenlegi struktúrájának át
 
 <tool-use data-tool-type="generic" data-tool-name="list_dir">
 <details>
-            <summary>Tool use: **list_directory** • Listed directory undefined • **0** results</summary>
+            <summary>Tool use: **list_dir** • Listed directory undefined • **0** results</summary>
         
 No results found
 </details>
@@ -452,7 +452,7 @@ A meglévő frontend struktúra áttekintése, hogy pontosan illeszkedjünk:
 
 <tool-use data-tool-type="generic" data-tool-name="list_dir">
 <details>
-            <summary>Tool use: **list_directory** • Listed directory undefined • **0** results</summary>
+            <summary>Tool use: **list_dir** • Listed directory undefined • **0** results</summary>
         
 No results found
 </details>
@@ -672,7 +672,7 @@ Directory: **/Users/liviuszberger/mbit-erp** (0 file)
 
 <tool-use data-tool-type="generic" data-tool-name="list_dir">
 <details>
-            <summary>Tool use: **list_directory** • Listed directory undefined • **0** results</summary>
+            <summary>Tool use: **list_dir** • Listed directory undefined • **0** results</summary>
         
 No results found
 </details>
@@ -753,20 +753,20 @@ Parameters:
 
 ```json
 {
-  &quot;plan&quot;: &quot;# Készletnyilvántartás és Logisztika Modul Bővítése\n\n## Áttekintés\n\nEz a terv részletesen lefedi a készletnyilvántartás és logisztika modul bővítését négy fő funkcióval:\n1. **Visszárú kezelés** - Kétlépcsős jóváhagyási workflow\n2. **Szállítókezelés** - Többszörös szállító kapcsolat árukkal\n3. **Leltárív nyomtatás** - PDF, CSV és Excel formátumok\n4. **Email értesítési rendszer** - mailto: link alapú értesítések feladatokhoz\n\nMinden funkcióhoz teljes backend és frontend (Electron desktop) implementáció szükséges, működő gombokkal és logikus rendszerszintű összekapcsolásokkal.\n\n---\n\n## 1. Visszárú Kezelés (Return Management)\n\n### 1.1 Adatbázis változások\n\n**Új modell: &#96;Return&#96; (visszárú)**\n- Fájl: &#96;apps/server/prisma/schema.prisma&#96;\n- Mezők:\n  - &#96;id&#96; (String, UUID, primary key)\n  - &#96;orderId&#96; (String?, opcionális, Order kapcsolat)\n  - &#96;itemId&#96; (String, Item kapcsolat)\n  - &#96;warehouseId&#96; (String, Warehouse kapcsolat)\n  - &#96;mennyiseg&#96; (Float)\n  - &#96;ok&#96; (String) - visszárú ok (enum: &#39;hibas&#39;, &#39;sertett&#39;, &#39;tulcsordulas&#39;, &#39;egyeb&#39;)\n  - &#96;allapot&#96; (String) - enum: &#39;PENDING&#39;, &#39;APPROVED&#39;, &#39;REJECTED&#39;, &#39;COMPLETED&#39;\n  - &#96;visszaruDatum&#96; (DateTime)\n  - &#96;megjegyzesek&#96; (String?)\n  - &#96;createdById&#96; (String?, User kapcsolat)\n  - &#96;approvedById&#96; (String?, User kapcsolat)\n  - &#96;createdAt&#96;, &#96;updatedAt&#96; (DateTime)\n- Kapcsolatok: Order, Item, Warehouse, User (createdBy, approvedBy)\n- Indexek: &#96;orderId&#96;, &#96;itemId&#96;, &#96;warehouseId&#96;, &#96;allapot&#96;, &#96;createdAt&#96;\n\n**StockMove automatikus létrehozás**\n- Visszárú jóváhagyásakor automatikus StockMove létrehozás &#96;tipus: &#39;RETURN&#39;&#96; értékkel\n\n### 1.2 Backend implementáció\n\n**Új fájlok:**\n- &#96;apps/server/src/logistics/return.service.ts&#96; - Visszárú üzleti logika\n- &#96;apps/server/src/logistics/return.controller.ts&#96; - REST API végpontok\n- &#96;apps/server/src/logistics/dto/create-return.dto.ts&#96; - DTO validáció\n- &#96;apps/server/src/logistics/dto/update-return.dto.ts&#96;\n- &#96;apps/server/src/logistics/dto/approve-return.dto.ts&#96;\n\n**ReturnService metódusok:**\n- &#96;findAll(skip, take, filters)&#96; - Lista lekérdezés szűrőkkel\n- &#96;findOne(id)&#96; - Egy visszárú lekérdezése\n- &#96;create(dto, userId)&#96; - Új visszárú létrehozása\n- &#96;update(id, dto, userId)&#96; - Visszárú módosítása (csak PENDING állapotban)\n- &#96;approve(id, userId)&#96; - Visszárú jóváhagyása (állapot: APPROVED, StockMove létrehozás)\n- &#96;reject(id, userId, reason?)&#96; - Visszárú elutasítása\n- &#96;complete(id, userId)&#96; - Visszárú feldolgozása (készlet visszaírás, állapot: COMPLETED)\n- &#96;getByOrder(orderId)&#96; - Rendeléshez tartozó visszárúk\n\n**ReturnController végpontok:**\n- &#96;GET /logistics/returns&#96; - Lista (query: skip, take, orderId, itemId, warehouseId, allapot)\n- &#96;GET /logistics/returns/:id&#96; - Részletek\n- &#96;POST /logistics/returns&#96; - Létrehozás\n- &#96;PUT /logistics/returns/:id&#96; - Módosítás\n- &#96;POST /logistics/returns/:id/approve&#96; - Jóváhagyás\n- &#96;POST /logistics/returns/:id/reject&#96; - Elutasítás\n- &#96;POST /logistics/returns/:id/complete&#96; - Feldolgozás\n\n**Jogosultságok hozzáadása:**\n- &#96;apps/server/src/common/rbac/permission.enum.ts&#96;:\n  - &#96;RETURN_VIEW = &#39;return:view&#39;&#96;\n  - &#96;RETURN_CREATE = &#39;return:create&#39;&#96;\n  - &#96;RETURN_EDIT = &#39;return:edit&#39;&#96;\n  - &#96;RETURN_APPROVE = &#39;return:approve&#39;&#96;\n  - &#96;RETURN_COMPLETE = &#39;return:complete&#39;&#96;\n\n**LogisticsModule frissítése:**\n- ReturnService és ReturnController hozzáadása\n\n### 1.3 Frontend implementáció (Electron Desktop)\n\n**Új fájlok:**\n- &#96;apps/web/src/pages/Returns.tsx&#96; - Visszárú kezelő oldal\n- &#96;apps/web/src/components/logistics/ReturnModal.tsx&#96; - Visszárú létrehozás/szerkesztés modal\n- &#96;apps/web/src/components/logistics/ReturnList.tsx&#96; - Visszárú lista komponens\n- &#96;apps/web/src/lib/api/logistics.ts&#96; - API hívások (useReturns, useCreateReturn, useApproveReturn, stb.)\n\n**Returns.tsx funkciók:**\n- Táblázat: azonosító, rendelés, áru, raktár, mennyiség, ok, állapot, dátum, műveletek\n- Szűrők: rendelés, áru, raktár, állapot, dátum tartomány\n- Gombok:\n  - \&quot;Új visszárú\&quot; - Modal megnyitása\n  - \&quot;Jóváhagyás\&quot; - Csak PENDING állapotnál, admin jogosultság\n  - \&quot;Elutasítás\&quot; - Csak PENDING állapotnál, admin jogosultság\n  - \&quot;Feldolgozás\&quot; - Csak APPROVED állapotnál\n  - \&quot;Szerkesztés\&quot; - Csak PENDING állapotnál\n  - \&quot;Részletek\&quot; - Teljes visszárú információ megjelenítése\n\n**ReturnModal.tsx mezők:**\n- Rendelés kiválasztás (opcionális, dropdown)\n- Áru kiválasztás (kötelező, dropdown)\n- Raktár kiválasztás (kötelező, dropdown)\n- Mennyiség (szám input)\n- Visszárú ok (dropdown: hibás, sérült, túlcsordulás, egyéb)\n- Megjegyzések (textarea)\n- Dátum (date picker)\n\n**Logistics.tsx frissítése:**\n- Új tab hozzáadása: \&quot;Visszárúk\&quot; a meglévő tabokhoz (Cikktörzs, Raktárak, Készletek)\n\n**Order részletek oldal frissítése:**\n- \&quot;Visszárú létrehozása\&quot; gomb hozzáadása, amely előtölti a rendelést a ReturnModal-ban\n\n---\n\n## 2. Szállítókezelés (Supplier Management)\n\n### 2.1 Adatbázis változások\n\n**Új modell: &#96;ItemSupplier&#96; (kapcsolótábla)**\n- Fájl: &#96;apps/server/prisma/schema.prisma&#96;\n- Mezők:\n  - &#96;id&#96; (String, UUID, primary key)\n  - &#96;itemId&#96; (String, Item kapcsolat)\n  - &#96;supplierId&#96; (String, Supplier kapcsolat)\n  - &#96;isPrimary&#96; (Boolean, default: false) - elsődleges szállító jelölés\n  - &#96;beszerzesiAr&#96; (Float?) - szállító specifikus ár\n  - &#96;minMennyiseg&#96; (Float?) - minimum rendelési mennyiség\n  - &#96;szallitasiIdo&#96; (Int?) - szállítási idő napokban\n  - &#96;megjegyzesek&#96; (String?)\n  - &#96;createdAt&#96;, &#96;updatedAt&#96; (DateTime)\n- Unique constraint: &#96;[itemId, supplierId]&#96;\n- Indexek: &#96;itemId&#96;, &#96;supplierId&#96;, &#96;isPrimary&#96;\n\n**Supplier modell már létezik** - nincs változtatás szükséges\n\n### 2.2 Backend implementáció\n\n**Új fájlok:**\n- &#96;apps/server/src/logistics/supplier.service.ts&#96; - Szállító üzleti logika\n- &#96;apps/server/src/logistics/supplier.controller.ts&#96; - REST API végpontok\n- &#96;apps/server/src/logistics/dto/create-supplier.dto.ts&#96;\n- &#96;apps/server/src/logistics/dto/update-supplier.dto.ts&#96;\n- &#96;apps/server/src/logistics/dto/link-item-supplier.dto.ts&#96;\n\n**SupplierService metódusok:**\n- &#96;findAll(skip, take, search?)&#96; - Szállítók listája\n- &#96;findOne(id)&#96; - Egy szállító részletei\n- &#96;create(dto)&#96; - Új szállító\n- &#96;update(id, dto)&#96; - Szállító módosítása\n- &#96;delete(id)&#96; - Szállító törlése (soft delete: aktiv = false)\n- &#96;linkItemToSupplier(itemId, supplierId, dto)&#96; - Áru összekapcsolása szállítóval\n- &#96;unlinkItemFromSupplier(itemId, supplierId)&#96; - Kapcsolat megszüntetése\n- &#96;getItemSuppliers(itemId)&#96; - Áru szállítói\n- &#96;getSupplierItems(supplierId)&#96; - Szállító árui\n- &#96;setPrimarySupplier(itemId, supplierId)&#96; - Elsődleges szállító beállítása\n\n**SupplierController végpontok:**\n- &#96;GET /logistics/suppliers&#96; - Lista\n- &#96;GET /logistics/suppliers/:id&#96; - Részletek\n- &#96;POST /logistics/suppliers&#96; - Létrehozás\n- &#96;PUT /logistics/suppliers/:id&#96; - Módosítás\n- &#96;DELETE /logistics/suppliers/:id&#96; - Törlés (soft)\n- &#96;POST /logistics/suppliers/:id/items/:itemId/link&#96; - Áru összekapcsolása\n- &#96;DELETE /logistics/suppliers/:id/items/:itemId/unlink&#96; - Kapcsolat megszüntetése\n- &#96;PUT /logistics/items/:itemId/suppliers/:supplierId/primary&#96; - Elsődleges beállítás\n\n**ItemService frissítése:**\n- &#96;findOne(id)&#96; - Include: &#96;itemSuppliers&#96; with &#96;supplier&#96; details\n- &#96;findAll()&#96; - Opcionális include: &#96;itemSuppliers&#96;\n\n**Jogosultságok:**\n- &#96;SUPPLIER_VIEW = &#39;supplier:view&#39;&#96;\n- &#96;SUPPLIER_CREATE = &#39;supplier:create&#39;&#96;\n- &#96;SUPPLIER_EDIT = &#39;supplier:edit&#39;&#96;\n- &#96;SUPPLIER_DELETE = &#39;supplier:delete&#39;&#96;\n\n**LogisticsModule frissítése:**\n- SupplierService és SupplierController hozzáadása\n\n### 2.3 Frontend implementáció\n\n**Új fájlok:**\n- &#96;apps/web/src/pages/Suppliers.tsx&#96; - Szállítók kezelő oldal\n- &#96;apps/web/src/components/logistics/SupplierModal.tsx&#96; - Szállító létrehozás/szerkesztés\n- &#96;apps/web/src/components/logistics/ItemSupplierLinkModal.tsx&#96; - Áru-szállító kapcsolat kezelés\n- &#96;apps/web/src/lib/api/logistics.ts&#96; - API hívások (useSuppliers, useLinkItemSupplier, stb.)\n\n**Suppliers.tsx funkciók:**\n- Táblázat: név, adószám, cím, email, telefon, státusz, műveletek\n- Keresés: név, adószám alapján\n- Gombok:\n  - \&quot;Új szállító\&quot; - Modal megnyitása\n  - \&quot;Szerkesztés\&quot; - Modal megnyitása adatokkal\n  - \&quot;Törlés\&quot; - Soft delete (aktiv = false)\n  - \&quot;Árui\&quot; - Szállító áruinak listája\n  - \&quot;Áru hozzáadása\&quot; - ItemSupplierLinkModal megnyitása\n\n**SupplierModal.tsx mezők:**\n- Név (kötelező)\n- Adószám\n- Cím\n- Email\n- Telefon\n- Aktív (checkbox)\n\n**Products.tsx frissítése:**\n- \&quot;Szállítók\&quot; szekció hozzáadása a termék részleteknél\n- \&quot;Szállító hozzáadása\&quot; gomb\n- Szállítók listája (elsődleges kiemeléssel)\n- \&quot;Elsődleges beállítása\&quot; gomb minden szállítónál\n- \&quot;Eltávolítás\&quot; gomb\n\n**ItemSupplierLinkModal.tsx:**\n- Szállító kiválasztás (dropdown)\n- Beszerzési ár (opcionális)\n- Minimum mennyiség (opcionális)\n- Szállítási idő napokban (opcionális)\n- Megjegyzések\n- \&quot;Elsődleges szállító\&quot; checkbox\n\n**Logistics.tsx frissítése:**\n- Új tab: \&quot;Szállítók\&quot;\n\n---\n\n## 3. Leltárív Nyomtatás (Inventory Report Printing)\n\n### 3.1 Backend implementáció\n\n**Új fájlok:**\n- &#96;apps/server/src/logistics/inventory-report.service.ts&#96; - Riport generálás logika\n- &#96;apps/server/src/logistics/inventory-report.controller.ts&#96; - Export végpontok\n\n**InventoryReportService metódusok:**\n- &#96;generatePDF(warehouseId?, filters)&#96; - PDF generálás pdfkit-tel\n- &#96;generateCSV(warehouseId?, filters)&#96; - CSV generálás\n- &#96;generateExcel(warehouseId?, filters)&#96; - Excel generálás exceljs-szel\n- &#96;getReportData(warehouseId?, filters)&#96; - Adatok lekérdezése (közös logika)\n\n**PDF sablon struktúra:**\n- Fejléc: \&quot;Leltárív\&quot;, dátum, raktár neve\n- Táblázat oszlopok: Áru azonosító, Név, Mennyiség, Egység, Raktári hely, Minimum, Maximum, Státusz\n- Lábléc: Összesített mennyiség, alacsony készletű tételek száma\n\n**CSV struktúra:**\n- Ugyanazok az oszlopok, UTF-8 BOM a magyar karakterekhez\n\n**Excel struktúra:**\n- Munkalap: \&quot;Leltárív\&quot;\n- Formázott táblázat, fejléc sötét háttérrel\n- Szűrhető oszlopok\n\n**InventoryReportController végpontok:**\n- &#96;GET /logistics/inventory/reports/print&#96; - Query: warehouseId, format (pdf/csv/excel), date, lowStockOnly\n- Response: File download (Content-Disposition header)\n\n**Jogosultságok:**\n- &#96;INVENTORY_REPORT_PRINT = &#39;inventory:report_print&#39;&#96;\n\n### 3.2 Frontend implementáció\n\n**Új fájlok:**\n- &#96;apps/web/src/components/logistics/InventoryReportModal.tsx&#96; - Riport opciók modal\n- &#96;apps/web/src/lib/api/logistics.ts&#96; - downloadReport függvény\n\n**InventoryReportModal.tsx:**\n- Raktár kiválasztás (dropdown, opcionális = \&quot;Összes raktár\&quot;)\n- Dátum kiválasztás (date picker, opcionális)\n- Formátum választás (radio: PDF, CSV, Excel)\n- \&quot;Csak alacsony készletű\&quot; checkbox\n- \&quot;Riport generálása\&quot; gomb\n- Loading állapot\n- Sikeres generálás után automatikus letöltés\n\n**Warehouses.tsx frissítése:**\n- \&quot;Leltárív nyomtatása\&quot; gomb a raktár részleteknél\n- Modal megnyitása előtöltött raktárral\n\n**Logistics.tsx frissítése:**\n- \&quot;Leltárív nyomtatása\&quot; gomb a Készletek tab-ban\n- Modal megnyitása\n\n**downloadReport függvény:**\n- Axios GET hívás &#96;responseType: &#39;blob&#39;&#96;\n- Blob letöltés böngésző API-val\n- Fájlnév generálás: &#96;Leltariv_YYYY-MM-DD.{ext}&#96;\n\n---\n\n## 4. Email Értesítési Rendszer (Task Notification)\n\n### 4.1 Backend implementáció\n\n**Új fájlok:**\n- &#96;apps/server/src/team/task/task-notification.service.ts&#96; - Email sablon generálás\n- &#96;apps/server/src/team/task/task.controller.ts&#96; frissítése - új endpoint\n\n**TaskNotificationService metódusok:**\n- &#96;generateMailtoLink(taskId, userId)&#96; - mailto: URL generálás\n- &#96;generateEmailSubject(task)&#96; - Tárgy generálás\n- &#96;generateEmailBody(task)&#96; - Szövegtörzs generálás HTML formátumban\n\n**Email sablon struktúra:**\n- Tárgy: \&quot;Új feladat az Mbit rendszerben!\&quot;\n- Szöveg:\n  - Feladat címe (h2)\n  - Leírás (ha van)\n  - Határidő (ha van)\n  - Prioritás\n  - Board neve\n  - Link a feladathoz (ha van frontend URL)\n  - Létrehozó neve\n\n**TaskController új végpont:**\n- &#96;GET /team/tasks/:id/notify&#96; - Query: userId (opcionális, default: assignedToId)\n- Response: &#96;{ mailtoUrl: string, subject: string, body: string }&#96;\n\n**Jogosultságok:**\n- &#96;TASK_NOTIFY = &#39;task:notify&#39;&#96; (már létezik TASK_EDIT alatt)\n\n### 4.2 Frontend implementáció\n\n**Frissítendő fájlok:**\n- &#96;apps/web/src/components/team/TaskModal.tsx&#96; - \&quot;Értesítés küldése\&quot; gomb hozzáadása\n- &#96;apps/web/src/lib/api/team.ts&#96; - useTaskNotification hook\n\n**TaskModal.tsx frissítése:**\n- \&quot;Értesítés küldése\&quot; gomb hozzáadása (ha van assignedTo)\n- Gomb megnyomásakor:\n  1. API hívás: &#96;GET /api/team/tasks/:id/notify&#96;\n  2. &#96;window.location.href = mailtoUrl&#96; megnyitása\n  3. Sikeres üzenet megjelenítése\n\n**useTaskNotification hook:**\n&#96;&#96;&#96;typescript\nexport function useTaskNotification() {\n  return useMutation({\n    mutationFn: async (taskId: string) =&gt; {\n      const response = await axios.get(&#96;/api/team/tasks/${taskId}/notify&#96;);\n      return response.data;\n    },\n  });\n}\n&#96;&#96;&#96;\n\n**TaskCard.tsx frissítése (ha van külön komponens):**\n- \&quot;Értesítés\&quot; ikon gomb (opcionális, ha van assignedTo)\n\n---\n\n## 5. Adatbázis Migrációk\n\n### 5.1 Prisma Schema frissítések\n\n**Fájl: &#96;apps/server/prisma/schema.prisma&#96;**\n\n**Return modell hozzáadása:**\n&#96;&#96;&#96;prisma\nmodel Return {\n  id            String    @id @default(uuid())\n  orderId      String?\n  itemId       String\n  warehouseId  String\n  mennyiseg    Float\n  ok           String\n  allapot      String    @default(\&quot;PENDING\&quot;)\n  visszaruDatum DateTime @default(now())\n  megjegyzesek String?\n  createdById  String?\n  approvedById String?\n  createdAt    DateTime  @default(now())\n  updatedAt    DateTime  @updatedAt\n  \n  order        Order?    @relation(fields: [orderId], references: [id], onDelete: SetNull)\n  item         Item      @relation(fields: [itemId], references: [id])\n  warehouse    Warehouse @relation(fields: [warehouseId], references: [id])\n  createdBy    User?     @relation(\&quot;ReturnCreatedBy\&quot;, fields: [createdById], references: [id], onDelete: SetNull)\n  approvedBy   User?     @relation(\&quot;ReturnApprovedBy\&quot;, fields: [approvedById], references: [id], onDelete: SetNull)\n  \n  @@index([orderId])\n  @@index([itemId])\n  @@index([warehouseId])\n  @@index([allapot])\n  @@index([createdAt])\n  @@map(\&quot;visszaru\&quot;)\n}\n&#96;&#96;&#96;\n\n**ItemSupplier modell hozzáadása:**\n&#96;&#96;&#96;prisma\nmodel ItemSupplier {\n  id            String    @id @default(uuid())\n  itemId        String\n  supplierId    String\n  isPrimary     Boolean   @default(false)\n  beszerzesiAr  Float?\n  minMennyiseg  Float?\n  szallitasiIdo Int?\n  megjegyzesek  String?\n  createdAt     DateTime  @default(now())\n  updatedAt     DateTime  @updatedAt\n  \n  item          Item      @relation(fields: [itemId], references: [id], onDelete: Cascade)\n  supplier      Supplier  @relation(fields: [supplierId], references: [id], onDelete: Cascade)\n  \n  @@unique([itemId, supplierId])\n  @@index([itemId])\n  @@index([supplierId])\n  @@index([isPrimary])\n  @@map(\&quot;aru_szallito\&quot;)\n}\n&#96;&#96;&#96;\n\n**User modell frissítése:**\n- &#96;createdReturns&#96; és &#96;approvedReturns&#96; relációk hozzáadása\n\n**Order, Item, Warehouse modell frissítése:**\n- &#96;returns&#96; reláció hozzáadása\n\n**Item modell frissítése:**\n- &#96;itemSuppliers&#96; reláció hozzáadása\n\n**Supplier modell frissítése:**\n- &#96;itemSuppliers&#96; reláció hozzáadása\n\n### 5.2 Migráció futtatása\n\n&#96;&#96;&#96;bash\ncd apps/server\nnpx prisma migrate dev --name add_returns_and_item_suppliers\nnpx prisma generate\n&#96;&#96;&#96;\n\n---\n\n## 6. CI/CD Workflow Optimalizálás\n\n### 6.1 GitHub Actions Workflow frissítése\n\n**Fájl: &#96;.github/workflows/build-desktop.yml&#96;**\n\n**Változtatások:**\n1. Node.js verzió frissítése 18.18.2-ről 20.x-re (ha szükséges)\n2. Dependenciák frissítése ellenőrzése\n3. Build lépések optimalizálása\n4. Windows build ellenőrzések megerősítése\n\n**Új lépések hozzáadása:**\n- Prisma migráció futtatása build előtt\n- Prisma Client generálás ellenőrzése\n- Backend build ellenőrzése (dist mappa létezése)\n- Frontend build ellenőrzése (dist mappa létezése)\n\n**Dependenciák frissítése:**\n- &#96;apps/server/package.json&#96; - pdfkit, exceljs verziók ellenőrzése\n- &#96;apps/desktop/package.json&#96; - electron, electron-builder verziók ellenőrzése\n\n---\n\n## 7. Implementációs Sorrend\n\n### Fázis 1: Adatbázis és Alapstruktúra\n1. Prisma schema frissítése (Return, ItemSupplier)\n2. Migráció futtatása\n3. Permission enum frissítése\n4. LogisticsModule struktúra frissítése\n\n### Fázis 2: Szállítókezelés (alap)\n1. SupplierService és SupplierController implementálása\n2. ItemSupplier kapcsolat kezelés\n3. Frontend: Suppliers.tsx oldal\n4. Frontend: Products.tsx frissítése szállító kapcsolattal\n5. Tesztelés\n\n### Fázis 3: Visszárú kezelés\n1. ReturnService és ReturnController implementálása\n2. Jóváhagyási workflow\n3. StockMove automatikus létrehozás\n4. Frontend: Returns.tsx oldal\n5. Frontend: Order részletek frissítése\n6. Tesztelés\n\n### Fázis 4: Leltárív nyomtatás\n1. InventoryReportService implementálása (PDF, CSV, Excel)\n2. InventoryReportController végpontok\n3. Frontend: InventoryReportModal komponens\n4. Frontend: Warehouses.tsx és Logistics.tsx frissítése\n5. Tesztelés (minden formátum)\n\n### Fázis 5: Email értesítési rendszer\n1. TaskNotificationService implementálása\n2. TaskController új endpoint\n3. Frontend: TaskModal.tsx frissítése\n4. Tesztelés (mailto: link)\n\n### Fázis 6: CI/CD és Dokumentáció\n1. GitHub Actions workflow optimalizálás\n2. Dependenciák frissítése\n3. Build tesztelés Windows-on\n4. Dokumentáció frissítése\n\n---\n\n## 8. Technikai Részletek\n\n### 8.1 Függőségek\n\n**Már telepítve:**\n- &#96;pdfkit&#96; (^0.17.2) - PDF generáláshoz\n- &#96;exceljs&#96; (^4.4.0) - Excel generáláshoz\n- &#96;@types/pdfkit&#96; (^0.17.3)\n\n**Nincs új függőség szükséges** - minden szükséges könyvtár már a projektben van.\n\n### 8.2 Frontend API Integráció\n\n**Új API hook-ok:**\n- &#96;useReturns()&#96; - Visszárúk listája\n- &#96;useCreateReturn()&#96; - Új visszárú\n- &#96;useApproveReturn()&#96; - Jóváhagyás\n- &#96;useSuppliers()&#96; - Szállítók listája\n- &#96;useLinkItemSupplier()&#96; - Áru-szállító kapcsolat\n- &#96;useTaskNotification()&#96; - Email értesítés\n\n### 8.3 Error Handling\n\n- Backend: NestJS exception filters használata\n- Frontend: React Query error handling\n- Validációs üzenetek magyarul\n- Loading állapotok minden aszinkron műveletnél\n\n### 8.4 UI/UX Konzisztencia\n\n- TailwindCSS osztályok használata (meglévő stílusok)\n- Modal komponens újrafelhasználása\n- Gombok: &#96;mbit-blue&#96; szín, konzisztens stílus\n- Táblázatok: meglévő táblázat stílusok\n- Form mezők: meglévő input stílusok\n\n---\n\n## 9. Tesztelési Terv\n\n### 9.1 Backend Tesztek\n- Unit tesztek: Service metódusok\n- Integration tesztek: Controller végpontok\n- Adatbázis műveletek: Prisma Client tesztelés\n\n### 9.2 Frontend Tesztek\n- Komponens renderelés\n- Form validáció\n- API hívások (mock)\n- Modal működés\n- File download működés\n\n### 9.3 E2E Tesztek\n- Visszárú workflow teljes körű tesztelése\n- Szállító-áru kapcsolat létrehozása és kezelése\n- Leltárív generálás és letöltés (minden formátum)\n- Email értesítés küldése\n\n### 9.4 Windows Desktop Build Teszt\n- Electron app build sikeres\n- Backend és frontend fájlok be vannak csomagolva\n- Alkalmazás indítása és működése\n- Minden új funkció elérhető és működik\n\n---\n\n## 10. Dokumentáció Frissítése\n\n**Frissítendő fájlok:**\n- &#96;README.md&#96; - Új funkciók leírása\n- &#96;FELHASZNALOI_UTMUTATO.md&#96; - Visszárú, szállítókezelés, leltárív használata\n- &#96;docs/Megvalosulasi_jelentes.md&#96; - Fejlesztések dokumentálása\n\n**Új dokumentáció:**\n- &#96;docs/Logisztika_modul_funkciok.md&#96; - Részletes funkció leírások&quot;,
-  &quot;name&quot;: &quot;Készletnyilvántartás és logisztika modul bővítése&quot;,
-  &quot;overview&quot;: &quot;A készletnyilvántartás és logisztika modul bővítése visszárú kezeléssel, szállítókezeléssel, leltárív nyomtatással és email értesítési rendszerrel. Minden funkcióhoz teljes UI és backend implementáció, Windows desktop Electron alkalmazáshoz optimalizálva.&quot;
+  "plan": "# Készletnyilvántartás és Logisztika Modul Bővítése\n\n## Áttekintés\n\nEz a terv részletesen lefedi a készletnyilvántartás és logisztika modul bővítését négy fő funkcióval:\n1. **Visszárú kezelés** - Kétlépcsős jóváhagyási workflow\n2. **Szállítókezelés** - Többszörös szállító kapcsolat árukkal\n3. **Leltárív nyomtatás** - PDF, CSV és Excel formátumok\n4. **Email értesítési rendszer** - mailto: link alapú értesítések feladatokhoz\n\nMinden funkcióhoz teljes backend és frontend (Electron desktop) implementáció szükséges, működő gombokkal és logikus rendszerszintű összekapcsolásokkal.\n\n---\n\n## 1. Visszárú Kezelés (Return Management)\n\n### 1.1 Adatbázis változások\n\n**Új modell: &#96;Return&#96; (visszárú)**\n- Fájl: &#96;apps/server/prisma/schema.prisma&#96;\n- Mezők:\n  - &#96;id&#96; (String, UUID, primary key)\n  - &#96;orderId&#96; (String?, opcionális, Order kapcsolat)\n  - &#96;itemId&#96; (String, Item kapcsolat)\n  - &#96;warehouseId&#96; (String, Warehouse kapcsolat)\n  - &#96;mennyiseg&#96; (Float)\n  - &#96;ok&#96; (String) - visszárú ok (enum: 'hibas', 'sertett', 'tulcsordulas', 'egyeb')\n  - &#96;allapot&#96; (String) - enum: 'PENDING', 'APPROVED', 'REJECTED', 'COMPLETED'\n  - &#96;visszaruDatum&#96; (DateTime)\n  - &#96;megjegyzesek&#96; (String?)\n  - &#96;createdById&#96; (String?, User kapcsolat)\n  - &#96;approvedById&#96; (String?, User kapcsolat)\n  - &#96;createdAt&#96;, &#96;updatedAt&#96; (DateTime)\n- Kapcsolatok: Order, Item, Warehouse, User (createdBy, approvedBy)\n- Indexek: &#96;orderId&#96;, &#96;itemId&#96;, &#96;warehouseId&#96;, &#96;allapot&#96;, &#96;createdAt&#96;\n\n**StockMove automatikus létrehozás**\n- Visszárú jóváhagyásakor automatikus StockMove létrehozás &#96;tipus: 'RETURN'&#96; értékkel\n\n### 1.2 Backend implementáció\n\n**Új fájlok:**\n- &#96;apps/server/src/logistics/return.service.ts&#96; - Visszárú üzleti logika\n- &#96;apps/server/src/logistics/return.controller.ts&#96; - REST API végpontok\n- &#96;apps/server/src/logistics/dto/create-return.dto.ts&#96; - DTO validáció\n- &#96;apps/server/src/logistics/dto/update-return.dto.ts&#96;\n- &#96;apps/server/src/logistics/dto/approve-return.dto.ts&#96;\n\n**ReturnService metódusok:**\n- &#96;findAll(skip, take, filters)&#96; - Lista lekérdezés szűrőkkel\n- &#96;findOne(id)&#96; - Egy visszárú lekérdezése\n- &#96;create(dto, userId)&#96; - Új visszárú létrehozása\n- &#96;update(id, dto, userId)&#96; - Visszárú módosítása (csak PENDING állapotban)\n- &#96;approve(id, userId)&#96; - Visszárú jóváhagyása (állapot: APPROVED, StockMove létrehozás)\n- &#96;reject(id, userId, reason?)&#96; - Visszárú elutasítása\n- &#96;complete(id, userId)&#96; - Visszárú feldolgozása (készlet visszaírás, állapot: COMPLETED)\n- &#96;getByOrder(orderId)&#96; - Rendeléshez tartozó visszárúk\n\n**ReturnController végpontok:**\n- &#96;GET /logistics/returns&#96; - Lista (query: skip, take, orderId, itemId, warehouseId, allapot)\n- &#96;GET /logistics/returns/:id&#96; - Részletek\n- &#96;POST /logistics/returns&#96; - Létrehozás\n- &#96;PUT /logistics/returns/:id&#96; - Módosítás\n- &#96;POST /logistics/returns/:id/approve&#96; - Jóváhagyás\n- &#96;POST /logistics/returns/:id/reject&#96; - Elutasítás\n- &#96;POST /logistics/returns/:id/complete&#96; - Feldolgozás\n\n**Jogosultságok hozzáadása:**\n- &#96;apps/server/src/common/rbac/permission.enum.ts&#96;:\n  - &#96;RETURN_VIEW = 'return:view'&#96;\n  - &#96;RETURN_CREATE = 'return:create'&#96;\n  - &#96;RETURN_EDIT = 'return:edit'&#96;\n  - &#96;RETURN_APPROVE = 'return:approve'&#96;\n  - &#96;RETURN_COMPLETE = 'return:complete'&#96;\n\n**LogisticsModule frissítése:**\n- ReturnService és ReturnController hozzáadása\n\n### 1.3 Frontend implementáció (Electron Desktop)\n\n**Új fájlok:**\n- &#96;apps/web/src/pages/Returns.tsx&#96; - Visszárú kezelő oldal\n- &#96;apps/web/src/components/logistics/ReturnModal.tsx&#96; - Visszárú létrehozás/szerkesztés modal\n- &#96;apps/web/src/components/logistics/ReturnList.tsx&#96; - Visszárú lista komponens\n- &#96;apps/web/src/lib/api/logistics.ts&#96; - API hívások (useReturns, useCreateReturn, useApproveReturn, stb.)\n\n**Returns.tsx funkciók:**\n- Táblázat: azonosító, rendelés, áru, raktár, mennyiség, ok, állapot, dátum, műveletek\n- Szűrők: rendelés, áru, raktár, állapot, dátum tartomány\n- Gombok:\n  - \"Új visszárú\" - Modal megnyitása\n  - \"Jóváhagyás\" - Csak PENDING állapotnál, admin jogosultság\n  - \"Elutasítás\" - Csak PENDING állapotnál, admin jogosultság\n  - \"Feldolgozás\" - Csak APPROVED állapotnál\n  - \"Szerkesztés\" - Csak PENDING állapotnál\n  - \"Részletek\" - Teljes visszárú információ megjelenítése\n\n**ReturnModal.tsx mezők:**\n- Rendelés kiválasztás (opcionális, dropdown)\n- Áru kiválasztás (kötelező, dropdown)\n- Raktár kiválasztás (kötelező, dropdown)\n- Mennyiség (szám input)\n- Visszárú ok (dropdown: hibás, sérült, túlcsordulás, egyéb)\n- Megjegyzések (textarea)\n- Dátum (date picker)\n\n**Logistics.tsx frissítése:**\n- Új tab hozzáadása: \"Visszárúk\" a meglévő tabokhoz (Cikktörzs, Raktárak, Készletek)\n\n**Order részletek oldal frissítése:**\n- \"Visszárú létrehozása\" gomb hozzáadása, amely előtölti a rendelést a ReturnModal-ban\n\n---\n\n## 2. Szállítókezelés (Supplier Management)\n\n### 2.1 Adatbázis változások\n\n**Új modell: &#96;ItemSupplier&#96; (kapcsolótábla)**\n- Fájl: &#96;apps/server/prisma/schema.prisma&#96;\n- Mezők:\n  - &#96;id&#96; (String, UUID, primary key)\n  - &#96;itemId&#96; (String, Item kapcsolat)\n  - &#96;supplierId&#96; (String, Supplier kapcsolat)\n  - &#96;isPrimary&#96; (Boolean, default: false) - elsődleges szállító jelölés\n  - &#96;beszerzesiAr&#96; (Float?) - szállító specifikus ár\n  - &#96;minMennyiseg&#96; (Float?) - minimum rendelési mennyiség\n  - &#96;szallitasiIdo&#96; (Int?) - szállítási idő napokban\n  - &#96;megjegyzesek&#96; (String?)\n  - &#96;createdAt&#96;, &#96;updatedAt&#96; (DateTime)\n- Unique constraint: &#96;[itemId, supplierId]&#96;\n- Indexek: &#96;itemId&#96;, &#96;supplierId&#96;, &#96;isPrimary&#96;\n\n**Supplier modell már létezik** - nincs változtatás szükséges\n\n### 2.2 Backend implementáció\n\n**Új fájlok:**\n- &#96;apps/server/src/logistics/supplier.service.ts&#96; - Szállító üzleti logika\n- &#96;apps/server/src/logistics/supplier.controller.ts&#96; - REST API végpontok\n- &#96;apps/server/src/logistics/dto/create-supplier.dto.ts&#96;\n- &#96;apps/server/src/logistics/dto/update-supplier.dto.ts&#96;\n- &#96;apps/server/src/logistics/dto/link-item-supplier.dto.ts&#96;\n\n**SupplierService metódusok:**\n- &#96;findAll(skip, take, search?)&#96; - Szállítók listája\n- &#96;findOne(id)&#96; - Egy szállító részletei\n- &#96;create(dto)&#96; - Új szállító\n- &#96;update(id, dto)&#96; - Szállító módosítása\n- &#96;delete(id)&#96; - Szállító törlése (soft delete: aktiv = false)\n- &#96;linkItemToSupplier(itemId, supplierId, dto)&#96; - Áru összekapcsolása szállítóval\n- &#96;unlinkItemFromSupplier(itemId, supplierId)&#96; - Kapcsolat megszüntetése\n- &#96;getItemSuppliers(itemId)&#96; - Áru szállítói\n- &#96;getSupplierItems(supplierId)&#96; - Szállító árui\n- &#96;setPrimarySupplier(itemId, supplierId)&#96; - Elsődleges szállító beállítása\n\n**SupplierController végpontok:**\n- &#96;GET /logistics/suppliers&#96; - Lista\n- &#96;GET /logistics/suppliers/:id&#96; - Részletek\n- &#96;POST /logistics/suppliers&#96; - Létrehozás\n- &#96;PUT /logistics/suppliers/:id&#96; - Módosítás\n- &#96;DELETE /logistics/suppliers/:id&#96; - Törlés (soft)\n- &#96;POST /logistics/suppliers/:id/items/:itemId/link&#96; - Áru összekapcsolása\n- &#96;DELETE /logistics/suppliers/:id/items/:itemId/unlink&#96; - Kapcsolat megszüntetése\n- &#96;PUT /logistics/items/:itemId/suppliers/:supplierId/primary&#96; - Elsődleges beállítás\n\n**ItemService frissítése:**\n- &#96;findOne(id)&#96; - Include: &#96;itemSuppliers&#96; with &#96;supplier&#96; details\n- &#96;findAll()&#96; - Opcionális include: &#96;itemSuppliers&#96;\n\n**Jogosultságok:**\n- &#96;SUPPLIER_VIEW = 'supplier:view'&#96;\n- &#96;SUPPLIER_CREATE = 'supplier:create'&#96;\n- &#96;SUPPLIER_EDIT = 'supplier:edit'&#96;\n- &#96;SUPPLIER_DELETE = 'supplier:delete'&#96;\n\n**LogisticsModule frissítése:**\n- SupplierService és SupplierController hozzáadása\n\n### 2.3 Frontend implementáció\n\n**Új fájlok:**\n- &#96;apps/web/src/pages/Suppliers.tsx&#96; - Szállítók kezelő oldal\n- &#96;apps/web/src/components/logistics/SupplierModal.tsx&#96; - Szállító létrehozás/szerkesztés\n- &#96;apps/web/src/components/logistics/ItemSupplierLinkModal.tsx&#96; - Áru-szállító kapcsolat kezelés\n- &#96;apps/web/src/lib/api/logistics.ts&#96; - API hívások (useSuppliers, useLinkItemSupplier, stb.)\n\n**Suppliers.tsx funkciók:**\n- Táblázat: név, adószám, cím, email, telefon, státusz, műveletek\n- Keresés: név, adószám alapján\n- Gombok:\n  - \"Új szállító\" - Modal megnyitása\n  - \"Szerkesztés\" - Modal megnyitása adatokkal\n  - \"Törlés\" - Soft delete (aktiv = false)\n  - \"Árui\" - Szállító áruinak listája\n  - \"Áru hozzáadása\" - ItemSupplierLinkModal megnyitása\n\n**SupplierModal.tsx mezők:**\n- Név (kötelező)\n- Adószám\n- Cím\n- Email\n- Telefon\n- Aktív (checkbox)\n\n**Products.tsx frissítése:**\n- \"Szállítók\" szekció hozzáadása a termék részleteknél\n- \"Szállító hozzáadása\" gomb\n- Szállítók listája (elsődleges kiemeléssel)\n- \"Elsődleges beállítása\" gomb minden szállítónál\n- \"Eltávolítás\" gomb\n\n**ItemSupplierLinkModal.tsx:**\n- Szállító kiválasztás (dropdown)\n- Beszerzési ár (opcionális)\n- Minimum mennyiség (opcionális)\n- Szállítási idő napokban (opcionális)\n- Megjegyzések\n- \"Elsődleges szállító\" checkbox\n\n**Logistics.tsx frissítése:**\n- Új tab: \"Szállítók\"\n\n---\n\n## 3. Leltárív Nyomtatás (Inventory Report Printing)\n\n### 3.1 Backend implementáció\n\n**Új fájlok:**\n- &#96;apps/server/src/logistics/inventory-report.service.ts&#96; - Riport generálás logika\n- &#96;apps/server/src/logistics/inventory-report.controller.ts&#96; - Export végpontok\n\n**InventoryReportService metódusok:**\n- &#96;generatePDF(warehouseId?, filters)&#96; - PDF generálás pdfkit-tel\n- &#96;generateCSV(warehouseId?, filters)&#96; - CSV generálás\n- &#96;generateExcel(warehouseId?, filters)&#96; - Excel generálás exceljs-szel\n- &#96;getReportData(warehouseId?, filters)&#96; - Adatok lekérdezése (közös logika)\n\n**PDF sablon struktúra:**\n- Fejléc: \"Leltárív\", dátum, raktár neve\n- Táblázat oszlopok: Áru azonosító, Név, Mennyiség, Egység, Raktári hely, Minimum, Maximum, Státusz\n- Lábléc: Összesített mennyiség, alacsony készletű tételek száma\n\n**CSV struktúra:**\n- Ugyanazok az oszlopok, UTF-8 BOM a magyar karakterekhez\n\n**Excel struktúra:**\n- Munkalap: \"Leltárív\"\n- Formázott táblázat, fejléc sötét háttérrel\n- Szűrhető oszlopok\n\n**InventoryReportController végpontok:**\n- &#96;GET /logistics/inventory/reports/print&#96; - Query: warehouseId, format (pdf/csv/excel), date, lowStockOnly\n- Response: File download (Content-Disposition header)\n\n**Jogosultságok:**\n- &#96;INVENTORY_REPORT_PRINT = 'inventory:report_print'&#96;\n\n### 3.2 Frontend implementáció\n\n**Új fájlok:**\n- &#96;apps/web/src/components/logistics/InventoryReportModal.tsx&#96; - Riport opciók modal\n- &#96;apps/web/src/lib/api/logistics.ts&#96; - downloadReport függvény\n\n**InventoryReportModal.tsx:**\n- Raktár kiválasztás (dropdown, opcionális = \"Összes raktár\")\n- Dátum kiválasztás (date picker, opcionális)\n- Formátum választás (radio: PDF, CSV, Excel)\n- \"Csak alacsony készletű\" checkbox\n- \"Riport generálása\" gomb\n- Loading állapot\n- Sikeres generálás után automatikus letöltés\n\n**Warehouses.tsx frissítése:**\n- \"Leltárív nyomtatása\" gomb a raktár részleteknél\n- Modal megnyitása előtöltött raktárral\n\n**Logistics.tsx frissítése:**\n- \"Leltárív nyomtatása\" gomb a Készletek tab-ban\n- Modal megnyitása\n\n**downloadReport függvény:**\n- Axios GET hívás &#96;responseType: 'blob'&#96;\n- Blob letöltés böngésző API-val\n- Fájlnév generálás: &#96;Leltariv_YYYY-MM-DD.{ext}&#96;\n\n---\n\n## 4. Email Értesítési Rendszer (Task Notification)\n\n### 4.1 Backend implementáció\n\n**Új fájlok:**\n- &#96;apps/server/src/team/task/task-notification.service.ts&#96; - Email sablon generálás\n- &#96;apps/server/src/team/task/task.controller.ts&#96; frissítése - új endpoint\n\n**TaskNotificationService metódusok:**\n- &#96;generateMailtoLink(taskId, userId)&#96; - mailto: URL generálás\n- &#96;generateEmailSubject(task)&#96; - Tárgy generálás\n- &#96;generateEmailBody(task)&#96; - Szövegtörzs generálás HTML formátumban\n\n**Email sablon struktúra:**\n- Tárgy: \"Új feladat az Mbit rendszerben!\"\n- Szöveg:\n  - Feladat címe (h2)\n  - Leírás (ha van)\n  - Határidő (ha van)\n  - Prioritás\n  - Board neve\n  - Link a feladathoz (ha van frontend URL)\n  - Létrehozó neve\n\n**TaskController új végpont:**\n- &#96;GET /team/tasks/:id/notify&#96; - Query: userId (opcionális, default: assignedToId)\n- Response: &#96;{ mailtoUrl: string, subject: string, body: string }&#96;\n\n**Jogosultságok:**\n- &#96;TASK_NOTIFY = 'task:notify'&#96; (már létezik TASK_EDIT alatt)\n\n### 4.2 Frontend implementáció\n\n**Frissítendő fájlok:**\n- &#96;apps/web/src/components/team/TaskModal.tsx&#96; - \"Értesítés küldése\" gomb hozzáadása\n- &#96;apps/web/src/lib/api/team.ts&#96; - useTaskNotification hook\n\n**TaskModal.tsx frissítése:**\n- \"Értesítés küldése\" gomb hozzáadása (ha van assignedTo)\n- Gomb megnyomásakor:\n  1. API hívás: &#96;GET /api/team/tasks/:id/notify&#96;\n  2. &#96;window.location.href = mailtoUrl&#96; megnyitása\n  3. Sikeres üzenet megjelenítése\n\n**useTaskNotification hook:**\n&#96;&#96;&#96;typescript\nexport function useTaskNotification() {\n  return useMutation({\n    mutationFn: async (taskId: string) =&gt; {\n      const response = await axios.get(&#96;/api/team/tasks/${taskId}/notify&#96;);\n      return response.data;\n    },\n  });\n}\n&#96;&#96;&#96;\n\n**TaskCard.tsx frissítése (ha van külön komponens):**\n- \"Értesítés\" ikon gomb (opcionális, ha van assignedTo)\n\n---\n\n## 5. Adatbázis Migrációk\n\n### 5.1 Prisma Schema frissítések\n\n**Fájl: &#96;apps/server/prisma/schema.prisma&#96;**\n\n**Return modell hozzáadása:**\n&#96;&#96;&#96;prisma\nmodel Return {\n  id            String    @id @default(uuid())\n  orderId      String?\n  itemId       String\n  warehouseId  String\n  mennyiseg    Float\n  ok           String\n  allapot      String    @default(\"PENDING\")\n  visszaruDatum DateTime @default(now())\n  megjegyzesek String?\n  createdById  String?\n  approvedById String?\n  createdAt    DateTime  @default(now())\n  updatedAt    DateTime  @updatedAt\n  \n  order        Order?    @relation(fields: [orderId], references: [id], onDelete: SetNull)\n  item         Item      @relation(fields: [itemId], references: [id])\n  warehouse    Warehouse @relation(fields: [warehouseId], references: [id])\n  createdBy    User?     @relation(\"ReturnCreatedBy\", fields: [createdById], references: [id], onDelete: SetNull)\n  approvedBy   User?     @relation(\"ReturnApprovedBy\", fields: [approvedById], references: [id], onDelete: SetNull)\n  \n  @@index([orderId])\n  @@index([itemId])\n  @@index([warehouseId])\n  @@index([allapot])\n  @@index([createdAt])\n  @@map(\"visszaru\")\n}\n&#96;&#96;&#96;\n\n**ItemSupplier modell hozzáadása:**\n&#96;&#96;&#96;prisma\nmodel ItemSupplier {\n  id            String    @id @default(uuid())\n  itemId        String\n  supplierId    String\n  isPrimary     Boolean   @default(false)\n  beszerzesiAr  Float?\n  minMennyiseg  Float?\n  szallitasiIdo Int?\n  megjegyzesek  String?\n  createdAt     DateTime  @default(now())\n  updatedAt     DateTime  @updatedAt\n  \n  item          Item      @relation(fields: [itemId], references: [id], onDelete: Cascade)\n  supplier      Supplier  @relation(fields: [supplierId], references: [id], onDelete: Cascade)\n  \n  @@unique([itemId, supplierId])\n  @@index([itemId])\n  @@index([supplierId])\n  @@index([isPrimary])\n  @@map(\"aru_szallito\")\n}\n&#96;&#96;&#96;\n\n**User modell frissítése:**\n- &#96;createdReturns&#96; és &#96;approvedReturns&#96; relációk hozzáadása\n\n**Order, Item, Warehouse modell frissítése:**\n- &#96;returns&#96; reláció hozzáadása\n\n**Item modell frissítése:**\n- &#96;itemSuppliers&#96; reláció hozzáadása\n\n**Supplier modell frissítése:**\n- &#96;itemSuppliers&#96; reláció hozzáadása\n\n### 5.2 Migráció futtatása\n\n&#96;&#96;&#96;bash\ncd apps/server\nnpx prisma migrate dev --name add_returns_and_item_suppliers\nnpx prisma generate\n&#96;&#96;&#96;\n\n---\n\n## 6. CI/CD Workflow Optimalizálás\n\n### 6.1 GitHub Actions Workflow frissítése\n\n**Fájl: &#96;.github/workflows/build-desktop.yml&#96;**\n\n**Változtatások:**\n1. Node.js verzió frissítése 18.18.2-ről 20.x-re (ha szükséges)\n2. Dependenciák frissítése ellenőrzése\n3. Build lépések optimalizálása\n4. Windows build ellenőrzések megerősítése\n\n**Új lépések hozzáadása:**\n- Prisma migráció futtatása build előtt\n- Prisma Client generálás ellenőrzése\n- Backend build ellenőrzése (dist mappa létezése)\n- Frontend build ellenőrzése (dist mappa létezése)\n\n**Dependenciák frissítése:**\n- &#96;apps/server/package.json&#96; - pdfkit, exceljs verziók ellenőrzése\n- &#96;apps/desktop/package.json&#96; - electron, electron-builder verziók ellenőrzése\n\n---\n\n## 7. Implementációs Sorrend\n\n### Fázis 1: Adatbázis és Alapstruktúra\n1. Prisma schema frissítése (Return, ItemSupplier)\n2. Migráció futtatása\n3. Permission enum frissítése\n4. LogisticsModule struktúra frissítése\n\n### Fázis 2: Szállítókezelés (alap)\n1. SupplierService és SupplierController implementálása\n2. ItemSupplier kapcsolat kezelés\n3. Frontend: Suppliers.tsx oldal\n4. Frontend: Products.tsx frissítése szállító kapcsolattal\n5. Tesztelés\n\n### Fázis 3: Visszárú kezelés\n1. ReturnService és ReturnController implementálása\n2. Jóváhagyási workflow\n3. StockMove automatikus létrehozás\n4. Frontend: Returns.tsx oldal\n5. Frontend: Order részletek frissítése\n6. Tesztelés\n\n### Fázis 4: Leltárív nyomtatás\n1. InventoryReportService implementálása (PDF, CSV, Excel)\n2. InventoryReportController végpontok\n3. Frontend: InventoryReportModal komponens\n4. Frontend: Warehouses.tsx és Logistics.tsx frissítése\n5. Tesztelés (minden formátum)\n\n### Fázis 5: Email értesítési rendszer\n1. TaskNotificationService implementálása\n2. TaskController új endpoint\n3. Frontend: TaskModal.tsx frissítése\n4. Tesztelés (mailto: link)\n\n### Fázis 6: CI/CD és Dokumentáció\n1. GitHub Actions workflow optimalizálás\n2. Dependenciák frissítése\n3. Build tesztelés Windows-on\n4. Dokumentáció frissítése\n\n---\n\n## 8. Technikai Részletek\n\n### 8.1 Függőségek\n\n**Már telepítve:**\n- &#96;pdfkit&#96; (^0.17.2) - PDF generáláshoz\n- &#96;exceljs&#96; (^4.4.0) - Excel generáláshoz\n- &#96;@types/pdfkit&#96; (^0.17.3)\n\n**Nincs új függőség szükséges** - minden szükséges könyvtár már a projektben van.\n\n### 8.2 Frontend API Integráció\n\n**Új API hook-ok:**\n- &#96;useReturns()&#96; - Visszárúk listája\n- &#96;useCreateReturn()&#96; - Új visszárú\n- &#96;useApproveReturn()&#96; - Jóváhagyás\n- &#96;useSuppliers()&#96; - Szállítók listája\n- &#96;useLinkItemSupplier()&#96; - Áru-szállító kapcsolat\n- &#96;useTaskNotification()&#96; - Email értesítés\n\n### 8.3 Error Handling\n\n- Backend: NestJS exception filters használata\n- Frontend: React Query error handling\n- Validációs üzenetek magyarul\n- Loading állapotok minden aszinkron műveletnél\n\n### 8.4 UI/UX Konzisztencia\n\n- TailwindCSS osztályok használata (meglévő stílusok)\n- Modal komponens újrafelhasználása\n- Gombok: &#96;mbit-blue&#96; szín, konzisztens stílus\n- Táblázatok: meglévő táblázat stílusok\n- Form mezők: meglévő input stílusok\n\n---\n\n## 9. Tesztelési Terv\n\n### 9.1 Backend Tesztek\n- Unit tesztek: Service metódusok\n- Integration tesztek: Controller végpontok\n- Adatbázis műveletek: Prisma Client tesztelés\n\n### 9.2 Frontend Tesztek\n- Komponens renderelés\n- Form validáció\n- API hívások (mock)\n- Modal működés\n- File download működés\n\n### 9.3 E2E Tesztek\n- Visszárú workflow teljes körű tesztelése\n- Szállító-áru kapcsolat létrehozása és kezelése\n- Leltárív generálás és letöltés (minden formátum)\n- Email értesítés küldése\n\n### 9.4 Windows Desktop Build Teszt\n- Electron app build sikeres\n- Backend és frontend fájlok be vannak csomagolva\n- Alkalmazás indítása és működése\n- Minden új funkció elérhető és működik\n\n---\n\n## 10. Dokumentáció Frissítése\n\n**Frissítendő fájlok:**\n- &#96;README.md&#96; - Új funkciók leírása\n- &#96;FELHASZNALOI_UTMUTATO.md&#96; - Visszárú, szállítókezelés, leltárív használata\n- &#96;docs/Megvalosulasi_jelentes.md&#96; - Fejlesztések dokumentálása\n\n**Új dokumentáció:**\n- &#96;docs/Logisztika_modul_funkciok.md&#96; - Részletes funkció leírások",
+  "name": "Készletnyilvántartás és logisztika modul bővítése",
+  "overview": "A készletnyilvántartás és logisztika modul bővítése visszárú kezeléssel, szállítókezeléssel, leltárív nyomtatással és email értesítési rendszerrel. Minden funkcióhoz teljes UI és backend implementáció, Windows desktop Electron alkalmazáshoz optimalizálva."
 }
 ```
 Additional data:
 
 ```json
 {
-  &quot;status&quot;: &quot;accepted&quot;,
-  &quot;reviewData&quot;: {
-    &quot;status&quot;: &quot;Done&quot;,
-    &quot;selectedOption&quot;: &quot;approve&quot;,
-    &quot;isShowingInput&quot;: false
+  "status": "accepted",
+  "reviewData": {
+    "status": "Done",
+    "selectedOption": "approve",
+    "isShowingInput": false
   }
 }
 ```
@@ -774,117 +774,117 @@ Result:
 
 ```json
 {
-  &quot;accepted&quot;: {
-    &quot;finalTodos&quot;: [
+  "accepted": {
+    "finalTodos": [
       {
-        &quot;content&quot;: &quot;Prisma schema módosítások: Return modell, ItemSupplier kapcsolótábla, kapcsolatok létrehozása&quot;,
-        &quot;status&quot;: &quot;completed&quot;,
-        &quot;id&quot;: &quot;todo-1763551563472-8rz5fif4g&quot;
+        "content": "Prisma schema módosítások: Return modell, ItemSupplier kapcsolótábla, kapcsolatok létrehozása",
+        "status": "completed",
+        "id": "todo-1763551563472-8rz5fif4g"
       },
       {
-        &quot;content&quot;: &quot;Prisma migráció futtatása és seed adatok (ha szükséges)&quot;,
-        &quot;status&quot;: &quot;completed&quot;,
-        &quot;id&quot;: &quot;todo-1763551563472-0achquw3x&quot;
+        "content": "Prisma migráció futtatása és seed adatok (ha szükséges)",
+        "status": "completed",
+        "id": "todo-1763551563472-0achquw3x"
       },
       {
-        &quot;content&quot;: &quot;Új jogosultságok hozzáadása permission.enum.ts-ben (RETURN_*, SUPPLIER_*, INVENTORY_REPORT_*, TASK_NOTIFY)&quot;,
-        &quot;status&quot;: &quot;completed&quot;,
-        &quot;id&quot;: &quot;todo-1763551563472-qefks3nzy&quot;
+        "content": "Új jogosultságok hozzáadása permission.enum.ts-ben (RETURN_*, SUPPLIER_*, INVENTORY_REPORT_*, TASK_NOTIFY)",
+        "status": "completed",
+        "id": "todo-1763551563472-qefks3nzy"
       },
       {
-        &quot;content&quot;: &quot;ReturnService implementálása: CRUD műveletek, jóváhagyási workflow, készlet visszaírás logika&quot;,
-        &quot;status&quot;: &quot;completed&quot;,
-        &quot;id&quot;: &quot;todo-1763551563472-cdqmiygcf&quot;
+        "content": "ReturnService implementálása: CRUD műveletek, jóváhagyási workflow, készlet visszaírás logika",
+        "status": "completed",
+        "id": "todo-1763551563472-cdqmiygcf"
       },
       {
-        &quot;content&quot;: &quot;ReturnController implementálása: REST végpontok, jogosultság ellenőrzések, audit log&quot;,
-        &quot;status&quot;: &quot;completed&quot;,
-        &quot;id&quot;: &quot;todo-1763551563472-qvkr7fjd0&quot;
+        "content": "ReturnController implementálása: REST végpontok, jogosultság ellenőrzések, audit log",
+        "status": "completed",
+        "id": "todo-1763551563472-qvkr7fjd0"
       },
       {
-        &quot;content&quot;: &quot;SupplierService implementálása: CRUD műveletek, áru kapcsolatok kezelése, elsődleges szállító logika&quot;,
-        &quot;status&quot;: &quot;completed&quot;,
-        &quot;id&quot;: &quot;todo-1763551563472-5m5q9320q&quot;
+        "content": "SupplierService implementálása: CRUD műveletek, áru kapcsolatok kezelése, elsődleges szállító logika",
+        "status": "completed",
+        "id": "todo-1763551563472-5m5q9320q"
       },
       {
-        &quot;content&quot;: &quot;SupplierController implementálása: REST végpontok, jogosultság ellenőrzések&quot;,
-        &quot;status&quot;: &quot;completed&quot;,
-        &quot;id&quot;: &quot;todo-1763551563472-owgg0bqrw&quot;
+        "content": "SupplierController implementálása: REST végpontok, jogosultság ellenőrzések",
+        "status": "completed",
+        "id": "todo-1763551563472-owgg0bqrw"
       },
       {
-        &quot;content&quot;: &quot;InventoryReportService implementálása: PDF/CSV/Excel generálás, adatok lekérése&quot;,
-        &quot;status&quot;: &quot;completed&quot;,
-        &quot;id&quot;: &quot;todo-1763551563472-wp1t0ybm3&quot;
+        "content": "InventoryReportService implementálása: PDF/CSV/Excel generálás, adatok lekérése",
+        "status": "completed",
+        "id": "todo-1763551563472-wp1t0ybm3"
       },
       {
-        &quot;content&quot;: &quot;InventoryReportController implementálása: REST végpontok nyomtatáshoz és exportáláshoz&quot;,
-        &quot;status&quot;: &quot;completed&quot;,
-        &quot;id&quot;: &quot;todo-1763551563472-3pbqc7k8y&quot;
+        "content": "InventoryReportController implementálása: REST végpontok nyomtatáshoz és exportáláshoz",
+        "status": "completed",
+        "id": "todo-1763551563472-3pbqc7k8y"
       },
       {
-        &quot;content&quot;: &quot;TaskNotificationService implementálása: email sablon generálás, mailto link készítés&quot;,
-        &quot;status&quot;: &quot;completed&quot;,
-        &quot;id&quot;: &quot;todo-1763551563472-u4glm6w1x&quot;
+        "content": "TaskNotificationService implementálása: email sablon generálás, mailto link készítés",
+        "status": "completed",
+        "id": "todo-1763551563472-u4glm6w1x"
       },
       {
-        &quot;content&quot;: &quot;TaskController módosítás: notify endpoint hozzáadása&quot;,
-        &quot;status&quot;: &quot;completed&quot;,
-        &quot;id&quot;: &quot;todo-1763551563472-veqhfyqs2&quot;
+        "content": "TaskController módosítás: notify endpoint hozzáadása",
+        "status": "completed",
+        "id": "todo-1763551563472-veqhfyqs2"
       },
       {
-        &quot;content&quot;: &quot;LogisticsModule frissítése: új services és controllers regisztrálása&quot;,
-        &quot;status&quot;: &quot;completed&quot;,
-        &quot;id&quot;: &quot;todo-1763551563472-jb0i0s39i&quot;
+        "content": "LogisticsModule frissítése: új services és controllers regisztrálása",
+        "status": "completed",
+        "id": "todo-1763551563472-jb0i0s39i"
       },
       {
-        &quot;content&quot;: &quot;ItemService módosítása: suppliers reláció hozzáadása&quot;,
-        &quot;status&quot;: &quot;completed&quot;,
-        &quot;id&quot;: &quot;todo-1763551563472-7ot83kmwv&quot;
+        "content": "ItemService módosítása: suppliers reláció hozzáadása",
+        "status": "completed",
+        "id": "todo-1763551563472-7ot83kmwv"
       },
       {
-        &quot;content&quot;: &quot;Frontend API hooks létrehozása: useReturns, useSuppliers, useGenerateInventoryReport stb.&quot;,
-        &quot;status&quot;: &quot;completed&quot;,
-        &quot;id&quot;: &quot;todo-1763551563472-96vfn8w2w&quot;
+        "content": "Frontend API hooks létrehozása: useReturns, useSuppliers, useGenerateInventoryReport stb.",
+        "status": "completed",
+        "id": "todo-1763551563472-96vfn8w2w"
       },
       {
-        &quot;content&quot;: &quot;Returns.tsx oldal létrehozása: lista, modal, szűrők, művelet gombok&quot;,
-        &quot;status&quot;: &quot;completed&quot;,
-        &quot;id&quot;: &quot;todo-1763551563472-jb3k1lvu4&quot;
+        "content": "Returns.tsx oldal létrehozása: lista, modal, szűrők, művelet gombok",
+        "status": "completed",
+        "id": "todo-1763551563472-jb3k1lvu4"
       },
       {
-        &quot;content&quot;: &quot;Suppliers.tsx oldal létrehozása: lista, modal, áru kapcsolatok kezelése&quot;,
-        &quot;status&quot;: &quot;completed&quot;,
-        &quot;id&quot;: &quot;todo-1763551563472-gz6txj62d&quot;
+        "content": "Suppliers.tsx oldal létrehozása: lista, modal, áru kapcsolatok kezelése",
+        "status": "completed",
+        "id": "todo-1763551563472-gz6txj62d"
       },
       {
-        &quot;content&quot;: &quot;ProductSuppliers komponens létrehozása és Products.tsx módosítása&quot;,
-        &quot;status&quot;: &quot;completed&quot;,
-        &quot;id&quot;: &quot;todo-1763551563472-m8i57g49b&quot;
+        "content": "ProductSuppliers komponens létrehozása és Products.tsx módosítása",
+        "status": "completed",
+        "id": "todo-1763551563472-m8i57g49b"
       },
       {
-        &quot;content&quot;: &quot;InventoryReportButton komponens létrehozása és Warehouses.tsx módosítása&quot;,
-        &quot;status&quot;: &quot;completed&quot;,
-        &quot;id&quot;: &quot;todo-1763551563472-x0wsvhyqw&quot;
+        "content": "InventoryReportButton komponens létrehozása és Warehouses.tsx módosítása",
+        "status": "completed",
+        "id": "todo-1763551563472-x0wsvhyqw"
       },
       {
-        &quot;content&quot;: &quot;Logistics.tsx módosítása: új tab-ok (Visszárú, Szállítók) hozzáadása&quot;,
-        &quot;status&quot;: &quot;completed&quot;,
-        &quot;id&quot;: &quot;todo-1763551563472-5mbbsl4ac&quot;
+        "content": "Logistics.tsx módosítása: új tab-ok (Visszárú, Szállítók) hozzáadása",
+        "status": "completed",
+        "id": "todo-1763551563472-5mbbsl4ac"
       },
       {
-        &quot;content&quot;: &quot;TaskModal.tsx módosítása: Értesítés küldése gomb és funkció&quot;,
-        &quot;status&quot;: &quot;completed&quot;,
-        &quot;id&quot;: &quot;todo-1763551563472-nvpgqjvst&quot;
+        "content": "TaskModal.tsx módosítása: Értesítés küldése gomb és funkció",
+        "status": "completed",
+        "id": "todo-1763551563472-nvpgqjvst"
       },
       {
-        &quot;content&quot;: &quot;Backend függőségek telepítése: pdfkit, exceljs, @types/pdfkit&quot;,
-        &quot;status&quot;: &quot;completed&quot;,
-        &quot;id&quot;: &quot;todo-1763551563472-1mnrne39n&quot;
+        "content": "Backend függőségek telepítése: pdfkit, exceljs, @types/pdfkit",
+        "status": "completed",
+        "id": "todo-1763551563472-1mnrne39n"
       },
       {
-        &quot;content&quot;: &quot;Integrációk tesztelése: visszárú-készlet, szállító-áru, leltárív-raktár, email értesítés&quot;,
-        &quot;status&quot;: &quot;pending&quot;,
-        &quot;id&quot;: &quot;todo-1763551641175-oge4rjmo9&quot;
+        "content": "Integrációk tesztelése: visszárú-készlet, szállító-áru, leltárív-raktár, email értesítés",
+        "status": "pending",
+        "id": "todo-1763551641175-oge4rjmo9"
       }
     ]
   }
@@ -988,19 +988,19 @@ A Prisma sémát frissítjük: hozzáadjuk a Return és ItemSupplier modelleket,
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/prisma/schema.prisma</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/prisma/schema.prisma</summary>
 
 **Chunk 1**
 Lines added: 2, lines removed: undefined
 
 ```diff
 @@ -33,4 +33,6 @@
-    taskAttachments   TaskAttachment[] @relation(&quot;TaskAttachments&quot;)
-    taskWatchers      TaskWatcher[]  @relation(&quot;TaskWatchers&quot;)
-+   createdReturns    Return[]       @relation(&quot;ReturnCreatedBy&quot;)
-+   approvedReturns   Return[]       @relation(&quot;ReturnApprovedBy&quot;)
+    taskAttachments   TaskAttachment[] @relation("TaskAttachments")
+    taskWatchers      TaskWatcher[]  @relation("TaskWatchers")
++   createdReturns    Return[]       @relation("ReturnCreatedBy")
++   approvedReturns   Return[]       @relation("ReturnApprovedBy")
   
-    @@map(&quot;felhasznalok&quot;)
+    @@map("felhasznalok")
 ```
 
 </details>
@@ -1011,7 +1011,7 @@ Lines added: 2, lines removed: undefined
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/prisma/schema.prisma</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/prisma/schema.prisma</summary>
 
 **Chunk 1**
 Lines added: 1, lines removed: undefined
@@ -1033,7 +1033,7 @@ Lines added: 1, lines removed: undefined
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/prisma/schema.prisma</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/prisma/schema.prisma</summary>
 
 **Chunk 1**
 Lines added: 2, lines removed: undefined
@@ -1056,7 +1056,7 @@ Lines added: 2, lines removed: undefined
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/prisma/schema.prisma</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/prisma/schema.prisma</summary>
 
 **Chunk 1**
 Lines added: 1, lines removed: undefined
@@ -1067,7 +1067,7 @@ Lines added: 1, lines removed: undefined
     stockLevels StockLevel[]
 +   returns     Return[]
   
-    @@map(&quot;raktarak&quot;)
+    @@map("raktarak")
 ```
 
 </details>
@@ -1078,7 +1078,7 @@ Lines added: 1, lines removed: undefined
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/prisma/schema.prisma</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/prisma/schema.prisma</summary>
 
 **Chunk 1**
 Lines added: 1, lines removed: undefined
@@ -1089,7 +1089,7 @@ Lines added: 1, lines removed: undefined
     purchaseOrders  PurchaseOrder[]
 +   itemSuppliers   ItemSupplier[]
   
-    @@map(&quot;szallitok&quot;)
+    @@map("szallitok")
 ```
 
 </details>
@@ -1100,14 +1100,14 @@ Lines added: 1, lines removed: undefined
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/prisma/schema.prisma</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/prisma/schema.prisma</summary>
 
 **Chunk 1**
 Lines added: 51, lines removed: undefined
 
 ```diff
 @@ -1078,3 +1078,54 @@
-    @@map(&quot;task_figyelok&quot;)
+    @@map("task_figyelok")
   }
 + 
 + model Return {
@@ -1117,7 +1117,7 @@ Lines added: 51, lines removed: undefined
 +   warehouseId   String
 +   mennyiseg     Float
 +   ok            String
-+   allapot       String    @default(&quot;PENDING&quot;)
++   allapot       String    @default("PENDING")
 +   visszaruDatum DateTime  @default(now())
 +   megjegyzesek  String?
 +   createdById   String?
@@ -1128,15 +1128,15 @@ Lines added: 51, lines removed: undefined
 +   order         Order?    @relation(fields: [orderId], references: [id], onDelete: SetNull)
 +   item          Item      @relation(fields: [itemId], references: [id], onDelete: Cascade)
 +   warehouse     Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
-+   createdBy     User?     @relation(&quot;ReturnCreatedBy&quot;, fields: [createdById], references: [id], onDelete: SetNull)
-+   approvedBy    User?     @relation(&quot;ReturnApprovedBy&quot;, fields: [approvedById], references: [id], onDelete: SetNull)
++   createdBy     User?     @relation("ReturnCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
++   approvedBy    User?     @relation("ReturnApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
 +   
 +   @@index([orderId])
 +   @@index([itemId])
 +   @@index([warehouseId])
 +   @@index([allapot])
 +   @@index([createdAt])
-+   @@map(&quot;visszaru&quot;)
++   @@map("visszaru")
 + }
 + 
 + model ItemSupplier {
@@ -1158,7 +1158,7 @@ Lines added: 51, lines removed: undefined
 +   @@index([itemId])
 +   @@index([supplierId])
 +   @@index([isPrimary])
-+   @@map(&quot;aru_szallito&quot;)
++   @@map("aru_szallito")
 + }
   
 ```
@@ -1216,34 +1216,34 @@ Lint results
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/common/rbac/permission.enum.ts</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/common/rbac/permission.enum.ts</summary>
 
 **Chunk 1**
 Lines added: 19, lines removed: undefined
 
 ```diff
 @@ -155,4 +155,23 @@
-    BOARD_DELETE = &#39;board:delete&#39;,
-    BOARD_MANAGE_MEMBERS = &#39;board:manage_members&#39;,
+    BOARD_DELETE = 'board:delete',
+    BOARD_MANAGE_MEMBERS = 'board:manage_members',
 +   
 +   // Return specific
-+   RETURN_VIEW = &#39;return:view&#39;,
-+   RETURN_CREATE = &#39;return:create&#39;,
-+   RETURN_EDIT = &#39;return:edit&#39;,
-+   RETURN_APPROVE = &#39;return:approve&#39;,
-+   RETURN_COMPLETE = &#39;return:complete&#39;,
++   RETURN_VIEW = 'return:view',
++   RETURN_CREATE = 'return:create',
++   RETURN_EDIT = 'return:edit',
++   RETURN_APPROVE = 'return:approve',
++   RETURN_COMPLETE = 'return:complete',
 +   
 +   // Supplier specific
-+   SUPPLIER_VIEW = &#39;supplier:view&#39;,
-+   SUPPLIER_CREATE = &#39;supplier:create&#39;,
-+   SUPPLIER_EDIT = &#39;supplier:edit&#39;,
-+   SUPPLIER_DELETE = &#39;supplier:delete&#39;,
++   SUPPLIER_VIEW = 'supplier:view',
++   SUPPLIER_CREATE = 'supplier:create',
++   SUPPLIER_EDIT = 'supplier:edit',
++   SUPPLIER_DELETE = 'supplier:delete',
 +   
 +   // Inventory Report specific
-+   INVENTORY_REPORT_PRINT = &#39;inventory:report_print&#39;,
++   INVENTORY_REPORT_PRINT = 'inventory:report_print',
 +   
 +   // Task Notification
-+   TASK_NOTIFY = &#39;task:notify&#39;,
++   TASK_NOTIFY = 'task:notify',
   }
   
 ```
@@ -1256,30 +1256,30 @@ Lines added: 19, lines removed: undefined
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/common/rbac/permission.enum.ts</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/common/rbac/permission.enum.ts</summary>
 
 **Chunk 1**
 Lines added: 15, lines removed: undefined
 
 ```diff
 @@ -310,4 +310,19 @@
-    [Permission.BOARD_DELETE]: { nev: &#39;Board törlés&#39;, modulo: &#39;Csapat kommunikáció&#39;, leiras: &#39;Board-ok törlése&#39; },
-    [Permission.BOARD_MANAGE_MEMBERS]: { nev: &#39;Board tagok kezelése&#39;, modulo: &#39;Csapat kommunikáció&#39;, leiras: &#39;Board tagok hozzáadása és eltávolítása&#39; },
+    [Permission.BOARD_DELETE]: { nev: 'Board törlés', modulo: 'Csapat kommunikáció', leiras: 'Board-ok törlése' },
+    [Permission.BOARD_MANAGE_MEMBERS]: { nev: 'Board tagok kezelése', modulo: 'Csapat kommunikáció', leiras: 'Board tagok hozzáadása és eltávolítása' },
 +   
-+   [Permission.RETURN_VIEW]: { nev: &#39;Visszárú megtekintése&#39;, modulo: &#39;Logisztika&#39;, leiras: &#39;Visszárúk böngészése&#39; },
-+   [Permission.RETURN_CREATE]: { nev: &#39;Visszárú létrehozás&#39;, modulo: &#39;Logisztika&#39;, leiras: &#39;Új visszárúk rögzítése&#39; },
-+   [Permission.RETURN_EDIT]: { nev: &#39;Visszárú szerkesztés&#39;, modulo: &#39;Logisztika&#39;, leiras: &#39;Visszárúk módosítása&#39; },
-+   [Permission.RETURN_APPROVE]: { nev: &#39;Visszárú jóváhagyás&#39;, modulo: &#39;Logisztika&#39;, leiras: &#39;Visszárúk jóváhagyása&#39; },
-+   [Permission.RETURN_COMPLETE]: { nev: &#39;Visszárú feldolgozás&#39;, modulo: &#39;Logisztika&#39;, leiras: &#39;Visszárúk feldolgozása és készlet visszaírás&#39; },
++   [Permission.RETURN_VIEW]: { nev: 'Visszárú megtekintése', modulo: 'Logisztika', leiras: 'Visszárúk böngészése' },
++   [Permission.RETURN_CREATE]: { nev: 'Visszárú létrehozás', modulo: 'Logisztika', leiras: 'Új visszárúk rögzítése' },
++   [Permission.RETURN_EDIT]: { nev: 'Visszárú szerkesztés', modulo: 'Logisztika', leiras: 'Visszárúk módosítása' },
++   [Permission.RETURN_APPROVE]: { nev: 'Visszárú jóváhagyás', modulo: 'Logisztika', leiras: 'Visszárúk jóváhagyása' },
++   [Permission.RETURN_COMPLETE]: { nev: 'Visszárú feldolgozás', modulo: 'Logisztika', leiras: 'Visszárúk feldolgozása és készlet visszaírás' },
 +   
-+   [Permission.SUPPLIER_VIEW]: { nev: &#39;Szállítók megtekintése&#39;, modulo: &#39;Logisztika&#39;, leiras: &#39;Szállítók böngészése&#39; },
-+   [Permission.SUPPLIER_CREATE]: { nev: &#39;Szállító létrehozás&#39;, modulo: &#39;Logisztika&#39;, leiras: &#39;Új szállítók rögzítése&#39; },
-+   [Permission.SUPPLIER_EDIT]: { nev: &#39;Szállító szerkesztés&#39;, modulo: &#39;Logisztika&#39;, leiras: &#39;Szállítók módosítása&#39; },
-+   [Permission.SUPPLIER_DELETE]: { nev: &#39;Szállító törlés&#39;, modulo: &#39;Logisztika&#39;, leiras: &#39;Szállítók törlése&#39; },
++   [Permission.SUPPLIER_VIEW]: { nev: 'Szállítók megtekintése', modulo: 'Logisztika', leiras: 'Szállítók böngészése' },
++   [Permission.SUPPLIER_CREATE]: { nev: 'Szállító létrehozás', modulo: 'Logisztika', leiras: 'Új szállítók rögzítése' },
++   [Permission.SUPPLIER_EDIT]: { nev: 'Szállító szerkesztés', modulo: 'Logisztika', leiras: 'Szállítók módosítása' },
++   [Permission.SUPPLIER_DELETE]: { nev: 'Szállító törlés', modulo: 'Logisztika', leiras: 'Szállítók törlése' },
 +   
-+   [Permission.INVENTORY_REPORT_PRINT]: { nev: &#39;Leltárív nyomtatás&#39;, modulo: &#39;Logisztika&#39;, leiras: &#39;Leltárív generálása és nyomtatása&#39; },
++   [Permission.INVENTORY_REPORT_PRINT]: { nev: 'Leltárív nyomtatás', modulo: 'Logisztika', leiras: 'Leltárív generálása és nyomtatása' },
 +   
-+   [Permission.TASK_NOTIFY]: { nev: &#39;Feladat értesítés&#39;, modulo: &#39;Csapat kommunikáció&#39;, leiras: &#39;Email értesítés küldése feladatokról&#39; },
++   [Permission.TASK_NOTIFY]: { nev: 'Feladat értesítés', modulo: 'Csapat kommunikáció', leiras: 'Email értesítés küldése feladatokról' },
   };
   
 ```
@@ -1334,7 +1334,7 @@ A jogosultságok hozzáadva. A Prisma migrációt később futtatjuk. Folytatjuk
 
 <tool-use data-tool-type="generic" data-tool-name="list_dir">
 <details>
-            <summary>Tool use: **list_directory** • Listed directory undefined • **0** results</summary>
+            <summary>Tool use: **list_dir** • Listed directory undefined • **0** results</summary>
         
 No results found
 </details>
@@ -1344,7 +1344,7 @@ No results found
 
 <tool-use data-tool-type="write" data-tool-name="write">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/logistics/dto/create-return.dto.ts</summary>
+<details><summary>Tool use: **write** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/logistics/dto/create-return.dto.ts</summary>
 
 **Chunk 1**
 Lines added: 36, lines removed: 1
@@ -1352,13 +1352,13 @@ Lines added: 36, lines removed: 1
 ```diff
 @@ -1,1 +1,36 @@
 - 
-+ import { IsString, IsOptional, IsNumber, IsEnum, IsDateString, Min } from &#39;class-validator&#39;;
++ import { IsString, IsOptional, IsNumber, IsEnum, IsDateString, Min } from 'class-validator';
 + 
 + export enum ReturnOk {
-+   HIBAS = &#39;hibas&#39;,
-+   SERTETT = &#39;sertett&#39;,
-+   TULCSORDULAS = &#39;tulcsordulas&#39;,
-+   EGYEB = &#39;egyeb&#39;,
++   HIBAS = 'hibas',
++   SERTETT = 'sertett',
++   TULCSORDULAS = 'tulcsordulas',
++   EGYEB = 'egyeb',
 + }
 + 
 + export class CreateReturnDto {
@@ -1398,7 +1398,7 @@ Lines added: 36, lines removed: 1
 
 <tool-use data-tool-type="write" data-tool-name="write">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/logistics/dto/update-return.dto.ts</summary>
+<details><summary>Tool use: **write** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/logistics/dto/update-return.dto.ts</summary>
 
 **Chunk 1**
 Lines added: 30, lines removed: 1
@@ -1406,8 +1406,8 @@ Lines added: 30, lines removed: 1
 ```diff
 @@ -1,1 +1,30 @@
 - 
-+ import { IsString, IsOptional, IsNumber, IsEnum, IsDateString, Min } from &#39;class-validator&#39;;
-+ import { ReturnOk } from &#39;./create-return.dto&#39;;
++ import { IsString, IsOptional, IsNumber, IsEnum, IsDateString, Min } from 'class-validator';
++ import { ReturnOk } from './create-return.dto';
 + 
 + export class UpdateReturnDto {
 +   @IsOptional()
@@ -1446,7 +1446,7 @@ Lines added: 30, lines removed: 1
 
 <tool-use data-tool-type="write" data-tool-name="write">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/logistics/dto/approve-return.dto.ts</summary>
+<details><summary>Tool use: **write** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/logistics/dto/approve-return.dto.ts</summary>
 
 **Chunk 1**
 Lines added: 8, lines removed: 1
@@ -1454,7 +1454,7 @@ Lines added: 8, lines removed: 1
 ```diff
 @@ -1,1 +1,8 @@
 - 
-+ import { IsOptional, IsString } from &#39;class-validator&#39;;
++ import { IsOptional, IsString } from 'class-validator';
 + 
 + export class ApproveReturnDto {
 +   @IsOptional()
@@ -1498,7 +1498,7 @@ A ReturnService implementálása:
 
 <tool-use data-tool-type="write" data-tool-name="write">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/logistics/return.service.ts</summary>
+<details><summary>Tool use: **write** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/logistics/return.service.ts</summary>
 
 **Chunk 1**
 Lines added: 400, lines removed: 1
@@ -1506,11 +1506,11 @@ Lines added: 400, lines removed: 1
 ```diff
 @@ -1,1 +1,400 @@
 - 
-+ import { Injectable, NotFoundException, BadRequestException } from &#39;@nestjs/common&#39;;
-+ import { PrismaService } from &#39;../prisma/prisma.service&#39;;
-+ import { CreateReturnDto } from &#39;./dto/create-return.dto&#39;;
-+ import { UpdateReturnDto } from &#39;./dto/update-return.dto&#39;;
-+ import { StockService } from &#39;./stock.service&#39;;
++ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
++ import { PrismaService } from '../prisma/prisma.service';
++ import { CreateReturnDto } from './dto/create-return.dto';
++ import { UpdateReturnDto } from './dto/update-return.dto';
++ import { StockService } from './stock.service';
 + 
 + export interface ReturnFilters {
 +   orderId?: string;
@@ -1587,7 +1587,7 @@ Lines added: 400, lines removed: 1
 +             },
 +           },
 +         },
-+         orderBy: { createdAt: &#39;desc&#39; },
++         orderBy: { createdAt: 'desc' },
 +       }),
 +     ]);
 + 
@@ -1619,7 +1619,7 @@ Lines added: 400, lines removed: 1
 +     });
 + 
 +     if (!returnItem) {
-+       throw new NotFoundException(&#39;Visszárú nem található&#39;);
++       throw new NotFoundException('Visszárú nem található');
 +     }
 + 
 +     return returnItem;
@@ -1632,7 +1632,7 @@ Lines added: 400, lines removed: 1
 +     });
 + 
 +     if (!item) {
-+       throw new NotFoundException(&#39;Áru nem található&#39;);
++       throw new NotFoundException('Áru nem található');
 +     }
 + 
 +     // Validate warehouse exists
@@ -1641,7 +1641,7 @@ Lines added: 400, lines removed: 1
 +     });
 + 
 +     if (!warehouse) {
-+       throw new NotFoundException(&#39;Raktár nem található&#39;);
++       throw new NotFoundException('Raktár nem található');
 +     }
 + 
 +     // Validate order if provided
@@ -1651,7 +1651,7 @@ Lines added: 400, lines removed: 1
 +       });
 + 
 +       if (!order) {
-+         throw new NotFoundException(&#39;Rendelés nem található&#39;);
++         throw new NotFoundException('Rendelés nem található');
 +       }
 +     }
 + 
@@ -1665,7 +1665,7 @@ Lines added: 400, lines removed: 1
 +         visszaruDatum: dto.visszaruDatum ? new Date(dto.visszaruDatum) : new Date(),
 +         megjegyzesek: dto.megjegyzesek || null,
 +         createdById: userId || null,
-+         allapot: &#39;PENDING&#39;,
++         allapot: 'PENDING',
 +       },
 +       include: {
 +         order: true,
@@ -1686,8 +1686,8 @@ Lines added: 400, lines removed: 1
 +     const returnItem = await this.findOne(id);
 + 
 +     // Only allow updates if status is PENDING
-+     if (returnItem.allapot !== &#39;PENDING&#39;) {
-+       throw new BadRequestException(&#39;Csak PENDING állapotú visszárú módosítható&#39;);
++     if (returnItem.allapot !== 'PENDING') {
++       throw new BadRequestException('Csak PENDING állapotú visszárú módosítható');
 +     }
 + 
 +     const updateData: any = {};
@@ -1697,7 +1697,7 @@ Lines added: 400, lines removed: 1
 +         where: { id: dto.itemId },
 +       });
 +       if (!item) {
-+         throw new NotFoundException(&#39;Áru nem található&#39;);
++         throw new NotFoundException('Áru nem található');
 +       }
 +       updateData.itemId = dto.itemId;
 +     }
@@ -1707,7 +1707,7 @@ Lines added: 400, lines removed: 1
 +         where: { id: dto.warehouseId },
 +       });
 +       if (!warehouse) {
-+         throw new NotFoundException(&#39;Raktár nem található&#39;);
++         throw new NotFoundException('Raktár nem található');
 +       }
 +       updateData.warehouseId = dto.warehouseId;
 +     }
@@ -1749,15 +1749,15 @@ Lines added: 400, lines removed: 1
 +   async approve(id: string, userId: string, megjegyzesek?: string) {
 +     const returnItem = await this.findOne(id);
 + 
-+     if (returnItem.allapot !== &#39;PENDING&#39;) {
-+       throw new BadRequestException(&#39;Csak PENDING állapotú visszárú jóváhagyható&#39;);
++     if (returnItem.allapot !== 'PENDING') {
++       throw new BadRequestException('Csak PENDING állapotú visszárú jóváhagyható');
 +     }
 + 
 +     // Update return status
 +     const updatedReturn = await this.prisma.return.update({
 +       where: { id },
 +       data: {
-+         allapot: &#39;APPROVED&#39;,
++         allapot: 'APPROVED',
 +         approvedById: userId,
 +         megjegyzesek: megjegyzesek || returnItem.megjegyzesek,
 +       },
@@ -1779,10 +1779,10 @@ Lines added: 400, lines removed: 1
 +     await this.stockService.createStockMove({
 +       itemId: returnItem.itemId,
 +       warehouseId: returnItem.warehouseId,
-+       tipus: &#39;RETURN&#39;,
++       tipus: 'RETURN',
 +       mennyiseg: returnItem.mennyiseg,
 +       referenciaId: id,
-+       megjegyzesek: &#96;Visszárú jóváhagyva: ${megjegyzesek || &#39;&#39;}&#96;,
++       megjegyzesek: &#96;Visszárú jóváhagyva: ${megjegyzesek || ''}&#96;,
 +     });
 + 
 +     return updatedReturn;
@@ -1791,16 +1791,16 @@ Lines added: 400, lines removed: 1
 +   async reject(id: string, userId: string, reason?: string) {
 +     const returnItem = await this.findOne(id);
 + 
-+     if (returnItem.allapot !== &#39;PENDING&#39;) {
-+       throw new BadRequestException(&#39;Csak PENDING állapotú visszárú elutasítható&#39;);
++     if (returnItem.allapot !== 'PENDING') {
++       throw new BadRequestException('Csak PENDING állapotú visszárú elutasítható');
 +     }
 + 
 +     return this.prisma.return.update({
 +       where: { id },
 +       data: {
-+         allapot: &#39;REJECTED&#39;,
++         allapot: 'REJECTED',
 +         approvedById: userId,
-+         megjegyzesek: reason || returnItem.megjegyzesek || &#39;Elutasítva&#39;,
++         megjegyzesek: reason || returnItem.megjegyzesek || 'Elutasítva',
 +       },
 +       include: {
 +         order: true,
@@ -1820,8 +1820,8 @@ Lines added: 400, lines removed: 1
 +   async complete(id: string, userId: string) {
 +     const returnItem = await this.findOne(id);
 + 
-+     if (returnItem.allapot !== &#39;APPROVED&#39;) {
-+       throw new BadRequestException(&#39;Csak APPROVED állapotú visszárú feldolgozható&#39;);
++     if (returnItem.allapot !== 'APPROVED') {
++       throw new BadRequestException('Csak APPROVED állapotú visszárú feldolgozható');
 +     }
 + 
 +     // Update stock level - add the returned quantity back to stock
@@ -1842,7 +1842,7 @@ Lines added: 400, lines removed: 1
 +         },
 +       });
 +     } else {
-+       // Create new stock level if it doesn&#39;t exist
++       // Create new stock level if it doesn't exist
 +       await this.prisma.stockLevel.create({
 +         data: {
 +           itemId: returnItem.itemId,
@@ -1856,7 +1856,7 @@ Lines added: 400, lines removed: 1
 +     return this.prisma.return.update({
 +       where: { id },
 +       data: {
-+         allapot: &#39;COMPLETED&#39;,
++         allapot: 'COMPLETED',
 +       },
 +       include: {
 +         order: true,
@@ -1901,7 +1901,7 @@ Lines added: 400, lines removed: 1
 +           },
 +         },
 +       },
-+       orderBy: { createdAt: &#39;desc&#39; },
++       orderBy: { createdAt: 'desc' },
 +     });
 +   }
 + }
@@ -1934,7 +1934,7 @@ A ReturnController implementálása:
 
 <tool-use data-tool-type="write" data-tool-name="write">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/logistics/return.controller.ts</summary>
+<details><summary>Tool use: **write** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/logistics/return.controller.ts</summary>
 
 **Chunk 1**
 Lines added: 128, lines removed: 1
@@ -1952,17 +1952,17 @@ Lines added: 128, lines removed: 1
 +   Query,
 +   UseGuards,
 +   Request,
-+ } from &#39;@nestjs/common&#39;;
-+ import { ReturnService } from &#39;./return.service&#39;;
-+ import { CreateReturnDto } from &#39;./dto/create-return.dto&#39;;
-+ import { UpdateReturnDto } from &#39;./dto/update-return.dto&#39;;
-+ import { ApproveReturnDto } from &#39;./dto/approve-return.dto&#39;;
-+ import { AuditService } from &#39;../common/audit/audit.service&#39;;
-+ import { Permissions } from &#39;../common/rbac/rbac.decorator&#39;;
-+ import { Permission } from &#39;../common/rbac/permission.enum&#39;;
-+ import { RbacGuard } from &#39;../common/rbac/rbac.guard&#39;;
++ } from '@nestjs/common';
++ import { ReturnService } from './return.service';
++ import { CreateReturnDto } from './dto/create-return.dto';
++ import { UpdateReturnDto } from './dto/update-return.dto';
++ import { ApproveReturnDto } from './dto/approve-return.dto';
++ import { AuditService } from '../common/audit/audit.service';
++ import { Permissions } from '../common/rbac/rbac.decorator';
++ import { Permission } from '../common/rbac/permission.enum';
++ import { RbacGuard } from '../common/rbac/rbac.guard';
 + 
-+ @Controller(&#39;logistics/returns&#39;)
++ @Controller('logistics/returns')
 + @UseGuards(RbacGuard)
 + export class ReturnController {
 +   constructor(
@@ -1973,12 +1973,12 @@ Lines added: 128, lines removed: 1
 +   @Get()
 +   @Permissions(Permission.RETURN_VIEW)
 +   findAll(
-+     @Query(&#39;skip&#39;) skip?: string,
-+     @Query(&#39;take&#39;) take?: string,
-+     @Query(&#39;orderId&#39;) orderId?: string,
-+     @Query(&#39;itemId&#39;) itemId?: string,
-+     @Query(&#39;warehouseId&#39;) warehouseId?: string,
-+     @Query(&#39;allapot&#39;) allapot?: string,
++     @Query('skip') skip?: string,
++     @Query('take') take?: string,
++     @Query('orderId') orderId?: string,
++     @Query('itemId') itemId?: string,
++     @Query('warehouseId') warehouseId?: string,
++     @Query('allapot') allapot?: string,
 +   ) {
 +     const filters = { orderId, itemId, warehouseId, allapot };
 +     return this.returnService.findAll(
@@ -1988,9 +1988,9 @@ Lines added: 128, lines removed: 1
 +     );
 +   }
 + 
-+   @Get(&#39;:id&#39;)
++   @Get(':id')
 +   @Permissions(Permission.RETURN_VIEW)
-+   findOne(@Param(&#39;id&#39;) id: string) {
++   findOne(@Param('id') id: string) {
 +     return this.returnService.findOne(id);
 +   }
 + 
@@ -1999,7 +1999,7 @@ Lines added: 128, lines removed: 1
 +   async create(@Body() dto: CreateReturnDto, @Request() req: any) {
 +     const returnItem = await this.returnService.create(dto, req.user?.id);
 +     await this.auditService.logCreate(
-+       &#39;Return&#39;,
++       'Return',
 +       returnItem.id,
 +       returnItem,
 +       req.user?.id,
@@ -2007,23 +2007,23 @@ Lines added: 128, lines removed: 1
 +     return returnItem;
 +   }
 + 
-+   @Put(&#39;:id&#39;)
++   @Put(':id')
 +   @Permissions(Permission.RETURN_EDIT)
 +   async update(
-+     @Param(&#39;id&#39;) id: string,
++     @Param('id') id: string,
 +     @Body() dto: UpdateReturnDto,
 +     @Request() req: any,
 +   ) {
 +     const old = await this.returnService.findOne(id);
 +     const updated = await this.returnService.update(id, dto, req.user?.id);
-+     await this.auditService.logUpdate(&#39;Return&#39;, id, old, updated, req.user?.id);
++     await this.auditService.logUpdate('Return', id, old, updated, req.user?.id);
 +     return updated;
 +   }
 + 
-+   @Post(&#39;:id/approve&#39;)
++   @Post(':id/approve')
 +   @Permissions(Permission.RETURN_APPROVE)
 +   async approve(
-+     @Param(&#39;id&#39;) id: string,
++     @Param('id') id: string,
 +     @Body() dto: ApproveReturnDto,
 +     @Request() req: any,
 +   ) {
@@ -2033,14 +2033,14 @@ Lines added: 128, lines removed: 1
 +       req.user?.id,
 +       dto.megjegyzesek,
 +     );
-+     await this.auditService.logUpdate(&#39;Return&#39;, id, old, approved, req.user?.id);
++     await this.auditService.logUpdate('Return', id, old, approved, req.user?.id);
 +     return approved;
 +   }
 + 
-+   @Post(&#39;:id/reject&#39;)
++   @Post(':id/reject')
 +   @Permissions(Permission.RETURN_APPROVE)
 +   async reject(
-+     @Param(&#39;id&#39;) id: string,
++     @Param('id') id: string,
 +     @Body() body: { reason?: string },
 +     @Request() req: any,
 +   ) {
@@ -2050,17 +2050,17 @@ Lines added: 128, lines removed: 1
 +       req.user?.id,
 +       body.reason,
 +     );
-+     await this.auditService.logUpdate(&#39;Return&#39;, id, old, rejected, req.user?.id);
++     await this.auditService.logUpdate('Return', id, old, rejected, req.user?.id);
 +     return rejected;
 +   }
 + 
-+   @Post(&#39;:id/complete&#39;)
++   @Post(':id/complete')
 +   @Permissions(Permission.RETURN_COMPLETE)
-+   async complete(@Param(&#39;id&#39;) id: string, @Request() req: any) {
++   async complete(@Param('id') id: string, @Request() req: any) {
 +     const old = await this.returnService.findOne(id);
 +     const completed = await this.returnService.complete(id, req.user?.id);
 +     await this.auditService.logUpdate(
-+       &#39;Return&#39;,
++       'Return',
 +       id,
 +       old,
 +       completed,
@@ -2090,7 +2090,7 @@ A Supplier DTO-k és service létrehozása:
 
 <tool-use data-tool-type="write" data-tool-name="write">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/logistics/dto/create-supplier.dto.ts</summary>
+<details><summary>Tool use: **write** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/logistics/dto/create-supplier.dto.ts</summary>
 
 **Chunk 1**
 Lines added: 27, lines removed: 1
@@ -2098,7 +2098,7 @@ Lines added: 27, lines removed: 1
 ```diff
 @@ -1,1 +1,27 @@
 - 
-+ import { IsString, IsOptional, IsBoolean } from &#39;class-validator&#39;;
++ import { IsString, IsOptional, IsBoolean } from 'class-validator';
 + 
 + export class CreateSupplierDto {
 +   @IsString()
@@ -2135,7 +2135,7 @@ Lines added: 27, lines removed: 1
 
 <tool-use data-tool-type="write" data-tool-name="write">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/logistics/dto/update-supplier.dto.ts</summary>
+<details><summary>Tool use: **write** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/logistics/dto/update-supplier.dto.ts</summary>
 
 **Chunk 1**
 Lines added: 28, lines removed: 1
@@ -2143,7 +2143,7 @@ Lines added: 28, lines removed: 1
 ```diff
 @@ -1,1 +1,28 @@
 - 
-+ import { IsString, IsOptional, IsBoolean } from &#39;class-validator&#39;;
++ import { IsString, IsOptional, IsBoolean } from 'class-validator';
 + 
 + export class UpdateSupplierDto {
 +   @IsOptional()
@@ -2181,7 +2181,7 @@ Lines added: 28, lines removed: 1
 
 <tool-use data-tool-type="write" data-tool-name="write">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/logistics/dto/link-item-supplier.dto.ts</summary>
+<details><summary>Tool use: **write** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/logistics/dto/link-item-supplier.dto.ts</summary>
 
 **Chunk 1**
 Lines added: 30, lines removed: 1
@@ -2189,7 +2189,7 @@ Lines added: 30, lines removed: 1
 ```diff
 @@ -1,1 +1,30 @@
 - 
-+ import { IsString, IsOptional, IsNumber, IsBoolean, Min } from &#39;class-validator&#39;;
++ import { IsString, IsOptional, IsNumber, IsBoolean, Min } from 'class-validator';
 + 
 + export class LinkItemSupplierDto {
 +   @IsString()
@@ -2229,7 +2229,7 @@ Lines added: 30, lines removed: 1
 
 <tool-use data-tool-type="write" data-tool-name="write">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/logistics/supplier.service.ts</summary>
+<details><summary>Tool use: **write** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/logistics/supplier.service.ts</summary>
 
 **Chunk 1**
 Lines added: 321, lines removed: 1
@@ -2237,11 +2237,11 @@ Lines added: 321, lines removed: 1
 ```diff
 @@ -1,1 +1,321 @@
 - 
-+ import { Injectable, NotFoundException, BadRequestException } from &#39;@nestjs/common&#39;;
-+ import { PrismaService } from &#39;../prisma/prisma.service&#39;;
-+ import { CreateSupplierDto } from &#39;./dto/create-supplier.dto&#39;;
-+ import { UpdateSupplierDto } from &#39;./dto/update-supplier.dto&#39;;
-+ import { LinkItemSupplierDto } from &#39;./dto/link-item-supplier.dto&#39;;
++ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
++ import { PrismaService } from '../prisma/prisma.service';
++ import { CreateSupplierDto } from './dto/create-supplier.dto';
++ import { UpdateSupplierDto } from './dto/update-supplier.dto';
++ import { LinkItemSupplierDto } from './dto/link-item-supplier.dto';
 + 
 + @Injectable()
 + export class SupplierService {
@@ -2272,7 +2272,7 @@ Lines added: 321, lines removed: 1
 +             },
 +           },
 +         },
-+         orderBy: { createdAt: &#39;desc&#39; },
++         orderBy: { createdAt: 'desc' },
 +       }),
 +     ]);
 + 
@@ -2306,7 +2306,7 @@ Lines added: 321, lines removed: 1
 +     });
 + 
 +     if (!supplier) {
-+       throw new NotFoundException(&#39;Szállító nem található&#39;);
++       throw new NotFoundException('Szállító nem található');
 +     }
 + 
 +     return supplier;
@@ -2360,7 +2360,7 @@ Lines added: 321, lines removed: 1
 +     });
 + 
 +     if (!item) {
-+       throw new NotFoundException(&#39;Áru nem található&#39;);
++       throw new NotFoundException('Áru nem található');
 +     }
 + 
 +     // Validate supplier exists
@@ -2369,7 +2369,7 @@ Lines added: 321, lines removed: 1
 +     });
 + 
 +     if (!supplier) {
-+       throw new NotFoundException(&#39;Szállító nem található&#39;);
++       throw new NotFoundException('Szállító nem található');
 +     }
 + 
 +     // Check if link already exists
@@ -2383,7 +2383,7 @@ Lines added: 321, lines removed: 1
 +     });
 + 
 +     if (existingLink) {
-+       throw new BadRequestException(&#39;Az áru már kapcsolva van ehhez a szállítóhoz&#39;);
++       throw new BadRequestException('Az áru már kapcsolva van ehhez a szállítóhoz');
 +     }
 + 
 +     // If this is set as primary, unset other primary suppliers for this item
@@ -2438,7 +2438,7 @@ Lines added: 321, lines removed: 1
 +     });
 + 
 +     if (!link) {
-+       throw new NotFoundException(&#39;Kapcsolat nem található&#39;);
++       throw new NotFoundException('Kapcsolat nem található');
 +     }
 + 
 +     await this.prisma.itemSupplier.delete({
@@ -2459,7 +2459,7 @@ Lines added: 321, lines removed: 1
 +     });
 + 
 +     if (!item) {
-+       throw new NotFoundException(&#39;Áru nem található&#39;);
++       throw new NotFoundException('Áru nem található');
 +     }
 + 
 +     return this.prisma.itemSupplier.findMany({
@@ -2468,8 +2468,8 @@ Lines added: 321, lines removed: 1
 +         supplier: true,
 +       },
 +       orderBy: [
-+         { isPrimary: &#39;desc&#39; },
-+         { createdAt: &#39;asc&#39; },
++         { isPrimary: 'desc' },
++         { createdAt: 'asc' },
 +       ],
 +     });
 +   }
@@ -2480,7 +2480,7 @@ Lines added: 321, lines removed: 1
 +     });
 + 
 +     if (!supplier) {
-+       throw new NotFoundException(&#39;Szállító nem található&#39;);
++       throw new NotFoundException('Szállító nem található');
 +     }
 + 
 +     return this.prisma.itemSupplier.findMany({
@@ -2496,8 +2496,8 @@ Lines added: 321, lines removed: 1
 +         },
 +       },
 +       orderBy: [
-+         { isPrimary: &#39;desc&#39; },
-+         { createdAt: &#39;asc&#39; },
++         { isPrimary: 'desc' },
++         { createdAt: 'asc' },
 +       ],
 +     });
 +   }
@@ -2514,7 +2514,7 @@ Lines added: 321, lines removed: 1
 +     });
 + 
 +     if (!link) {
-+       throw new NotFoundException(&#39;Kapcsolat nem található&#39;);
++       throw new NotFoundException('Kapcsolat nem található');
 +     }
 + 
 +     // Unset all other primary suppliers for this item
@@ -2568,7 +2568,7 @@ Lines added: 321, lines removed: 1
 
 <tool-use data-tool-type="write" data-tool-name="write">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/logistics/supplier.controller.ts</summary>
+<details><summary>Tool use: **write** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/logistics/supplier.controller.ts</summary>
 
 **Chunk 1**
 Lines added: 100, lines removed: 1
@@ -2586,17 +2586,17 @@ Lines added: 100, lines removed: 1
 +   Param,
 +   Query,
 +   UseGuards,
-+ } from &#39;@nestjs/common&#39;;
-+ import { SupplierService } from &#39;./supplier.service&#39;;
-+ import { CreateSupplierDto } from &#39;./dto/create-supplier.dto&#39;;
-+ import { UpdateSupplierDto } from &#39;./dto/update-supplier.dto&#39;;
-+ import { LinkItemSupplierDto } from &#39;./dto/link-item-supplier.dto&#39;;
-+ import { AuditService } from &#39;../common/audit/audit.service&#39;;
-+ import { Permissions } from &#39;../common/rbac/rbac.decorator&#39;;
-+ import { Permission } from &#39;../common/rbac/permission.enum&#39;;
-+ import { RbacGuard } from &#39;../common/rbac/rbac.guard&#39;;
++ } from '@nestjs/common';
++ import { SupplierService } from './supplier.service';
++ import { CreateSupplierDto } from './dto/create-supplier.dto';
++ import { UpdateSupplierDto } from './dto/update-supplier.dto';
++ import { LinkItemSupplierDto } from './dto/link-item-supplier.dto';
++ import { AuditService } from '../common/audit/audit.service';
++ import { Permissions } from '../common/rbac/rbac.decorator';
++ import { Permission } from '../common/rbac/permission.enum';
++ import { RbacGuard } from '../common/rbac/rbac.guard';
 + 
-+ @Controller(&#39;logistics/suppliers&#39;)
++ @Controller('logistics/suppliers')
 + @UseGuards(RbacGuard)
 + export class SupplierController {
 +   constructor(
@@ -2607,9 +2607,9 @@ Lines added: 100, lines removed: 1
 +   @Get()
 +   @Permissions(Permission.SUPPLIER_VIEW)
 +   findAll(
-+     @Query(&#39;skip&#39;) skip?: string,
-+     @Query(&#39;take&#39;) take?: string,
-+     @Query(&#39;search&#39;) search?: string,
++     @Query('skip') skip?: string,
++     @Query('take') take?: string,
++     @Query('search') search?: string,
 +   ) {
 +     return this.supplierService.findAll(
 +       skip ? parseInt(skip) : 0,
@@ -2618,9 +2618,9 @@ Lines added: 100, lines removed: 1
 +     );
 +   }
 + 
-+   @Get(&#39;:id&#39;)
++   @Get(':id')
 +   @Permissions(Permission.SUPPLIER_VIEW)
-+   findOne(@Param(&#39;id&#39;) id: string) {
++   findOne(@Param('id') id: string) {
 +     return this.supplierService.findOne(id);
 +   }
 + 
@@ -2628,50 +2628,50 @@ Lines added: 100, lines removed: 1
 +   @Permissions(Permission.SUPPLIER_CREATE)
 +   async create(@Body() dto: CreateSupplierDto) {
 +     const supplier = await this.supplierService.create(dto);
-+     await this.auditService.logCreate(&#39;Supplier&#39;, supplier.id, supplier);
++     await this.auditService.logCreate('Supplier', supplier.id, supplier);
 +     return supplier;
 +   }
 + 
-+   @Put(&#39;:id&#39;)
++   @Put(':id')
 +   @Permissions(Permission.SUPPLIER_EDIT)
-+   async update(@Param(&#39;id&#39;) id: string, @Body() dto: UpdateSupplierDto) {
++   async update(@Param('id') id: string, @Body() dto: UpdateSupplierDto) {
 +     const old = await this.supplierService.findOne(id);
 +     const updated = await this.supplierService.update(id, dto);
-+     await this.auditService.logUpdate(&#39;Supplier&#39;, id, old, updated);
++     await this.auditService.logUpdate('Supplier', id, old, updated);
 +     return updated;
 +   }
 + 
-+   @Delete(&#39;:id&#39;)
++   @Delete(':id')
 +   @Permissions(Permission.SUPPLIER_DELETE)
-+   async delete(@Param(&#39;id&#39;) id: string) {
++   async delete(@Param('id') id: string) {
 +     const old = await this.supplierService.findOne(id);
 +     const deleted = await this.supplierService.delete(id);
-+     await this.auditService.logDelete(&#39;Supplier&#39;, id, old);
++     await this.auditService.logDelete('Supplier', id, old);
 +     return deleted;
 +   }
 + 
-+   @Post(&#39;:id/items/:itemId/link&#39;)
++   @Post(':id/items/:itemId/link')
 +   @Permissions(Permission.SUPPLIER_EDIT)
 +   async linkItem(
-+     @Param(&#39;id&#39;) supplierId: string,
-+     @Param(&#39;itemId&#39;) itemId: string,
++     @Param('id') supplierId: string,
++     @Param('itemId') itemId: string,
 +     @Body() dto: LinkItemSupplierDto,
 +   ) {
 +     return this.supplierService.linkItemToSupplier(itemId, supplierId, dto);
 +   }
 + 
-+   @Delete(&#39;:id/items/:itemId/unlink&#39;)
++   @Delete(':id/items/:itemId/unlink')
 +   @Permissions(Permission.SUPPLIER_EDIT)
 +   async unlinkItem(
-+     @Param(&#39;id&#39;) supplierId: string,
-+     @Param(&#39;itemId&#39;) itemId: string,
++     @Param('id') supplierId: string,
++     @Param('itemId') itemId: string,
 +   ) {
 +     return this.supplierService.unlinkItemFromSupplier(itemId, supplierId);
 +   }
 + 
-+   @Get(&#39;:id/items&#39;)
++   @Get(':id/items')
 +   @Permissions(Permission.SUPPLIER_VIEW)
-+   getSupplierItems(@Param(&#39;id&#39;) supplierId: string) {
++   getSupplierItems(@Param('id') supplierId: string) {
 +     return this.supplierService.getSupplierItems(supplierId);
 +   }
 + }
@@ -2686,7 +2686,7 @@ Lines added: 100, lines removed: 1
 
 <tool-use data-tool-type="write" data-tool-name="write">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/logistics/dto/item-supplier-primary.dto.ts</summary>
+<details><summary>Tool use: **write** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/logistics/dto/item-supplier-primary.dto.ts</summary>
 
 **Chunk 1**
 Lines added: 4, lines removed: 1
@@ -2744,7 +2744,7 @@ Az ItemService frissítése az itemSuppliers relációval, és az ItemController
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/logistics/item.service.ts</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/logistics/item.service.ts</summary>
 
 **Chunk 1**
 Lines added: 9, lines removed: undefined
@@ -2758,8 +2758,8 @@ Lines added: 9, lines removed: undefined
 +             supplier: true,
 +           },
 +           orderBy: [
-+             { isPrimary: &#39;desc&#39; },
-+             { createdAt: &#39;asc&#39; },
++             { isPrimary: 'desc' },
++             { createdAt: 'asc' },
 +           ],
 +         },
         },
@@ -2774,18 +2774,18 @@ Lines added: 9, lines removed: undefined
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/logistics/item.controller.ts</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/logistics/item.controller.ts</summary>
 
 **Chunk 1**
 Lines added: 1, lines removed: undefined
 
 ```diff
 @@ -1,4 +1,5 @@
-  import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards } from &#39;@nestjs/common&#39;;
-  import { ItemService } from &#39;./item.service&#39;;
-+ import { SupplierService } from &#39;./supplier.service&#39;;
-  import { Permissions } from &#39;../common/rbac/rbac.decorator&#39;;
-  import { Permission } from &#39;../common/rbac/permission.enum&#39;;
+  import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards } from '@nestjs/common';
+  import { ItemService } from './item.service';
++ import { SupplierService } from './supplier.service';
+  import { Permissions } from '../common/rbac/rbac.decorator';
+  import { Permission } from '../common/rbac/permission.enum';
 ```
 
 </details>
@@ -2796,7 +2796,7 @@ Lines added: 1, lines removed: undefined
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/logistics/item.controller.ts</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/logistics/item.controller.ts</summary>
 
 **Chunk 1**
 Lines added: 4, lines removed: 1
@@ -2822,7 +2822,7 @@ Lines added: 4, lines removed: 1
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/logistics/item.controller.ts</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/logistics/item.controller.ts</summary>
 
 **Chunk 1**
 Lines added: 15, lines removed: undefined
@@ -2832,17 +2832,17 @@ Lines added: 15, lines removed: undefined
       return this.itemService.delete(id);
     }
 + 
-+   @Get(&#39;:id/suppliers&#39;)
++   @Get(':id/suppliers')
 +   @Permissions(Permission.PRODUCT_VIEW)
-+   getItemSuppliers(@Param(&#39;id&#39;) itemId: string) {
++   getItemSuppliers(@Param('id') itemId: string) {
 +     return this.supplierService.getItemSuppliers(itemId);
 +   }
 + 
-+   @Put(&#39;:id/suppliers/:supplierId/primary&#39;)
++   @Put(':id/suppliers/:supplierId/primary')
 +   @Permissions(Permission.PRODUCT_EDIT)
 +   setPrimarySupplier(
-+     @Param(&#39;id&#39;) itemId: string,
-+     @Param(&#39;supplierId&#39;) supplierId: string,
++     @Param('id') itemId: string,
++     @Param('supplierId') supplierId: string,
 +   ) {
 +     return this.supplierService.setPrimarySupplier(itemId, supplierId);
 +   }
@@ -2868,7 +2868,7 @@ Az InventoryReportService és InventoryReportController implementálása a lelt�
 
 <tool-use data-tool-type="write" data-tool-name="write">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/logistics/inventory-report.service.ts</summary>
+<details><summary>Tool use: **write** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/logistics/inventory-report.service.ts</summary>
 
 **Chunk 1**
 Lines added: 230, lines removed: 1
@@ -2876,12 +2876,12 @@ Lines added: 230, lines removed: 1
 ```diff
 @@ -1,1 +1,230 @@
 - 
-+ import { Injectable } from &#39;@nestjs/common&#39;;
-+ import { PrismaService } from &#39;../prisma/prisma.service&#39;;
-+ import { InventoryService } from &#39;./inventory.service&#39;;
-+ import PDFDocument from &#39;pdfkit&#39;;
-+ import ExcelJS from &#39;exceljs&#39;;
-+ import { Response } from &#39;express&#39;;
++ import { Injectable } from '@nestjs/common';
++ import { PrismaService } from '../prisma/prisma.service';
++ import { InventoryService } from './inventory.service';
++ import PDFDocument from 'pdfkit';
++ import ExcelJS from 'exceljs';
++ import { Response } from 'express';
 + 
 + export interface InventoryReportFilters {
 +   warehouseId?: string;
@@ -2939,12 +2939,12 @@ Lines added: 230, lines removed: 1
 +       const doc = new PDFDocument({ margin: 50 });
 +       const chunks: Buffer[] = [];
 + 
-+       doc.on(&#39;data&#39;, (chunk) =&gt; chunks.push(chunk));
-+       doc.on(&#39;end&#39;, () =&gt; resolve(Buffer.concat(chunks)));
-+       doc.on(&#39;error&#39;, reject);
++       doc.on('data', (chunk) =&gt; chunks.push(chunk));
++       doc.on('end', () =&gt; resolve(Buffer.concat(chunks)));
++       doc.on('error', reject);
 + 
 +       // Header
-+       doc.fontSize(20).text(&#39;Leltárív&#39;, { align: &#39;center&#39; });
++       doc.fontSize(20).text('Leltárív', { align: 'center' });
 +       doc.moveDown(0.5);
 + 
 +       const warehouse = filters?.warehouseId
@@ -2954,11 +2954,11 @@ Lines added: 230, lines removed: 1
 +         : null;
 + 
 +       doc.fontSize(12);
-+       doc.text(&#96;Dátum: ${new Date().toLocaleDateString(&#39;hu-HU&#39;)}&#96;, { align: &#39;left&#39; });
++       doc.text(&#96;Dátum: ${new Date().toLocaleDateString('hu-HU')}&#96;, { align: 'left' });
 +       if (warehouse) {
-+         doc.text(&#96;Raktár: ${warehouse.nev} (${warehouse.azonosito})&#96;, { align: &#39;left&#39; });
++         doc.text(&#96;Raktár: ${warehouse.nev} (${warehouse.azonosito})&#96;, { align: 'left' });
 +       } else {
-+         doc.text(&#39;Raktár: Összes raktár&#39;, { align: &#39;left&#39; });
++         doc.text('Raktár: Összes raktár', { align: 'left' });
 +       }
 +       doc.moveDown();
 + 
@@ -2968,21 +2968,21 @@ Lines added: 230, lines removed: 1
 +       const colWidths = [80, 150, 80, 60, 100, 70, 70, 60];
 +       const rowHeight = 25;
 + 
-+       doc.fontSize(10).font(&#39;Helvetica-Bold&#39;);
-+       doc.text(&#39;Azonosító&#39;, tableLeft, tableTop);
-+       doc.text(&#39;Név&#39;, tableLeft + colWidths[0], tableTop);
-+       doc.text(&#39;Mennyiség&#39;, tableLeft + colWidths[0] + colWidths[1], tableTop);
-+       doc.text(&#39;Egység&#39;, tableLeft + colWidths[0] + colWidths[1] + colWidths[2], tableTop);
-+       doc.text(&#39;Raktári hely&#39;, tableLeft + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3], tableTop);
-+       doc.text(&#39;Minimum&#39;, tableLeft + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4], tableTop);
-+       doc.text(&#39;Maximum&#39;, tableLeft + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4] + colWidths[5], tableTop);
-+       doc.text(&#39;Státusz&#39;, tableLeft + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4] + colWidths[5] + colWidths[6], tableTop);
++       doc.fontSize(10).font('Helvetica-Bold');
++       doc.text('Azonosító', tableLeft, tableTop);
++       doc.text('Név', tableLeft + colWidths[0], tableTop);
++       doc.text('Mennyiség', tableLeft + colWidths[0] + colWidths[1], tableTop);
++       doc.text('Egység', tableLeft + colWidths[0] + colWidths[1] + colWidths[2], tableTop);
++       doc.text('Raktári hely', tableLeft + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3], tableTop);
++       doc.text('Minimum', tableLeft + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4], tableTop);
++       doc.text('Maximum', tableLeft + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4] + colWidths[5], tableTop);
++       doc.text('Státusz', tableLeft + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4] + colWidths[5] + colWidths[6], tableTop);
 + 
 +       // Draw header line
 +       doc.moveTo(tableLeft, tableTop + 15).lineTo(tableLeft + colWidths.reduce((a, b) =&gt; a + b, 0), tableTop + 15).stroke();
 + 
 +       // Table rows
-+       doc.font(&#39;Helvetica&#39;).fontSize(9);
++       doc.font('Helvetica').fontSize(9);
 +       let y = tableTop + rowHeight;
 +       let totalQuantity = 0;
 +       let lowStockCount = 0;
@@ -2999,23 +2999,23 @@ Lines added: 230, lines removed: 1
 +           lowStockCount++;
 +         }
 + 
-+         doc.text(item.item?.azonosito || &#39;-&#39;, tableLeft, y);
-+         doc.text(item.item?.nev || &#39;-&#39;, tableLeft + colWidths[0], y, { width: colWidths[1] });
-+         doc.text(item.mennyiseg.toString(), tableLeft + colWidths[0] + colWidths[1], y, { align: &#39;right&#39; });
-+         doc.text(item.item?.egyseg || &#39;-&#39;, tableLeft + colWidths[0] + colWidths[1] + colWidths[2], y);
-+         doc.text(item.location?.nev || &#39;-&#39;, tableLeft + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3], y, { width: colWidths[4] });
-+         doc.text(item.minimum?.toString() || &#39;-&#39;, tableLeft + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4], y, { align: &#39;right&#39; });
-+         doc.text(item.maximum?.toString() || &#39;-&#39;, tableLeft + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4] + colWidths[5], y, { align: &#39;right&#39; });
-+         doc.text(item.lowStockFlag ? &#39;Alacsony&#39; : &#39;Normál&#39;, tableLeft + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4] + colWidths[5] + colWidths[6], y);
++         doc.text(item.item?.azonosito || '-', tableLeft, y);
++         doc.text(item.item?.nev || '-', tableLeft + colWidths[0], y, { width: colWidths[1] });
++         doc.text(item.mennyiseg.toString(), tableLeft + colWidths[0] + colWidths[1], y, { align: 'right' });
++         doc.text(item.item?.egyseg || '-', tableLeft + colWidths[0] + colWidths[1] + colWidths[2], y);
++         doc.text(item.location?.nev || '-', tableLeft + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3], y, { width: colWidths[4] });
++         doc.text(item.minimum?.toString() || '-', tableLeft + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4], y, { align: 'right' });
++         doc.text(item.maximum?.toString() || '-', tableLeft + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4] + colWidths[5], y, { align: 'right' });
++         doc.text(item.lowStockFlag ? 'Alacsony' : 'Normál', tableLeft + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4] + colWidths[5] + colWidths[6], y);
 + 
 +         y += rowHeight;
 +       });
 + 
 +       // Footer
 +       doc.moveDown(2);
-+       doc.fontSize(10).font(&#39;Helvetica-Bold&#39;);
-+       doc.text(&#96;Összesített mennyiség: ${totalQuantity}&#96;, { align: &#39;left&#39; });
-+       doc.text(&#96;Alacsony készletű tételek száma: ${lowStockCount}&#96;, { align: &#39;left&#39; });
++       doc.fontSize(10).font('Helvetica-Bold');
++       doc.text(&#96;Összesített mennyiség: ${totalQuantity}&#96;, { align: 'left' });
++       doc.text(&#96;Alacsony készletű tételek száma: ${lowStockCount}&#96;, { align: 'left' });
 + 
 +       doc.end();
 +     });
@@ -3025,22 +3025,22 @@ Lines added: 230, lines removed: 1
 +     const data = await this.getReportData(filters);
 + 
 +     // CSV header with UTF-8 BOM for Excel compatibility
-+     let csv = &#39;\uFEFF&#39;;
-+     csv += &#39;Azonosító,Név,Mennyiség,Egység,Raktár,Raktári hely,Minimum,Maximum,Státusz\n&#39;;
++     let csv = '\uFEFF';
++     csv += 'Azonosító,Név,Mennyiség,Egység,Raktár,Raktári hely,Minimum,Maximum,Státusz\n';
 + 
 +     data.forEach((item) =&gt; {
 +       const row = [
-+         item.item?.azonosito || &#39;&#39;,
-+         &#96;&quot;${(item.item?.nev || &#39;&#39;).replace(/&quot;/g, &#39;&quot;&quot;&#39;)}&quot;&#96;,
++         item.item?.azonosito || '',
++         &#96;"${(item.item?.nev || '').replace(/"/g, '""')}"&#96;,
 +         item.mennyiseg.toString(),
-+         item.item?.egyseg || &#39;&#39;,
-+         item.warehouse?.nev || &#39;&#39;,
-+         item.location?.nev || &#39;&#39;,
-+         item.minimum?.toString() || &#39;&#39;,
-+         item.maximum?.toString() || &#39;&#39;,
-+         item.lowStockFlag ? &#39;Alacsony&#39; : &#39;Normál&#39;,
++         item.item?.egyseg || '',
++         item.warehouse?.nev || '',
++         item.location?.nev || '',
++         item.minimum?.toString() || '',
++         item.maximum?.toString() || '',
++         item.lowStockFlag ? 'Alacsony' : 'Normál',
 +       ];
-+       csv += row.join(&#39;,&#39;) + &#39;\n&#39;;
++       csv += row.join(',') + '\n';
 +     });
 + 
 +     return csv;
@@ -3050,53 +3050,53 @@ Lines added: 230, lines removed: 1
 +     const data = await this.getReportData(filters);
 + 
 +     const workbook = new ExcelJS.Workbook();
-+     const worksheet = workbook.addWorksheet(&#39;Leltárív&#39;);
++     const worksheet = workbook.addWorksheet('Leltárív');
 + 
 +     // Header row
 +     worksheet.columns = [
-+       { header: &#39;Azonosító&#39;, key: &#39;azonosito&#39;, width: 15 },
-+       { header: &#39;Név&#39;, key: &#39;nev&#39;, width: 30 },
-+       { header: &#39;Mennyiség&#39;, key: &#39;mennyiseg&#39;, width: 12 },
-+       { header: &#39;Egység&#39;, key: &#39;egyseg&#39;, width: 10 },
-+       { header: &#39;Raktár&#39;, key: &#39;raktar&#39;, width: 20 },
-+       { header: &#39;Raktári hely&#39;, key: &#39;hely&#39;, width: 20 },
-+       { header: &#39;Minimum&#39;, key: &#39;minimum&#39;, width: 12 },
-+       { header: &#39;Maximum&#39;, key: &#39;maximum&#39;, width: 12 },
-+       { header: &#39;Státusz&#39;, key: &#39;status&#39;, width: 12 },
++       { header: 'Azonosító', key: 'azonosito', width: 15 },
++       { header: 'Név', key: 'nev', width: 30 },
++       { header: 'Mennyiség', key: 'mennyiseg', width: 12 },
++       { header: 'Egység', key: 'egyseg', width: 10 },
++       { header: 'Raktár', key: 'raktar', width: 20 },
++       { header: 'Raktári hely', key: 'hely', width: 20 },
++       { header: 'Minimum', key: 'minimum', width: 12 },
++       { header: 'Maximum', key: 'maximum', width: 12 },
++       { header: 'Státusz', key: 'status', width: 12 },
 +     ];
 + 
 +     // Style header
 +     worksheet.getRow(1).font = { bold: true };
 +     worksheet.getRow(1).fill = {
-+       type: &#39;pattern&#39;,
-+       pattern: &#39;solid&#39;,
-+       fgColor: { argb: &#39;FFD3D3D3&#39; },
++       type: 'pattern',
++       pattern: 'solid',
++       fgColor: { argb: 'FFD3D3D3' },
 +     };
 + 
 +     // Add data rows
 +     data.forEach((item) =&gt; {
 +       worksheet.addRow({
-+         azonosito: item.item?.azonosito || &#39;&#39;,
-+         nev: item.item?.nev || &#39;&#39;,
++         azonosito: item.item?.azonosito || '',
++         nev: item.item?.nev || '',
 +         mennyiseg: item.mennyiseg,
-+         egyseg: item.item?.egyseg || &#39;&#39;,
-+         raktar: item.warehouse?.nev || &#39;&#39;,
-+         hely: item.location?.nev || &#39;&#39;,
-+         minimum: item.minimum || &#39;&#39;,
-+         maximum: item.maximum || &#39;&#39;,
-+         status: item.lowStockFlag ? &#39;Alacsony&#39; : &#39;Normál&#39;,
++         egyseg: item.item?.egyseg || '',
++         raktar: item.warehouse?.nev || '',
++         hely: item.location?.nev || '',
++         minimum: item.minimum || '',
++         maximum: item.maximum || '',
++         status: item.lowStockFlag ? 'Alacsony' : 'Normál',
 +       });
 +     });
 + 
 +     // Add summary row
 +     const totalRow = worksheet.addRow({});
-+     totalRow.getCell(1).value = &#39;Összesített mennyiség:&#39;;
++     totalRow.getCell(1).value = 'Összesített mennyiség:';
 +     totalRow.getCell(2).value = data.reduce((sum, item) =&gt; sum + item.mennyiseg, 0);
 +     totalRow.getCell(1).font = { bold: true };
 +     totalRow.getCell(2).font = { bold: true };
 + 
 +     const lowStockRow = worksheet.addRow({});
-+     lowStockRow.getCell(1).value = &#39;Alacsony készletű tételek száma:&#39;;
++     lowStockRow.getCell(1).value = 'Alacsony készletű tételek száma:';
 +     lowStockRow.getCell(2).value = data.filter((item) =&gt; item.lowStockFlag).length;
 +     lowStockRow.getCell(1).font = { bold: true };
 +     lowStockRow.getCell(2).font = { bold: true };
@@ -3116,7 +3116,7 @@ Lines added: 230, lines removed: 1
 
 <tool-use data-tool-type="write" data-tool-name="write">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/logistics/inventory-report.controller.ts</summary>
+<details><summary>Tool use: **write** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/logistics/inventory-report.controller.ts</summary>
 
 **Chunk 1**
 Lines added: 79, lines removed: 1
@@ -3131,73 +3131,73 @@ Lines added: 79, lines removed: 1
 +   UseGuards,
 +   Res,
 +   HttpStatus,
-+ } from &#39;@nestjs/common&#39;;
-+ import { InventoryReportService } from &#39;./inventory-report.service&#39;;
-+ import { Permissions } from &#39;../common/rbac/rbac.decorator&#39;;
-+ import { Permission } from &#39;../common/rbac/permission.enum&#39;;
-+ import { RbacGuard } from &#39;../common/rbac/rbac.guard&#39;;
-+ import { Response } from &#39;express&#39;;
++ } from '@nestjs/common';
++ import { InventoryReportService } from './inventory-report.service';
++ import { Permissions } from '../common/rbac/rbac.decorator';
++ import { Permission } from '../common/rbac/permission.enum';
++ import { RbacGuard } from '../common/rbac/rbac.guard';
++ import { Response } from 'express';
 + 
-+ @Controller(&#39;logistics/inventory/reports&#39;)
++ @Controller('logistics/inventory/reports')
 + @UseGuards(RbacGuard)
 + export class InventoryReportController {
 +   constructor(private reportService: InventoryReportService) {}
 + 
-+   @Get(&#39;print&#39;)
++   @Get('print')
 +   @Permissions(Permission.INVENTORY_REPORT_PRINT)
 +   async print(
-+     @Query(&#39;warehouseId&#39;) warehouseId?: string,
-+     @Query(&#39;format&#39;) format: &#39;pdf&#39; | &#39;csv&#39; | &#39;excel&#39; = &#39;pdf&#39;,
-+     @Query(&#39;date&#39;) date?: string,
-+     @Query(&#39;lowStockOnly&#39;) lowStockOnly?: string,
++     @Query('warehouseId') warehouseId?: string,
++     @Query('format') format: 'pdf' | 'csv' | 'excel' = 'pdf',
++     @Query('date') date?: string,
++     @Query('lowStockOnly') lowStockOnly?: string,
 +     @Res() res?: Response,
 +   ) {
 +     const filters = {
 +       warehouseId,
 +       date,
-+       lowStockOnly: lowStockOnly === &#39;true&#39;,
++       lowStockOnly: lowStockOnly === 'true',
 +     };
 + 
-+     const dateStr = new Date().toISOString().split(&#39;T&#39;)[0];
-+     const warehouse = warehouseId ? &#96;_raktar_${warehouseId}&#96; : &#39;&#39;;
++     const dateStr = new Date().toISOString().split('T')[0];
++     const warehouse = warehouseId ? &#96;_raktar_${warehouseId}&#96; : '';
 + 
 +     try {
-+       if (format === &#39;pdf&#39;) {
++       if (format === 'pdf') {
 +         const buffer = await this.reportService.generatePDF(filters);
-+         res?.setHeader(&#39;Content-Type&#39;, &#39;application/pdf&#39;);
++         res?.setHeader('Content-Type', 'application/pdf');
 +         res?.setHeader(
-+           &#39;Content-Disposition&#39;,
-+           &#96;attachment; filename=&quot;Leltariv_${dateStr}${warehouse}.pdf&quot;&#96;,
++           'Content-Disposition',
++           &#96;attachment; filename="Leltariv_${dateStr}${warehouse}.pdf"&#96;,
 +         );
 +         res?.send(buffer);
-+       } else if (format === &#39;csv&#39;) {
++       } else if (format === 'csv') {
 +         const csv = await this.reportService.generateCSV(filters);
-+         res?.setHeader(&#39;Content-Type&#39;, &#39;text/csv; charset=utf-8&#39;);
++         res?.setHeader('Content-Type', 'text/csv; charset=utf-8');
 +         res?.setHeader(
-+           &#39;Content-Disposition&#39;,
-+           &#96;attachment; filename=&quot;Leltariv_${dateStr}${warehouse}.csv&quot;&#96;,
++           'Content-Disposition',
++           &#96;attachment; filename="Leltariv_${dateStr}${warehouse}.csv"&#96;,
 +         );
-+         res?.send(Buffer.from(csv, &#39;utf-8&#39;));
-+       } else if (format === &#39;excel&#39;) {
++         res?.send(Buffer.from(csv, 'utf-8'));
++       } else if (format === 'excel') {
 +         const buffer = await this.reportService.generateExcel(filters);
 +         res?.setHeader(
-+           &#39;Content-Type&#39;,
-+           &#39;application/vnd.openxmlformats-officedocument.spreadsheetml.sheet&#39;,
++           'Content-Type',
++           'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
 +         );
 +         res?.setHeader(
-+           &#39;Content-Disposition&#39;,
-+           &#96;attachment; filename=&quot;Leltariv_${dateStr}${warehouse}.xlsx&quot;&#96;,
++           'Content-Disposition',
++           &#96;attachment; filename="Leltariv_${dateStr}${warehouse}.xlsx"&#96;,
 +         );
 +         res?.send(buffer);
 +       } else {
 +         res?.status(HttpStatus.BAD_REQUEST).json({
-+           error: &#39;Érvénytelen formátum. Használjon: pdf, csv vagy excel&#39;,
++           error: 'Érvénytelen formátum. Használjon: pdf, csv vagy excel',
 +         });
 +       }
 +     } catch (error) {
 +       res?.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
-+         error: &#39;Hiba a riport generálása során&#39;,
-+         message: error instanceof Error ? error.message : &#39;Ismeretlen hiba&#39;,
++         error: 'Hiba a riport generálása során',
++         message: error instanceof Error ? error.message : 'Ismeretlen hiba',
 +       });
 +     }
 +   }
@@ -3223,7 +3223,7 @@ A TaskNotificationService implementálása az email értesítésekhez:
 
 <tool-use data-tool-type="write" data-tool-name="write">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/team/task/task-notification.service.ts</summary>
+<details><summary>Tool use: **write** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/team/task/task-notification.service.ts</summary>
 
 **Chunk 1**
 Lines added: 132, lines removed: 1
@@ -3231,8 +3231,8 @@ Lines added: 132, lines removed: 1
 ```diff
 @@ -1,1 +1,132 @@
 - 
-+ import { Injectable, NotFoundException } from &#39;@nestjs/common&#39;;
-+ import { PrismaService } from &#39;../../../prisma/prisma.service&#39;;
++ import { Injectable, NotFoundException } from '@nestjs/common';
++ import { PrismaService } from '../../../prisma/prisma.service';
 + 
 + @Injectable()
 + export class TaskNotificationService {
@@ -3266,13 +3266,13 @@ Lines added: 132, lines removed: 1
 +     });
 + 
 +     if (!task) {
-+       throw new NotFoundException(&#39;Feladat nem található&#39;);
++       throw new NotFoundException('Feladat nem található');
 +     }
 + 
 +     // Determine recipient - use provided userId or assignedToId
 +     const recipientId = userId || task.assignedToId;
 +     if (!recipientId) {
-+       throw new NotFoundException(&#39;Nincs címzett megadva a feladathoz&#39;);
++       throw new NotFoundException('Nincs címzett megadva a feladathoz');
 +     }
 + 
 +     const recipient = await this.prisma.user.findUnique({
@@ -3284,7 +3284,7 @@ Lines added: 132, lines removed: 1
 +     });
 + 
 +     if (!recipient || !recipient.email) {
-+       throw new NotFoundException(&#39;Címzett email címe nem található&#39;);
++       throw new NotFoundException('Címzett email címe nem található');
 +     }
 + 
 +     const subject = this.generateEmailSubject(task);
@@ -3305,20 +3305,20 @@ Lines added: 132, lines removed: 1
 +   }
 + 
 +   private generateEmailSubject(task: any): string {
-+     return &#39;Új feladat az Mbit rendszerben!&#39;;
++     return 'Új feladat az Mbit rendszerben!';
 +   }
 + 
 +   private generateEmailBody(task: any): string {
-+     let body = &#39;&#39;;
++     let body = '';
 + 
 +     // Header
-+     body += &#39;Kedves Kolléga!\n\n&#39;;
-+     body += &#39;Új feladatot rendeltem hozzá Önhöz az Mbit ERP rendszerben.\n\n&#39;;
++     body += 'Kedves Kolléga!\n\n';
++     body += 'Új feladatot rendeltem hozzá Önhöz az Mbit ERP rendszerben.\n\n';
 + 
 +     // Task title
-+     body += &#39;═══════════════════════════════════════\n&#39;;
++     body += '═══════════════════════════════════════\n';
 +     body += &#96;FELADAT: ${task.cim}\n&#96;;
-+     body += &#39;═══════════════════════════════════════\n\n&#39;;
++     body += '═══════════════════════════════════════\n\n';
 + 
 +     // Description
 +     if (task.leiras) {
@@ -3326,8 +3326,8 @@ Lines added: 132, lines removed: 1
 +     }
 + 
 +     // Details
-+     body += &#39;Részletek:\n&#39;;
-+     body += &#39;───────────────────────────────────────\n&#39;;
++     body += 'Részletek:\n';
++     body += '───────────────────────────────────────\n';
 + 
 +     if (task.board) {
 +       body += &#96;Board: ${task.board.nev}\n&#96;;
@@ -3335,29 +3335,29 @@ Lines added: 132, lines removed: 1
 + 
 +     if (task.prioritas) {
 +       const priorityMap: Record&lt;string, string&gt; = {
-+         LOW: &#39;Alacsony&#39;,
-+         MEDIUM: &#39;Közepes&#39;,
-+         HIGH: &#39;Magas&#39;,
-+         URGENT: &#39;Sürgős&#39;,
++         LOW: 'Alacsony',
++         MEDIUM: 'Közepes',
++         HIGH: 'Magas',
++         URGENT: 'Sürgős',
 +       };
 +       body += &#96;Prioritás: ${priorityMap[task.prioritas] || task.prioritas}\n&#96;;
 +     }
 + 
 +     if (task.hataridoDatum) {
 +       const deadline = new Date(task.hataridoDatum);
-+       body += &#96;Határidő: ${deadline.toLocaleDateString(&#39;hu-HU&#39;)}\n&#96;;
++       body += &#96;Határidő: ${deadline.toLocaleDateString('hu-HU')}\n&#96;;
 +     }
 + 
 +     if (task.createdBy) {
 +       body += &#96;Létrehozta: ${task.createdBy.nev}\n&#96;;
 +     }
 + 
-+     body += &#39;───────────────────────────────────────\n\n&#39;;
++     body += '───────────────────────────────────────\n\n';
 + 
 +     // Footer
-+     body += &#39;Kérjük, hogy tekintse át a feladatot a rendszerben.\n\n&#39;;
-+     body += &#39;Üdvözlettel,\n&#39;;
-+     body += task.createdBy?.nev || &#39;Mbit ERP Rendszer&#39;;
++     body += 'Kérjük, hogy tekintse át a feladatot a rendszerben.\n\n';
++     body += 'Üdvözlettel,\n';
++     body += task.createdBy?.nev || 'Mbit ERP Rendszer';
 + 
 +     return body;
 +   }
@@ -3391,18 +3391,18 @@ A notify endpoint hozzáadása a TaskController-hez:
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/team/task/task.controller.ts</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/team/task/task.controller.ts</summary>
 
 **Chunk 1**
 Lines added: 1, lines removed: undefined
 
 ```diff
 @@ -14,4 +14,5 @@
-  } from &#39;@nestjs/common&#39;;
-  import { TaskService } from &#39;./task.service&#39;;
-+ import { TaskNotificationService } from &#39;./task-notification.service&#39;;
-  import { CreateTaskDto } from &#39;./dto/create-task.dto&#39;;
-  import { UpdateTaskDto } from &#39;./dto/update-task.dto&#39;;
+  } from '@nestjs/common';
+  import { TaskService } from './task.service';
++ import { TaskNotificationService } from './task-notification.service';
+  import { CreateTaskDto } from './dto/create-task.dto';
+  import { UpdateTaskDto } from './dto/update-task.dto';
 ```
 
 </details>
@@ -3413,7 +3413,7 @@ Lines added: 1, lines removed: undefined
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/team/task/task.controller.ts</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/team/task/task.controller.ts</summary>
 
 **Chunk 1**
 Lines added: 4, lines removed: 1
@@ -3439,7 +3439,7 @@ Lines added: 4, lines removed: 1
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/team/task/task.controller.ts</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/team/task/task.controller.ts</summary>
 
 **Chunk 1**
 Lines added: 9, lines removed: undefined
@@ -3449,11 +3449,11 @@ Lines added: 9, lines removed: undefined
       return await this.taskService.move(id, dto, userId, isAdmin);
     }
 + 
-+   @Get(&#39;:id/notify&#39;)
++   @Get(':id/notify')
 +   @Permissions(Permission.TASK_NOTIFY)
 +   async notify(
-+     @Param(&#39;id&#39;) id: string,
-+     @Query(&#39;userId&#39;) userId?: string,
++     @Param('id') id: string,
++     @Query('userId') userId?: string,
 +   ) {
 +     return await this.notificationService.generateMailtoLink(id, userId);
 +   }
@@ -3487,18 +3487,18 @@ A TeamModule frissítése a TaskNotificationService-szel:
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/team/team.module.ts</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/team/team.module.ts</summary>
 
 **Chunk 1**
 Lines added: 1, lines removed: undefined
 
 ```diff
 @@ -4,4 +4,5 @@
-  import { TaskController, DashboardController } from &#39;./task/task.controller&#39;;
-  import { TaskService } from &#39;./task/task.service&#39;;
-+ import { TaskNotificationService } from &#39;./task/task-notification.service&#39;;
-  import { BoardController } from &#39;./board/board.controller&#39;;
-  import { BoardService } from &#39;./board/board.service&#39;;
+  import { TaskController, DashboardController } from './task/task.controller';
+  import { TaskService } from './task/task.service';
++ import { TaskNotificationService } from './task/task-notification.service';
+  import { BoardController } from './board/board.controller';
+  import { BoardService } from './board/board.service';
 ```
 
 </details>
@@ -3509,7 +3509,7 @@ Lines added: 1, lines removed: undefined
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/team/team.module.ts</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/team/team.module.ts</summary>
 
 **Chunk 1**
 Lines added: 1, lines removed: undefined
@@ -3549,21 +3549,21 @@ A LogisticsModule frissítése az új service-ekkel és controller-ekkel:
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/logistics/logistics.module.ts</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/logistics/logistics.module.ts</summary>
 
 **Chunk 1**
 Lines added: 6, lines removed: undefined
 
 ```diff
 @@ -15,4 +15,10 @@
-  import { PurchaseOrderController } from &#39;./purchase-order.controller&#39;;
-  import { PurchaseOrderService } from &#39;./purchase-order.service&#39;;
-+ import { ReturnController } from &#39;./return.controller&#39;;
-+ import { ReturnService } from &#39;./return.service&#39;;
-+ import { SupplierController } from &#39;./supplier.controller&#39;;
-+ import { SupplierService } from &#39;./supplier.service&#39;;
-+ import { InventoryReportController } from &#39;./inventory-report.controller&#39;;
-+ import { InventoryReportService } from &#39;./inventory-report.service&#39;;
+  import { PurchaseOrderController } from './purchase-order.controller';
+  import { PurchaseOrderService } from './purchase-order.service';
++ import { ReturnController } from './return.controller';
++ import { ReturnService } from './return.service';
++ import { SupplierController } from './supplier.controller';
++ import { SupplierService } from './supplier.service';
++ import { InventoryReportController } from './inventory-report.controller';
++ import { InventoryReportService } from './inventory-report.service';
   
   @Module({
 ```
@@ -3576,7 +3576,7 @@ Lines added: 6, lines removed: undefined
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/logistics/logistics.module.ts</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/logistics/logistics.module.ts</summary>
 
 **Chunk 1**
 Lines added: 3, lines removed: undefined
@@ -3642,7 +3642,7 @@ Javítjuk az inventory-report.service.ts-ben a PDF generálást: a warehouse lek
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/logistics/inventory-report.service.ts</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/logistics/inventory-report.service.ts</summary>
 
 **Chunk 1**
 Lines added: 8, lines removed: undefined
@@ -3677,7 +3677,7 @@ Lines added: undefined, lines removed: 6
 -         : null;
 - 
         doc.fontSize(12);
-        doc.text(&#96;Dátum: ${new Date().toLocaleDateString(&#39;hu-HU&#39;)}&#96;, { align: &#39;left&#39; });
+        doc.text(&#96;Dátum: ${new Date().toLocaleDateString('hu-HU')}&#96;, { align: 'left' });
 ```
 
 </details>
@@ -3738,7 +3738,7 @@ Frontend API hooks létrehozása. Először az API fájlok áttekintése:
 
 <tool-use data-tool-type="generic" data-tool-name="list_dir">
 <details>
-            <summary>Tool use: **list_directory** • Listed directory undefined • **0** results</summary>
+            <summary>Tool use: **list_dir** • Listed directory undefined • **0** results</summary>
         
 No results found
 </details>
@@ -3777,7 +3777,7 @@ A logistics API hooks fájl létrehozása:
 
 <tool-use data-tool-type="write" data-tool-name="write">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/lib/api/logistics.ts</summary>
+<details><summary>Tool use: **write** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/lib/api/logistics.ts</summary>
 
 **Chunk 1**
 Lines added: 424, lines removed: 1
@@ -3785,8 +3785,8 @@ Lines added: 424, lines removed: 1
 ```diff
 @@ -1,1 +1,424 @@
 - 
-+ import { useQuery, useMutation, useQueryClient } from &#39;@tanstack/react-query&#39;;
-+ import axios from &#39;../axios&#39;;
++ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
++ import axios from '../axios';
 + 
 + // Types
 + export interface Return {
@@ -3795,8 +3795,8 @@ Lines added: 424, lines removed: 1
 +   itemId: string;
 +   warehouseId: string;
 +   mennyiseg: number;
-+   ok: &#39;hibas&#39; | &#39;sertett&#39; | &#39;tulcsordulas&#39; | &#39;egyeb&#39;;
-+   allapot: &#39;PENDING&#39; | &#39;APPROVED&#39; | &#39;REJECTED&#39; | &#39;COMPLETED&#39;;
++   ok: 'hibas' | 'sertett' | 'tulcsordulas' | 'egyeb';
++   allapot: 'PENDING' | 'APPROVED' | 'REJECTED' | 'COMPLETED';
 +   visszaruDatum: string;
 +   megjegyzesek?: string;
 +   createdById?: string;
@@ -3874,7 +3874,7 @@ Lines added: 424, lines removed: 1
 +   itemId: string;
 +   warehouseId: string;
 +   mennyiseg: number;
-+   ok: &#39;hibas&#39; | &#39;sertett&#39; | &#39;tulcsordulas&#39; | &#39;egyeb&#39;;
++   ok: 'hibas' | 'sertett' | 'tulcsordulas' | 'egyeb';
 +   visszaruDatum?: string;
 +   megjegyzesek?: string;
 + }
@@ -3883,7 +3883,7 @@ Lines added: 424, lines removed: 1
 +   itemId?: string;
 +   warehouseId?: string;
 +   mennyiseg?: number;
-+   ok?: &#39;hibas&#39; | &#39;sertett&#39; | &#39;tulcsordulas&#39; | &#39;egyeb&#39;;
++   ok?: 'hibas' | 'sertett' | 'tulcsordulas' | 'egyeb';
 +   visszaruDatum?: string;
 +   megjegyzesek?: string;
 + }
@@ -3918,7 +3918,7 @@ Lines added: 424, lines removed: 1
 + export interface InventoryReportFilters {
 +   warehouseId?: string;
 +   date?: string;
-+   format?: &#39;pdf&#39; | &#39;csv&#39; | &#39;excel&#39;;
++   format?: 'pdf' | 'csv' | 'excel';
 +   lowStockOnly?: boolean;
 + }
 + 
@@ -3932,7 +3932,7 @@ Lines added: 424, lines removed: 1
 +   take?: number;
 + }) {
 +   return useQuery({
-+     queryKey: [&#39;returns&#39;, filters],
++     queryKey: ['returns', filters],
 +     queryFn: async () =&gt; {
 +       const params = new URLSearchParams();
 +       if (filters) {
@@ -3950,7 +3950,7 @@ Lines added: 424, lines removed: 1
 + 
 + export function useReturn(id: string) {
 +   return useQuery({
-+     queryKey: [&#39;return&#39;, id],
++     queryKey: ['return', id],
 +     queryFn: async () =&gt; {
 +       const response = await axios.get(&#96;/api/logistics/returns/${id}&#96;);
 +       return response.data;
@@ -3963,11 +3963,11 @@ Lines added: 424, lines removed: 1
 +   const queryClient = useQueryClient();
 +   return useMutation({
 +     mutationFn: async (data: CreateReturnDto) =&gt; {
-+       const response = await axios.post(&#39;/api/logistics/returns&#39;, data);
++       const response = await axios.post('/api/logistics/returns', data);
 +       return response.data;
 +     },
 +     onSuccess: () =&gt; {
-+       queryClient.invalidateQueries({ queryKey: [&#39;returns&#39;] });
++       queryClient.invalidateQueries({ queryKey: ['returns'] });
 +     },
 +   });
 + }
@@ -3980,8 +3980,8 @@ Lines added: 424, lines removed: 1
 +       return response.data;
 +     },
 +     onSuccess: (_, variables) =&gt; {
-+       queryClient.invalidateQueries({ queryKey: [&#39;returns&#39;] });
-+       queryClient.invalidateQueries({ queryKey: [&#39;return&#39;, variables.id] });
++       queryClient.invalidateQueries({ queryKey: ['returns'] });
++       queryClient.invalidateQueries({ queryKey: ['return', variables.id] });
 +     },
 +   });
 + }
@@ -3996,8 +3996,8 @@ Lines added: 424, lines removed: 1
 +       return response.data;
 +     },
 +     onSuccess: (_, variables) =&gt; {
-+       queryClient.invalidateQueries({ queryKey: [&#39;returns&#39;] });
-+       queryClient.invalidateQueries({ queryKey: [&#39;return&#39;, variables.id] });
++       queryClient.invalidateQueries({ queryKey: ['returns'] });
++       queryClient.invalidateQueries({ queryKey: ['return', variables.id] });
 +     },
 +   });
 + }
@@ -4012,8 +4012,8 @@ Lines added: 424, lines removed: 1
 +       return response.data;
 +     },
 +     onSuccess: (_, variables) =&gt; {
-+       queryClient.invalidateQueries({ queryKey: [&#39;returns&#39;] });
-+       queryClient.invalidateQueries({ queryKey: [&#39;return&#39;, variables.id] });
++       queryClient.invalidateQueries({ queryKey: ['returns'] });
++       queryClient.invalidateQueries({ queryKey: ['return', variables.id] });
 +     },
 +   });
 + }
@@ -4026,8 +4026,8 @@ Lines added: 424, lines removed: 1
 +       return response.data;
 +     },
 +     onSuccess: (_, id) =&gt; {
-+       queryClient.invalidateQueries({ queryKey: [&#39;returns&#39;] });
-+       queryClient.invalidateQueries({ queryKey: [&#39;return&#39;, id] });
++       queryClient.invalidateQueries({ queryKey: ['returns'] });
++       queryClient.invalidateQueries({ queryKey: ['return', id] });
 +     },
 +   });
 + }
@@ -4035,13 +4035,13 @@ Lines added: 424, lines removed: 1
 + // Supplier hooks
 + export function useSuppliers(search?: string, skip = 0, take = 50) {
 +   return useQuery({
-+     queryKey: [&#39;suppliers&#39;, search, skip, take],
++     queryKey: ['suppliers', search, skip, take],
 +     queryFn: async () =&gt; {
 +       const params = new URLSearchParams();
-+       params.append(&#39;skip&#39;, String(skip));
-+       params.append(&#39;take&#39;, String(take));
++       params.append('skip', String(skip));
++       params.append('take', String(take));
 +       if (search) {
-+         params.append(&#39;search&#39;, search);
++         params.append('search', search);
 +       }
 +       const response = await axios.get(&#96;/api/logistics/suppliers?${params.toString()}&#96;);
 +       return response.data;
@@ -4051,7 +4051,7 @@ Lines added: 424, lines removed: 1
 + 
 + export function useSupplier(id: string) {
 +   return useQuery({
-+     queryKey: [&#39;supplier&#39;, id],
++     queryKey: ['supplier', id],
 +     queryFn: async () =&gt; {
 +       const response = await axios.get(&#96;/api/logistics/suppliers/${id}&#96;);
 +       return response.data;
@@ -4064,11 +4064,11 @@ Lines added: 424, lines removed: 1
 +   const queryClient = useQueryClient();
 +   return useMutation({
 +     mutationFn: async (data: CreateSupplierDto) =&gt; {
-+       const response = await axios.post(&#39;/api/logistics/suppliers&#39;, data);
++       const response = await axios.post('/api/logistics/suppliers', data);
 +       return response.data;
 +     },
 +     onSuccess: () =&gt; {
-+       queryClient.invalidateQueries({ queryKey: [&#39;suppliers&#39;] });
++       queryClient.invalidateQueries({ queryKey: ['suppliers'] });
 +     },
 +   });
 + }
@@ -4081,8 +4081,8 @@ Lines added: 424, lines removed: 1
 +       return response.data;
 +     },
 +     onSuccess: (_, variables) =&gt; {
-+       queryClient.invalidateQueries({ queryKey: [&#39;suppliers&#39;] });
-+       queryClient.invalidateQueries({ queryKey: [&#39;supplier&#39;, variables.id] });
++       queryClient.invalidateQueries({ queryKey: ['suppliers'] });
++       queryClient.invalidateQueries({ queryKey: ['supplier', variables.id] });
 +     },
 +   });
 + }
@@ -4095,7 +4095,7 @@ Lines added: 424, lines removed: 1
 +       return response.data;
 +     },
 +     onSuccess: () =&gt; {
-+       queryClient.invalidateQueries({ queryKey: [&#39;suppliers&#39;] });
++       queryClient.invalidateQueries({ queryKey: ['suppliers'] });
 +     },
 +   });
 + }
@@ -4119,10 +4119,10 @@ Lines added: 424, lines removed: 1
 +       return response.data;
 +     },
 +     onSuccess: (_, variables) =&gt; {
-+       queryClient.invalidateQueries({ queryKey: [&#39;suppliers&#39;] });
-+       queryClient.invalidateQueries({ queryKey: [&#39;supplier&#39;, variables.supplierId] });
-+       queryClient.invalidateQueries({ queryKey: [&#39;items&#39;] });
-+       queryClient.invalidateQueries({ queryKey: [&#39;item&#39;, variables.itemId] });
++       queryClient.invalidateQueries({ queryKey: ['suppliers'] });
++       queryClient.invalidateQueries({ queryKey: ['supplier', variables.supplierId] });
++       queryClient.invalidateQueries({ queryKey: ['items'] });
++       queryClient.invalidateQueries({ queryKey: ['item', variables.itemId] });
 +     },
 +   });
 + }
@@ -4137,10 +4137,10 @@ Lines added: 424, lines removed: 1
 +       return response.data;
 +     },
 +     onSuccess: (_, variables) =&gt; {
-+       queryClient.invalidateQueries({ queryKey: [&#39;suppliers&#39;] });
-+       queryClient.invalidateQueries({ queryKey: [&#39;supplier&#39;, variables.supplierId] });
-+       queryClient.invalidateQueries({ queryKey: [&#39;items&#39;] });
-+       queryClient.invalidateQueries({ queryKey: [&#39;item&#39;, variables.itemId] });
++       queryClient.invalidateQueries({ queryKey: ['suppliers'] });
++       queryClient.invalidateQueries({ queryKey: ['supplier', variables.supplierId] });
++       queryClient.invalidateQueries({ queryKey: ['items'] });
++       queryClient.invalidateQueries({ queryKey: ['item', variables.itemId] });
 +     },
 +   });
 + }
@@ -4155,16 +4155,16 @@ Lines added: 424, lines removed: 1
 +       return response.data;
 +     },
 +     onSuccess: (_, variables) =&gt; {
-+       queryClient.invalidateQueries({ queryKey: [&#39;items&#39;] });
-+       queryClient.invalidateQueries({ queryKey: [&#39;item&#39;, variables.itemId] });
-+       queryClient.invalidateQueries({ queryKey: [&#39;suppliers&#39;] });
++       queryClient.invalidateQueries({ queryKey: ['items'] });
++       queryClient.invalidateQueries({ queryKey: ['item', variables.itemId] });
++       queryClient.invalidateQueries({ queryKey: ['suppliers'] });
 +     },
 +   });
 + }
 + 
 + export function useItemSuppliers(itemId: string) {
 +   return useQuery({
-+     queryKey: [&#39;item-suppliers&#39;, itemId],
++     queryKey: ['item-suppliers', itemId],
 +     queryFn: async () =&gt; {
 +       const response = await axios.get(&#96;/api/logistics/items/${itemId}/suppliers&#96;);
 +       return response.data;
@@ -4175,7 +4175,7 @@ Lines added: 424, lines removed: 1
 + 
 + export function useSupplierItems(supplierId: string) {
 +   return useQuery({
-+     queryKey: [&#39;supplier-items&#39;, supplierId],
++     queryKey: ['supplier-items', supplierId],
 +     queryFn: async () =&gt; {
 +       const response = await axios.get(&#96;/api/logistics/suppliers/${supplierId}/items&#96;);
 +       return response.data;
@@ -4188,22 +4188,22 @@ Lines added: 424, lines removed: 1
 + export function downloadInventoryReport(filters: InventoryReportFilters) {
 +   const params = new URLSearchParams();
 +   if (filters.warehouseId) {
-+     params.append(&#39;warehouseId&#39;, filters.warehouseId);
++     params.append('warehouseId', filters.warehouseId);
 +   }
 +   if (filters.date) {
-+     params.append(&#39;date&#39;, filters.date);
++     params.append('date', filters.date);
 +   }
 +   if (filters.lowStockOnly) {
-+     params.append(&#39;lowStockOnly&#39;, &#39;true&#39;);
++     params.append('lowStockOnly', 'true');
 +   }
-+   params.append(&#39;format&#39;, filters.format || &#39;pdf&#39;);
++   params.append('format', filters.format || 'pdf');
 + 
 +   const url = &#96;/api/logistics/inventory/reports/print?${params.toString()}&#96;;
 +   
 +   // Create a temporary link and trigger download
-+   const link = document.createElement(&#39;a&#39;);
++   const link = document.createElement('a');
 +   link.href = url;
-+   link.download = &#96;Leltariv_${new Date().toISOString().split(&#39;T&#39;)[0]}.${filters.format || &#39;pdf&#39;}&#96;;
++   link.download = &#96;Leltariv_${new Date().toISOString().split('T')[0]}.${filters.format || 'pdf'}&#96;;
 +   document.body.appendChild(link);
 +   link.click();
 +   document.body.removeChild(link);
@@ -4237,7 +4237,7 @@ A Returns.tsx oldal létrehozása:
 
 <tool-use data-tool-type="write" data-tool-name="write">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Returns.tsx</summary>
+<details><summary>Tool use: **write** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Returns.tsx</summary>
 
 **Chunk 1**
 Lines added: 623, lines removed: 1
@@ -4245,8 +4245,8 @@ Lines added: 623, lines removed: 1
 ```diff
 @@ -1,1 +1,623 @@
 - 
-+ import { useState, useEffect } from &#39;react&#39;;
-+ import Modal from &#39;../components/Modal&#39;;
++ import { useState, useEffect } from 'react';
++ import Modal from '../components/Modal';
 + import {
 +   useReturns,
 +   useCreateReturn,
@@ -4256,10 +4256,10 @@ Lines added: 623, lines removed: 1
 +   useCompleteReturn,
 +   Return,
 +   CreateReturnDto,
-+ } from &#39;../lib/api/logistics&#39;;
-+ import { useQuery } from &#39;@tanstack/react-query&#39;;
-+ import axios from &#39;../lib/axios&#39;;
-+ import { apiFetch } from &#39;../lib/api&#39;;
++ } from '../lib/api/logistics';
++ import { useQuery } from '@tanstack/react-query';
++ import axios from '../lib/axios';
++ import { apiFetch } from '../lib/api';
 + 
 + export default function Returns() {
 +   const [filters, setFilters] = useState&lt;{
@@ -4272,8 +4272,8 @@ Lines added: 623, lines removed: 1
 +   const [editingReturnId, setEditingReturnId] = useState&lt;string | null&gt;(null);
 +   const [selectedReturn, setSelectedReturn] = useState&lt;Return | null&gt;(null);
 +   const [saving, setSaving] = useState(false);
-+   const [error, setError] = useState&lt;string&gt;(&#39;&#39;);
-+   const [success, setSuccess] = useState&lt;string&gt;(&#39;&#39;);
++   const [error, setError] = useState&lt;string&gt;('');
++   const [success, setSuccess] = useState&lt;string&gt;('');
 + 
 +   const { data: returnsData, isLoading, refetch } = useReturns({
 +     ...filters,
@@ -4282,25 +4282,25 @@ Lines added: 623, lines removed: 1
 +   });
 + 
 +   const { data: itemsData } = useQuery({
-+     queryKey: [&#39;items&#39;],
++     queryKey: ['items'],
 +     queryFn: async () =&gt; {
-+       const response = await axios.get(&#39;/api/logistics/items?skip=0&amp;take=1000&#39;);
++       const response = await axios.get('/api/logistics/items?skip=0&amp;take=1000');
 +       return response.data;
 +     },
 +   });
 + 
 +   const { data: warehousesData } = useQuery({
-+     queryKey: [&#39;warehouses&#39;],
++     queryKey: ['warehouses'],
 +     queryFn: async () =&gt; {
-+       const response = await apiFetch(&#39;/logistics/warehouses?skip=0&amp;take=100&#39;);
++       const response = await apiFetch('/logistics/warehouses?skip=0&amp;take=100');
 +       return response.json();
 +     },
 +   });
 + 
 +   const { data: ordersData } = useQuery({
-+     queryKey: [&#39;orders&#39;],
++     queryKey: ['orders'],
 +     queryFn: async () =&gt; {
-+       const response = await axios.get(&#39;/api/crm/orders?skip=0&amp;take=1000&#39;);
++       const response = await axios.get('/api/crm/orders?skip=0&amp;take=1000');
 +       return response.data;
 +     },
 +   });
@@ -4312,41 +4312,41 @@ Lines added: 623, lines removed: 1
 +   const completeReturn = useCompleteReturn();
 + 
 +   const [formData, setFormData] = useState&lt;CreateReturnDto&gt;({
-+     orderId: &#39;&#39;,
-+     itemId: &#39;&#39;,
-+     warehouseId: &#39;&#39;,
++     orderId: '',
++     itemId: '',
++     warehouseId: '',
 +     mennyiseg: 0,
-+     ok: &#39;hibas&#39;,
-+     visszaruDatum: new Date().toISOString().split(&#39;T&#39;)[0],
-+     megjegyzesek: &#39;&#39;,
++     ok: 'hibas',
++     visszaruDatum: new Date().toISOString().split('T')[0],
++     megjegyzesek: '',
 +   });
 + 
 +   const handleOpenModal = (returnItem?: Return) =&gt; {
 +     if (returnItem) {
 +       setEditingReturnId(returnItem.id);
 +       setFormData({
-+         orderId: returnItem.orderId || &#39;&#39;,
++         orderId: returnItem.orderId || '',
 +         itemId: returnItem.itemId,
 +         warehouseId: returnItem.warehouseId,
 +         mennyiseg: returnItem.mennyiseg,
 +         ok: returnItem.ok,
-+         visszaruDatum: returnItem.visszaruDatum.split(&#39;T&#39;)[0],
-+         megjegyzesek: returnItem.megjegyzesek || &#39;&#39;,
++         visszaruDatum: returnItem.visszaruDatum.split('T')[0],
++         megjegyzesek: returnItem.megjegyzesek || '',
 +       });
 +     } else {
 +       setEditingReturnId(null);
 +       setFormData({
-+         orderId: &#39;&#39;,
-+         itemId: &#39;&#39;,
-+         warehouseId: &#39;&#39;,
++         orderId: '',
++         itemId: '',
++         warehouseId: '',
 +         mennyiseg: 0,
-+         ok: &#39;hibas&#39;,
-+         visszaruDatum: new Date().toISOString().split(&#39;T&#39;)[0],
-+         megjegyzesek: &#39;&#39;,
++         ok: 'hibas',
++         visszaruDatum: new Date().toISOString().split('T')[0],
++         megjegyzesek: '',
 +       });
 +     }
-+     setError(&#39;&#39;);
-+     setSuccess(&#39;&#39;);
++     setError('');
++     setSuccess('');
 +     setIsModalOpen(true);
 +   };
 + 
@@ -4354,15 +4354,15 @@ Lines added: 623, lines removed: 1
 +     setIsModalOpen(false);
 +     setEditingReturnId(null);
 +     setSelectedReturn(null);
-+     setError(&#39;&#39;);
-+     setSuccess(&#39;&#39;);
++     setError('');
++     setSuccess('');
 +   };
 + 
 +   const handleSubmit = async (e: React.FormEvent) =&gt; {
 +     e.preventDefault();
 +     setSaving(true);
-+     setError(&#39;&#39;);
-+     setSuccess(&#39;&#39;);
++     setError('');
++     setSuccess('');
 + 
 +     try {
 +       const submitData = {
@@ -4376,10 +4376,10 @@ Lines added: 623, lines removed: 1
 +           id: editingReturnId,
 +           data: submitData,
 +         });
-+         setSuccess(&#39;Visszárú sikeresen frissítve!&#39;);
++         setSuccess('Visszárú sikeresen frissítve!');
 +       } else {
 +         await createReturn.mutateAsync(submitData);
-+         setSuccess(&#39;Visszárú sikeresen létrehozva!&#39;);
++         setSuccess('Visszárú sikeresen létrehozva!');
 +       }
 + 
 +       setTimeout(() =&gt; {
@@ -4387,58 +4387,58 @@ Lines added: 623, lines removed: 1
 +         refetch();
 +       }, 1500);
 +     } catch (err: any) {
-+       setError(err.response?.data?.message || &#39;Hiba történt a mentés során&#39;);
++       setError(err.response?.data?.message || 'Hiba történt a mentés során');
 +     } finally {
 +       setSaving(false);
 +     }
 +   };
 + 
 +   const handleApprove = async (id: string) =&gt; {
-+     if (!confirm(&#39;Biztosan jóváhagyja ezt a visszárút?&#39;)) return;
++     if (!confirm('Biztosan jóváhagyja ezt a visszárút?')) return;
 + 
 +     try {
-+       await approveReturn.mutateAsync({ id, megjegyzesek: &#39;&#39; });
-+       setSuccess(&#39;Visszárú sikeresen jóváhagyva!&#39;);
++       await approveReturn.mutateAsync({ id, megjegyzesek: '' });
++       setSuccess('Visszárú sikeresen jóváhagyva!');
 +       refetch();
 +     } catch (err: any) {
-+       setError(err.response?.data?.message || &#39;Hiba történt a jóváhagyás során&#39;);
++       setError(err.response?.data?.message || 'Hiba történt a jóváhagyás során');
 +     }
 +   };
 + 
 +   const handleReject = async (id: string) =&gt; {
-+     const reason = prompt(&#39;Elutasítás oka:&#39;);
++     const reason = prompt('Elutasítás oka:');
 +     if (reason === null) return;
 + 
 +     try {
 +       await rejectReturn.mutateAsync({ id, reason });
-+       setSuccess(&#39;Visszárú sikeresen elutasítva!&#39;);
++       setSuccess('Visszárú sikeresen elutasítva!');
 +       refetch();
 +     } catch (err: any) {
-+       setError(err.response?.data?.message || &#39;Hiba történt az elutasítás során&#39;);
++       setError(err.response?.data?.message || 'Hiba történt az elutasítás során');
 +     }
 +   };
 + 
 +   const handleComplete = async (id: string) =&gt; {
-+     if (!confirm(&#39;Biztosan feldolgozza ezt a visszárút? A készlet vissza lesz írva.&#39;)) return;
++     if (!confirm('Biztosan feldolgozza ezt a visszárút? A készlet vissza lesz írva.')) return;
 + 
 +     try {
 +       await completeReturn.mutateAsync(id);
-+       setSuccess(&#39;Visszárú sikeresen feldolgozva!&#39;);
++       setSuccess('Visszárú sikeresen feldolgozva!');
 +       refetch();
 +     } catch (err: any) {
-+       setError(err.response?.data?.message || &#39;Hiba történt a feldolgozás során&#39;);
++       setError(err.response?.data?.message || 'Hiba történt a feldolgozás során');
 +     }
 +   };
 + 
 +   const getStatusBadge = (allapot: string) =&gt; {
 +     const statusMap: Record&lt;string, { label: string; className: string }&gt; = {
-+       PENDING: { label: &#39;Függőben&#39;, className: &#39;bg-yellow-100 text-yellow-800&#39; },
-+       APPROVED: { label: &#39;Jóváhagyva&#39;, className: &#39;bg-blue-100 text-blue-800&#39; },
-+       REJECTED: { label: &#39;Elutasítva&#39;, className: &#39;bg-red-100 text-red-800&#39; },
-+       COMPLETED: { label: &#39;Feldolgozva&#39;, className: &#39;bg-green-100 text-green-800&#39; },
++       PENDING: { label: 'Függőben', className: 'bg-yellow-100 text-yellow-800' },
++       APPROVED: { label: 'Jóváhagyva', className: 'bg-blue-100 text-blue-800' },
++       REJECTED: { label: 'Elutasítva', className: 'bg-red-100 text-red-800' },
++       COMPLETED: { label: 'Feldolgozva', className: 'bg-green-100 text-green-800' },
 +     };
 + 
-+     const status = statusMap[allapot] || { label: allapot, className: &#39;bg-gray-100 text-gray-800&#39; };
++     const status = statusMap[allapot] || { label: allapot, className: 'bg-gray-100 text-gray-800' };
 +     return (
 +       &lt;span className={&#96;px-2 py-1 rounded text-xs font-medium ${status.className}&#96;}&gt;
 +         {status.label}
@@ -4448,50 +4448,50 @@ Lines added: 623, lines removed: 1
 + 
 +   const getOkLabel = (ok: string) =&gt; {
 +     const okMap: Record&lt;string, string&gt; = {
-+       hibas: &#39;Hibás&#39;,
-+       sertett: &#39;Sérült&#39;,
-+       tulcsordulas: &#39;Túlcsordulás&#39;,
-+       egyeb: &#39;Egyéb&#39;,
++       hibas: 'Hibás',
++       sertett: 'Sérült',
++       tulcsordulas: 'Túlcsordulás',
++       egyeb: 'Egyéb',
 +     };
 +     return okMap[ok] || ok;
 +   };
 + 
 +   return (
-+     &lt;div className=&quot;p-6&quot;&gt;
-+       &lt;div className=&quot;flex justify-between items-center mb-6&quot;&gt;
-+         &lt;h1 className=&quot;text-3xl font-bold&quot;&gt;Visszárú Kezelés&lt;/h1&gt;
++     &lt;div className="p-6"&gt;
++       &lt;div className="flex justify-between items-center mb-6"&gt;
++         &lt;h1 className="text-3xl font-bold"&gt;Visszárú Kezelés&lt;/h1&gt;
 +         &lt;button
 +           onClick={() =&gt; handleOpenModal()}
-+           className=&quot;bg-mbit-blue text-white px-4 py-2 rounded-lg hover:bg-blue-700&quot;
++           className="bg-mbit-blue text-white px-4 py-2 rounded-lg hover:bg-blue-700"
 +         &gt;
 +           + Új visszárú
 +         &lt;/button&gt;
 +       &lt;/div&gt;
 + 
 +       {error &amp;&amp; (
-+         &lt;div className=&quot;mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded&quot;&gt;
++         &lt;div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded"&gt;
 +           {error}
 +         &lt;/div&gt;
 +       )}
 + 
 +       {success &amp;&amp; (
-+         &lt;div className=&quot;mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded&quot;&gt;
++         &lt;div className="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded"&gt;
 +           {success}
 +         &lt;/div&gt;
 +       )}
 + 
 +       {/* Filters */}
-+       &lt;div className=&quot;bg-white rounded-lg shadow p-4 mb-6&quot;&gt;
-+         &lt;h2 className=&quot;text-lg font-semibold mb-4&quot;&gt;Szűrők&lt;/h2&gt;
-+         &lt;div className=&quot;grid grid-cols-1 md:grid-cols-4 gap-4&quot;&gt;
++       &lt;div className="bg-white rounded-lg shadow p-4 mb-6"&gt;
++         &lt;h2 className="text-lg font-semibold mb-4"&gt;Szűrők&lt;/h2&gt;
++         &lt;div className="grid grid-cols-1 md:grid-cols-4 gap-4"&gt;
 +           &lt;div&gt;
-+             &lt;label className=&quot;block text-sm font-medium text-gray-700 mb-1&quot;&gt;Rendelés&lt;/label&gt;
++             &lt;label className="block text-sm font-medium text-gray-700 mb-1"&gt;Rendelés&lt;/label&gt;
 +             &lt;select
-+               value={filters.orderId || &#39;&#39;}
++               value={filters.orderId || ''}
 +               onChange={(e) =&gt; setFilters({ ...filters, orderId: e.target.value || undefined })}
-+               className=&quot;w-full px-3 py-2 border border-gray-300 rounded-lg&quot;
++               className="w-full px-3 py-2 border border-gray-300 rounded-lg"
 +             &gt;
-+               &lt;option value=&quot;&quot;&gt;Összes&lt;/option&gt;
++               &lt;option value=""&gt;Összes&lt;/option&gt;
 +               {ordersData?.items?.map((order: any) =&gt; (
 +                 &lt;option key={order.id} value={order.id}&gt;
 +                   {order.azonosito}
@@ -4501,13 +4501,13 @@ Lines added: 623, lines removed: 1
 +           &lt;/div&gt;
 + 
 +           &lt;div&gt;
-+             &lt;label className=&quot;block text-sm font-medium text-gray-700 mb-1&quot;&gt;Áru&lt;/label&gt;
++             &lt;label className="block text-sm font-medium text-gray-700 mb-1"&gt;Áru&lt;/label&gt;
 +             &lt;select
-+               value={filters.itemId || &#39;&#39;}
++               value={filters.itemId || ''}
 +               onChange={(e) =&gt; setFilters({ ...filters, itemId: e.target.value || undefined })}
-+               className=&quot;w-full px-3 py-2 border border-gray-300 rounded-lg&quot;
++               className="w-full px-3 py-2 border border-gray-300 rounded-lg"
 +             &gt;
-+               &lt;option value=&quot;&quot;&gt;Összes&lt;/option&gt;
++               &lt;option value=""&gt;Összes&lt;/option&gt;
 +               {itemsData?.items?.map((item: any) =&gt; (
 +                 &lt;option key={item.id} value={item.id}&gt;
 +                   {item.azonosito} - {item.nev}
@@ -4517,15 +4517,15 @@ Lines added: 623, lines removed: 1
 +           &lt;/div&gt;
 + 
 +           &lt;div&gt;
-+             &lt;label className=&quot;block text-sm font-medium text-gray-700 mb-1&quot;&gt;Raktár&lt;/label&gt;
++             &lt;label className="block text-sm font-medium text-gray-700 mb-1"&gt;Raktár&lt;/label&gt;
 +             &lt;select
-+               value={filters.warehouseId || &#39;&#39;}
++               value={filters.warehouseId || ''}
 +               onChange={(e) =&gt;
 +                 setFilters({ ...filters, warehouseId: e.target.value || undefined })
 +               }
-+               className=&quot;w-full px-3 py-2 border border-gray-300 rounded-lg&quot;
++               className="w-full px-3 py-2 border border-gray-300 rounded-lg"
 +             &gt;
-+               &lt;option value=&quot;&quot;&gt;Összes&lt;/option&gt;
++               &lt;option value=""&gt;Összes&lt;/option&gt;
 +               {warehousesData?.data?.map((warehouse: any) =&gt; (
 +                 &lt;option key={warehouse.id} value={warehouse.id}&gt;
 +                   {warehouse.nev}
@@ -4535,121 +4535,121 @@ Lines added: 623, lines removed: 1
 +           &lt;/div&gt;
 + 
 +           &lt;div&gt;
-+             &lt;label className=&quot;block text-sm font-medium text-gray-700 mb-1&quot;&gt;Állapot&lt;/label&gt;
++             &lt;label className="block text-sm font-medium text-gray-700 mb-1"&gt;Állapot&lt;/label&gt;
 +             &lt;select
-+               value={filters.allapot || &#39;&#39;}
++               value={filters.allapot || ''}
 +               onChange={(e) =&gt; setFilters({ ...filters, allapot: e.target.value || undefined })}
-+               className=&quot;w-full px-3 py-2 border border-gray-300 rounded-lg&quot;
++               className="w-full px-3 py-2 border border-gray-300 rounded-lg"
 +             &gt;
-+               &lt;option value=&quot;&quot;&gt;Összes&lt;/option&gt;
-+               &lt;option value=&quot;PENDING&quot;&gt;Függőben&lt;/option&gt;
-+               &lt;option value=&quot;APPROVED&quot;&gt;Jóváhagyva&lt;/option&gt;
-+               &lt;option value=&quot;REJECTED&quot;&gt;Elutasítva&lt;/option&gt;
-+               &lt;option value=&quot;COMPLETED&quot;&gt;Feldolgozva&lt;/option&gt;
++               &lt;option value=""&gt;Összes&lt;/option&gt;
++               &lt;option value="PENDING"&gt;Függőben&lt;/option&gt;
++               &lt;option value="APPROVED"&gt;Jóváhagyva&lt;/option&gt;
++               &lt;option value="REJECTED"&gt;Elutasítva&lt;/option&gt;
++               &lt;option value="COMPLETED"&gt;Feldolgozva&lt;/option&gt;
 +             &lt;/select&gt;
 +           &lt;/div&gt;
 +         &lt;/div&gt;
 +       &lt;/div&gt;
 + 
 +       {/* Returns Table */}
-+       &lt;div className=&quot;bg-white rounded-lg shadow overflow-hidden&quot;&gt;
-+         &lt;div className=&quot;px-6 py-4 bg-gray-50 border-b border-gray-200&quot;&gt;
-+           &lt;h2 className=&quot;text-lg font-semibold&quot;&gt;Visszárúk ({returnsData?.total || 0})&lt;/h2&gt;
++       &lt;div className="bg-white rounded-lg shadow overflow-hidden"&gt;
++         &lt;div className="px-6 py-4 bg-gray-50 border-b border-gray-200"&gt;
++           &lt;h2 className="text-lg font-semibold"&gt;Visszárúk ({returnsData?.total || 0})&lt;/h2&gt;
 +         &lt;/div&gt;
 +         {isLoading ? (
-+           &lt;div className=&quot;p-6&quot;&gt;Betöltés...&lt;/div&gt;
++           &lt;div className="p-6"&gt;Betöltés...&lt;/div&gt;
 +         ) : (
-+           &lt;table className=&quot;min-w-full divide-y divide-gray-200&quot;&gt;
-+             &lt;thead className=&quot;bg-gray-50&quot;&gt;
++           &lt;table className="min-w-full divide-y divide-gray-200"&gt;
++             &lt;thead className="bg-gray-50"&gt;
 +               &lt;tr&gt;
-+                 &lt;th className=&quot;px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase&quot;&gt;
++                 &lt;th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"&gt;
 +                   Rendelés
 +                 &lt;/th&gt;
-+                 &lt;th className=&quot;px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase&quot;&gt;
++                 &lt;th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"&gt;
 +                   Áru
 +                 &lt;/th&gt;
-+                 &lt;th className=&quot;px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase&quot;&gt;
++                 &lt;th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"&gt;
 +                   Raktár
 +                 &lt;/th&gt;
-+                 &lt;th className=&quot;px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase&quot;&gt;
++                 &lt;th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase"&gt;
 +                   Mennyiség
 +                 &lt;/th&gt;
-+                 &lt;th className=&quot;px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase&quot;&gt;
++                 &lt;th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"&gt;
 +                   Ok
 +                 &lt;/th&gt;
-+                 &lt;th className=&quot;px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase&quot;&gt;
++                 &lt;th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"&gt;
 +                   Állapot
 +                 &lt;/th&gt;
-+                 &lt;th className=&quot;px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase&quot;&gt;
++                 &lt;th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"&gt;
 +                   Dátum
 +                 &lt;/th&gt;
-+                 &lt;th className=&quot;px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase&quot;&gt;
++                 &lt;th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase"&gt;
 +                   Műveletek
 +                 &lt;/th&gt;
 +               &lt;/tr&gt;
 +             &lt;/thead&gt;
-+             &lt;tbody className=&quot;bg-white divide-y divide-gray-200&quot;&gt;
++             &lt;tbody className="bg-white divide-y divide-gray-200"&gt;
 +               {returnsData?.items?.map((returnItem: Return) =&gt; (
-+                 &lt;tr key={returnItem.id} className=&quot;hover:bg-gray-50&quot;&gt;
-+                   &lt;td className=&quot;px-6 py-4 whitespace-nowrap text-sm text-gray-900&quot;&gt;
-+                     {returnItem.order?.azonosito || &#39;-&#39;}
++                 &lt;tr key={returnItem.id} className="hover:bg-gray-50"&gt;
++                   &lt;td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900"&gt;
++                     {returnItem.order?.azonosito || '-'}
 +                   &lt;/td&gt;
-+                   &lt;td className=&quot;px-6 py-4 text-sm text-gray-900&quot;&gt;
++                   &lt;td className="px-6 py-4 text-sm text-gray-900"&gt;
 +                     {returnItem.item?.azonosito} - {returnItem.item?.nev}
 +                   &lt;/td&gt;
-+                   &lt;td className=&quot;px-6 py-4 whitespace-nowrap text-sm text-gray-500&quot;&gt;
++                   &lt;td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500"&gt;
 +                     {returnItem.warehouse?.nev}
 +                   &lt;/td&gt;
-+                   &lt;td className=&quot;px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900&quot;&gt;
++                   &lt;td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900"&gt;
 +                     {returnItem.mennyiseg}
 +                   &lt;/td&gt;
-+                   &lt;td className=&quot;px-6 py-4 whitespace-nowrap text-sm text-gray-500&quot;&gt;
++                   &lt;td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500"&gt;
 +                     {getOkLabel(returnItem.ok)}
 +                   &lt;/td&gt;
-+                   &lt;td className=&quot;px-6 py-4 whitespace-nowrap&quot;&gt;{getStatusBadge(returnItem.allapot)}&lt;/td&gt;
-+                   &lt;td className=&quot;px-6 py-4 whitespace-nowrap text-sm text-gray-500&quot;&gt;
-+                     {new Date(returnItem.visszaruDatum).toLocaleDateString(&#39;hu-HU&#39;)}
++                   &lt;td className="px-6 py-4 whitespace-nowrap"&gt;{getStatusBadge(returnItem.allapot)}&lt;/td&gt;
++                   &lt;td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500"&gt;
++                     {new Date(returnItem.visszaruDatum).toLocaleDateString('hu-HU')}
 +                   &lt;/td&gt;
-+                   &lt;td className=&quot;px-6 py-4 whitespace-nowrap text-center text-sm font-medium&quot;&gt;
-+                     &lt;div className=&quot;flex justify-center gap-2&quot;&gt;
-+                       {returnItem.allapot === &#39;PENDING&#39; &amp;&amp; (
++                   &lt;td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium"&gt;
++                     &lt;div className="flex justify-center gap-2"&gt;
++                       {returnItem.allapot === 'PENDING' &amp;&amp; (
 +                         &lt;&gt;
 +                           &lt;button
 +                             onClick={() =&gt; handleApprove(returnItem.id)}
-+                             className=&quot;text-blue-600 hover:text-blue-900&quot;
-+                             title=&quot;Jóváhagyás&quot;
++                             className="text-blue-600 hover:text-blue-900"
++                             title="Jóváhagyás"
 +                           &gt;
 +                             ✓
 +                           &lt;/button&gt;
 +                           &lt;button
 +                             onClick={() =&gt; handleReject(returnItem.id)}
-+                             className=&quot;text-red-600 hover:text-red-900&quot;
-+                             title=&quot;Elutasítás&quot;
++                             className="text-red-600 hover:text-red-900"
++                             title="Elutasítás"
 +                           &gt;
 +                             ✗
 +                           &lt;/button&gt;
 +                           &lt;button
 +                             onClick={() =&gt; handleOpenModal(returnItem)}
-+                             className=&quot;text-gray-600 hover:text-gray-900&quot;
-+                             title=&quot;Szerkesztés&quot;
++                             className="text-gray-600 hover:text-gray-900"
++                             title="Szerkesztés"
 +                           &gt;
 +                             ✎
 +                           &lt;/button&gt;
 +                         &lt;/&gt;
 +                       )}
-+                       {returnItem.allapot === &#39;APPROVED&#39; &amp;&amp; (
++                       {returnItem.allapot === 'APPROVED' &amp;&amp; (
 +                         &lt;button
 +                           onClick={() =&gt; handleComplete(returnItem.id)}
-+                           className=&quot;text-green-600 hover:text-green-900&quot;
-+                           title=&quot;Feldolgozás&quot;
++                           className="text-green-600 hover:text-green-900"
++                           title="Feldolgozás"
 +                         &gt;
 +                           ✓✓
 +                         &lt;/button&gt;
 +                       )}
 +                       &lt;button
 +                         onClick={() =&gt; setSelectedReturn(returnItem)}
-+                         className=&quot;text-gray-600 hover:text-gray-900&quot;
-+                         title=&quot;Részletek&quot;
++                         className="text-gray-600 hover:text-gray-900"
++                         title="Részletek"
 +                       &gt;
 +                         👁
 +                       &lt;/button&gt;
@@ -4666,32 +4666,32 @@ Lines added: 623, lines removed: 1
 +       &lt;Modal
 +         isOpen={isModalOpen}
 +         onClose={handleCloseModal}
-+         title={editingReturnId ? &#39;Visszárú szerkesztése&#39; : &#39;Új visszárú&#39;}
-+         size=&quot;lg&quot;
++         title={editingReturnId ? 'Visszárú szerkesztése' : 'Új visszárú'}
++         size="lg"
 +       &gt;
-+         &lt;form onSubmit={handleSubmit} className=&quot;space-y-4&quot;&gt;
++         &lt;form onSubmit={handleSubmit} className="space-y-4"&gt;
 +           {error &amp;&amp; (
-+             &lt;div className=&quot;bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded&quot;&gt;
++             &lt;div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded"&gt;
 +               {error}
 +             &lt;/div&gt;
 +           )}
 + 
 +           {success &amp;&amp; (
-+             &lt;div className=&quot;bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded&quot;&gt;
++             &lt;div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded"&gt;
 +               {success}
 +             &lt;/div&gt;
 +           )}
 + 
 +           &lt;div&gt;
-+             &lt;label className=&quot;block text-sm font-medium text-gray-700 mb-1&quot;&gt;
++             &lt;label className="block text-sm font-medium text-gray-700 mb-1"&gt;
 +               Rendelés (opcionális)
 +             &lt;/label&gt;
 +             &lt;select
 +               value={formData.orderId}
 +               onChange={(e) =&gt; setFormData({ ...formData, orderId: e.target.value })}
-+               className=&quot;w-full px-3 py-2 border border-gray-300 rounded-lg&quot;
++               className="w-full px-3 py-2 border border-gray-300 rounded-lg"
 +             &gt;
-+               &lt;option value=&quot;&quot;&gt;Nincs rendelés&lt;/option&gt;
++               &lt;option value=""&gt;Nincs rendelés&lt;/option&gt;
 +               {ordersData?.items?.map((order: any) =&gt; (
 +                 &lt;option key={order.id} value={order.id}&gt;
 +                   {order.azonosito}
@@ -4701,16 +4701,16 @@ Lines added: 623, lines removed: 1
 +           &lt;/div&gt;
 + 
 +           &lt;div&gt;
-+             &lt;label className=&quot;block text-sm font-medium text-gray-700 mb-1&quot;&gt;
-+               Áru &lt;span className=&quot;text-red-500&quot;&gt;*&lt;/span&gt;
++             &lt;label className="block text-sm font-medium text-gray-700 mb-1"&gt;
++               Áru &lt;span className="text-red-500"&gt;*&lt;/span&gt;
 +             &lt;/label&gt;
 +             &lt;select
 +               value={formData.itemId}
 +               onChange={(e) =&gt; setFormData({ ...formData, itemId: e.target.value })}
-+               className=&quot;w-full px-3 py-2 border border-gray-300 rounded-lg&quot;
++               className="w-full px-3 py-2 border border-gray-300 rounded-lg"
 +               required
 +             &gt;
-+               &lt;option value=&quot;&quot;&gt;Válasszon árut&lt;/option&gt;
++               &lt;option value=""&gt;Válasszon árut&lt;/option&gt;
 +               {itemsData?.items?.map((item: any) =&gt; (
 +                 &lt;option key={item.id} value={item.id}&gt;
 +                   {item.azonosito} - {item.nev}
@@ -4720,16 +4720,16 @@ Lines added: 623, lines removed: 1
 +           &lt;/div&gt;
 + 
 +           &lt;div&gt;
-+             &lt;label className=&quot;block text-sm font-medium text-gray-700 mb-1&quot;&gt;
-+               Raktár &lt;span className=&quot;text-red-500&quot;&gt;*&lt;/span&gt;
++             &lt;label className="block text-sm font-medium text-gray-700 mb-1"&gt;
++               Raktár &lt;span className="text-red-500"&gt;*&lt;/span&gt;
 +             &lt;/label&gt;
 +             &lt;select
 +               value={formData.warehouseId}
 +               onChange={(e) =&gt; setFormData({ ...formData, warehouseId: e.target.value })}
-+               className=&quot;w-full px-3 py-2 border border-gray-300 rounded-lg&quot;
++               className="w-full px-3 py-2 border border-gray-300 rounded-lg"
 +               required
 +             &gt;
-+               &lt;option value=&quot;&quot;&gt;Válasszon raktárt&lt;/option&gt;
++               &lt;option value=""&gt;Válasszon raktárt&lt;/option&gt;
 +               {warehousesData?.data?.map((warehouse: any) =&gt; (
 +                 &lt;option key={warehouse.id} value={warehouse.id}&gt;
 +                   {warehouse.nev}
@@ -4739,75 +4739,75 @@ Lines added: 623, lines removed: 1
 +           &lt;/div&gt;
 + 
 +           &lt;div&gt;
-+             &lt;label className=&quot;block text-sm font-medium text-gray-700 mb-1&quot;&gt;
-+               Mennyiség &lt;span className=&quot;text-red-500&quot;&gt;*&lt;/span&gt;
++             &lt;label className="block text-sm font-medium text-gray-700 mb-1"&gt;
++               Mennyiség &lt;span className="text-red-500"&gt;*&lt;/span&gt;
 +             &lt;/label&gt;
 +             &lt;input
-+               type=&quot;number&quot;
-+               step=&quot;0.01&quot;
-+               min=&quot;0.01&quot;
++               type="number"
++               step="0.01"
++               min="0.01"
 +               value={formData.mennyiseg}
 +               onChange={(e) =&gt;
 +                 setFormData({ ...formData, mennyiseg: parseFloat(e.target.value) || 0 })
 +               }
-+               className=&quot;w-full px-3 py-2 border border-gray-300 rounded-lg&quot;
++               className="w-full px-3 py-2 border border-gray-300 rounded-lg"
 +               required
 +             /&gt;
 +           &lt;/div&gt;
 + 
 +           &lt;div&gt;
-+             &lt;label className=&quot;block text-sm font-medium text-gray-700 mb-1&quot;&gt;
-+               Visszárú ok &lt;span className=&quot;text-red-500&quot;&gt;*&lt;/span&gt;
++             &lt;label className="block text-sm font-medium text-gray-700 mb-1"&gt;
++               Visszárú ok &lt;span className="text-red-500"&gt;*&lt;/span&gt;
 +             &lt;/label&gt;
 +             &lt;select
 +               value={formData.ok}
 +               onChange={(e) =&gt;
-+                 setFormData({ ...formData, ok: e.target.value as CreateReturnDto[&#39;ok&#39;] })
++                 setFormData({ ...formData, ok: e.target.value as CreateReturnDto['ok'] })
 +               }
-+               className=&quot;w-full px-3 py-2 border border-gray-300 rounded-lg&quot;
++               className="w-full px-3 py-2 border border-gray-300 rounded-lg"
 +               required
 +             &gt;
-+               &lt;option value=&quot;hibas&quot;&gt;Hibás&lt;/option&gt;
-+               &lt;option value=&quot;sertett&quot;&gt;Sérült&lt;/option&gt;
-+               &lt;option value=&quot;tulcsordulas&quot;&gt;Túlcsordulás&lt;/option&gt;
-+               &lt;option value=&quot;egyeb&quot;&gt;Egyéb&lt;/option&gt;
++               &lt;option value="hibas"&gt;Hibás&lt;/option&gt;
++               &lt;option value="sertett"&gt;Sérült&lt;/option&gt;
++               &lt;option value="tulcsordulas"&gt;Túlcsordulás&lt;/option&gt;
++               &lt;option value="egyeb"&gt;Egyéb&lt;/option&gt;
 +             &lt;/select&gt;
 +           &lt;/div&gt;
 + 
 +           &lt;div&gt;
-+             &lt;label className=&quot;block text-sm font-medium text-gray-700 mb-1&quot;&gt;Dátum&lt;/label&gt;
++             &lt;label className="block text-sm font-medium text-gray-700 mb-1"&gt;Dátum&lt;/label&gt;
 +             &lt;input
-+               type=&quot;date&quot;
++               type="date"
 +               value={formData.visszaruDatum}
 +               onChange={(e) =&gt; setFormData({ ...formData, visszaruDatum: e.target.value })}
-+               className=&quot;w-full px-3 py-2 border border-gray-300 rounded-lg&quot;
++               className="w-full px-3 py-2 border border-gray-300 rounded-lg"
 +             /&gt;
 +           &lt;/div&gt;
 + 
 +           &lt;div&gt;
-+             &lt;label className=&quot;block text-sm font-medium text-gray-700 mb-1&quot;&gt;Megjegyzések&lt;/label&gt;
++             &lt;label className="block text-sm font-medium text-gray-700 mb-1"&gt;Megjegyzések&lt;/label&gt;
 +             &lt;textarea
 +               value={formData.megjegyzesek}
 +               onChange={(e) =&gt; setFormData({ ...formData, megjegyzesek: e.target.value })}
-+               className=&quot;w-full px-3 py-2 border border-gray-300 rounded-lg&quot;
++               className="w-full px-3 py-2 border border-gray-300 rounded-lg"
 +               rows={3}
 +             /&gt;
 +           &lt;/div&gt;
 + 
-+           &lt;div className=&quot;flex justify-end gap-2 pt-4&quot;&gt;
++           &lt;div className="flex justify-end gap-2 pt-4"&gt;
 +             &lt;button
-+               type=&quot;button&quot;
++               type="button"
 +               onClick={handleCloseModal}
-+               className=&quot;px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50&quot;
++               className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
 +             &gt;
 +               Mégse
 +             &lt;/button&gt;
 +             &lt;button
-+               type=&quot;submit&quot;
++               type="submit"
 +               disabled={saving}
-+               className=&quot;px-4 py-2 bg-mbit-blue text-white rounded-lg hover:bg-blue-700 disabled:opacity-50&quot;
++               className="px-4 py-2 bg-mbit-blue text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
 +             &gt;
-+               {saving ? &#39;Mentés...&#39; : editingReturnId ? &#39;Frissítés&#39; : &#39;Létrehozás&#39;}
++               {saving ? 'Mentés...' : editingReturnId ? 'Frissítés' : 'Létrehozás'}
 +             &lt;/button&gt;
 +           &lt;/div&gt;
 +         &lt;/form&gt;
@@ -4818,12 +4818,12 @@ Lines added: 623, lines removed: 1
 +         &lt;Modal
 +           isOpen={!!selectedReturn}
 +           onClose={() =&gt; setSelectedReturn(null)}
-+           title=&quot;Visszárú részletei&quot;
-+           size=&quot;lg&quot;
++           title="Visszárú részletei"
++           size="lg"
 +         &gt;
-+           &lt;div className=&quot;space-y-4&quot;&gt;
++           &lt;div className="space-y-4"&gt;
 +             &lt;div&gt;
-+               &lt;strong&gt;Rendelés:&lt;/strong&gt; {selectedReturn.order?.azonosito || &#39;-&#39;}
++               &lt;strong&gt;Rendelés:&lt;/strong&gt; {selectedReturn.order?.azonosito || '-'}
 +             &lt;/div&gt;
 +             &lt;div&gt;
 +               &lt;strong&gt;Áru:&lt;/strong&gt; {selectedReturn.item?.azonosito} - {selectedReturn.item?.nev}
@@ -4841,8 +4841,8 @@ Lines added: 623, lines removed: 1
 +               &lt;strong&gt;Állapot:&lt;/strong&gt; {getStatusBadge(selectedReturn.allapot)}
 +             &lt;/div&gt;
 +             &lt;div&gt;
-+               &lt;strong&gt;Dátum:&lt;/strong&gt;{&#39; &#39;}
-+               {new Date(selectedReturn.visszaruDatum).toLocaleDateString(&#39;hu-HU&#39;)}
++               &lt;strong&gt;Dátum:&lt;/strong&gt;{' '}
++               {new Date(selectedReturn.visszaruDatum).toLocaleDateString('hu-HU')}
 +             &lt;/div&gt;
 +             {selectedReturn.megjegyzesek &amp;&amp; (
 +               &lt;div&gt;
@@ -4888,7 +4888,7 @@ A Suppliers.tsx oldal létrehozása:
 
 <tool-use data-tool-type="write" data-tool-name="write">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Suppliers.tsx</summary>
+<details><summary>Tool use: **write** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Suppliers.tsx</summary>
 
 **Chunk 1**
 Lines added: 416, lines removed: 1
@@ -4896,8 +4896,8 @@ Lines added: 416, lines removed: 1
 ```diff
 @@ -1,1 +1,416 @@
 - 
-+ import { useState } from &#39;react&#39;;
-+ import Modal from &#39;../components/Modal&#39;;
++ import { useState } from 'react';
++ import Modal from '../components/Modal';
 + import {
 +   useSuppliers,
 +   useSupplier,
@@ -4908,34 +4908,34 @@ Lines added: 416, lines removed: 1
 +   Supplier,
 +   CreateSupplierDto,
 +   UpdateSupplierDto,
-+ } from &#39;../lib/api/logistics&#39;;
-+ import { useQuery } from &#39;@tanstack/react-query&#39;;
-+ import axios from &#39;../lib/axios&#39;;
++ } from '../lib/api/logistics';
++ import { useQuery } from '@tanstack/react-query';
++ import axios from '../lib/axios';
 + 
 + export default function Suppliers() {
-+   const [searchTerm, setSearchTerm] = useState(&#39;&#39;);
++   const [searchTerm, setSearchTerm] = useState('');
 +   const [isModalOpen, setIsModalOpen] = useState(false);
 +   const [isItemsModalOpen, setIsItemsModalOpen] = useState(false);
 +   const [editingSupplierId, setEditingSupplierId] = useState&lt;string | null&gt;(null);
 +   const [selectedSupplierId, setSelectedSupplierId] = useState&lt;string | null&gt;(null);
 +   const [saving, setSaving] = useState(false);
-+   const [error, setError] = useState&lt;string&gt;(&#39;&#39;);
-+   const [success, setSuccess] = useState&lt;string&gt;(&#39;&#39;);
++   const [error, setError] = useState&lt;string&gt;('');
++   const [success, setSuccess] = useState&lt;string&gt;('');
 + 
 +   const { data: suppliersData, isLoading, refetch } = useSuppliers(searchTerm, 0, 100);
 + 
-+   const { data: supplierItems } = useSupplierItems(selectedSupplierId || &#39;&#39;);
++   const { data: supplierItems } = useSupplierItems(selectedSupplierId || '');
 + 
 +   const createSupplier = useCreateSupplier();
 +   const updateSupplier = useUpdateSupplier();
 +   const deleteSupplier = useDeleteSupplier();
 + 
 +   const [formData, setFormData] = useState&lt;CreateSupplierDto&gt;({
-+     nev: &#39;&#39;,
-+     adoszam: &#39;&#39;,
-+     cim: &#39;&#39;,
-+     email: &#39;&#39;,
-+     telefon: &#39;&#39;,
++     nev: '',
++     adoszam: '',
++     cim: '',
++     email: '',
++     telefon: '',
 +     aktiv: true,
 +   });
 + 
@@ -4944,40 +4944,40 @@ Lines added: 416, lines removed: 1
 +       setEditingSupplierId(supplier.id);
 +       setFormData({
 +         nev: supplier.nev,
-+         adoszam: supplier.adoszam || &#39;&#39;,
-+         cim: supplier.cim || &#39;&#39;,
-+         email: supplier.email || &#39;&#39;,
-+         telefon: supplier.telefon || &#39;&#39;,
++         adoszam: supplier.adoszam || '',
++         cim: supplier.cim || '',
++         email: supplier.email || '',
++         telefon: supplier.telefon || '',
 +         aktiv: supplier.aktiv,
 +       });
 +     } else {
 +       setEditingSupplierId(null);
 +       setFormData({
-+         nev: &#39;&#39;,
-+         adoszam: &#39;&#39;,
-+         cim: &#39;&#39;,
-+         email: &#39;&#39;,
-+         telefon: &#39;&#39;,
++         nev: '',
++         adoszam: '',
++         cim: '',
++         email: '',
++         telefon: '',
 +         aktiv: true,
 +       });
 +     }
-+     setError(&#39;&#39;);
-+     setSuccess(&#39;&#39;);
++     setError('');
++     setSuccess('');
 +     setIsModalOpen(true);
 +   };
 + 
 +   const handleCloseModal = () =&gt; {
 +     setIsModalOpen(false);
 +     setEditingSupplierId(null);
-+     setError(&#39;&#39;);
-+     setSuccess(&#39;&#39;);
++     setError('');
++     setSuccess('');
 +   };
 + 
 +   const handleSubmit = async (e: React.FormEvent) =&gt; {
 +     e.preventDefault();
 +     setSaving(true);
-+     setError(&#39;&#39;);
-+     setSuccess(&#39;&#39;);
++     setError('');
++     setSuccess('');
 + 
 +     try {
 +       if (editingSupplierId) {
@@ -4985,10 +4985,10 @@ Lines added: 416, lines removed: 1
 +           id: editingSupplierId,
 +           data: formData,
 +         });
-+         setSuccess(&#39;Szállító sikeresen frissítve!&#39;);
++         setSuccess('Szállító sikeresen frissítve!');
 +       } else {
 +         await createSupplier.mutateAsync(formData);
-+         setSuccess(&#39;Szállító sikeresen létrehozva!&#39;);
++         setSuccess('Szállító sikeresen létrehozva!');
 +       }
 + 
 +       setTimeout(() =&gt; {
@@ -4996,21 +4996,21 @@ Lines added: 416, lines removed: 1
 +         refetch();
 +       }, 1500);
 +     } catch (err: any) {
-+       setError(err.response?.data?.message || &#39;Hiba történt a mentés során&#39;);
++       setError(err.response?.data?.message || 'Hiba történt a mentés során');
 +     } finally {
 +       setSaving(false);
 +     }
 +   };
 + 
 +   const handleDelete = async (id: string) =&gt; {
-+     if (!confirm(&#39;Biztosan törli ezt a szállítót?&#39;)) return;
++     if (!confirm('Biztosan törli ezt a szállítót?')) return;
 + 
 +     try {
 +       await deleteSupplier.mutateAsync(id);
-+       setSuccess(&#39;Szállító sikeresen törölve!&#39;);
++       setSuccess('Szállító sikeresen törölve!');
 +       refetch();
 +     } catch (err: any) {
-+       setError(err.response?.data?.message || &#39;Hiba történt a törlés során&#39;);
++       setError(err.response?.data?.message || 'Hiba történt a törlés során');
 +     }
 +   };
 + 
@@ -5020,121 +5020,121 @@ Lines added: 416, lines removed: 1
 +   };
 + 
 +   return (
-+     &lt;div className=&quot;p-6&quot;&gt;
-+       &lt;div className=&quot;flex justify-between items-center mb-6&quot;&gt;
-+         &lt;h1 className=&quot;text-3xl font-bold&quot;&gt;Szállítók Kezelése&lt;/h1&gt;
++     &lt;div className="p-6"&gt;
++       &lt;div className="flex justify-between items-center mb-6"&gt;
++         &lt;h1 className="text-3xl font-bold"&gt;Szállítók Kezelése&lt;/h1&gt;
 +         &lt;button
 +           onClick={() =&gt; handleOpenModal()}
-+           className=&quot;bg-mbit-blue text-white px-4 py-2 rounded-lg hover:bg-blue-700&quot;
++           className="bg-mbit-blue text-white px-4 py-2 rounded-lg hover:bg-blue-700"
 +         &gt;
 +           + Új szállító
 +         &lt;/button&gt;
 +       &lt;/div&gt;
 + 
 +       {error &amp;&amp; (
-+         &lt;div className=&quot;mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded&quot;&gt;
++         &lt;div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded"&gt;
 +           {error}
 +         &lt;/div&gt;
 +       )}
 + 
 +       {success &amp;&amp; (
-+         &lt;div className=&quot;mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded&quot;&gt;
++         &lt;div className="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded"&gt;
 +           {success}
 +         &lt;/div&gt;
 +       )}
 + 
 +       {/* Search */}
-+       &lt;div className=&quot;mb-6&quot;&gt;
++       &lt;div className="mb-6"&gt;
 +         &lt;input
-+           type=&quot;text&quot;
-+           placeholder=&quot;Keresés név, adószám vagy email alapján...&quot;
++           type="text"
++           placeholder="Keresés név, adószám vagy email alapján..."
 +           value={searchTerm}
 +           onChange={(e) =&gt; setSearchTerm(e.target.value)}
-+           className=&quot;w-full px-4 py-2 border border-gray-300 rounded-lg&quot;
++           className="w-full px-4 py-2 border border-gray-300 rounded-lg"
 +         /&gt;
 +       &lt;/div&gt;
 + 
 +       {/* Suppliers Table */}
-+       &lt;div className=&quot;bg-white rounded-lg shadow overflow-hidden&quot;&gt;
-+         &lt;div className=&quot;px-6 py-4 bg-gray-50 border-b border-gray-200&quot;&gt;
-+           &lt;h2 className=&quot;text-lg font-semibold&quot;&gt;Szállítók ({suppliersData?.total || 0})&lt;/h2&gt;
++       &lt;div className="bg-white rounded-lg shadow overflow-hidden"&gt;
++         &lt;div className="px-6 py-4 bg-gray-50 border-b border-gray-200"&gt;
++           &lt;h2 className="text-lg font-semibold"&gt;Szállítók ({suppliersData?.total || 0})&lt;/h2&gt;
 +         &lt;/div&gt;
 +         {isLoading ? (
-+           &lt;div className=&quot;p-6&quot;&gt;Betöltés...&lt;/div&gt;
++           &lt;div className="p-6"&gt;Betöltés...&lt;/div&gt;
 +         ) : (
-+           &lt;table className=&quot;min-w-full divide-y divide-gray-200&quot;&gt;
-+             &lt;thead className=&quot;bg-gray-50&quot;&gt;
++           &lt;table className="min-w-full divide-y divide-gray-200"&gt;
++             &lt;thead className="bg-gray-50"&gt;
 +               &lt;tr&gt;
-+                 &lt;th className=&quot;px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase&quot;&gt;
++                 &lt;th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"&gt;
 +                   Név
 +                 &lt;/th&gt;
-+                 &lt;th className=&quot;px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase&quot;&gt;
++                 &lt;th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"&gt;
 +                   Adószám
 +                 &lt;/th&gt;
-+                 &lt;th className=&quot;px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase&quot;&gt;
++                 &lt;th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"&gt;
 +                   Cím
 +                 &lt;/th&gt;
-+                 &lt;th className=&quot;px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase&quot;&gt;
++                 &lt;th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"&gt;
 +                   Email
 +                 &lt;/th&gt;
-+                 &lt;th className=&quot;px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase&quot;&gt;
++                 &lt;th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"&gt;
 +                   Telefon
 +                 &lt;/th&gt;
-+                 &lt;th className=&quot;px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase&quot;&gt;
++                 &lt;th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase"&gt;
 +                   Státusz
 +                 &lt;/th&gt;
-+                 &lt;th className=&quot;px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase&quot;&gt;
++                 &lt;th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase"&gt;
 +                   Műveletek
 +                 &lt;/th&gt;
 +               &lt;/tr&gt;
 +             &lt;/thead&gt;
-+             &lt;tbody className=&quot;bg-white divide-y divide-gray-200&quot;&gt;
++             &lt;tbody className="bg-white divide-y divide-gray-200"&gt;
 +               {suppliersData?.items?.map((supplier: Supplier) =&gt; (
-+                 &lt;tr key={supplier.id} className=&quot;hover:bg-gray-50&quot;&gt;
-+                   &lt;td className=&quot;px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900&quot;&gt;
++                 &lt;tr key={supplier.id} className="hover:bg-gray-50"&gt;
++                   &lt;td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"&gt;
 +                     {supplier.nev}
 +                   &lt;/td&gt;
-+                   &lt;td className=&quot;px-6 py-4 whitespace-nowrap text-sm text-gray-500&quot;&gt;
-+                     {supplier.adoszam || &#39;-&#39;}
++                   &lt;td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500"&gt;
++                     {supplier.adoszam || '-'}
 +                   &lt;/td&gt;
-+                   &lt;td className=&quot;px-6 py-4 text-sm text-gray-500&quot;&gt;{supplier.cim || &#39;-&#39;}&lt;/td&gt;
-+                   &lt;td className=&quot;px-6 py-4 whitespace-nowrap text-sm text-gray-500&quot;&gt;
-+                     {supplier.email || &#39;-&#39;}
++                   &lt;td className="px-6 py-4 text-sm text-gray-500"&gt;{supplier.cim || '-'}&lt;/td&gt;
++                   &lt;td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500"&gt;
++                     {supplier.email || '-'}
 +                   &lt;/td&gt;
-+                   &lt;td className=&quot;px-6 py-4 whitespace-nowrap text-sm text-gray-500&quot;&gt;
-+                     {supplier.telefon || &#39;-&#39;}
++                   &lt;td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500"&gt;
++                     {supplier.telefon || '-'}
 +                   &lt;/td&gt;
-+                   &lt;td className=&quot;px-6 py-4 whitespace-nowrap text-center&quot;&gt;
++                   &lt;td className="px-6 py-4 whitespace-nowrap text-center"&gt;
 +                     &lt;span
 +                       className={&#96;px-2 py-1 rounded text-xs font-medium ${
 +                         supplier.aktiv
-+                           ? &#39;bg-green-100 text-green-800&#39;
-+                           : &#39;bg-gray-100 text-gray-800&#39;
++                           ? 'bg-green-100 text-green-800'
++                           : 'bg-gray-100 text-gray-800'
 +                       }&#96;}
 +                     &gt;
-+                       {supplier.aktiv ? &#39;Aktív&#39; : &#39;Inaktív&#39;}
++                       {supplier.aktiv ? 'Aktív' : 'Inaktív'}
 +                     &lt;/span&gt;
 +                   &lt;/td&gt;
-+                   &lt;td className=&quot;px-6 py-4 whitespace-nowrap text-center text-sm font-medium&quot;&gt;
-+                     &lt;div className=&quot;flex justify-center gap-2&quot;&gt;
++                   &lt;td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium"&gt;
++                     &lt;div className="flex justify-center gap-2"&gt;
 +                       &lt;button
 +                         onClick={() =&gt; handleViewItems(supplier.id)}
-+                         className=&quot;text-blue-600 hover:text-blue-900&quot;
-+                         title=&quot;Árui&quot;
++                         className="text-blue-600 hover:text-blue-900"
++                         title="Árui"
 +                       &gt;
 +                         📦
 +                       &lt;/button&gt;
 +                       &lt;button
 +                         onClick={() =&gt; handleOpenModal(supplier)}
-+                         className=&quot;text-gray-600 hover:text-gray-900&quot;
-+                         title=&quot;Szerkesztés&quot;
++                         className="text-gray-600 hover:text-gray-900"
++                         title="Szerkesztés"
 +                       &gt;
 +                         ✎
 +                       &lt;/button&gt;
 +                       &lt;button
 +                         onClick={() =&gt; handleDelete(supplier.id)}
-+                         className=&quot;text-red-600 hover:text-red-900&quot;
-+                         title=&quot;Törlés&quot;
++                         className="text-red-600 hover:text-red-900"
++                         title="Törlés"
 +                       &gt;
 +                         🗑
 +                       &lt;/button&gt;
@@ -5151,101 +5151,101 @@ Lines added: 416, lines removed: 1
 +       &lt;Modal
 +         isOpen={isModalOpen}
 +         onClose={handleCloseModal}
-+         title={editingSupplierId ? &#39;Szállító szerkesztése&#39; : &#39;Új szállító&#39;}
-+         size=&quot;lg&quot;
++         title={editingSupplierId ? 'Szállító szerkesztése' : 'Új szállító'}
++         size="lg"
 +       &gt;
-+         &lt;form onSubmit={handleSubmit} className=&quot;space-y-4&quot;&gt;
++         &lt;form onSubmit={handleSubmit} className="space-y-4"&gt;
 +           {error &amp;&amp; (
-+             &lt;div className=&quot;bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded&quot;&gt;
++             &lt;div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded"&gt;
 +               {error}
 +             &lt;/div&gt;
 +           )}
 + 
 +           {success &amp;&amp; (
-+             &lt;div className=&quot;bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded&quot;&gt;
++             &lt;div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded"&gt;
 +               {success}
 +             &lt;/div&gt;
 +           )}
 + 
 +           &lt;div&gt;
-+             &lt;label className=&quot;block text-sm font-medium text-gray-700 mb-1&quot;&gt;
-+               Név &lt;span className=&quot;text-red-500&quot;&gt;*&lt;/span&gt;
++             &lt;label className="block text-sm font-medium text-gray-700 mb-1"&gt;
++               Név &lt;span className="text-red-500"&gt;*&lt;/span&gt;
 +             &lt;/label&gt;
 +             &lt;input
-+               type=&quot;text&quot;
++               type="text"
 +               value={formData.nev}
 +               onChange={(e) =&gt; setFormData({ ...formData, nev: e.target.value })}
-+               className=&quot;w-full px-3 py-2 border border-gray-300 rounded-lg&quot;
++               className="w-full px-3 py-2 border border-gray-300 rounded-lg"
 +               required
 +             /&gt;
 +           &lt;/div&gt;
 + 
 +           &lt;div&gt;
-+             &lt;label className=&quot;block text-sm font-medium text-gray-700 mb-1&quot;&gt;Adószám&lt;/label&gt;
++             &lt;label className="block text-sm font-medium text-gray-700 mb-1"&gt;Adószám&lt;/label&gt;
 +             &lt;input
-+               type=&quot;text&quot;
++               type="text"
 +               value={formData.adoszam}
 +               onChange={(e) =&gt; setFormData({ ...formData, adoszam: e.target.value })}
-+               className=&quot;w-full px-3 py-2 border border-gray-300 rounded-lg&quot;
++               className="w-full px-3 py-2 border border-gray-300 rounded-lg"
 +             /&gt;
 +           &lt;/div&gt;
 + 
 +           &lt;div&gt;
-+             &lt;label className=&quot;block text-sm font-medium text-gray-700 mb-1&quot;&gt;Cím&lt;/label&gt;
++             &lt;label className="block text-sm font-medium text-gray-700 mb-1"&gt;Cím&lt;/label&gt;
 +             &lt;input
-+               type=&quot;text&quot;
++               type="text"
 +               value={formData.cim}
 +               onChange={(e) =&gt; setFormData({ ...formData, cim: e.target.value })}
-+               className=&quot;w-full px-3 py-2 border border-gray-300 rounded-lg&quot;
++               className="w-full px-3 py-2 border border-gray-300 rounded-lg"
 +             /&gt;
 +           &lt;/div&gt;
 + 
 +           &lt;div&gt;
-+             &lt;label className=&quot;block text-sm font-medium text-gray-700 mb-1&quot;&gt;Email&lt;/label&gt;
++             &lt;label className="block text-sm font-medium text-gray-700 mb-1"&gt;Email&lt;/label&gt;
 +             &lt;input
-+               type=&quot;email&quot;
++               type="email"
 +               value={formData.email}
 +               onChange={(e) =&gt; setFormData({ ...formData, email: e.target.value })}
-+               className=&quot;w-full px-3 py-2 border border-gray-300 rounded-lg&quot;
++               className="w-full px-3 py-2 border border-gray-300 rounded-lg"
 +             /&gt;
 +           &lt;/div&gt;
 + 
 +           &lt;div&gt;
-+             &lt;label className=&quot;block text-sm font-medium text-gray-700 mb-1&quot;&gt;Telefon&lt;/label&gt;
++             &lt;label className="block text-sm font-medium text-gray-700 mb-1"&gt;Telefon&lt;/label&gt;
 +             &lt;input
-+               type=&quot;tel&quot;
++               type="tel"
 +               value={formData.telefon}
 +               onChange={(e) =&gt; setFormData({ ...formData, telefon: e.target.value })}
-+               className=&quot;w-full px-3 py-2 border border-gray-300 rounded-lg&quot;
++               className="w-full px-3 py-2 border border-gray-300 rounded-lg"
 +             /&gt;
 +           &lt;/div&gt;
 + 
 +           &lt;div&gt;
-+             &lt;label className=&quot;flex items-center&quot;&gt;
++             &lt;label className="flex items-center"&gt;
 +               &lt;input
-+                 type=&quot;checkbox&quot;
++                 type="checkbox"
 +                 checked={formData.aktiv}
 +                 onChange={(e) =&gt; setFormData({ ...formData, aktiv: e.target.checked })}
-+                 className=&quot;mr-2&quot;
++                 className="mr-2"
 +               /&gt;
-+               &lt;span className=&quot;text-sm font-medium text-gray-700&quot;&gt;Aktív&lt;/span&gt;
++               &lt;span className="text-sm font-medium text-gray-700"&gt;Aktív&lt;/span&gt;
 +             &lt;/label&gt;
 +           &lt;/div&gt;
 + 
-+           &lt;div className=&quot;flex justify-end gap-2 pt-4&quot;&gt;
++           &lt;div className="flex justify-end gap-2 pt-4"&gt;
 +             &lt;button
-+               type=&quot;button&quot;
++               type="button"
 +               onClick={handleCloseModal}
-+               className=&quot;px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50&quot;
++               className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
 +             &gt;
 +               Mégse
 +             &lt;/button&gt;
 +             &lt;button
-+               type=&quot;submit&quot;
++               type="submit"
 +               disabled={saving}
-+               className=&quot;px-4 py-2 bg-mbit-blue text-white rounded-lg hover:bg-blue-700 disabled:opacity-50&quot;
++               className="px-4 py-2 bg-mbit-blue text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
 +             &gt;
-+               {saving ? &#39;Mentés...&#39; : editingSupplierId ? &#39;Frissítés&#39; : &#39;Létrehozás&#39;}
++               {saving ? 'Mentés...' : editingSupplierId ? 'Frissítés' : 'Létrehozás'}
 +             &lt;/button&gt;
 +           &lt;/div&gt;
 +         &lt;/form&gt;
@@ -5258,46 +5258,46 @@ Lines added: 416, lines removed: 1
 +           setIsItemsModalOpen(false);
 +           setSelectedSupplierId(null);
 +         }}
-+         title=&quot;Szállító árui&quot;
-+         size=&quot;lg&quot;
++         title="Szállító árui"
++         size="lg"
 +       &gt;
 +         {supplierItems &amp;&amp; supplierItems.length &gt; 0 ? (
-+           &lt;table className=&quot;min-w-full divide-y divide-gray-200&quot;&gt;
-+             &lt;thead className=&quot;bg-gray-50&quot;&gt;
++           &lt;table className="min-w-full divide-y divide-gray-200"&gt;
++             &lt;thead className="bg-gray-50"&gt;
 +               &lt;tr&gt;
-+                 &lt;th className=&quot;px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase&quot;&gt;
++                 &lt;th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"&gt;
 +                   Áru azonosító
 +                 &lt;/th&gt;
-+                 &lt;th className=&quot;px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase&quot;&gt;
++                 &lt;th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"&gt;
 +                   Név
 +                 &lt;/th&gt;
-+                 &lt;th className=&quot;px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase&quot;&gt;
++                 &lt;th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"&gt;
 +                   Egység
 +                 &lt;/th&gt;
-+                 &lt;th className=&quot;px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase&quot;&gt;
++                 &lt;th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase"&gt;
 +                   Elsődleges
 +                 &lt;/th&gt;
 +               &lt;/tr&gt;
 +             &lt;/thead&gt;
-+             &lt;tbody className=&quot;bg-white divide-y divide-gray-200&quot;&gt;
++             &lt;tbody className="bg-white divide-y divide-gray-200"&gt;
 +               {supplierItems.map((itemSupplier: any) =&gt; (
 +                 &lt;tr key={itemSupplier.id}&gt;
-+                   &lt;td className=&quot;px-6 py-4 whitespace-nowrap text-sm text-gray-900&quot;&gt;
++                   &lt;td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900"&gt;
 +                     {itemSupplier.item?.azonosito}
 +                   &lt;/td&gt;
-+                   &lt;td className=&quot;px-6 py-4 text-sm text-gray-900&quot;&gt;
++                   &lt;td className="px-6 py-4 text-sm text-gray-900"&gt;
 +                     {itemSupplier.item?.nev}
 +                   &lt;/td&gt;
-+                   &lt;td className=&quot;px-6 py-4 whitespace-nowrap text-sm text-gray-500&quot;&gt;
++                   &lt;td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500"&gt;
 +                     {itemSupplier.item?.egyseg}
 +                   &lt;/td&gt;
-+                   &lt;td className=&quot;px-6 py-4 whitespace-nowrap text-center&quot;&gt;
++                   &lt;td className="px-6 py-4 whitespace-nowrap text-center"&gt;
 +                     {itemSupplier.isPrimary ? (
-+                       &lt;span className=&quot;px-2 py-1 bg-green-100 text-green-800 text-xs rounded&quot;&gt;
++                       &lt;span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded"&gt;
 +                         ✓
 +                       &lt;/span&gt;
 +                     ) : (
-+                       &lt;span className=&quot;text-gray-400&quot;&gt;-&lt;/span&gt;
++                       &lt;span className="text-gray-400"&gt;-&lt;/span&gt;
 +                     )}
 +                   &lt;/td&gt;
 +                 &lt;/tr&gt;
@@ -5305,7 +5305,7 @@ Lines added: 416, lines removed: 1
 +             &lt;/tbody&gt;
 +           &lt;/table&gt;
 +         ) : (
-+           &lt;p className=&quot;text-gray-500&quot;&gt;Nincs áru kapcsolva ehhez a szállítóhoz.&lt;/p&gt;
++           &lt;p className="text-gray-500"&gt;Nincs áru kapcsolva ehhez a szállítóhoz.&lt;/p&gt;
 +         )}
 +       &lt;/Modal&gt;
 +     &lt;/div&gt;
@@ -5340,7 +5340,7 @@ A ProductSuppliers komponens létrehozása és a Products.tsx frissítése:
 
 <tool-use data-tool-type="write" data-tool-name="write">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/logistics/ProductSuppliers.tsx</summary>
+<details><summary>Tool use: **write** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/logistics/ProductSuppliers.tsx</summary>
 
 **Chunk 1**
 Lines added: 370, lines removed: 1
@@ -5348,8 +5348,8 @@ Lines added: 370, lines removed: 1
 ```diff
 @@ -1,1 +1,370 @@
 - 
-+ import { useState } from &#39;react&#39;;
-+ import Modal from &#39;../Modal&#39;;
++ import { useState } from 'react';
++ import Modal from '../Modal';
 + import {
 +   useItemSuppliers,
 +   useLinkItemSupplier,
@@ -5357,9 +5357,9 @@ Lines added: 370, lines removed: 1
 +   useSetPrimarySupplier,
 +   ItemSupplier,
 +   LinkItemSupplierDto,
-+ } from &#39;../../lib/api/logistics&#39;;
-+ import { useQuery } from &#39;@tanstack/react-query&#39;;
-+ import axios from &#39;../../lib/axios&#39;;
++ } from '../../lib/api/logistics';
++ import { useQuery } from '@tanstack/react-query';
++ import axios from '../../lib/axios';
 + 
 + interface ProductSuppliersProps {
 +   itemId: string;
@@ -5368,15 +5368,15 @@ Lines added: 370, lines removed: 1
 + export default function ProductSuppliers({ itemId }: ProductSuppliersProps) {
 +   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
 +   const [saving, setSaving] = useState(false);
-+   const [error, setError] = useState&lt;string&gt;(&#39;&#39;);
-+   const [success, setSuccess] = useState&lt;string&gt;(&#39;&#39;);
++   const [error, setError] = useState&lt;string&gt;('');
++   const [success, setSuccess] = useState&lt;string&gt;('');
 + 
 +   const { data: itemSuppliers, isLoading, refetch } = useItemSuppliers(itemId);
 + 
 +   const { data: suppliersData } = useQuery({
-+     queryKey: [&#39;suppliers&#39;],
++     queryKey: ['suppliers'],
 +     queryFn: async () =&gt; {
-+       const response = await axios.get(&#39;/api/logistics/suppliers?skip=0&amp;take=1000&#39;);
++       const response = await axios.get('/api/logistics/suppliers?skip=0&amp;take=1000');
 +       return response.data;
 +     },
 +   });
@@ -5386,39 +5386,39 @@ Lines added: 370, lines removed: 1
 +   const setPrimary = useSetPrimarySupplier();
 + 
 +   const [linkFormData, setLinkFormData] = useState&lt;LinkItemSupplierDto&gt;({
-+     supplierId: &#39;&#39;,
++     supplierId: '',
 +     beszerzesiAr: undefined,
 +     minMennyiseg: undefined,
 +     szallitasiIdo: undefined,
-+     megjegyzesek: &#39;&#39;,
++     megjegyzesek: '',
 +     isPrimary: false,
 +   });
 + 
 +   const handleOpenLinkModal = () =&gt; {
 +     setLinkFormData({
-+       supplierId: &#39;&#39;,
++       supplierId: '',
 +       beszerzesiAr: undefined,
 +       minMennyiseg: undefined,
 +       szallitasiIdo: undefined,
-+       megjegyzesek: &#39;&#39;,
++       megjegyzesek: '',
 +       isPrimary: false,
 +     });
-+     setError(&#39;&#39;);
-+     setSuccess(&#39;&#39;);
++     setError('');
++     setSuccess('');
 +     setIsLinkModalOpen(true);
 +   };
 + 
 +   const handleCloseLinkModal = () =&gt; {
 +     setIsLinkModalOpen(false);
-+     setError(&#39;&#39;);
-+     setSuccess(&#39;&#39;);
++     setError('');
++     setSuccess('');
 +   };
 + 
 +   const handleLinkSubmit = async (e: React.FormEvent) =&gt; {
 +     e.preventDefault();
 +     setSaving(true);
-+     setError(&#39;&#39;);
-+     setSuccess(&#39;&#39;);
++     setError('');
++     setSuccess('');
 + 
 +     try {
 +       await linkSupplier.mutateAsync({
@@ -5426,37 +5426,37 @@ Lines added: 370, lines removed: 1
 +         supplierId: linkFormData.supplierId,
 +         data: linkFormData,
 +       });
-+       setSuccess(&#39;Szállító sikeresen hozzáadva!&#39;);
++       setSuccess('Szállító sikeresen hozzáadva!');
 +       setTimeout(() =&gt; {
 +         handleCloseLinkModal();
 +         refetch();
 +       }, 1500);
 +     } catch (err: any) {
-+       setError(err.response?.data?.message || &#39;Hiba történt a kapcsolat létrehozása során&#39;);
++       setError(err.response?.data?.message || 'Hiba történt a kapcsolat létrehozása során');
 +     } finally {
 +       setSaving(false);
 +     }
 +   };
 + 
 +   const handleUnlink = async (supplierId: string) =&gt; {
-+     if (!confirm(&#39;Biztosan eltávolítja ezt a szállítót?&#39;)) return;
++     if (!confirm('Biztosan eltávolítja ezt a szállítót?')) return;
 + 
 +     try {
 +       await unlinkSupplier.mutateAsync({ itemId, supplierId });
-+       setSuccess(&#39;Szállító sikeresen eltávolítva!&#39;);
++       setSuccess('Szállító sikeresen eltávolítva!');
 +       refetch();
 +     } catch (err: any) {
-+       setError(err.response?.data?.message || &#39;Hiba történt az eltávolítás során&#39;);
++       setError(err.response?.data?.message || 'Hiba történt az eltávolítás során');
 +     }
 +   };
 + 
 +   const handleSetPrimary = async (supplierId: string) =&gt; {
 +     try {
 +       await setPrimary.mutateAsync({ itemId, supplierId });
-+       setSuccess(&#39;Elsődleges szállító beállítva!&#39;);
++       setSuccess('Elsődleges szállító beállítva!');
 +       refetch();
 +     } catch (err: any) {
-+       setError(err.response?.data?.message || &#39;Hiba történt a beállítás során&#39;);
++       setError(err.response?.data?.message || 'Hiba történt a beállítás során');
 +     }
 +   };
 + 
@@ -5464,100 +5464,100 @@ Lines added: 370, lines removed: 1
 +   const linkedSupplierIds = itemSuppliers?.map((is: ItemSupplier) =&gt; is.supplierId) || [];
 + 
 +   return (
-+     &lt;div className=&quot;mt-6&quot;&gt;
-+       &lt;div className=&quot;flex justify-between items-center mb-4&quot;&gt;
-+         &lt;h3 className=&quot;text-lg font-semibold&quot;&gt;Szállítók&lt;/h3&gt;
++     &lt;div className="mt-6"&gt;
++       &lt;div className="flex justify-between items-center mb-4"&gt;
++         &lt;h3 className="text-lg font-semibold"&gt;Szállítók&lt;/h3&gt;
 +         &lt;button
 +           onClick={handleOpenLinkModal}
-+           className=&quot;bg-mbit-blue text-white px-3 py-1 rounded text-sm hover:bg-blue-700&quot;
++           className="bg-mbit-blue text-white px-3 py-1 rounded text-sm hover:bg-blue-700"
 +         &gt;
 +           + Szállító hozzáadása
 +         &lt;/button&gt;
 +       &lt;/div&gt;
 + 
 +       {error &amp;&amp; (
-+         &lt;div className=&quot;mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded text-sm&quot;&gt;
++         &lt;div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded text-sm"&gt;
 +           {error}
 +         &lt;/div&gt;
 +       )}
 + 
 +       {success &amp;&amp; (
-+         &lt;div className=&quot;mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded text-sm&quot;&gt;
++         &lt;div className="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded text-sm"&gt;
 +           {success}
 +         &lt;/div&gt;
 +       )}
 + 
 +       {isLoading ? (
-+         &lt;p className=&quot;text-gray-500&quot;&gt;Betöltés...&lt;/p&gt;
++         &lt;p className="text-gray-500"&gt;Betöltés...&lt;/p&gt;
 +       ) : itemSuppliers &amp;&amp; itemSuppliers.length &gt; 0 ? (
-+         &lt;div className=&quot;bg-white rounded-lg shadow overflow-hidden&quot;&gt;
-+           &lt;table className=&quot;min-w-full divide-y divide-gray-200&quot;&gt;
-+             &lt;thead className=&quot;bg-gray-50&quot;&gt;
++         &lt;div className="bg-white rounded-lg shadow overflow-hidden"&gt;
++           &lt;table className="min-w-full divide-y divide-gray-200"&gt;
++             &lt;thead className="bg-gray-50"&gt;
 +               &lt;tr&gt;
-+                 &lt;th className=&quot;px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase&quot;&gt;
++                 &lt;th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase"&gt;
 +                   Szállító
 +                 &lt;/th&gt;
-+                 &lt;th className=&quot;px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase&quot;&gt;
++                 &lt;th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase"&gt;
 +                   Beszerzési ár
 +                 &lt;/th&gt;
-+                 &lt;th className=&quot;px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase&quot;&gt;
++                 &lt;th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase"&gt;
 +                   Min. mennyiség
 +                 &lt;/th&gt;
-+                 &lt;th className=&quot;px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase&quot;&gt;
++                 &lt;th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase"&gt;
 +                   Szállítási idő
 +                 &lt;/th&gt;
-+                 &lt;th className=&quot;px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase&quot;&gt;
++                 &lt;th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase"&gt;
 +                   Elsődleges
 +                 &lt;/th&gt;
-+                 &lt;th className=&quot;px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase&quot;&gt;
++                 &lt;th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase"&gt;
 +                   Műveletek
 +                 &lt;/th&gt;
 +               &lt;/tr&gt;
 +             &lt;/thead&gt;
-+             &lt;tbody className=&quot;bg-white divide-y divide-gray-200&quot;&gt;
++             &lt;tbody className="bg-white divide-y divide-gray-200"&gt;
 +               {itemSuppliers.map((itemSupplier: ItemSupplier) =&gt; (
 +                 &lt;tr
 +                   key={itemSupplier.id}
-+                   className={itemSupplier.isPrimary ? &#39;bg-blue-50&#39; : &#39;hover:bg-gray-50&#39;}
++                   className={itemSupplier.isPrimary ? 'bg-blue-50' : 'hover:bg-gray-50'}
 +                 &gt;
-+                   &lt;td className=&quot;px-4 py-3 text-sm font-medium text-gray-900&quot;&gt;
++                   &lt;td className="px-4 py-3 text-sm font-medium text-gray-900"&gt;
 +                     {itemSupplier.supplier?.nev}
 +                     {itemSupplier.isPrimary &amp;&amp; (
-+                       &lt;span className=&quot;ml-2 px-2 py-0.5 bg-green-100 text-green-800 text-xs rounded&quot;&gt;
++                       &lt;span className="ml-2 px-2 py-0.5 bg-green-100 text-green-800 text-xs rounded"&gt;
 +                         Elsődleges
 +                       &lt;/span&gt;
 +                     )}
 +                   &lt;/td&gt;
-+                   &lt;td className=&quot;px-4 py-3 text-sm text-right text-gray-900&quot;&gt;
++                   &lt;td className="px-4 py-3 text-sm text-right text-gray-900"&gt;
 +                     {itemSupplier.beszerzesiAr
-+                       ? &#96;${itemSupplier.beszerzesiAr.toLocaleString(&#39;hu-HU&#39;)} HUF&#96;
-+                       : &#39;-&#39;}
++                       ? &#96;${itemSupplier.beszerzesiAr.toLocaleString('hu-HU')} HUF&#96;
++                       : '-'}
 +                   &lt;/td&gt;
-+                   &lt;td className=&quot;px-4 py-3 text-sm text-right text-gray-500&quot;&gt;
-+                     {itemSupplier.minMennyiseg || &#39;-&#39;}
++                   &lt;td className="px-4 py-3 text-sm text-right text-gray-500"&gt;
++                     {itemSupplier.minMennyiseg || '-'}
 +                   &lt;/td&gt;
-+                   &lt;td className=&quot;px-4 py-3 text-sm text-right text-gray-500&quot;&gt;
-+                     {itemSupplier.szallitasiIdo ? &#96;${itemSupplier.szallitasiIdo} nap&#96; : &#39;-&#39;}
++                   &lt;td className="px-4 py-3 text-sm text-right text-gray-500"&gt;
++                     {itemSupplier.szallitasiIdo ? &#96;${itemSupplier.szallitasiIdo} nap&#96; : '-'}
 +                   &lt;/td&gt;
-+                   &lt;td className=&quot;px-4 py-3 text-center&quot;&gt;
++                   &lt;td className="px-4 py-3 text-center"&gt;
 +                     {itemSupplier.isPrimary ? (
-+                       &lt;span className=&quot;px-2 py-1 bg-green-100 text-green-800 text-xs rounded&quot;&gt;
++                       &lt;span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded"&gt;
 +                         ✓
 +                       &lt;/span&gt;
 +                     ) : (
 +                       &lt;button
 +                         onClick={() =&gt; handleSetPrimary(itemSupplier.supplierId)}
-+                         className=&quot;text-blue-600 hover:text-blue-900 text-sm&quot;
++                         className="text-blue-600 hover:text-blue-900 text-sm"
 +                       &gt;
 +                         Beállítás
 +                       &lt;/button&gt;
 +                     )}
 +                   &lt;/td&gt;
-+                   &lt;td className=&quot;px-4 py-3 text-center text-sm font-medium&quot;&gt;
++                   &lt;td className="px-4 py-3 text-center text-sm font-medium"&gt;
 +                     &lt;button
 +                       onClick={() =&gt; handleUnlink(itemSupplier.supplierId)}
-+                       className=&quot;text-red-600 hover:text-red-900&quot;
-+                       title=&quot;Eltávolítás&quot;
++                       className="text-red-600 hover:text-red-900"
++                       title="Eltávolítás"
 +                     &gt;
 +                       🗑
 +                     &lt;/button&gt;
@@ -5568,42 +5568,42 @@ Lines added: 370, lines removed: 1
 +           &lt;/table&gt;
 +         &lt;/div&gt;
 +       ) : (
-+         &lt;p className=&quot;text-gray-500 text-sm&quot;&gt;Nincs szállító kapcsolva ehhez az áruhoz.&lt;/p&gt;
++         &lt;p className="text-gray-500 text-sm"&gt;Nincs szállító kapcsolva ehhez az áruhoz.&lt;/p&gt;
 +       )}
 + 
 +       {/* Link Supplier Modal */}
 +       &lt;Modal
 +         isOpen={isLinkModalOpen}
 +         onClose={handleCloseLinkModal}
-+         title=&quot;Szállító hozzáadása&quot;
-+         size=&quot;md&quot;
++         title="Szállító hozzáadása"
++         size="md"
 +       &gt;
-+         &lt;form onSubmit={handleLinkSubmit} className=&quot;space-y-4&quot;&gt;
++         &lt;form onSubmit={handleLinkSubmit} className="space-y-4"&gt;
 +           {error &amp;&amp; (
-+             &lt;div className=&quot;bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded text-sm&quot;&gt;
++             &lt;div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded text-sm"&gt;
 +               {error}
 +             &lt;/div&gt;
 +           )}
 + 
 +           {success &amp;&amp; (
-+             &lt;div className=&quot;bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded text-sm&quot;&gt;
++             &lt;div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded text-sm"&gt;
 +               {success}
 +             &lt;/div&gt;
 +           )}
 + 
 +           &lt;div&gt;
-+             &lt;label className=&quot;block text-sm font-medium text-gray-700 mb-1&quot;&gt;
-+               Szállító &lt;span className=&quot;text-red-500&quot;&gt;*&lt;/span&gt;
++             &lt;label className="block text-sm font-medium text-gray-700 mb-1"&gt;
++               Szállító &lt;span className="text-red-500"&gt;*&lt;/span&gt;
 +             &lt;/label&gt;
 +             &lt;select
 +               value={linkFormData.supplierId}
 +               onChange={(e) =&gt;
 +                 setLinkFormData({ ...linkFormData, supplierId: e.target.value })
 +               }
-+               className=&quot;w-full px-3 py-2 border border-gray-300 rounded-lg&quot;
++               className="w-full px-3 py-2 border border-gray-300 rounded-lg"
 +               required
 +             &gt;
-+               &lt;option value=&quot;&quot;&gt;Válasszon szállítót&lt;/option&gt;
++               &lt;option value=""&gt;Válasszon szállítót&lt;/option&gt;
 +               {suppliersData?.items
 +                 ?.filter((s: any) =&gt; s.aktiv &amp;&amp; !linkedSupplierIds.includes(s.id))
 +                 .map((supplier: any) =&gt; (
@@ -5615,101 +5615,101 @@ Lines added: 370, lines removed: 1
 +           &lt;/div&gt;
 + 
 +           &lt;div&gt;
-+             &lt;label className=&quot;block text-sm font-medium text-gray-700 mb-1&quot;&gt;
++             &lt;label className="block text-sm font-medium text-gray-700 mb-1"&gt;
 +               Beszerzési ár (HUF)
 +             &lt;/label&gt;
 +             &lt;input
-+               type=&quot;number&quot;
-+               step=&quot;0.01&quot;
-+               min=&quot;0&quot;
-+               value={linkFormData.beszerzesiAr || &#39;&#39;}
++               type="number"
++               step="0.01"
++               min="0"
++               value={linkFormData.beszerzesiAr || ''}
 +               onChange={(e) =&gt;
 +                 setLinkFormData({
 +                   ...linkFormData,
 +                   beszerzesiAr: e.target.value ? parseFloat(e.target.value) : undefined,
 +                 })
 +               }
-+               className=&quot;w-full px-3 py-2 border border-gray-300 rounded-lg&quot;
++               className="w-full px-3 py-2 border border-gray-300 rounded-lg"
 +             /&gt;
 +           &lt;/div&gt;
 + 
 +           &lt;div&gt;
-+             &lt;label className=&quot;block text-sm font-medium text-gray-700 mb-1&quot;&gt;
++             &lt;label className="block text-sm font-medium text-gray-700 mb-1"&gt;
 +               Minimum rendelési mennyiség
 +             &lt;/label&gt;
 +             &lt;input
-+               type=&quot;number&quot;
-+               step=&quot;0.01&quot;
-+               min=&quot;0&quot;
-+               value={linkFormData.minMennyiseg || &#39;&#39;}
++               type="number"
++               step="0.01"
++               min="0"
++               value={linkFormData.minMennyiseg || ''}
 +               onChange={(e) =&gt;
 +                 setLinkFormData({
 +                   ...linkFormData,
 +                   minMennyiseg: e.target.value ? parseFloat(e.target.value) : undefined,
 +                 })
 +               }
-+               className=&quot;w-full px-3 py-2 border border-gray-300 rounded-lg&quot;
++               className="w-full px-3 py-2 border border-gray-300 rounded-lg"
 +             /&gt;
 +           &lt;/div&gt;
 + 
 +           &lt;div&gt;
-+             &lt;label className=&quot;block text-sm font-medium text-gray-700 mb-1&quot;&gt;
++             &lt;label className="block text-sm font-medium text-gray-700 mb-1"&gt;
 +               Szállítási idő (nap)
 +             &lt;/label&gt;
 +             &lt;input
-+               type=&quot;number&quot;
-+               min=&quot;0&quot;
-+               value={linkFormData.szallitasiIdo || &#39;&#39;}
++               type="number"
++               min="0"
++               value={linkFormData.szallitasiIdo || ''}
 +               onChange={(e) =&gt;
 +                 setLinkFormData({
 +                   ...linkFormData,
 +                   szallitasiIdo: e.target.value ? parseInt(e.target.value) : undefined,
 +                 })
 +               }
-+               className=&quot;w-full px-3 py-2 border border-gray-300 rounded-lg&quot;
++               className="w-full px-3 py-2 border border-gray-300 rounded-lg"
 +             /&gt;
 +           &lt;/div&gt;
 + 
 +           &lt;div&gt;
-+             &lt;label className=&quot;block text-sm font-medium text-gray-700 mb-1&quot;&gt;Megjegyzések&lt;/label&gt;
++             &lt;label className="block text-sm font-medium text-gray-700 mb-1"&gt;Megjegyzések&lt;/label&gt;
 +             &lt;textarea
 +               value={linkFormData.megjegyzesek}
 +               onChange={(e) =&gt;
 +                 setLinkFormData({ ...linkFormData, megjegyzesek: e.target.value })
 +               }
-+               className=&quot;w-full px-3 py-2 border border-gray-300 rounded-lg&quot;
++               className="w-full px-3 py-2 border border-gray-300 rounded-lg"
 +               rows={3}
 +             /&gt;
 +           &lt;/div&gt;
 + 
 +           &lt;div&gt;
-+             &lt;label className=&quot;flex items-center&quot;&gt;
++             &lt;label className="flex items-center"&gt;
 +               &lt;input
-+                 type=&quot;checkbox&quot;
++                 type="checkbox"
 +                 checked={linkFormData.isPrimary}
 +                 onChange={(e) =&gt;
 +                   setLinkFormData({ ...linkFormData, isPrimary: e.target.checked })
 +                 }
-+                 className=&quot;mr-2&quot;
++                 className="mr-2"
 +               /&gt;
-+               &lt;span className=&quot;text-sm font-medium text-gray-700&quot;&gt;Elsődleges szállító&lt;/span&gt;
++               &lt;span className="text-sm font-medium text-gray-700"&gt;Elsődleges szállító&lt;/span&gt;
 +             &lt;/label&gt;
 +           &lt;/div&gt;
 + 
-+           &lt;div className=&quot;flex justify-end gap-2 pt-4&quot;&gt;
++           &lt;div className="flex justify-end gap-2 pt-4"&gt;
 +             &lt;button
-+               type=&quot;button&quot;
++               type="button"
 +               onClick={handleCloseLinkModal}
-+               className=&quot;px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50&quot;
++               className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
 +             &gt;
 +               Mégse
 +             &lt;/button&gt;
 +             &lt;button
-+               type=&quot;submit&quot;
++               type="submit"
 +               disabled={saving}
-+               className=&quot;px-4 py-2 bg-mbit-blue text-white rounded-lg hover:bg-blue-700 disabled:opacity-50&quot;
++               className="px-4 py-2 bg-mbit-blue text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
 +             &gt;
-+               {saving ? &#39;Hozzáadás...&#39; : &#39;Hozzáadás&#39;}
++               {saving ? 'Hozzáadás...' : 'Hozzáadás'}
 +             &lt;/button&gt;
 +           &lt;/div&gt;
 +         &lt;/form&gt;
@@ -5781,16 +5781,16 @@ A Products.tsx frissítése a ProductSuppliers komponens hozzáadásával:
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Products.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Products.tsx</summary>
 
 **Chunk 1**
 Lines added: 1, lines removed: undefined
 
 ```diff
 @@ -2,4 +2,5 @@
-  import Modal from &#39;../components/Modal&#39;;
-  import { apiFetch } from &#39;../lib/api&#39;;
-+ import ProductSuppliers from &#39;../components/logistics/ProductSuppliers&#39;;
+  import Modal from '../components/Modal';
+  import { apiFetch } from '../lib/api';
++ import ProductSuppliers from '../components/logistics/ProductSuppliers';
   
   interface Warehouse {
 ```
@@ -5803,7 +5803,7 @@ Lines added: 1, lines removed: undefined
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Products.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Products.tsx</summary>
 
 **Chunk 1**
 Lines added: 7, lines removed: undefined
@@ -5815,12 +5815,12 @@ Lines added: 7, lines removed: undefined
 + 
 +           {/* Suppliers section - only show when editing existing product */}
 +           {editingProductId &amp;&amp; (
-+             &lt;div className=&quot;border-t pt-4 mt-4&quot;&gt;
++             &lt;div className="border-t pt-4 mt-4"&gt;
 +               &lt;ProductSuppliers itemId={editingProductId} /&gt;
 +             &lt;/div&gt;
 +           )}
   
-            &lt;div className=&quot;flex justify-end space-x-3 pt-4&quot;&gt;
+            &lt;div className="flex justify-end space-x-3 pt-4"&gt;
 ```
 
 </details>
@@ -5831,7 +5831,7 @@ Lines added: 7, lines removed: undefined
 
 <tool-use data-tool-type="write" data-tool-name="write">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/logistics/InventoryReportModal.tsx</summary>
+<details><summary>Tool use: **write** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/logistics/InventoryReportModal.tsx</summary>
 
 **Chunk 1**
 Lines added: 154, lines removed: 1
@@ -5839,12 +5839,12 @@ Lines added: 154, lines removed: 1
 ```diff
 @@ -1,1 +1,154 @@
 - 
-+ import { useState } from &#39;react&#39;;
-+ import Modal from &#39;../Modal&#39;;
-+ import { downloadInventoryReport, InventoryReportFilters } from &#39;../../lib/api/logistics&#39;;
-+ import { useQuery } from &#39;@tanstack/react-query&#39;;
-+ import axios from &#39;../../lib/axios&#39;;
-+ import { apiFetch } from &#39;../../lib/api&#39;;
++ import { useState } from 'react';
++ import Modal from '../Modal';
++ import { downloadInventoryReport, InventoryReportFilters } from '../../lib/api/logistics';
++ import { useQuery } from '@tanstack/react-query';
++ import axios from '../../lib/axios';
++ import { apiFetch } from '../../lib/api';
 + 
 + interface InventoryReportModalProps {
 +   isOpen: boolean;
@@ -5859,15 +5859,15 @@ Lines added: 154, lines removed: 1
 + }: InventoryReportModalProps) {
 +   const [filters, setFilters] = useState&lt;InventoryReportFilters&gt;({
 +     warehouseId: defaultWarehouseId,
-+     format: &#39;pdf&#39;,
++     format: 'pdf',
 +     lowStockOnly: false,
 +   });
 +   const [generating, setGenerating] = useState(false);
 + 
 +   const { data: warehousesData } = useQuery({
-+     queryKey: [&#39;warehouses&#39;],
++     queryKey: ['warehouses'],
 +     queryFn: async () =&gt; {
-+       const response = await apiFetch(&#39;/logistics/warehouses?skip=0&amp;take=100&#39;);
++       const response = await apiFetch('/logistics/warehouses?skip=0&amp;take=100');
 +       return response.json();
 +     },
 +   });
@@ -5881,24 +5881,24 @@ Lines added: 154, lines removed: 1
 +         onClose();
 +       }, 1000);
 +     } catch (error) {
-+       console.error(&#39;Hiba a riport generálása során:&#39;, error);
++       console.error('Hiba a riport generálása során:', error);
 +       setGenerating(false);
 +     }
 +   };
 + 
 +   return (
-+     &lt;Modal isOpen={isOpen} onClose={onClose} title=&quot;Leltárív nyomtatása&quot; size=&quot;md&quot;&gt;
-+       &lt;div className=&quot;space-y-4&quot;&gt;
++     &lt;Modal isOpen={isOpen} onClose={onClose} title="Leltárív nyomtatása" size="md"&gt;
++       &lt;div className="space-y-4"&gt;
 +         &lt;div&gt;
-+           &lt;label className=&quot;block text-sm font-medium text-gray-700 mb-1&quot;&gt;Raktár&lt;/label&gt;
++           &lt;label className="block text-sm font-medium text-gray-700 mb-1"&gt;Raktár&lt;/label&gt;
 +           &lt;select
-+             value={filters.warehouseId || &#39;&#39;}
++             value={filters.warehouseId || ''}
 +             onChange={(e) =&gt;
 +               setFilters({ ...filters, warehouseId: e.target.value || undefined })
 +             }
-+             className=&quot;w-full px-3 py-2 border border-gray-300 rounded-lg&quot;
++             className="w-full px-3 py-2 border border-gray-300 rounded-lg"
 +           &gt;
-+             &lt;option value=&quot;&quot;&gt;Összes raktár&lt;/option&gt;
++             &lt;option value=""&gt;Összes raktár&lt;/option&gt;
 +             {warehousesData?.data?.map((warehouse: any) =&gt; (
 +               &lt;option key={warehouse.id} value={warehouse.id}&gt;
 +                 {warehouse.nev}
@@ -5908,48 +5908,48 @@ Lines added: 154, lines removed: 1
 +         &lt;/div&gt;
 + 
 +         &lt;div&gt;
-+           &lt;label className=&quot;block text-sm font-medium text-gray-700 mb-1&quot;&gt;Dátum&lt;/label&gt;
++           &lt;label className="block text-sm font-medium text-gray-700 mb-1"&gt;Dátum&lt;/label&gt;
 +           &lt;input
-+             type=&quot;date&quot;
-+             value={filters.date || &#39;&#39;}
++             type="date"
++             value={filters.date || ''}
 +             onChange={(e) =&gt; setFilters({ ...filters, date: e.target.value || undefined })}
-+             className=&quot;w-full px-3 py-2 border border-gray-300 rounded-lg&quot;
++             className="w-full px-3 py-2 border border-gray-300 rounded-lg"
 +           /&gt;
 +         &lt;/div&gt;
 + 
 +         &lt;div&gt;
-+           &lt;label className=&quot;block text-sm font-medium text-gray-700 mb-3&quot;&gt;Formátum&lt;/label&gt;
-+           &lt;div className=&quot;space-y-2&quot;&gt;
-+             &lt;label className=&quot;flex items-center&quot;&gt;
++           &lt;label className="block text-sm font-medium text-gray-700 mb-3"&gt;Formátum&lt;/label&gt;
++           &lt;div className="space-y-2"&gt;
++             &lt;label className="flex items-center"&gt;
 +               &lt;input
-+                 type=&quot;radio&quot;
-+                 name=&quot;format&quot;
-+                 value=&quot;pdf&quot;
-+                 checked={filters.format === &#39;pdf&#39;}
-+                 onChange={(e) =&gt; setFilters({ ...filters, format: &#39;pdf&#39; })}
-+                 className=&quot;mr-2&quot;
++                 type="radio"
++                 name="format"
++                 value="pdf"
++                 checked={filters.format === 'pdf'}
++                 onChange={(e) =&gt; setFilters({ ...filters, format: 'pdf' })}
++                 className="mr-2"
 +               /&gt;
 +               &lt;span&gt;PDF&lt;/span&gt;
 +             &lt;/label&gt;
-+             &lt;label className=&quot;flex items-center&quot;&gt;
++             &lt;label className="flex items-center"&gt;
 +               &lt;input
-+                 type=&quot;radio&quot;
-+                 name=&quot;format&quot;
-+                 value=&quot;csv&quot;
-+                 checked={filters.format === &#39;csv&#39;}
-+                 onChange={(e) =&gt; setFilters({ ...filters, format: &#39;csv&#39; })}
-+                 className=&quot;mr-2&quot;
++                 type="radio"
++                 name="format"
++                 value="csv"
++                 checked={filters.format === 'csv'}
++                 onChange={(e) =&gt; setFilters({ ...filters, format: 'csv' })}
++                 className="mr-2"
 +               /&gt;
 +               &lt;span&gt;CSV&lt;/span&gt;
 +             &lt;/label&gt;
-+             &lt;label className=&quot;flex items-center&quot;&gt;
++             &lt;label className="flex items-center"&gt;
 +               &lt;input
-+                 type=&quot;radio&quot;
-+                 name=&quot;format&quot;
-+                 value=&quot;excel&quot;
-+                 checked={filters.format === &#39;excel&#39;}
-+                 onChange={(e) =&gt; setFilters({ ...filters, format: &#39;excel&#39; })}
-+                 className=&quot;mr-2&quot;
++                 type="radio"
++                 name="format"
++                 value="excel"
++                 checked={filters.format === 'excel'}
++                 onChange={(e) =&gt; setFilters({ ...filters, format: 'excel' })}
++                 className="mr-2"
 +               /&gt;
 +               &lt;span&gt;Excel&lt;/span&gt;
 +             &lt;/label&gt;
@@ -5957,35 +5957,35 @@ Lines added: 154, lines removed: 1
 +         &lt;/div&gt;
 + 
 +         &lt;div&gt;
-+           &lt;label className=&quot;flex items-center&quot;&gt;
++           &lt;label className="flex items-center"&gt;
 +             &lt;input
-+               type=&quot;checkbox&quot;
++               type="checkbox"
 +               checked={filters.lowStockOnly || false}
 +               onChange={(e) =&gt; setFilters({ ...filters, lowStockOnly: e.target.checked })}
-+               className=&quot;mr-2&quot;
++               className="mr-2"
 +             /&gt;
-+             &lt;span className=&quot;text-sm font-medium text-gray-700&quot;&gt;
++             &lt;span className="text-sm font-medium text-gray-700"&gt;
 +               Csak alacsony készletű tételek
 +             &lt;/span&gt;
 +           &lt;/label&gt;
 +         &lt;/div&gt;
 + 
-+         &lt;div className=&quot;flex justify-end gap-2 pt-4&quot;&gt;
++         &lt;div className="flex justify-end gap-2 pt-4"&gt;
 +           &lt;button
-+             type=&quot;button&quot;
++             type="button"
 +             onClick={onClose}
-+             className=&quot;px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50&quot;
++             className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
 +             disabled={generating}
 +           &gt;
 +             Mégse
 +           &lt;/button&gt;
 +           &lt;button
-+             type=&quot;button&quot;
++             type="button"
 +             onClick={handleGenerate}
 +             disabled={generating}
-+             className=&quot;px-4 py-2 bg-mbit-blue text-white rounded-lg hover:bg-blue-700 disabled:opacity-50&quot;
++             className="px-4 py-2 bg-mbit-blue text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
 +           &gt;
-+             {generating ? &#39;Generálás...&#39; : &#39;Riport generálása&#39;}
++             {generating ? 'Generálás...' : 'Riport generálása'}
 +           &lt;/button&gt;
 +         &lt;/div&gt;
 +       &lt;/div&gt;
@@ -6071,16 +6071,16 @@ A Warehouses.tsx frissítése a leltárív nyomtatás gombbal:
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Warehouses.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Warehouses.tsx</summary>
 
 **Chunk 1**
 Lines added: 1, lines removed: undefined
 
 ```diff
 @@ -2,4 +2,5 @@
-  import { useState, useEffect } from &#39;react&#39;;
-  import Modal from &#39;../components/Modal&#39;;
-+ import InventoryReportModal from &#39;../components/logistics/InventoryReportModal&#39;;
+  import { useState, useEffect } from 'react';
+  import Modal from '../components/Modal';
++ import InventoryReportModal from '../components/logistics/InventoryReportModal';
   
   interface Warehouse {
 ```
@@ -6093,14 +6093,14 @@ Lines added: 1, lines removed: undefined
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Warehouses.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Warehouses.tsx</summary>
 
 **Chunk 1**
 Lines added: 1, lines removed: undefined
 
 ```diff
 @@ -56,4 +56,5 @@
-    const [productSuccess, setProductSuccess] = useState&lt;string&gt;(&#39;&#39;);
+    const [productSuccess, setProductSuccess] = useState&lt;string&gt;('');
     const [items, setItems] = useState&lt;Item[]&gt;([]);
 +   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   
@@ -6115,7 +6115,7 @@ Lines added: 1, lines removed: undefined
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Warehouses.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Warehouses.tsx</summary>
 
 **Chunk 1**
 Lines added: 6, lines removed: undefined
@@ -6123,10 +6123,10 @@ Lines added: 6, lines removed: undefined
 ```diff
 @@ -520,4 +520,10 @@
               &lt;/h2&gt;
-              &lt;div className=&quot;flex gap-2&quot;&gt;
+              &lt;div className="flex gap-2"&gt;
 +               &lt;button
 +                 onClick={() =&gt; setIsReportModalOpen(true)}
-+                 className=&quot;bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 text-sm&quot;
++                 className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 text-sm"
 +               &gt;
 +                 📄 Leltárív nyomtatása
 +               &lt;/button&gt;
@@ -6142,7 +6142,7 @@ Lines added: 6, lines removed: undefined
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Warehouses.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Warehouses.tsx</summary>
 
 **Chunk 1**
 Lines added: 6, lines removed: undefined
@@ -6245,19 +6245,19 @@ Az App.tsx frissítése a Returns és Suppliers útvonalakkal, majd a Logistics.
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/App.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/App.tsx</summary>
 
 **Chunk 1**
 Lines added: 2, lines removed: undefined
 
 ```diff
 @@ -6,4 +6,6 @@
-  import Warehouses from &#39;./pages/Warehouses&#39;;
-  import Products from &#39;./pages/Products&#39;;
-+ import Returns from &#39;./pages/Returns&#39;;
-+ import Suppliers from &#39;./pages/Suppliers&#39;;
-  import Settings from &#39;./pages/Settings&#39;;
-  import Opportunities from &#39;./pages/Opportunities&#39;;
+  import Warehouses from './pages/Warehouses';
+  import Products from './pages/Products';
++ import Returns from './pages/Returns';
++ import Suppliers from './pages/Suppliers';
+  import Settings from './pages/Settings';
+  import Opportunities from './pages/Opportunities';
 ```
 
 </details>
@@ -6268,7 +6268,7 @@ Lines added: 2, lines removed: undefined
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/App.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/App.tsx</summary>
 
 **Chunk 1**
 Lines added: 3, lines removed: 1
@@ -6276,11 +6276,11 @@ Lines added: 3, lines removed: 1
 ```diff
 @@ -196,5 +196,7 @@
                     items={[
-                      { to: &#39;/warehouses&#39;, label: &#39;Raktárak&#39; },
--                     { to: &#39;/products&#39;, label: &#39;Termékek&#39; }
-+                     { to: &#39;/products&#39;, label: &#39;Termékek&#39; },
-+                     { to: &#39;/returns&#39;, label: &#39;Visszárúk&#39; },
-+                     { to: &#39;/suppliers&#39;, label: &#39;Szállítók&#39; }
+                      { to: '/warehouses', label: 'Raktárak' },
+-                     { to: '/products', label: 'Termékek' }
++                     { to: '/products', label: 'Termékek' },
++                     { to: '/returns', label: 'Visszárúk' },
++                     { to: '/suppliers', label: 'Szállítók' }
                     ]}
                   /&gt;
 ```
@@ -6293,18 +6293,18 @@ Lines added: 3, lines removed: 1
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/App.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/App.tsx</summary>
 
 **Chunk 1**
 Lines added: 2, lines removed: undefined
 
 ```diff
 @@ -242,4 +242,6 @@
-            &lt;Route path=&quot;/warehouses&quot; element={&lt;Warehouses /&gt;} /&gt;
-            &lt;Route path=&quot;/products&quot; element={&lt;Products /&gt;} /&gt;
-+           &lt;Route path=&quot;/returns&quot; element={&lt;Returns /&gt;} /&gt;
-+           &lt;Route path=&quot;/suppliers&quot; element={&lt;Suppliers /&gt;} /&gt;
-            &lt;Route path=&quot;/settings&quot; element={&lt;Settings /&gt;} /&gt;
+            &lt;Route path="/warehouses" element={&lt;Warehouses /&gt;} /&gt;
+            &lt;Route path="/products" element={&lt;Products /&gt;} /&gt;
++           &lt;Route path="/returns" element={&lt;Returns /&gt;} /&gt;
++           &lt;Route path="/suppliers" element={&lt;Suppliers /&gt;} /&gt;
+            &lt;Route path="/settings" element={&lt;Settings /&gt;} /&gt;
           &lt;/Routes&gt;
 ```
 
@@ -6409,7 +6409,7 @@ A useTaskNotification hook hozzáadása a team.ts-hez, majd a TaskModal.tsx fris
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/lib/api/team.ts</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/lib/api/team.ts</summary>
 
 **Chunk 1**
 Lines added: 11, lines removed: undefined
@@ -6423,7 +6423,7 @@ Lines added: 11, lines removed: undefined
 + export function useTaskNotification() {
 +   return useMutation({
 +     mutationFn: async ({ taskId, userId }: { taskId: string; userId?: string }) =&gt; {
-+       const params = userId ? &#96;?userId=${userId}&#96; : &#39;&#39;;
++       const params = userId ? &#96;?userId=${userId}&#96; : '';
 +       const response = await axios.get(&#96;/api/team/tasks/${taskId}/notify${params}&#96;);
 +       return response.data;
 +     },
@@ -6441,20 +6441,20 @@ Lines added: 11, lines removed: undefined
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskModal.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskModal.tsx</summary>
 
 **Chunk 1**
 Lines added: 2, lines removed: 2
 
 ```diff
 @@ -1,7 +1,7 @@
-  import { useState } from &#39;react&#39;;
-- import { useTask, useTaskComments, useCreateComment, useUpdateTask, useBoard, Task, TaskColumn } from &#39;../../lib/api/team&#39;;
-+ import { useTask, useTaskComments, useCreateComment, useUpdateTask, useBoard, useTaskNotification, Task, TaskColumn } from &#39;../../lib/api/team&#39;;
-  import { format } from &#39;date-fns&#39;;
-  import { hu } from &#39;date-fns/locale&#39;;
-- import { X, Calendar, User } from &#39;lucide-react&#39;;
-+ import { X, Calendar, User, Mail } from &#39;lucide-react&#39;;
+  import { useState } from 'react';
+- import { useTask, useTaskComments, useCreateComment, useUpdateTask, useBoard, Task, TaskColumn } from '../../lib/api/team';
++ import { useTask, useTaskComments, useCreateComment, useUpdateTask, useBoard, useTaskNotification, Task, TaskColumn } from '../../lib/api/team';
+  import { format } from 'date-fns';
+  import { hu } from 'date-fns/locale';
+- import { X, Calendar, User } from 'lucide-react';
++ import { X, Calendar, User, Mail } from 'lucide-react';
   
   interface TaskModalProps {
 ```
@@ -6467,7 +6467,7 @@ Lines added: 2, lines removed: 2
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskModal.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskModal.tsx</summary>
 
 **Chunk 1**
 Lines added: 3, lines removed: undefined
@@ -6477,9 +6477,9 @@ Lines added: 3, lines removed: undefined
     const createComment = useCreateComment();
     const updateTask = useUpdateTask();
 +   const taskNotification = useTaskNotification();
-    const [commentText, setCommentText] = useState(&#39;&#39;);
-+   const [notificationError, setNotificationError] = useState&lt;string&gt;(&#39;&#39;);
-+   const [notificationSuccess, setNotificationSuccess] = useState&lt;string&gt;(&#39;&#39;);
+    const [commentText, setCommentText] = useState('');
++   const [notificationError, setNotificationError] = useState&lt;string&gt;('');
++   const [notificationSuccess, setNotificationSuccess] = useState&lt;string&gt;('');
     
     // Load board to get available columns
 ```
@@ -6492,7 +6492,7 @@ Lines added: 3, lines removed: undefined
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskModal.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskModal.tsx</summary>
 
 **Chunk 1**
 Lines added: 27, lines removed: undefined
@@ -6504,12 +6504,12 @@ Lines added: 27, lines removed: undefined
 + 
 +   const handleSendNotification = async () =&gt; {
 +     if (!task?.assignedToId) {
-+       setNotificationError(&#39;Nincs hozzárendelt felhasználó a feladathoz&#39;);
++       setNotificationError('Nincs hozzárendelt felhasználó a feladathoz');
 +       return;
 +     }
 + 
-+     setNotificationError(&#39;&#39;);
-+     setNotificationSuccess(&#39;&#39;);
++     setNotificationError('');
++     setNotificationSuccess('');
 + 
 +     try {
 +       const result = await taskNotification.mutateAsync({
@@ -6520,12 +6520,12 @@ Lines added: 27, lines removed: undefined
 +       // Open mailto link
 +       window.location.href = result.mailtoUrl;
 +       
-+       setNotificationSuccess(&#39;Email kliens megnyitva!&#39;);
++       setNotificationSuccess('Email kliens megnyitva!');
 +       setTimeout(() =&gt; {
-+         setNotificationSuccess(&#39;&#39;);
++         setNotificationSuccess('');
 +       }, 3000);
 +     } catch (error: any) {
-+       setNotificationError(error.response?.data?.message || &#39;Hiba történt az értesítés küldése során&#39;);
++       setNotificationError(error.response?.data?.message || 'Hiba történt az értesítés küldése során');
 +     }
 +   };
   
@@ -6540,7 +6540,7 @@ Lines added: 27, lines removed: undefined
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskModal.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskModal.tsx</summary>
 
 **Chunk 1**
 Lines added: 19, lines removed: 6
@@ -6551,27 +6551,27 @@ Lines added: 19, lines removed: 6
             &lt;/div&gt;
 -           &lt;button
 -             onClick={onClose}
--             className=&quot;text-gray-400 hover:text-gray-600&quot;
+-             className="text-gray-400 hover:text-gray-600"
 -           &gt;
--             &lt;X className=&quot;w-6 h-6&quot; /&gt;
+-             &lt;X className="w-6 h-6" /&gt;
 -           &lt;/button&gt;
-+           &lt;div className=&quot;flex items-center gap-2&quot;&gt;
++           &lt;div className="flex items-center gap-2"&gt;
 +             {task.assignedToId &amp;&amp; (
 +               &lt;button
 +                 onClick={handleSendNotification}
 +                 disabled={taskNotification.isPending}
-+                 className=&quot;flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 text-sm&quot;
-+                 title=&quot;Email értesítés küldése&quot;
++                 className="flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 text-sm"
++                 title="Email értesítés küldése"
 +               &gt;
-+                 &lt;Mail className=&quot;w-4 h-4&quot; /&gt;
++                 &lt;Mail className="w-4 h-4" /&gt;
 +                 Értesítés küldése
 +               &lt;/button&gt;
 +             )}
 +             &lt;button
 +               onClick={onClose}
-+               className=&quot;text-gray-400 hover:text-gray-600&quot;
++               className="text-gray-400 hover:text-gray-600"
 +             &gt;
-+               &lt;X className=&quot;w-6 h-6&quot; /&gt;
++               &lt;X className="w-6 h-6" /&gt;
 +             &lt;/button&gt;
 +           &lt;/div&gt;
           &lt;/div&gt;
@@ -6586,7 +6586,7 @@ Lines added: 19, lines removed: 6
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskModal.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskModal.tsx</summary>
 
 **Chunk 1**
 Lines added: 12, lines removed: undefined
@@ -6594,15 +6594,15 @@ Lines added: 12, lines removed: undefined
 ```diff
 @@ -174,4 +174,16 @@
   
-          &lt;div className=&quot;p-6 space-y-6&quot;&gt;
+          &lt;div className="p-6 space-y-6"&gt;
 +           {notificationError &amp;&amp; (
-+             &lt;div className=&quot;bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded text-sm&quot;&gt;
++             &lt;div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded text-sm"&gt;
 +               {notificationError}
 +             &lt;/div&gt;
 +           )}
 + 
 +           {notificationSuccess &amp;&amp; (
-+             &lt;div className=&quot;bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded text-sm&quot;&gt;
++             &lt;div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded text-sm"&gt;
 +               {notificationSuccess}
 +             &lt;/div&gt;
 +           )}
@@ -6692,7 +6692,7 @@ A downloadInventoryReport függvény javítása, hogy helyesen működjön:
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/lib/api/logistics.ts</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/lib/api/logistics.ts</summary>
 
 **Chunk 1**
 Lines added: 1, lines removed: 1
@@ -6715,15 +6715,15 @@ Lines added: 24, lines removed: 7
     const url = &#96;/api/logistics/inventory/reports/print?${params.toString()}&#96;;
     
 -   // Create a temporary link and trigger download
--   const link = document.createElement(&#39;a&#39;);
+-   const link = document.createElement('a');
 -   link.href = url;
--   link.download = &#96;Leltariv_${new Date().toISOString().split(&#39;T&#39;)[0]}.${filters.format || &#39;pdf&#39;}&#96;;
+-   link.download = &#96;Leltariv_${new Date().toISOString().split('T')[0]}.${filters.format || 'pdf'}&#96;;
 -   document.body.appendChild(link);
 -   link.click();
 -   document.body.removeChild(link);
 +   try {
 +     const response = await axios.get(url, {
-+       responseType: &#39;blob&#39;,
++       responseType: 'blob',
 +     });
 + 
 +     // Create blob URL
@@ -6731,10 +6731,10 @@ Lines added: 24, lines removed: 7
 +     const blobUrl = window.URL.createObjectURL(blob);
 +     
 +     // Create a temporary link and trigger download
-+     const link = document.createElement(&#39;a&#39;);
++     const link = document.createElement('a');
 +     link.href = blobUrl;
-+     const extension = filters.format || &#39;pdf&#39;;
-+     link.download = &#96;Leltariv_${new Date().toISOString().split(&#39;T&#39;)[0]}.${extension}&#96;;
++     const extension = filters.format || 'pdf';
++     link.download = &#96;Leltariv_${new Date().toISOString().split('T')[0]}.${extension}&#96;;
 +     document.body.appendChild(link);
 +     link.click();
 +     document.body.removeChild(link);
@@ -6742,7 +6742,7 @@ Lines added: 24, lines removed: 7
 +     // Clean up blob URL
 +     window.URL.revokeObjectURL(blobUrl);
 +   } catch (error) {
-+     console.error(&#39;Hiba a riport letöltése során:&#39;, error);
++     console.error('Hiba a riport letöltése során:', error);
 +     throw error;
 +   }
   }
@@ -6869,7 +6869,7 @@ Prisma migráció futtatása, majd a backend függőségek ellenőrzése.
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp/apps/server && npx prisma migrate dev --name add_returns_and_item_suppliers</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp/apps/server && npx prisma migrate dev --name add_returns_and_item_suppliers</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp/apps/server && npx prisma migrate dev --name add_returns_and_item_suppliers
@@ -6877,15 +6877,15 @@ cd /Users/liviuszberger/mbit-erp/apps/server && npx prisma migrate dev --name ad
 
 ```
 Prisma schema loaded from prisma/schema.prisma
-Datasource &quot;db&quot;: SQLite database
+Datasource "db": SQLite database
 
 Error: Prisma schema validation - (get-config wasm)
 Error code: P1012
 error: Environment variable not found: DATABASE_URL.
   --&gt;  prisma/schema.prisma:7
    | 
- 6 |   provider = &quot;sqlite&quot;
- 7 |   url      = env(&quot;DATABASE_URL&quot;)
+ 6 |   provider = "sqlite"
+ 7 |   url      = env("DATABASE_URL")
    | 
 
 Validation Error Count: 1
@@ -6930,7 +6930,7 @@ Directory: **/Users/liviuszberger/mbit-erp/apps/server** (0 file)
 
 <tool-use data-tool-type="generic" data-tool-name="list_dir">
 <details>
-            <summary>Tool use: **list_directory** • Listed directory undefined • **0** results</summary>
+            <summary>Tool use: **list_dir** • Listed directory undefined • **0** results</summary>
         
 No results found
 </details>
@@ -6949,7 +6949,7 @@ A DATABASE_URL hiányzik. A meglévő adatbázis alapján beállítjuk és futta
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp/apps/server && export DATABASE_URL="file:./prisma/prisma/dev.db" && npx prisma migrate dev --name add_returns_and_item_suppliers</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp/apps/server && export DATABASE_URL="file:./prisma/prisma/dev.db" && npx prisma migrate dev --name add_returns_and_item_suppliers</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp/apps/server && export DATABASE_URL="file:./prisma/prisma/dev.db" && npx prisma migrate dev --name add_returns_and_item_suppliers
@@ -6957,7 +6957,7 @@ cd /Users/liviuszberger/mbit-erp/apps/server && export DATABASE_URL="file:./pris
 
 ```
 Prisma schema loaded from prisma/schema.prisma
-Datasource &quot;db&quot;: SQLite database &quot;dev.db&quot; at &quot;file:./prisma/prisma/dev.db&quot;
+Datasource "db": SQLite database "dev.db" at "file:./prisma/prisma/dev.db"
 
 SQLite database dev.db created at file:./prisma/prisma/dev.db
 
@@ -7026,7 +7026,7 @@ A migráció sikeresen lefutott. A backend függőségek ellenőrzése:
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp/apps/server && npm list pdfkit exceljs @types/pdfkit 2>&1 | head -20</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp/apps/server && npm list pdfkit exceljs @types/pdfkit 2>&1 | head -20</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp/apps/server && npm list pdfkit exceljs @types/pdfkit 2>&1 | head -20
@@ -7073,7 +7073,7 @@ A szükséges függőségek telepítve vannak. Az importok ellenőrzése az inve
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp/apps/server && npm run build 2>&1 | head -50</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp/apps/server && npm run build 2>&1 | head -50</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp/apps/server && npm run build 2>&1 | head -50
@@ -7084,22 +7084,22 @@ cd /Users/liviuszberger/mbit-erp/apps/server && npm run build 2>&1 | head -50
 &gt; @mbit-erp/server@1.0.0 build
 &gt; nest build
 
-[96msrc/logistics/inventory-report.service.ts[0m:[93m28[0m:[93m18[0m - [91merror[0m[90m TS2339: [0mProperty &#39;itemId&#39; does not exist on type &#39;InventoryReportFilters&#39;.
+[96msrc/logistics/inventory-report.service.ts[0m:[93m28[0m:[93m18[0m - [91merror[0m[90m TS2339: [0mProperty 'itemId' does not exist on type 'InventoryReportFilters'.
 
 [7m28[0m     if (filters?.itemId) {
 [7m  [0m [91m                 ~~~~~~[0m
-[96msrc/logistics/inventory-report.service.ts[0m:[93m29[0m:[93m37[0m - [91merror[0m[90m TS2339: [0mProperty &#39;itemId&#39; does not exist on type &#39;InventoryReportFilters&#39;.
+[96msrc/logistics/inventory-report.service.ts[0m:[93m29[0m:[93m37[0m - [91merror[0m[90m TS2339: [0mProperty 'itemId' does not exist on type 'InventoryReportFilters'.
 
 [7m29[0m       stockFilters.itemId = filters.itemId;
 [7m  [0m [91m                                    ~~~~~~[0m
-[96msrc/logistics/inventory-report.service.ts[0m:[93m229[0m:[93m12[0m - [91merror[0m[90m TS2352: [0mConversion of type &#39;Buffer&#39; to type &#39;Buffer&lt;ArrayBufferLike&gt;&#39; may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to &#39;unknown&#39; first.
-  Type &#39;Buffer&#39; is missing the following properties from type &#39;Buffer&lt;ArrayBufferLike&gt;&#39;: subarray, write, toJSON, equals, and 94 more.
+[96msrc/logistics/inventory-report.service.ts[0m:[93m229[0m:[93m12[0m - [91merror[0m[90m TS2352: [0mConversion of type 'Buffer' to type 'Buffer&lt;ArrayBufferLike&gt;' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Type 'Buffer' is missing the following properties from type 'Buffer&lt;ArrayBufferLike&gt;': subarray, write, toJSON, equals, and 94 more.
 
 [7m229[0m     return (await workbook.xlsx.writeBuffer()) as Buffer;
 [7m   [0m [91m           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
-[96msrc/team/task/task-notification.service.ts[0m:[93m2[0m:[93m31[0m - [91merror[0m[90m TS2307: [0mCannot find module &#39;../../../prisma/prisma.service&#39; or its corresponding type declarations.
+[96msrc/team/task/task-notification.service.ts[0m:[93m2[0m:[93m31[0m - [91merror[0m[90m TS2307: [0mCannot find module '../../../prisma/prisma.service' or its corresponding type declarations.
 
-[7m2[0m import { PrismaService } from &#39;../../../prisma/prisma.service&#39;;
+[7m2[0m import { PrismaService } from '../../../prisma/prisma.service';
 [7m [0m [91m                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
 
 Found 4 error(s).
@@ -7130,7 +7130,7 @@ TypeScript hibák javítása:
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/logistics/inventory-report.service.ts</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/logistics/inventory-report.service.ts</summary>
 
 **Chunk 1**
 Lines added: 1, lines removed: undefined
@@ -7152,7 +7152,7 @@ Lines added: 1, lines removed: undefined
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/logistics/inventory-report.service.ts</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/logistics/inventory-report.service.ts</summary>
 
 **Chunk 1**
 Lines added: 2, lines removed: 1
@@ -7176,16 +7176,16 @@ Lines added: 2, lines removed: 1
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/team/task/task-notification.service.ts</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/team/task/task-notification.service.ts</summary>
 
 **Chunk 1**
 Lines added: 1, lines removed: 1
 
 ```diff
 @@ -1,4 +1,4 @@
-  import { Injectable, NotFoundException } from &#39;@nestjs/common&#39;;
-- import { PrismaService } from &#39;../../../prisma/prisma.service&#39;;
-+ import { PrismaService } from &#39;../../prisma/prisma.service&#39;;
+  import { Injectable, NotFoundException } from '@nestjs/common';
+- import { PrismaService } from '../../../prisma/prisma.service';
++ import { PrismaService } from '../../prisma/prisma.service';
   
   @Injectable()
 ```
@@ -7197,7 +7197,7 @@ Lines added: 1, lines removed: 1
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp/apps/server && npm run build 2>&1 | tail -30</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp/apps/server && npm run build 2>&1 | tail -30</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp/apps/server && npm run build 2>&1 | tail -30
@@ -7312,7 +7312,7 @@ Git státusz és CI workflow ellenőrzése, majd commit és push.
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git status</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && git status</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp && git status
@@ -7320,12 +7320,12 @@ cd /Users/liviuszberger/mbit-erp && git status
 
 ```
 On branch main
-Your branch is up to date with &#39;origin/main&#39;.
+Your branch is up to date with 'origin/main'.
 
 Changes not staged for commit:
-  (use &quot;git add &lt;file&gt;...&quot; to update what will be committed)
-  (use &quot;git restore &lt;file&gt;...&quot; to discard changes in working directory)
-	modified:   &quot;.specstory/history/2025-11-16_13-58Z-csapat-kommunik\303\241ci\303\263s-modul-fejleszt\303\251se.md&quot;
+  (use "git add &lt;file&gt;..." to update what will be committed)
+  (use "git restore &lt;file&gt;..." to discard changes in working directory)
+	modified:   ".specstory/history/2025-11-16_13-58Z-csapat-kommunik\303\241ci\303\263s-modul-fejleszt\303\251se.md"
 	modified:   apps/server/package.json
 	modified:   apps/server/prisma/prisma/dev.db
 	modified:   apps/server/prisma/schema.prisma
@@ -7343,9 +7343,9 @@ Changes not staged for commit:
 	modified:   package-lock.json
 
 Untracked files:
-  (use &quot;git add &lt;file&gt;...&quot; to include in what will be committed)
+  (use "git add &lt;file&gt;..." to include in what will be committed)
 	.specstory/history/2025-11-17_14-55Z-run-build-for-aws-s3-upload.md
-	&quot;.specstory/history/2025-11-19_10-57Z-fejleszt\303\251si-terv-a-k\303\251szletnyilv\303\241ntart\303\241s-funkci\303\263khoz.md&quot;
+	".specstory/history/2025-11-19_10-57Z-fejleszt\303\251si-terv-a-k\303\251szletnyilv\303\241ntart\303\241s-funkci\303\263khoz.md"
 	apps/server/prisma/migrations/
 	apps/server/prisma/prisma/prisma/
 	apps/server/src/logistics/dto/
@@ -7361,7 +7361,7 @@ Untracked files:
 	apps/web/src/pages/Returns.tsx
 	apps/web/src/pages/Suppliers.tsx
 
-no changes added to commit (use &quot;git add&quot; and/or &quot;git commit -a&quot;)
+no changes added to commit (use "git add" and/or "git commit -a")
 
 ```
 </details>
@@ -7411,7 +7411,7 @@ CI workflow fájl ellenőrzése, majd a változások commitolása:
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git check-ignore apps/server/prisma/prisma/dev.db</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && git check-ignore apps/server/prisma/prisma/dev.db</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp && git check-ignore apps/server/prisma/prisma/dev.db
@@ -7422,7 +7422,7 @@ cd /Users/liviuszberger/mbit-erp && git check-ignore apps/server/prisma/prisma/d
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && ls -la apps/server/prisma/prisma/prisma/ 2>&1 | head -10</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && ls -la apps/server/prisma/prisma/prisma/ 2>&1 | head -10</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp && ls -la apps/server/prisma/prisma/prisma/ 2>&1 | head -10
@@ -7451,7 +7451,7 @@ A CI workflow rendben van. A dev.db fájlok a .gitignore-ban vannak, így nem ke
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git add apps/server/prisma/schema.prisma apps/server/prisma/migrations/ apps/server/src/ apps/web/src/ apps/server/package.json package-lock.json</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && git add apps/server/prisma/schema.prisma apps/server/prisma/migrations/ apps/server/src/ apps/web/src/ apps/server/package.json package-lock.json</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp && git add apps/server/prisma/schema.prisma apps/server/prisma/migrations/ apps/server/src/ apps/web/src/ apps/server/package.json package-lock.json
@@ -7462,14 +7462,14 @@ cd /Users/liviuszberger/mbit-erp && git add apps/server/prisma/schema.prisma app
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git status --short | head -30</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && git status --short | head -30</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp && git status --short | head -30
 ```
 
 ```
- M &quot;.specstory/history/2025-11-16_13-58Z-csapat-kommunik\303\241ci\303\263s-modul-fejleszt\303\251se.md&quot;
+ M ".specstory/history/2025-11-16_13-58Z-csapat-kommunik\303\241ci\303\263s-modul-fejleszt\303\251se.md"
 M  apps/server/package.json
 A  apps/server/prisma/migrations/20251119113559_add_returns_and_item_suppliers/migration.sql
 A  apps/server/prisma/migrations/migration_lock.toml
@@ -7507,7 +7507,7 @@ M  apps/web/src/components/team/TaskModal.tsx
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git commit -m "feat: Készletnyilvántartás és logisztika modul bővítése
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && git commit -m "feat: Készletnyilvántartás és logisztika modul bővítése
 
 - Visszárú kezelés: CRUD műveletek, jóváhagyási workflow, készlet visszaírás
 - Szállítók kezelése: CRUD műveletek, áru-szállító kapcsolatok, elsődleges szállító logika
@@ -7563,7 +7563,7 @@ cd /Users/liviuszberger/mbit-erp && git commit -m "feat: Készletnyilvántartás
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git push origin main</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && git push origin main</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp && git push origin main
@@ -7590,7 +7590,7 @@ A dev.db fájl még stagingben van. Eltávolítjuk a stagingből, mert a .gitign
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git reset HEAD apps/server/prisma/prisma/dev.db 2>&1</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && git reset HEAD apps/server/prisma/prisma/dev.db 2>&1</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp && git reset HEAD apps/server/prisma/prisma/dev.db 2>&1
@@ -7608,7 +7608,7 @@ M	apps/server/prisma/prisma/dev.db
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git status --short | grep -i "dev.db" || echo "Nincs dev.db fájl a staging area-ban"</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && git status --short | grep -i "dev.db" || echo "Nincs dev.db fájl a staging area-ban"</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp && git status --short | grep -i "dev.db" || echo "Nincs dev.db fájl a staging area-ban"
@@ -7624,7 +7624,7 @@ cd /Users/liviuszberger/mbit-erp && git status --short | grep -i "dev.db" || ech
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git log --oneline -1</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && git log --oneline -1</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp && git log --oneline -1
@@ -7650,7 +7650,7 @@ A dev.db fájl még stagingben van. Ellenőrzöm, hogy belekerült-e a commitba:
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git show --name-only --pretty=format: HEAD | grep -i "dev.db" || echo "A dev.db NEM került bele a commitba"</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && git show --name-only --pretty=format: HEAD | grep -i "dev.db" || echo "A dev.db NEM került bele a commitba"</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp && git show --name-only --pretty=format: HEAD | grep -i "dev.db" || echo "A dev.db NEM került bele a commitba"
@@ -7666,7 +7666,7 @@ A dev.db NEM került bele a commitba
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git ls-files | grep -i "dev.db" || echo "A dev.db NEM van tracked fájlként"</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && git ls-files | grep -i "dev.db" || echo "A dev.db NEM van tracked fájlként"</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp && git ls-files | grep -i "dev.db" || echo "A dev.db NEM van tracked fájlként"
@@ -7971,17 +7971,17 @@ TypeScript hibák javítása: eltávolítjuk a nem használt importokat és vál
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/logistics/InventoryReportModal.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/logistics/InventoryReportModal.tsx</summary>
 
 **Chunk 1**
 Lines added: undefined, lines removed: 1
 
 ```diff
 @@ -3,5 +3,4 @@
-  import { downloadInventoryReport, InventoryReportFilters } from &#39;../../lib/api/logistics&#39;;
-  import { useQuery } from &#39;@tanstack/react-query&#39;;
-- import axios from &#39;../../lib/axios&#39;;
-  import { apiFetch } from &#39;../../lib/api&#39;;
+  import { downloadInventoryReport, InventoryReportFilters } from '../../lib/api/logistics';
+  import { useQuery } from '@tanstack/react-query';
+- import axios from '../../lib/axios';
+  import { apiFetch } from '../../lib/api';
   
 ```
 
@@ -7993,18 +7993,18 @@ Lines added: undefined, lines removed: 1
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/logistics/InventoryReportModal.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/logistics/InventoryReportModal.tsx</summary>
 
 **Chunk 1**
 Lines added: 1, lines removed: 1
 
 ```diff
 @@ -85,5 +85,5 @@
-                  value=&quot;pdf&quot;
-                  checked={filters.format === &#39;pdf&#39;}
--                 onChange={(e) =&gt; setFilters({ ...filters, format: &#39;pdf&#39; })}
-+                 onChange={() =&gt; setFilters({ ...filters, format: &#39;pdf&#39; })}
-                  className=&quot;mr-2&quot;
+                  value="pdf"
+                  checked={filters.format === 'pdf'}
+-                 onChange={(e) =&gt; setFilters({ ...filters, format: 'pdf' })}
++                 onChange={() =&gt; setFilters({ ...filters, format: 'pdf' })}
+                  className="mr-2"
                 /&gt;
 ```
 
@@ -8013,11 +8013,11 @@ Lines added: 1, lines removed: 1
 
 ```diff
 @@ -96,5 +96,5 @@
-                  value=&quot;csv&quot;
-                  checked={filters.format === &#39;csv&#39;}
--                 onChange={(e) =&gt; setFilters({ ...filters, format: &#39;csv&#39; })}
-+                 onChange={() =&gt; setFilters({ ...filters, format: &#39;csv&#39; })}
-                  className=&quot;mr-2&quot;
+                  value="csv"
+                  checked={filters.format === 'csv'}
+-                 onChange={(e) =&gt; setFilters({ ...filters, format: 'csv' })}
++                 onChange={() =&gt; setFilters({ ...filters, format: 'csv' })}
+                  className="mr-2"
                 /&gt;
 ```
 
@@ -8026,11 +8026,11 @@ Lines added: 1, lines removed: 1
 
 ```diff
 @@ -107,5 +107,5 @@
-                  value=&quot;excel&quot;
-                  checked={filters.format === &#39;excel&#39;}
--                 onChange={(e) =&gt; setFilters({ ...filters, format: &#39;excel&#39; })}
-+                 onChange={() =&gt; setFilters({ ...filters, format: &#39;excel&#39; })}
-                  className=&quot;mr-2&quot;
+                  value="excel"
+                  checked={filters.format === 'excel'}
+-                 onChange={(e) =&gt; setFilters({ ...filters, format: 'excel' })}
++                 onChange={() =&gt; setFilters({ ...filters, format: 'excel' })}
+                  className="mr-2"
                 /&gt;
 ```
 
@@ -8042,16 +8042,16 @@ Lines added: 1, lines removed: 1
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Returns.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Returns.tsx</summary>
 
 **Chunk 1**
 Lines added: 1, lines removed: 1
 
 ```diff
 @@ -1,3 +1,3 @@
-- import { useState, useEffect } from &#39;react&#39;;
-+ import { useState } from &#39;react&#39;;
-  import Modal from &#39;../components/Modal&#39;;
+- import { useState, useEffect } from 'react';
++ import { useState } from 'react';
+  import Modal from '../components/Modal';
   import {
 ```
 
@@ -8063,7 +8063,7 @@ Lines added: 1, lines removed: 1
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Suppliers.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Suppliers.tsx</summary>
 
 **Chunk 1**
 Lines added: undefined, lines removed: 1
@@ -8085,9 +8085,9 @@ Lines added: undefined, lines removed: 3
     Supplier,
     CreateSupplierDto,
 -   UpdateSupplierDto,
-  } from &#39;../lib/api/logistics&#39;;
-- import { useQuery } from &#39;@tanstack/react-query&#39;;
-- import axios from &#39;../lib/axios&#39;;
+  } from '../lib/api/logistics';
+- import { useQuery } from '@tanstack/react-query';
+- import axios from '../lib/axios';
   
   export default function Suppliers() {
 ```
@@ -8099,7 +8099,7 @@ Lines added: undefined, lines removed: 3
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp/apps/web && npm run build 2>&1 | tail -30</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp/apps/web && npm run build 2>&1 | tail -30</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp/apps/web && npm run build 2>&1 | tail -30
@@ -8154,7 +8154,7 @@ A build sikeres. Commitolom és pusholom a javításokat:
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git add apps/web/src/components/logistics/InventoryReportModal.tsx apps/web/src/pages/Returns.tsx apps/web/src/pages/Suppliers.tsx</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && git add apps/web/src/components/logistics/InventoryReportModal.tsx apps/web/src/pages/Returns.tsx apps/web/src/pages/Suppliers.tsx</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp && git add apps/web/src/components/logistics/InventoryReportModal.tsx apps/web/src/pages/Returns.tsx apps/web/src/pages/Suppliers.tsx
@@ -8165,7 +8165,7 @@ cd /Users/liviuszberger/mbit-erp && git add apps/web/src/components/logistics/In
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git commit -m "fix: TypeScript build hibák javítása - nem használt importok eltávolítása"</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && git commit -m "fix: TypeScript build hibák javítása - nem használt importok eltávolítása"</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp && git commit -m "fix: TypeScript build hibák javítása - nem használt importok eltávolítása"
@@ -8182,7 +8182,7 @@ cd /Users/liviuszberger/mbit-erp && git commit -m "fix: TypeScript build hibák 
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git push origin main</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && git push origin main</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp && git push origin main
@@ -8442,7 +8442,7 @@ A ProductSuppliers modal form submit eseménye propagálódik a szülő formhoz,
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/logistics/ProductSuppliers.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/logistics/ProductSuppliers.tsx</summary>
 
 **Chunk 1**
 Lines added: 1, lines removed: undefined
@@ -8453,7 +8453,7 @@ Lines added: 1, lines removed: undefined
       e.preventDefault();
 +     e.stopPropagation(); // Prevent event bubbling to parent form
       setSaving(true);
-      setError(&#39;&#39;);
+      setError('');
 ```
 
 </details>
@@ -8464,19 +8464,19 @@ Lines added: 1, lines removed: undefined
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/logistics/ProductSuppliers.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/logistics/ProductSuppliers.tsx</summary>
 
 **Chunk 1**
 Lines added: 1, lines removed: 1
 
 ```diff
 @@ -230,5 +230,5 @@
-          size=&quot;md&quot;
+          size="md"
         &gt;
--         &lt;form onSubmit={handleLinkSubmit} className=&quot;space-y-4&quot;&gt;
-+         &lt;form onSubmit={handleLinkSubmit} onClick={(e) =&gt; e.stopPropagation()} className=&quot;space-y-4&quot;&gt;
+-         &lt;form onSubmit={handleLinkSubmit} className="space-y-4"&gt;
++         &lt;form onSubmit={handleLinkSubmit} onClick={(e) =&gt; e.stopPropagation()} className="space-y-4"&gt;
             {error &amp;&amp; (
-              &lt;div className=&quot;bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded text-sm&quot;&gt;
+              &lt;div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded text-sm"&gt;
 ```
 
 </details>
@@ -8505,7 +8505,7 @@ A Dashboard frissítése az új funkciókkal, majd az alkalmazás áttekintése:
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Dashboard.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Dashboard.tsx</summary>
 
 **Chunk 1**
 Lines added: 4, lines removed: 1
@@ -8531,7 +8531,7 @@ Lines added: 4, lines removed: 1
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Dashboard.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Dashboard.tsx</summary>
 
 **Chunk 1**
 Lines added: 1, lines removed: 1
@@ -8540,10 +8540,10 @@ Lines added: 1, lines removed: 1
 @@ -68,5 +68,5 @@
             Ez a modular vállalati alkalmazás CRM, DMS és logisztikai funkciókkal rendelkezik.
           &lt;/p&gt;
--         &lt;div className=&quot;grid grid-cols-1 md:grid-cols-3 gap-4&quot;&gt;
-+         &lt;div className=&quot;grid grid-cols-1 md:grid-cols-3 gap-4 mb-6&quot;&gt;
-            &lt;div className=&quot;border-l-4 border-mbit-blue pl-4&quot;&gt;
-              &lt;h3 className=&quot;font-bold mb-2&quot;&gt;CRM Modul&lt;/h3&gt;
+-         &lt;div className="grid grid-cols-1 md:grid-cols-3 gap-4"&gt;
++         &lt;div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6"&gt;
+            &lt;div className="border-l-4 border-mbit-blue pl-4"&gt;
+              &lt;h3 className="font-bold mb-2"&gt;CRM Modul&lt;/h3&gt;
 ```
 
 **Chunk 2**
@@ -8553,10 +8553,10 @@ Lines added: 11, lines removed: undefined
 @@ -100,4 +100,15 @@
             &lt;/div&gt;
           &lt;/div&gt;
-+         &lt;div className=&quot;grid grid-cols-1 md:grid-cols-2 gap-4&quot;&gt;
-+           &lt;div className=&quot;border-l-4 border-orange-500 pl-4&quot;&gt;
-+             &lt;h3 className=&quot;font-bold mb-2&quot;&gt;Csapat kommunikáció&lt;/h3&gt;
-+             &lt;ul className=&quot;text-sm text-gray-600 space-y-1&quot;&gt;
++         &lt;div className="grid grid-cols-1 md:grid-cols-2 gap-4"&gt;
++           &lt;div className="border-l-4 border-orange-500 pl-4"&gt;
++             &lt;h3 className="font-bold mb-2"&gt;Csapat kommunikáció&lt;/h3&gt;
++             &lt;ul className="text-sm text-gray-600 space-y-1"&gt;
 +               &lt;li&gt;• Kanban board-ok&lt;/li&gt;
 +               &lt;li&gt;• Feladatkezelés&lt;/li&gt;
 +               &lt;li&gt;• Email értesítések&lt;/li&gt;
@@ -8637,7 +8637,7 @@ Lines added: 11, lines removed: undefined
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Products.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Products.tsx</summary>
 
 **Chunk 1**
 Lines added: 1, lines removed: 1
@@ -8646,8 +8646,8 @@ Lines added: 1, lines removed: 1
 @@ -675,5 +675,5 @@
             {/* Suppliers section - only show when editing existing product */}
             {editingProductId &amp;&amp; (
--             &lt;div className=&quot;border-t pt-4 mt-4&quot;&gt;
-+             &lt;div className=&quot;border-t pt-4 mt-4&quot; onClick={(e) =&gt; e.stopPropagation()}&gt;
+-             &lt;div className="border-t pt-4 mt-4"&gt;
++             &lt;div className="border-t pt-4 mt-4" onClick={(e) =&gt; e.stopPropagation()}&gt;
                 &lt;ProductSuppliers itemId={editingProductId} /&gt;
               &lt;/div&gt;
 ```
@@ -8804,7 +8804,7 @@ A Dashboard frissítése az új statisztikákkal, majd a hiányzó funkciók imp
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Dashboard.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Dashboard.tsx</summary>
 
 **Chunk 1**
 Lines added: 5, lines removed: 1
@@ -8815,11 +8815,11 @@ Lines added: 5, lines removed: 1
         try {
 -         const [accounts, items, documents] = await Promise.all([
 +         const [accounts, items, documents, returns, suppliers] = await Promise.all([
-            axios.get(&#39;/api/crm/accounts?take=1&#39;).catch(() =&gt; ({ data: { total: 0 } })),
-            axios.get(&#39;/api/logistics/items?take=1&#39;).catch(() =&gt; ({ data: { total: 0 } })),
-            axios.get(&#39;/api/dms/documents?take=1&#39;).catch(() =&gt; ({ data: { total: 0 } })),
-+           axios.get(&#39;/api/logistics/returns?take=1&#39;).catch(() =&gt; ({ data: { total: 0 } })),
-+           axios.get(&#39;/api/logistics/suppliers?take=1&#39;).catch(() =&gt; ({ data: { total: 0 } })),
+            axios.get('/api/crm/accounts?take=1').catch(() =&gt; ({ data: { total: 0 } })),
+            axios.get('/api/logistics/items?take=1').catch(() =&gt; ({ data: { total: 0 } })),
+            axios.get('/api/dms/documents?take=1').catch(() =&gt; ({ data: { total: 0 } })),
++           axios.get('/api/logistics/returns?take=1').catch(() =&gt; ({ data: { total: 0 } })),
++           axios.get('/api/logistics/suppliers?take=1').catch(() =&gt; ({ data: { total: 0 } })),
           ]);
           return {
             accounts: accounts.data?.total || 0,
@@ -8852,7 +8852,7 @@ Lines added: 2, lines removed: undefined
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Dashboard.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Dashboard.tsx</summary>
 
 **Chunk 1**
 Lines added: 1, lines removed: 1
@@ -8861,10 +8861,10 @@ Lines added: 1, lines removed: 1
 @@ -54,5 +54,5 @@
         )}
         
--       &lt;div className=&quot;grid grid-cols-1 md:grid-cols-3 gap-6 mb-8&quot;&gt;
-+       &lt;div className=&quot;grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6 mb-8&quot;&gt;
-          &lt;div className=&quot;bg-white p-6 rounded-lg shadow&quot;&gt;
-            &lt;h3 className=&quot;text-gray-500 text-sm uppercase&quot;&gt;Ügyfelek&lt;/h3&gt;
+-       &lt;div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8"&gt;
++       &lt;div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6 mb-8"&gt;
+          &lt;div className="bg-white p-6 rounded-lg shadow"&gt;
+            &lt;h3 className="text-gray-500 text-sm uppercase"&gt;Ügyfelek&lt;/h3&gt;
 ```
 
 **Chunk 2**
@@ -8872,15 +8872,15 @@ Lines added: 8, lines removed: undefined
 
 ```diff
 @@ -67,4 +67,12 @@
-            &lt;p className=&quot;text-4xl font-bold text-purple-900&quot;&gt;{stats?.documents || 0}&lt;/p&gt;
+            &lt;p className="text-4xl font-bold text-purple-900"&gt;{stats?.documents || 0}&lt;/p&gt;
           &lt;/div&gt;
-+         &lt;div className=&quot;bg-white p-6 rounded-lg shadow&quot;&gt;
-+           &lt;h3 className=&quot;text-gray-500 text-sm uppercase&quot;&gt;Visszárúk&lt;/h3&gt;
-+           &lt;p className=&quot;text-4xl font-bold text-orange-900&quot;&gt;{stats?.returns || 0}&lt;/p&gt;
++         &lt;div className="bg-white p-6 rounded-lg shadow"&gt;
++           &lt;h3 className="text-gray-500 text-sm uppercase"&gt;Visszárúk&lt;/h3&gt;
++           &lt;p className="text-4xl font-bold text-orange-900"&gt;{stats?.returns || 0}&lt;/p&gt;
 +         &lt;/div&gt;
-+         &lt;div className=&quot;bg-white p-6 rounded-lg shadow&quot;&gt;
-+           &lt;h3 className=&quot;text-gray-500 text-sm uppercase&quot;&gt;Szállítók&lt;/h3&gt;
-+           &lt;p className=&quot;text-4xl font-bold text-indigo-900&quot;&gt;{stats?.suppliers || 0}&lt;/p&gt;
++         &lt;div className="bg-white p-6 rounded-lg shadow"&gt;
++           &lt;h3 className="text-gray-500 text-sm uppercase"&gt;Szállítók&lt;/h3&gt;
++           &lt;p className="text-4xl font-bold text-indigo-900"&gt;{stats?.suppliers || 0}&lt;/p&gt;
 +         &lt;/div&gt;
         &lt;/div&gt;
   
@@ -8920,7 +8920,7 @@ Készletmozgások lekérdezésének hozzáadása, majd export funkciók implemen
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/logistics/stock.service.ts</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/logistics/stock.service.ts</summary>
 
 **Chunk 1**
 Lines added: 30, lines removed: undefined
@@ -8953,7 +8953,7 @@ Lines added: 30, lines removed: undefined
 +           item: true,
 +           warehouse: true,
 +         },
-+         orderBy: { createdAt: &#39;desc&#39; },
++         orderBy: { createdAt: 'desc' },
 +       }),
 +     ]);
 + 
@@ -8971,7 +8971,7 @@ Lines added: 30, lines removed: undefined
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/logistics/stock.controller.ts</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/logistics/stock.controller.ts</summary>
 
 **Chunk 1**
 Lines added: 15, lines removed: undefined
@@ -8981,12 +8981,12 @@ Lines added: 15, lines removed: undefined
       return this.stockService.createStockMove(data);
     }
 + 
-+   @Get(&#39;movements&#39;)
++   @Get('movements')
 +   getStockMovements(
-+     @Query(&#39;itemId&#39;) itemId?: string,
-+     @Query(&#39;warehouseId&#39;) warehouseId?: string,
-+     @Query(&#39;skip&#39;) skip?: string,
-+     @Query(&#39;take&#39;) take?: string,
++     @Query('itemId') itemId?: string,
++     @Query('warehouseId') warehouseId?: string,
++     @Query('skip') skip?: string,
++     @Query('take') take?: string,
 +   ) {
 +     return this.stockService.getStockMovements({
 +       itemId,
@@ -9041,32 +9041,32 @@ Export funkciók hozzáadása a visszárúkhoz és szállítókhoz. Először a 
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Returns.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Returns.tsx</summary>
 
 **Chunk 1**
 Lines added: 15, lines removed: 6
 
 ```diff
 @@ -214,10 +214,19 @@
-        &lt;div className=&quot;flex justify-between items-center mb-6&quot;&gt;
-          &lt;h1 className=&quot;text-3xl font-bold&quot;&gt;Visszárú Kezelés&lt;/h1&gt;
+        &lt;div className="flex justify-between items-center mb-6"&gt;
+          &lt;h1 className="text-3xl font-bold"&gt;Visszárú Kezelés&lt;/h1&gt;
 -         &lt;button
 -           onClick={() =&gt; handleOpenModal()}
--           className=&quot;bg-mbit-blue text-white px-4 py-2 rounded-lg hover:bg-blue-700&quot;
+-           className="bg-mbit-blue text-white px-4 py-2 rounded-lg hover:bg-blue-700"
 -         &gt;
 -           + Új visszárú
 -         &lt;/button&gt;
-+         &lt;div className=&quot;flex gap-2&quot;&gt;
++         &lt;div className="flex gap-2"&gt;
 +           &lt;button
 +             onClick={handleExportCSV}
-+             className=&quot;bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm&quot;
-+             title=&quot;CSV export&quot;
++             className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm"
++             title="CSV export"
 +           &gt;
 +             📥 Export CSV
 +           &lt;/button&gt;
 +           &lt;button
 +             onClick={() =&gt; handleOpenModal()}
-+             className=&quot;bg-mbit-blue text-white px-4 py-2 rounded-lg hover:bg-blue-700&quot;
++             className="bg-mbit-blue text-white px-4 py-2 rounded-lg hover:bg-blue-700"
 +           &gt;
 +             + Új visszárú
 +           &lt;/button&gt;
@@ -9083,7 +9083,7 @@ Lines added: 15, lines removed: 6
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Returns.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Returns.tsx</summary>
 
 **Chunk 1**
 Lines added: 50, lines removed: undefined
@@ -9095,49 +9095,49 @@ Lines added: 50, lines removed: undefined
 + 
 +   const handleExportCSV = () =&gt; {
 +     if (!returnsData?.items || returnsData.items.length === 0) {
-+       alert(&#39;Nincs exportálandó adat!&#39;);
++       alert('Nincs exportálandó adat!');
 +       return;
 +     }
 + 
 +     const headers = [
-+       &#39;Rendelés&#39;,
-+       &#39;Áru azonosító&#39;,
-+       &#39;Áru név&#39;,
-+       &#39;Raktár&#39;,
-+       &#39;Mennyiség&#39;,
-+       &#39;Ok&#39;,
-+       &#39;Állapot&#39;,
-+       &#39;Dátum&#39;,
-+       &#39;Létrehozta&#39;,
-+       &#39;Jóváhagyta&#39;,
-+       &#39;Megjegyzések&#39;,
++       'Rendelés',
++       'Áru azonosító',
++       'Áru név',
++       'Raktár',
++       'Mennyiség',
++       'Ok',
++       'Állapot',
++       'Dátum',
++       'Létrehozta',
++       'Jóváhagyta',
++       'Megjegyzések',
 +     ];
 + 
 +     const rows = returnsData.items.map((r: Return) =&gt; [
-+       r.order?.azonosito || &#39;-&#39;,
-+       r.item?.azonosito || &#39;-&#39;,
-+       r.item?.nev || &#39;-&#39;,
-+       r.warehouse?.nev || &#39;-&#39;,
++       r.order?.azonosito || '-',
++       r.item?.azonosito || '-',
++       r.item?.nev || '-',
++       r.warehouse?.nev || '-',
 +       r.mennyiseg.toString(),
 +       getOkLabel(r.ok),
 +       r.allapot,
-+       new Date(r.visszaruDatum).toLocaleDateString(&#39;hu-HU&#39;),
-+       r.createdBy?.nev || &#39;-&#39;,
-+       r.approvedBy?.nev || &#39;-&#39;,
-+       r.megjegyzesek || &#39;&#39;,
++       new Date(r.visszaruDatum).toLocaleDateString('hu-HU'),
++       r.createdBy?.nev || '-',
++       r.approvedBy?.nev || '-',
++       r.megjegyzesek || '',
 +     ]);
 + 
 +     const csvContent = [
-+       headers.join(&#39;,&#39;),
-+       ...rows.map((row) =&gt; row.map((cell) =&gt; &#96;&quot;${cell}&quot;&#96;).join(&#39;,&#39;)),
-+     ].join(&#39;\n&#39;);
++       headers.join(','),
++       ...rows.map((row) =&gt; row.map((cell) =&gt; &#96;"${cell}"&#96;).join(',')),
++     ].join('\n');
 + 
-+     const blob = new Blob([&#39;\ufeff&#39; + csvContent], { type: &#39;text/csv;charset=utf-8;&#39; });
-+     const link = document.createElement(&#39;a&#39;);
++     const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
++     const link = document.createElement('a');
 +     const url = URL.createObjectURL(blob);
-+     link.setAttribute(&#39;href&#39;, url);
-+     link.setAttribute(&#39;download&#39;, &#96;visszaru_export_${new Date().toISOString().split(&#39;T&#39;)[0]}.csv&#96;);
-+     link.style.visibility = &#39;hidden&#39;;
++     link.setAttribute('href', url);
++     link.setAttribute('download', &#96;visszaru_export_${new Date().toISOString().split('T')[0]}.csv&#96;);
++     link.style.visibility = 'hidden';
 +     document.body.appendChild(link);
 +     link.click();
 +     document.body.removeChild(link);
@@ -9172,32 +9172,32 @@ Export funkció hozzáadása a szállítókhoz:
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Suppliers.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Suppliers.tsx</summary>
 
 **Chunk 1**
 Lines added: 15, lines removed: 6
 
 ```diff
 @@ -122,10 +122,19 @@
-        &lt;div className=&quot;flex justify-between items-center mb-6&quot;&gt;
-          &lt;h1 className=&quot;text-3xl font-bold&quot;&gt;Szállítók Kezelése&lt;/h1&gt;
+        &lt;div className="flex justify-between items-center mb-6"&gt;
+          &lt;h1 className="text-3xl font-bold"&gt;Szállítók Kezelése&lt;/h1&gt;
 -         &lt;button
 -           onClick={() =&gt; handleOpenModal()}
--           className=&quot;bg-mbit-blue text-white px-4 py-2 rounded-lg hover:bg-blue-700&quot;
+-           className="bg-mbit-blue text-white px-4 py-2 rounded-lg hover:bg-blue-700"
 -         &gt;
 -           + Új szállító
 -         &lt;/button&gt;
-+         &lt;div className=&quot;flex gap-2&quot;&gt;
++         &lt;div className="flex gap-2"&gt;
 +           &lt;button
 +             onClick={handleExportCSV}
-+             className=&quot;bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm&quot;
-+             title=&quot;CSV export&quot;
++             className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm"
++             title="CSV export"
 +           &gt;
 +             📥 Export CSV
 +           &lt;/button&gt;
 +           &lt;button
 +             onClick={() =&gt; handleOpenModal()}
-+             className=&quot;bg-mbit-blue text-white px-4 py-2 rounded-lg hover:bg-blue-700&quot;
++             className="bg-mbit-blue text-white px-4 py-2 rounded-lg hover:bg-blue-700"
 +           &gt;
 +             + Új szállító
 +           &lt;/button&gt;
@@ -9214,7 +9214,7 @@ Lines added: 15, lines removed: 6
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Suppliers.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Suppliers.tsx</summary>
 
 **Chunk 1**
 Lines added: 34, lines removed: undefined
@@ -9226,33 +9226,33 @@ Lines added: 34, lines removed: undefined
 + 
 +   const handleExportCSV = () =&gt; {
 +     if (!suppliersData?.suppliers || suppliersData.suppliers.length === 0) {
-+       alert(&#39;Nincs exportálandó adat!&#39;);
++       alert('Nincs exportálandó adat!');
 +       return;
 +     }
 + 
-+     const headers = [&#39;Név&#39;, &#39;Adószám&#39;, &#39;Cím&#39;, &#39;Email&#39;, &#39;Telefon&#39;, &#39;Aktív&#39;, &#39;Létrehozva&#39;];
++     const headers = ['Név', 'Adószám', 'Cím', 'Email', 'Telefon', 'Aktív', 'Létrehozva'];
 + 
 +     const rows = suppliersData.suppliers.map((s: Supplier) =&gt; [
 +       s.nev,
-+       s.adoszam || &#39;-&#39;,
-+       s.cim || &#39;-&#39;,
-+       s.email || &#39;-&#39;,
-+       s.telefon || &#39;-&#39;,
-+       s.aktiv ? &#39;Igen&#39; : &#39;Nem&#39;,
-+       new Date(s.createdAt).toLocaleDateString(&#39;hu-HU&#39;),
++       s.adoszam || '-',
++       s.cim || '-',
++       s.email || '-',
++       s.telefon || '-',
++       s.aktiv ? 'Igen' : 'Nem',
++       new Date(s.createdAt).toLocaleDateString('hu-HU'),
 +     ]);
 + 
 +     const csvContent = [
-+       headers.join(&#39;,&#39;),
-+       ...rows.map((row) =&gt; row.map((cell) =&gt; &#96;&quot;${cell}&quot;&#96;).join(&#39;,&#39;)),
-+     ].join(&#39;\n&#39;);
++       headers.join(','),
++       ...rows.map((row) =&gt; row.map((cell) =&gt; &#96;"${cell}"&#96;).join(',')),
++     ].join('\n');
 + 
-+     const blob = new Blob([&#39;\ufeff&#39; + csvContent], { type: &#39;text/csv;charset=utf-8;&#39; });
-+     const link = document.createElement(&#39;a&#39;);
++     const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
++     const link = document.createElement('a');
 +     const url = URL.createObjectURL(blob);
-+     link.setAttribute(&#39;href&#39;, url);
-+     link.setAttribute(&#39;download&#39;, &#96;szallitok_export_${new Date().toISOString().split(&#39;T&#39;)[0]}.csv&#96;);
-+     link.style.visibility = &#39;hidden&#39;;
++     link.setAttribute('href', url);
++     link.setAttribute('download', &#96;szallitok_export_${new Date().toISOString().split('T')[0]}.csv&#96;);
++     link.style.visibility = 'hidden';
 +     document.body.appendChild(link);
 +     link.click();
 +     document.body.removeChild(link);
@@ -9334,14 +9334,14 @@ Lint results
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git status --short | head -20</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && git status --short | head -20</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp && git status --short | head -20
 ```
 
 ```
- M &quot;.specstory/history/2025-11-16_13-58Z-csapat-kommunik\303\241ci\303\263s-modul-fejleszt\303\251se.md&quot;
+ M ".specstory/history/2025-11-16_13-58Z-csapat-kommunik\303\241ci\303\263s-modul-fejleszt\303\251se.md"
  M apps/server/prisma/prisma/dev.db
  M apps/server/src/logistics/stock.controller.ts
  M apps/server/src/logistics/stock.service.ts
@@ -9351,7 +9351,7 @@ cd /Users/liviuszberger/mbit-erp && git status --short | head -20
  M apps/web/src/pages/Returns.tsx
  M apps/web/src/pages/Suppliers.tsx
 ?? .specstory/history/2025-11-17_14-55Z-run-build-for-aws-s3-upload.md
-?? &quot;.specstory/history/2025-11-19_10-57Z-fejleszt\303\251si-terv-a-k\303\251szletnyilv\303\241ntart\303\241s-funkci\303\263khoz.md&quot;
+?? ".specstory/history/2025-11-19_10-57Z-fejleszt\303\251si-terv-a-k\303\251szletnyilv\303\241ntart\303\241s-funkci\303\263khoz.md"
 ?? apps/server/prisma/prisma/prisma/
 
 ```
@@ -9421,7 +9421,7 @@ A GitHub Actions workflow ellenőrzése, majd commit és push:
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git add apps/server/src/logistics/stock.service.ts apps/server/src/logistics/stock.controller.ts apps/web/src/components/logistics/ProductSuppliers.tsx apps/web/src/pages/Dashboard.tsx apps/web/src/pages/Products.tsx apps/web/src/pages/Returns.tsx apps/web/src/pages/Suppliers.tsx</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && git add apps/server/src/logistics/stock.service.ts apps/server/src/logistics/stock.controller.ts apps/web/src/components/logistics/ProductSuppliers.tsx apps/web/src/pages/Dashboard.tsx apps/web/src/pages/Products.tsx apps/web/src/pages/Returns.tsx apps/web/src/pages/Suppliers.tsx</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp && git add apps/server/src/logistics/stock.service.ts apps/server/src/logistics/stock.controller.ts apps/web/src/components/logistics/ProductSuppliers.tsx apps/web/src/pages/Dashboard.tsx apps/web/src/pages/Products.tsx apps/web/src/pages/Returns.tsx apps/web/src/pages/Suppliers.tsx
@@ -9432,14 +9432,14 @@ cd /Users/liviuszberger/mbit-erp && git add apps/server/src/logistics/stock.serv
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git status --short</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && git status --short</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp && git status --short
 ```
 
 ```
- M &quot;.specstory/history/2025-11-16_13-58Z-csapat-kommunik\303\241ci\303\263s-modul-fejleszt\303\251se.md&quot;
+ M ".specstory/history/2025-11-16_13-58Z-csapat-kommunik\303\241ci\303\263s-modul-fejleszt\303\251se.md"
  M apps/server/prisma/prisma/dev.db
 M  apps/server/src/logistics/stock.controller.ts
 M  apps/server/src/logistics/stock.service.ts
@@ -9449,7 +9449,7 @@ M  apps/web/src/pages/Products.tsx
 M  apps/web/src/pages/Returns.tsx
 M  apps/web/src/pages/Suppliers.tsx
 ?? .specstory/history/2025-11-17_14-55Z-run-build-for-aws-s3-upload.md
-?? &quot;.specstory/history/2025-11-19_10-57Z-fejleszt\303\251si-terv-a-k\303\251szletnyilv\303\241ntart\303\241s-funkci\303\263khoz.md&quot;
+?? ".specstory/history/2025-11-19_10-57Z-fejleszt\303\251si-terv-a-k\303\251szletnyilv\303\241ntart\303\241s-funkci\303\263khoz.md"
 ?? apps/server/prisma/prisma/prisma/
 
 ```
@@ -9459,7 +9459,7 @@ M  apps/web/src/pages/Suppliers.tsx
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git commit -m "fix: ProductSuppliers modal bezáródás javítása és fejlesztések
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && git commit -m "fix: ProductSuppliers modal bezáródás javítása és fejlesztések
 
 - ProductSuppliers modal event propagation javítása
 - Dashboard frissítése: visszárúk és szállítók statisztikák
@@ -9490,7 +9490,7 @@ cd /Users/liviuszberger/mbit-erp && git commit -m "fix: ProductSuppliers modal b
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git push origin main</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && git push origin main</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp && git push origin main
@@ -9769,7 +9769,7 @@ TypeScript hibák javítása: explicit típusok hozzáadása a CSV export függv
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Returns.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Returns.tsx</summary>
 
 **Chunk 1**
 Lines added: 1, lines removed: 1
@@ -9777,10 +9777,10 @@ Lines added: 1, lines removed: 1
 ```diff
 @@ -246,5 +246,5 @@
       const csvContent = [
-        headers.join(&#39;,&#39;),
--       ...rows.map((row) =&gt; row.map((cell) =&gt; &#96;&quot;${cell}&quot;&#96;).join(&#39;,&#39;)),
-+       ...rows.map((row: string[]) =&gt; row.map((cell: string) =&gt; &#96;&quot;${cell}&quot;&#96;).join(&#39;,&#39;)),
-      ].join(&#39;\n&#39;);
+        headers.join(','),
+-       ...rows.map((row) =&gt; row.map((cell) =&gt; &#96;"${cell}"&#96;).join(',')),
++       ...rows.map((row: string[]) =&gt; row.map((cell: string) =&gt; &#96;"${cell}"&#96;).join(',')),
+      ].join('\n');
   
 ```
 
@@ -9792,7 +9792,7 @@ Lines added: 1, lines removed: 1
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Suppliers.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Suppliers.tsx</summary>
 
 **Chunk 1**
 Lines added: 1, lines removed: 1
@@ -9800,10 +9800,10 @@ Lines added: 1, lines removed: 1
 ```diff
 @@ -138,5 +138,5 @@
       const csvContent = [
-        headers.join(&#39;,&#39;),
--       ...rows.map((row) =&gt; row.map((cell) =&gt; &#96;&quot;${cell}&quot;&#96;).join(&#39;,&#39;)),
-+       ...rows.map((row: string[]) =&gt; row.map((cell: string) =&gt; &#96;&quot;${cell}&quot;&#96;).join(&#39;,&#39;)),
-      ].join(&#39;\n&#39;);
+        headers.join(','),
+-       ...rows.map((row) =&gt; row.map((cell) =&gt; &#96;"${cell}"&#96;).join(',')),
++       ...rows.map((row: string[]) =&gt; row.map((cell: string) =&gt; &#96;"${cell}"&#96;).join(',')),
+      ].join('\n');
   
 ```
 
@@ -9814,7 +9814,7 @@ Lines added: 1, lines removed: 1
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp/apps/web && npm run build 2>&1 | tail -30</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp/apps/web && npm run build 2>&1 | tail -30</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp/apps/web && npm run build 2>&1 | tail -30
@@ -9869,7 +9869,7 @@ A build sikeres. Commitolom és pusholom a javításokat:
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git add apps/web/src/pages/Returns.tsx apps/web/src/pages/Suppliers.tsx</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && git add apps/web/src/pages/Returns.tsx apps/web/src/pages/Suppliers.tsx</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp && git add apps/web/src/pages/Returns.tsx apps/web/src/pages/Suppliers.tsx
@@ -9880,7 +9880,7 @@ cd /Users/liviuszberger/mbit-erp && git add apps/web/src/pages/Returns.tsx apps/
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git commit -m "fix: TypeScript implicit any type errors in CSV export functions"</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && git commit -m "fix: TypeScript implicit any type errors in CSV export functions"</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp && git commit -m "fix: TypeScript implicit any type errors in CSV export functions"
@@ -9897,7 +9897,7 @@ cd /Users/liviuszberger/mbit-erp && git commit -m "fix: TypeScript implicit any 
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git push origin main</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && git push origin main</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp && git push origin main
@@ -10189,18 +10189,18 @@ Parameters:
 
 ```json
 {
-  &quot;plan&quot;: &quot;# ProductSuppliers Modal Javítás és Rendeléskezelés Implementálás\n\n## 1. ProductSuppliers Modal Javítás\n\n### Probléma\n\nA ProductSuppliers komponens a termék szerkesztő form-on belül van, és a \&quot;+ Szállító hozzáadása\&quot; gombra kattintva a modal bezáródik, mert a szülő form submit eseménye aktiválódik.\n\n### Megoldás\n\n- A ProductSuppliers szekciót kivesszük a form-ból\n- Külön gombot adunk hozzá a termék részleteknél, ami megnyitja a ProductSuppliers modal-t\n- A ProductSuppliers komponens önálló modal-ként működik, nem a form része\n\n### Fájlok módosítása\n\n- &#96;apps/web/src/pages/Products.tsx&#96;: ProductSuppliers komponens eltávolítása a form-ból, külön gomb hozzáadása\n- &#96;apps/web/src/components/logistics/ProductSuppliers.tsx&#96;: Önálló modal működés biztosítása\n\n## 2. Rendeléskezelés Backend Implementálás\n\n### OrderService és OrderController létrehozása\n\n- &#96;apps/server/src/crm/order.service.ts&#96;: CRUD műveletek, workflow státusz változtatások\n- &#96;apps/server/src/crm/order.controller.ts&#96;: REST endpoints\n- &#96;apps/server/src/crm/dto/create-order.dto.ts&#96;: Order létrehozás DTO\n- &#96;apps/server/src/crm/dto/update-order.dto.ts&#96;: Order frissítés DTO\n- &#96;apps/server/src/crm/dto/order-status.dto.ts&#96;: Státusz változtatás DTO\n\n### Workflow státuszok\n\n- ÚJ (NEW) - Új rendelés\n- FELDOLGOZAS_ALATT (IN_PROCESS) - Feldolgozás alatt\n- SZALLITVA (SHIPPED) - Szállítva\n- TELJESITVE (COMPLETED) - Teljesítve\n- VISSZAVONVA (CANCELLED) - Visszavonva\n\n### Funkciók\n\n- Rendelés létrehozása (ajánlatból vagy manuálisan)\n- Rendelés szerkesztése\n- Státusz változtatás workflow-val\n- Rendelés törlése (csak ÚJ státuszban)\n- Rendelés tételek kezelése\n- Szűrés: állapot, ügyfél, dátum szerint\n\n### CRM Modul frissítése\n\n- &#96;apps/server/src/crm/crm.module.ts&#96;: OrderService és OrderController hozzáadása\n\n## 3. Rendeléskezelés Frontend - CRM Modul\n\n### Orders.tsx oldal létrehozása\n\n- &#96;apps/web/src/pages/Orders.tsx&#96;: CRM modul rendeléskezelő oldal\n- Funkciók:\n- Rendelések listázása táblázatban\n- Új rendelés létrehozása (ajánlatból vagy manuálisan)\n- Rendelés szerkesztése\n- Státusz változtatás gombokkal\n- Rendelés részletek megjelenítése\n- Szűrés: állapot, ügyfél, dátum\n- Export CSV funkció\n\n### CRM nézet jellemzői\n\n- Ügyfél kapcsolódás hangsúlyozása\n- Ajánlatból rendelés létrehozás\n- CRM workflow (Új → Feldolgozás → Szállítva → Teljesítve)\n- Ügyfél adatok megjelenítése\n\n### API hooks\n\n- &#96;apps/web/src/lib/api/crm.ts&#96;: useOrders, useCreateOrder, useUpdateOrder, useOrderStatusChange hookok hozzáadása\n\n### Navigáció frissítése\n\n- &#96;apps/web/src/App.tsx&#96;: Orders oldal hozzáadása a CRM dropdown menühöz\n\n## 4. Rendeléskezelés Frontend - Logisztika Modul\n\n### OrdersLogistics.tsx oldal létrehozása\n\n- &#96;apps/web/src/pages/OrdersLogistics.tsx&#96;: Logisztika modul rendeléskezelő oldal\n- Funkciók:\n- Rendelések listázása logisztikai nézetben\n- Készletkezelés kapcsolódás\n- Szállítási információk hangsúlyozása\n- Visszárú kapcsolódás megjelenítése\n- Logisztikai workflow (Feldolgozás → Szállítva → Teljesítve)\n\n### Logisztika nézet jellemzői\n\n- Készlet és raktár információk\n- Szállítási dátumok és információk\n- Visszárúk kapcsolódása\n- Logisztikai státuszok\n\n### Navigáció frissítése\n\n- &#96;apps/web/src/App.tsx&#96;: OrdersLogistics oldal hozzáadása a Logisztika dropdown menühöz\n\n## 5. Visszárúk Integráció Fejlesztése\n\n### Visszárúk oldal frissítése\n\n- &#96;apps/web/src/pages/Returns.tsx&#96;: Rendelés kapcsolódás javítása\n- Rendelés részletek megjelenítése visszárúknál\n- Rendelés tétel validáció (visszárú mennyiség &lt;= rendelés mennyiség)\n\n## 6. Jogosultságok\n\n### Új jogosultságok hozzáadása\n\n- &#96;apps/server/src/common/rbac/permission.enum.ts&#96;:\n- ORDER_VIEW\n- ORDER_CREATE\n- ORDER_EDIT\n- ORDER_DELETE\n- ORDER_STATUS_CHANGE\n\n## 7. Tesztelés és Dokumentáció\n\n### Tesztelési pontok\n\n- ProductSuppliers modal működés form-on kívül\n- Rendelés létrehozás és szerkesztés\n- Workflow státusz változtatások\n- Visszárú rendelés kapcsolódás\n- Mindkét modulban működés\n\n### Dokumentáció\n\n- Használati útmutató frissítése rendeléskezelési funkciókkal&quot;
+  "plan": "# ProductSuppliers Modal Javítás és Rendeléskezelés Implementálás\n\n## 1. ProductSuppliers Modal Javítás\n\n### Probléma\n\nA ProductSuppliers komponens a termék szerkesztő form-on belül van, és a \"+ Szállító hozzáadása\" gombra kattintva a modal bezáródik, mert a szülő form submit eseménye aktiválódik.\n\n### Megoldás\n\n- A ProductSuppliers szekciót kivesszük a form-ból\n- Külön gombot adunk hozzá a termék részleteknél, ami megnyitja a ProductSuppliers modal-t\n- A ProductSuppliers komponens önálló modal-ként működik, nem a form része\n\n### Fájlok módosítása\n\n- &#96;apps/web/src/pages/Products.tsx&#96;: ProductSuppliers komponens eltávolítása a form-ból, külön gomb hozzáadása\n- &#96;apps/web/src/components/logistics/ProductSuppliers.tsx&#96;: Önálló modal működés biztosítása\n\n## 2. Rendeléskezelés Backend Implementálás\n\n### OrderService és OrderController létrehozása\n\n- &#96;apps/server/src/crm/order.service.ts&#96;: CRUD műveletek, workflow státusz változtatások\n- &#96;apps/server/src/crm/order.controller.ts&#96;: REST endpoints\n- &#96;apps/server/src/crm/dto/create-order.dto.ts&#96;: Order létrehozás DTO\n- &#96;apps/server/src/crm/dto/update-order.dto.ts&#96;: Order frissítés DTO\n- &#96;apps/server/src/crm/dto/order-status.dto.ts&#96;: Státusz változtatás DTO\n\n### Workflow státuszok\n\n- ÚJ (NEW) - Új rendelés\n- FELDOLGOZAS_ALATT (IN_PROCESS) - Feldolgozás alatt\n- SZALLITVA (SHIPPED) - Szállítva\n- TELJESITVE (COMPLETED) - Teljesítve\n- VISSZAVONVA (CANCELLED) - Visszavonva\n\n### Funkciók\n\n- Rendelés létrehozása (ajánlatból vagy manuálisan)\n- Rendelés szerkesztése\n- Státusz változtatás workflow-val\n- Rendelés törlése (csak ÚJ státuszban)\n- Rendelés tételek kezelése\n- Szűrés: állapot, ügyfél, dátum szerint\n\n### CRM Modul frissítése\n\n- &#96;apps/server/src/crm/crm.module.ts&#96;: OrderService és OrderController hozzáadása\n\n## 3. Rendeléskezelés Frontend - CRM Modul\n\n### Orders.tsx oldal létrehozása\n\n- &#96;apps/web/src/pages/Orders.tsx&#96;: CRM modul rendeléskezelő oldal\n- Funkciók:\n- Rendelések listázása táblázatban\n- Új rendelés létrehozása (ajánlatból vagy manuálisan)\n- Rendelés szerkesztése\n- Státusz változtatás gombokkal\n- Rendelés részletek megjelenítése\n- Szűrés: állapot, ügyfél, dátum\n- Export CSV funkció\n\n### CRM nézet jellemzői\n\n- Ügyfél kapcsolódás hangsúlyozása\n- Ajánlatból rendelés létrehozás\n- CRM workflow (Új → Feldolgozás → Szállítva → Teljesítve)\n- Ügyfél adatok megjelenítése\n\n### API hooks\n\n- &#96;apps/web/src/lib/api/crm.ts&#96;: useOrders, useCreateOrder, useUpdateOrder, useOrderStatusChange hookok hozzáadása\n\n### Navigáció frissítése\n\n- &#96;apps/web/src/App.tsx&#96;: Orders oldal hozzáadása a CRM dropdown menühöz\n\n## 4. Rendeléskezelés Frontend - Logisztika Modul\n\n### OrdersLogistics.tsx oldal létrehozása\n\n- &#96;apps/web/src/pages/OrdersLogistics.tsx&#96;: Logisztika modul rendeléskezelő oldal\n- Funkciók:\n- Rendelések listázása logisztikai nézetben\n- Készletkezelés kapcsolódás\n- Szállítási információk hangsúlyozása\n- Visszárú kapcsolódás megjelenítése\n- Logisztikai workflow (Feldolgozás → Szállítva → Teljesítve)\n\n### Logisztika nézet jellemzői\n\n- Készlet és raktár információk\n- Szállítási dátumok és információk\n- Visszárúk kapcsolódása\n- Logisztikai státuszok\n\n### Navigáció frissítése\n\n- &#96;apps/web/src/App.tsx&#96;: OrdersLogistics oldal hozzáadása a Logisztika dropdown menühöz\n\n## 5. Visszárúk Integráció Fejlesztése\n\n### Visszárúk oldal frissítése\n\n- &#96;apps/web/src/pages/Returns.tsx&#96;: Rendelés kapcsolódás javítása\n- Rendelés részletek megjelenítése visszárúknál\n- Rendelés tétel validáció (visszárú mennyiség &lt;= rendelés mennyiség)\n\n## 6. Jogosultságok\n\n### Új jogosultságok hozzáadása\n\n- &#96;apps/server/src/common/rbac/permission.enum.ts&#96;:\n- ORDER_VIEW\n- ORDER_CREATE\n- ORDER_EDIT\n- ORDER_DELETE\n- ORDER_STATUS_CHANGE\n\n## 7. Tesztelés és Dokumentáció\n\n### Tesztelési pontok\n\n- ProductSuppliers modal működés form-on kívül\n- Rendelés létrehozás és szerkesztés\n- Workflow státusz változtatások\n- Visszárú rendelés kapcsolódás\n- Mindkét modulban működés\n\n### Dokumentáció\n\n- Használati útmutató frissítése rendeléskezelési funkciókkal"
 }
 ```
 Additional data:
 
 ```json
 {
-  &quot;status&quot;: &quot;accepted&quot;,
-  &quot;reviewData&quot;: {
-    &quot;status&quot;: &quot;Requested&quot;,
-    &quot;selectedOption&quot;: &quot;none&quot;,
-    &quot;isShowingInput&quot;: false
+  "status": "accepted",
+  "reviewData": {
+    "status": "Requested",
+    "selectedOption": "none",
+    "isShowingInput": false
   }
 }
 ```
@@ -10208,158 +10208,158 @@ Result:
 
 ```json
 {
-  &quot;modified&quot;: {
-    &quot;newPlan&quot;: &quot;# ProductSuppliers Modal Javítás és Rendeléskezelés Implementálás\n\n## 1. ProductSuppliers Modal Javítás\n\n### Probléma\n\nA ProductSuppliers komponens a termék szerkesztő form-on belül van, és a \&quot;+ Szállító hozzáadása\&quot; gombra kattintva a modal bezáródik, mert a szülő form submit eseménye aktiválódik.\n\n### Megoldás\n\n- A ProductSuppliers szekciót kivesszük a form-ból\n- Külön gombot adunk hozzá a termék részleteknél, ami megnyitja a ProductSuppliers modal-t\n- A ProductSuppliers komponens önálló modal-ként működik, nem a form része\n\n### Fájlok módosítása\n\n- &#96;apps/web/src/pages/Products.tsx&#96;: ProductSuppliers komponens eltávolítása a form-ból, külön gomb hozzáadása\n- &#96;apps/web/src/components/logistics/ProductSuppliers.tsx&#96;: Önálló modal működés biztosítása\n\n## 2. Rendeléskezelés Backend Implementálás\n\n### OrderService és OrderController létrehozása\n\n- &#96;apps/server/src/crm/order.service.ts&#96;: CRUD műveletek, workflow státusz változtatások\n- &#96;apps/server/src/crm/order.controller.ts&#96;: REST endpoints\n- &#96;apps/server/src/crm/dto/create-order.dto.ts&#96;: Order létrehozás DTO\n- &#96;apps/server/src/crm/dto/update-order.dto.ts&#96;: Order frissítés DTO\n- &#96;apps/server/src/crm/dto/order-status.dto.ts&#96;: Státusz változtatás DTO\n\n### Workflow státuszok\n\n- ÚJ (NEW) - Új rendelés\n- FELDOLGOZAS_ALATT (IN_PROCESS) - Feldolgozás alatt\n- SZALLITVA (SHIPPED) - Szállítva\n- TELJESITVE (COMPLETED) - Teljesítve\n- VISSZAVONVA (CANCELLED) - Visszavonva\n\n### Funkciók\n\n- Rendelés létrehozása (ajánlatból vagy manuálisan)\n- Rendelés szerkesztése\n- Státusz változtatás workflow-val\n- Rendelés törlése (csak ÚJ státuszban)\n- Rendelés tételek kezelése\n- Szűrés: állapot, ügyfél, dátum szerint\n\n### CRM Modul frissítése\n\n- &#96;apps/server/src/crm/crm.module.ts&#96;: OrderService és OrderController hozzáadása\n\n## 3. Rendeléskezelés Frontend - CRM Modul\n\n### Orders.tsx oldal létrehozása\n\n- &#96;apps/web/src/pages/Orders.tsx&#96;: CRM modul rendeléskezelő oldal\n- Funkciók:\n- Rendelések listázása táblázatban\n- Új rendelés létrehozása (ajánlatból vagy manuálisan)\n- Rendelés szerkesztése\n- Státusz változtatás gombokkal\n- Rendelés részletek megjelenítése\n- Szűrés: állapot, ügyfél, dátum\n- Export CSV funkció\n\n### CRM nézet jellemzői\n\n- Ügyfél kapcsolódás hangsúlyozása\n- Ajánlatból rendelés létrehozás\n- CRM workflow (Új → Feldolgozás → Szállítva → Teljesítve)\n- Ügyfél adatok megjelenítése\n\n### API hooks\n\n- &#96;apps/web/src/lib/api/crm.ts&#96;: useOrders, useCreateOrder, useUpdateOrder, useOrderStatusChange hookok hozzáadása\n\n### Navigáció frissítése\n\n- &#96;apps/web/src/App.tsx&#96;: Orders oldal hozzáadása a CRM dropdown menühöz\n\n## 4. Rendeléskezelés Frontend - Logisztika Modul\n\n### OrdersLogistics.tsx oldal létrehozása\n\n- &#96;apps/web/src/pages/OrdersLogistics.tsx&#96;: Logisztika modul rendeléskezelő oldal\n- Funkciók:\n- Rendelések listázása logisztikai nézetben\n- Készletkezelés kapcsolódás\n- Szállítási információk hangsúlyozása\n- Visszárú kapcsolódás megjelenítése\n- Logisztikai workflow (Feldolgozás → Szállítva → Teljesítve)\n\n### Logisztika nézet jellemzői\n\n- Készlet és raktár információk\n- Szállítási dátumok és információk\n- Visszárúk kapcsolódása\n- Logisztikai státuszok\n\n### Navigáció frissítése\n\n- &#96;apps/web/src/App.tsx&#96;: OrdersLogistics oldal hozzáadása a Logisztika dropdown menühöz\n\n## 5. Visszárúk Integráció Fejlesztése\n\n### Visszárúk oldal frissítése\n\n- &#96;apps/web/src/pages/Returns.tsx&#96;: Rendelés kapcsolódás javítása\n- Rendelés részletek megjelenítése visszárúknál\n- Rendelés tétel validáció (visszárú mennyiség &lt;= rendelés mennyiség)\n\n## 6. Jogosultságok\n\n### Új jogosultságok hozzáadása\n\n- &#96;apps/server/src/common/rbac/permission.enum.ts&#96;:\n- ORDER_VIEW\n- ORDER_CREATE\n- ORDER_EDIT\n- ORDER_DELETE\n- ORDER_STATUS_CHANGE\n\n## 7. Tesztelés és Dokumentáció\n\n### Tesztelési pontok\n\n- ProductSuppliers modal működés form-on kívül\n- Rendelés létrehozás és szerkesztés\n- Workflow státusz változtatások\n- Visszárú rendelés kapcsolódás\n- Mindkét modulban működés\n\n### Dokumentáció\n\n- Használati útmutató frissítése rendeléskezelési funkciókkal&quot;,
-    &quot;finalTodos&quot;: [
+  "modified": {
+    "newPlan": "# ProductSuppliers Modal Javítás és Rendeléskezelés Implementálás\n\n## 1. ProductSuppliers Modal Javítás\n\n### Probléma\n\nA ProductSuppliers komponens a termék szerkesztő form-on belül van, és a \"+ Szállító hozzáadása\" gombra kattintva a modal bezáródik, mert a szülő form submit eseménye aktiválódik.\n\n### Megoldás\n\n- A ProductSuppliers szekciót kivesszük a form-ból\n- Külön gombot adunk hozzá a termék részleteknél, ami megnyitja a ProductSuppliers modal-t\n- A ProductSuppliers komponens önálló modal-ként működik, nem a form része\n\n### Fájlok módosítása\n\n- &#96;apps/web/src/pages/Products.tsx&#96;: ProductSuppliers komponens eltávolítása a form-ból, külön gomb hozzáadása\n- &#96;apps/web/src/components/logistics/ProductSuppliers.tsx&#96;: Önálló modal működés biztosítása\n\n## 2. Rendeléskezelés Backend Implementálás\n\n### OrderService és OrderController létrehozása\n\n- &#96;apps/server/src/crm/order.service.ts&#96;: CRUD műveletek, workflow státusz változtatások\n- &#96;apps/server/src/crm/order.controller.ts&#96;: REST endpoints\n- &#96;apps/server/src/crm/dto/create-order.dto.ts&#96;: Order létrehozás DTO\n- &#96;apps/server/src/crm/dto/update-order.dto.ts&#96;: Order frissítés DTO\n- &#96;apps/server/src/crm/dto/order-status.dto.ts&#96;: Státusz változtatás DTO\n\n### Workflow státuszok\n\n- ÚJ (NEW) - Új rendelés\n- FELDOLGOZAS_ALATT (IN_PROCESS) - Feldolgozás alatt\n- SZALLITVA (SHIPPED) - Szállítva\n- TELJESITVE (COMPLETED) - Teljesítve\n- VISSZAVONVA (CANCELLED) - Visszavonva\n\n### Funkciók\n\n- Rendelés létrehozása (ajánlatból vagy manuálisan)\n- Rendelés szerkesztése\n- Státusz változtatás workflow-val\n- Rendelés törlése (csak ÚJ státuszban)\n- Rendelés tételek kezelése\n- Szűrés: állapot, ügyfél, dátum szerint\n\n### CRM Modul frissítése\n\n- &#96;apps/server/src/crm/crm.module.ts&#96;: OrderService és OrderController hozzáadása\n\n## 3. Rendeléskezelés Frontend - CRM Modul\n\n### Orders.tsx oldal létrehozása\n\n- &#96;apps/web/src/pages/Orders.tsx&#96;: CRM modul rendeléskezelő oldal\n- Funkciók:\n- Rendelések listázása táblázatban\n- Új rendelés létrehozása (ajánlatból vagy manuálisan)\n- Rendelés szerkesztése\n- Státusz változtatás gombokkal\n- Rendelés részletek megjelenítése\n- Szűrés: állapot, ügyfél, dátum\n- Export CSV funkció\n\n### CRM nézet jellemzői\n\n- Ügyfél kapcsolódás hangsúlyozása\n- Ajánlatból rendelés létrehozás\n- CRM workflow (Új → Feldolgozás → Szállítva → Teljesítve)\n- Ügyfél adatok megjelenítése\n\n### API hooks\n\n- &#96;apps/web/src/lib/api/crm.ts&#96;: useOrders, useCreateOrder, useUpdateOrder, useOrderStatusChange hookok hozzáadása\n\n### Navigáció frissítése\n\n- &#96;apps/web/src/App.tsx&#96;: Orders oldal hozzáadása a CRM dropdown menühöz\n\n## 4. Rendeléskezelés Frontend - Logisztika Modul\n\n### OrdersLogistics.tsx oldal létrehozása\n\n- &#96;apps/web/src/pages/OrdersLogistics.tsx&#96;: Logisztika modul rendeléskezelő oldal\n- Funkciók:\n- Rendelések listázása logisztikai nézetben\n- Készletkezelés kapcsolódás\n- Szállítási információk hangsúlyozása\n- Visszárú kapcsolódás megjelenítése\n- Logisztikai workflow (Feldolgozás → Szállítva → Teljesítve)\n\n### Logisztika nézet jellemzői\n\n- Készlet és raktár információk\n- Szállítási dátumok és információk\n- Visszárúk kapcsolódása\n- Logisztikai státuszok\n\n### Navigáció frissítése\n\n- &#96;apps/web/src/App.tsx&#96;: OrdersLogistics oldal hozzáadása a Logisztika dropdown menühöz\n\n## 5. Visszárúk Integráció Fejlesztése\n\n### Visszárúk oldal frissítése\n\n- &#96;apps/web/src/pages/Returns.tsx&#96;: Rendelés kapcsolódás javítása\n- Rendelés részletek megjelenítése visszárúknál\n- Rendelés tétel validáció (visszárú mennyiség &lt;= rendelés mennyiség)\n\n## 6. Jogosultságok\n\n### Új jogosultságok hozzáadása\n\n- &#96;apps/server/src/common/rbac/permission.enum.ts&#96;:\n- ORDER_VIEW\n- ORDER_CREATE\n- ORDER_EDIT\n- ORDER_DELETE\n- ORDER_STATUS_CHANGE\n\n## 7. Tesztelés és Dokumentáció\n\n### Tesztelési pontok\n\n- ProductSuppliers modal működés form-on kívül\n- Rendelés létrehozás és szerkesztés\n- Workflow státusz változtatások\n- Visszárú rendelés kapcsolódás\n- Mindkét modulban működés\n\n### Dokumentáció\n\n- Használati útmutató frissítése rendeléskezelési funkciókkal",
+    "finalTodos": [
       {
-        &quot;content&quot;: &quot;ProductSuppliers modal bezáródásának javítása - event propagation megakadályozása&quot;,
-        &quot;status&quot;: &quot;completed&quot;,
-        &quot;id&quot;: &quot;fix-modal-close&quot;
+        "content": "ProductSuppliers modal bezáródásának javítása - event propagation megakadályozása",
+        "status": "completed",
+        "id": "fix-modal-close"
       },
       {
-        &quot;content&quot;: &quot;Dashboard frissítése új funkciókkal&quot;,
-        &quot;status&quot;: &quot;completed&quot;,
-        &quot;id&quot;: &quot;update-dashboard&quot;
+        "content": "Dashboard frissítése új funkciókkal",
+        "status": "completed",
+        "id": "update-dashboard"
       },
       {
-        &quot;content&quot;: &quot;Visszárúk export funkció (CSV/Excel)&quot;,
-        &quot;status&quot;: &quot;completed&quot;,
-        &quot;id&quot;: &quot;add-export-returns&quot;
+        "content": "Visszárúk export funkció (CSV/Excel)",
+        "status": "completed",
+        "id": "add-export-returns"
       },
       {
-        &quot;content&quot;: &quot;Szállítók export funkció (CSV/Excel)&quot;,
-        &quot;status&quot;: &quot;completed&quot;,
-        &quot;id&quot;: &quot;add-export-suppliers&quot;
+        "content": "Szállítók export funkció (CSV/Excel)",
+        "status": "completed",
+        "id": "add-export-suppliers"
       },
       {
-        &quot;content&quot;: &quot;Dashboard statisztikák: visszárúk és szállítók száma&quot;,
-        &quot;status&quot;: &quot;completed&quot;,
-        &quot;id&quot;: &quot;add-dashboard-stats&quot;
+        "content": "Dashboard statisztikák: visszárúk és szállítók száma",
+        "status": "completed",
+        "id": "add-dashboard-stats"
       },
       {
-        &quot;content&quot;: &quot;Készletmozgások története megjelenítése&quot;,
-        &quot;status&quot;: &quot;completed&quot;,
-        &quot;id&quot;: &quot;add-stock-movements&quot;
+        "content": "Készletmozgások története megjelenítése",
+        "status": "completed",
+        "id": "add-stock-movements"
       },
       {
-        &quot;content&quot;: &quot;Termékek szűrése szállító alapján&quot;,
-        &quot;status&quot;: &quot;pending&quot;,
-        &quot;id&quot;: &quot;add-supplier-filter-products&quot;
+        "content": "Termékek szűrése szállító alapján",
+        "status": "pending",
+        "id": "add-supplier-filter-products"
       },
       {
-        &quot;content&quot;: &quot;Visszárúk tömeges műveletek (tömeges jóváhagyás)&quot;,
-        &quot;status&quot;: &quot;pending&quot;,
-        &quot;id&quot;: &quot;add-bulk-actions-returns&quot;
+        "content": "Visszárúk tömeges műveletek (tömeges jóváhagyás)",
+        "status": "pending",
+        "id": "add-bulk-actions-returns"
       },
       {
-        &quot;content&quot;: &quot;Prisma schema módosítások: Return modell, ItemSupplier kapcsolótábla, kapcsolatok létrehozása&quot;,
-        &quot;status&quot;: &quot;completed&quot;,
-        &quot;id&quot;: &quot;todo-1763558180422-nn97flgdf&quot;
+        "content": "Prisma schema módosítások: Return modell, ItemSupplier kapcsolótábla, kapcsolatok létrehozása",
+        "status": "completed",
+        "id": "todo-1763558180422-nn97flgdf"
       },
       {
-        &quot;content&quot;: &quot;Prisma migráció futtatása és seed adatok (ha szükséges)&quot;,
-        &quot;status&quot;: &quot;completed&quot;,
-        &quot;id&quot;: &quot;todo-1763558180422-oc5wr7cfd&quot;
+        "content": "Prisma migráció futtatása és seed adatok (ha szükséges)",
+        "status": "completed",
+        "id": "todo-1763558180422-oc5wr7cfd"
       },
       {
-        &quot;content&quot;: &quot;Új jogosultságok hozzáadása permission.enum.ts-ben (RETURN_*, SUPPLIER_*, INVENTORY_REPORT_*, TASK_NOTIFY)&quot;,
-        &quot;status&quot;: &quot;completed&quot;,
-        &quot;id&quot;: &quot;todo-1763558180422-5r5unfy53&quot;
+        "content": "Új jogosultságok hozzáadása permission.enum.ts-ben (RETURN_*, SUPPLIER_*, INVENTORY_REPORT_*, TASK_NOTIFY)",
+        "status": "completed",
+        "id": "todo-1763558180422-5r5unfy53"
       },
       {
-        &quot;content&quot;: &quot;ReturnService implementálása: CRUD műveletek, jóváhagyási workflow, készlet visszaírás logika&quot;,
-        &quot;status&quot;: &quot;completed&quot;,
-        &quot;id&quot;: &quot;todo-1763558180422-ndskp9gyt&quot;
+        "content": "ReturnService implementálása: CRUD műveletek, jóváhagyási workflow, készlet visszaírás logika",
+        "status": "completed",
+        "id": "todo-1763558180422-ndskp9gyt"
       },
       {
-        &quot;content&quot;: &quot;ReturnController implementálása: REST végpontok, jogosultság ellenőrzések, audit log&quot;,
-        &quot;status&quot;: &quot;completed&quot;,
-        &quot;id&quot;: &quot;todo-1763558180422-341yb8fuo&quot;
+        "content": "ReturnController implementálása: REST végpontok, jogosultság ellenőrzések, audit log",
+        "status": "completed",
+        "id": "todo-1763558180422-341yb8fuo"
       },
       {
-        &quot;content&quot;: &quot;SupplierService implementálása: CRUD műveletek, áru kapcsolatok kezelése, elsődleges szállító logika&quot;,
-        &quot;status&quot;: &quot;completed&quot;,
-        &quot;id&quot;: &quot;todo-1763558180422-sqodbad2n&quot;
+        "content": "SupplierService implementálása: CRUD műveletek, áru kapcsolatok kezelése, elsődleges szállító logika",
+        "status": "completed",
+        "id": "todo-1763558180422-sqodbad2n"
       },
       {
-        &quot;content&quot;: &quot;SupplierController implementálása: REST végpontok, jogosultság ellenőrzések&quot;,
-        &quot;status&quot;: &quot;completed&quot;,
-        &quot;id&quot;: &quot;todo-1763558180422-7x0fl4gvg&quot;
+        "content": "SupplierController implementálása: REST végpontok, jogosultság ellenőrzések",
+        "status": "completed",
+        "id": "todo-1763558180422-7x0fl4gvg"
       },
       {
-        &quot;content&quot;: &quot;InventoryReportService implementálása: PDF/CSV/Excel generálás, adatok lekérése&quot;,
-        &quot;status&quot;: &quot;completed&quot;,
-        &quot;id&quot;: &quot;todo-1763558180422-zqeql7imv&quot;
+        "content": "InventoryReportService implementálása: PDF/CSV/Excel generálás, adatok lekérése",
+        "status": "completed",
+        "id": "todo-1763558180422-zqeql7imv"
       },
       {
-        &quot;content&quot;: &quot;InventoryReportController implementálása: REST végpontok nyomtatáshoz és exportáláshoz&quot;,
-        &quot;status&quot;: &quot;completed&quot;,
-        &quot;id&quot;: &quot;todo-1763558180422-d3cbhubcx&quot;
+        "content": "InventoryReportController implementálása: REST végpontok nyomtatáshoz és exportáláshoz",
+        "status": "completed",
+        "id": "todo-1763558180422-d3cbhubcx"
       },
       {
-        &quot;content&quot;: &quot;TaskNotificationService implementálása: email sablon generálás, mailto link készítés&quot;,
-        &quot;status&quot;: &quot;completed&quot;,
-        &quot;id&quot;: &quot;todo-1763558180422-n2rprk25d&quot;
+        "content": "TaskNotificationService implementálása: email sablon generálás, mailto link készítés",
+        "status": "completed",
+        "id": "todo-1763558180422-n2rprk25d"
       },
       {
-        &quot;content&quot;: &quot;TaskController módosítás: notify endpoint hozzáadása&quot;,
-        &quot;status&quot;: &quot;completed&quot;,
-        &quot;id&quot;: &quot;todo-1763558180422-26a0tbcua&quot;
+        "content": "TaskController módosítás: notify endpoint hozzáadása",
+        "status": "completed",
+        "id": "todo-1763558180422-26a0tbcua"
       },
       {
-        &quot;content&quot;: &quot;LogisticsModule frissítése: új services és controllers regisztrálása&quot;,
-        &quot;status&quot;: &quot;completed&quot;,
-        &quot;id&quot;: &quot;todo-1763558180422-z51z147xi&quot;
+        "content": "LogisticsModule frissítése: új services és controllers regisztrálása",
+        "status": "completed",
+        "id": "todo-1763558180422-z51z147xi"
       },
       {
-        &quot;content&quot;: &quot;ItemService módosítása: suppliers reláció hozzáadása&quot;,
-        &quot;status&quot;: &quot;completed&quot;,
-        &quot;id&quot;: &quot;todo-1763558180422-n3pt7iyik&quot;
+        "content": "ItemService módosítása: suppliers reláció hozzáadása",
+        "status": "completed",
+        "id": "todo-1763558180422-n3pt7iyik"
       },
       {
-        &quot;content&quot;: &quot;Frontend API hooks létrehozása: useReturns, useSuppliers, useGenerateInventoryReport stb.&quot;,
-        &quot;status&quot;: &quot;completed&quot;,
-        &quot;id&quot;: &quot;todo-1763558180422-chgt7aw2t&quot;
+        "content": "Frontend API hooks létrehozása: useReturns, useSuppliers, useGenerateInventoryReport stb.",
+        "status": "completed",
+        "id": "todo-1763558180422-chgt7aw2t"
       },
       {
-        &quot;content&quot;: &quot;Returns.tsx oldal létrehozása: lista, modal, szűrők, művelet gombok&quot;,
-        &quot;status&quot;: &quot;completed&quot;,
-        &quot;id&quot;: &quot;todo-1763558180422-2njrnidz6&quot;
+        "content": "Returns.tsx oldal létrehozása: lista, modal, szűrők, művelet gombok",
+        "status": "completed",
+        "id": "todo-1763558180422-2njrnidz6"
       },
       {
-        &quot;content&quot;: &quot;Suppliers.tsx oldal létrehozása: lista, modal, áru kapcsolatok kezelése&quot;,
-        &quot;status&quot;: &quot;completed&quot;,
-        &quot;id&quot;: &quot;todo-1763558180422-lv88vmyuo&quot;
+        "content": "Suppliers.tsx oldal létrehozása: lista, modal, áru kapcsolatok kezelése",
+        "status": "completed",
+        "id": "todo-1763558180422-lv88vmyuo"
       },
       {
-        &quot;content&quot;: &quot;ProductSuppliers komponens létrehozása és Products.tsx módosítása&quot;,
-        &quot;status&quot;: &quot;completed&quot;,
-        &quot;id&quot;: &quot;todo-1763558180422-db6ot3gqo&quot;
+        "content": "ProductSuppliers komponens létrehozása és Products.tsx módosítása",
+        "status": "completed",
+        "id": "todo-1763558180422-db6ot3gqo"
       },
       {
-        &quot;content&quot;: &quot;InventoryReportButton komponens létrehozása és Warehouses.tsx módosítása&quot;,
-        &quot;status&quot;: &quot;completed&quot;,
-        &quot;id&quot;: &quot;todo-1763558180422-8gwvp0vas&quot;
+        "content": "InventoryReportButton komponens létrehozása és Warehouses.tsx módosítása",
+        "status": "completed",
+        "id": "todo-1763558180422-8gwvp0vas"
       },
       {
-        &quot;content&quot;: &quot;Logistics.tsx módosítása: új tab-ok (Visszárú, Szállítók) hozzáadása&quot;,
-        &quot;status&quot;: &quot;completed&quot;,
-        &quot;id&quot;: &quot;todo-1763558180422-9ceyrva8d&quot;
+        "content": "Logistics.tsx módosítása: új tab-ok (Visszárú, Szállítók) hozzáadása",
+        "status": "completed",
+        "id": "todo-1763558180422-9ceyrva8d"
       },
       {
-        &quot;content&quot;: &quot;TaskModal.tsx módosítása: Értesítés küldése gomb és funkció&quot;,
-        &quot;status&quot;: &quot;completed&quot;,
-        &quot;id&quot;: &quot;todo-1763558180422-pqc3t48u5&quot;
+        "content": "TaskModal.tsx módosítása: Értesítés küldése gomb és funkció",
+        "status": "completed",
+        "id": "todo-1763558180422-pqc3t48u5"
       },
       {
-        &quot;content&quot;: &quot;Backend függőségek telepítése: pdfkit, exceljs, @types/pdfkit&quot;,
-        &quot;status&quot;: &quot;completed&quot;,
-        &quot;id&quot;: &quot;todo-1763558180422-4ksjnc0d4&quot;
+        "content": "Backend függőségek telepítése: pdfkit, exceljs, @types/pdfkit",
+        "status": "completed",
+        "id": "todo-1763558180422-4ksjnc0d4"
       },
       {
-        &quot;content&quot;: &quot;Integrációk tesztelése: visszárú-készlet, szállító-áru, leltárív-raktár, email értesítés&quot;,
-        &quot;status&quot;: &quot;pending&quot;,
-        &quot;id&quot;: &quot;todo-1763558180422-h95ncikgk&quot;
+        "content": "Integrációk tesztelése: visszárú-készlet, szállító-áru, leltárív-raktár, email értesítés",
+        "status": "pending",
+        "id": "todo-1763558180422-h95ncikgk"
       }
     ]
   }
@@ -10429,14 +10429,14 @@ A ProductSuppliers modal javításával kezdjük: kivesszük a form-ból, és k�
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Products.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Products.tsx</summary>
 
 **Chunk 1**
 Lines added: 2, lines removed: undefined
 
 ```diff
 @@ -40,4 +40,6 @@
-    const [searchTerm, setSearchTerm] = useState(&#39;&#39;);
+    const [searchTerm, setSearchTerm] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
 +   const [isSuppliersModalOpen, setIsSuppliersModalOpen] = useState(false);
 +   const [selectedProductId, setSelectedProductId] = useState&lt;string | null&gt;(null);
@@ -10452,7 +10452,7 @@ Lines added: 2, lines removed: undefined
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Products.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Products.tsx</summary>
 
 **Chunk 1**
 Lines added: 10, lines removed: undefined
@@ -10466,8 +10466,8 @@ Lines added: 10, lines removed: undefined
 +                             setSelectedProductId(product.id);
 +                             setIsSuppliersModalOpen(true);
 +                           }}
-+                           className=&quot;text-green-600 hover:text-green-800 mr-3&quot;
-+                           title=&quot;Szállítók kezelése&quot;
++                           className="text-green-600 hover:text-green-800 mr-3"
++                           title="Szállítók kezelése"
 +                         &gt;
 +                           Szállítók
 +                         &lt;/button&gt;
@@ -10483,7 +10483,7 @@ Lines added: 10, lines removed: undefined
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Products.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Products.tsx</summary>
 
 **Chunk 1**
 Lines added: undefined, lines removed: 7
@@ -10495,12 +10495,12 @@ Lines added: undefined, lines removed: 7
 - 
 -           {/* Suppliers section - only show when editing existing product */}
 -           {editingProductId &amp;&amp; (
--             &lt;div className=&quot;border-t pt-4 mt-4&quot; onClick={(e) =&gt; e.stopPropagation()}&gt;
+-             &lt;div className="border-t pt-4 mt-4" onClick={(e) =&gt; e.stopPropagation()}&gt;
 -               &lt;ProductSuppliers itemId={editingProductId} /&gt;
 -             &lt;/div&gt;
 -           )}
   
-            &lt;div className=&quot;flex justify-end space-x-3 pt-4&quot;&gt;
+            &lt;div className="flex justify-end space-x-3 pt-4"&gt;
 ```
 
 </details>
@@ -10511,7 +10511,7 @@ Lines added: undefined, lines removed: 7
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Products.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Products.tsx</summary>
 
 **Chunk 1**
 Lines added: 15, lines removed: undefined
@@ -10529,8 +10529,8 @@ Lines added: 15, lines removed: undefined
 +             setIsSuppliersModalOpen(false);
 +             setSelectedProductId(null);
 +           }}
-+           title=&quot;Termék szállítói&quot;
-+           size=&quot;lg&quot;
++           title="Termék szállítói"
++           size="lg"
 +         &gt;
 +           &lt;ProductSuppliers itemId={selectedProductId} /&gt;
 +         &lt;/Modal&gt;
@@ -10565,15 +10565,15 @@ A ProductSuppliers komponens módosítása, hogy ne legyen saját Modal wrapper-
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/logistics/ProductSuppliers.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/logistics/ProductSuppliers.tsx</summary>
 
 **Chunk 1**
 Lines added: 5, lines removed: undefined
 
 ```diff
 @@ -11,4 +11,9 @@
-  import { useQuery } from &#39;@tanstack/react-query&#39;;
-  import axios from &#39;../../lib/axios&#39;;
+  import { useQuery } from '@tanstack/react-query';
+  import axios from '../../lib/axios';
 + 
 + interface ProductSuppliersProps {
 +   itemId: string;
@@ -10591,7 +10591,7 @@ Lines added: 5, lines removed: undefined
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/logistics/ProductSuppliers.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/logistics/ProductSuppliers.tsx</summary>
 
 **Chunk 1**
 Lines added: 1, lines removed: 5
@@ -10618,7 +10618,7 @@ Lines added: 1, lines removed: 5
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/logistics/ProductSuppliers.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/logistics/ProductSuppliers.tsx</summary>
 
 **Chunk 1**
 Lines added: 22, lines removed: 10
@@ -10627,33 +10627,33 @@ Lines added: 22, lines removed: 10
 @@ -117,14 +117,26 @@
   
     return (
--     &lt;div className=&quot;mt-6&quot;&gt;
--       &lt;div className=&quot;flex justify-between items-center mb-4&quot;&gt;
--         &lt;h3 className=&quot;text-lg font-semibold&quot;&gt;Szállítók&lt;/h3&gt;
+-     &lt;div className="mt-6"&gt;
+-       &lt;div className="flex justify-between items-center mb-4"&gt;
+-         &lt;h3 className="text-lg font-semibold"&gt;Szállítók&lt;/h3&gt;
 -         &lt;button
 -           onClick={handleOpenLinkModal}
--           className=&quot;bg-mbit-blue text-white px-3 py-1 rounded text-sm hover:bg-blue-700&quot;
+-           className="bg-mbit-blue text-white px-3 py-1 rounded text-sm hover:bg-blue-700"
 -         &gt;
 -           + Szállító hozzáadása
 -         &lt;/button&gt;
 -       &lt;/div&gt;
 +     &lt;div&gt;
 +       {showHeader &amp;&amp; (
-+         &lt;div className=&quot;flex justify-between items-center mb-4&quot;&gt;
-+           &lt;h3 className=&quot;text-lg font-semibold&quot;&gt;Szállítók&lt;/h3&gt;
++         &lt;div className="flex justify-between items-center mb-4"&gt;
++           &lt;h3 className="text-lg font-semibold"&gt;Szállítók&lt;/h3&gt;
 +           &lt;button
 +             onClick={handleOpenLinkModal}
-+             className=&quot;bg-mbit-blue text-white px-3 py-1 rounded text-sm hover:bg-blue-700&quot;
++             className="bg-mbit-blue text-white px-3 py-1 rounded text-sm hover:bg-blue-700"
 +           &gt;
 +             + Szállító hozzáadása
 +           &lt;/button&gt;
 +         &lt;/div&gt;
 +       )}
 +       {!showHeader &amp;&amp; (
-+         &lt;div className=&quot;flex justify-end mb-4&quot;&gt;
++         &lt;div className="flex justify-end mb-4"&gt;
 +           &lt;button
 +             onClick={handleOpenLinkModal}
-+             className=&quot;bg-mbit-blue text-white px-3 py-1 rounded text-sm hover:bg-blue-700&quot;
++             className="bg-mbit-blue text-white px-3 py-1 rounded text-sm hover:bg-blue-700"
 +           &gt;
 +             + Szállító hozzáadása
 +           &lt;/button&gt;
@@ -10731,14 +10731,14 @@ The string to replace was not found in the file.
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Products.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Products.tsx</summary>
 
 **Chunk 1**
 Lines added: 1, lines removed: 1
 
 ```diff
 @@ -716,5 +716,5 @@
-            size=&quot;lg&quot;
+            size="lg"
           &gt;
 -           &lt;ProductSuppliers itemId={selectedProductId} /&gt;
 +           &lt;ProductSuppliers itemId={selectedProductId} showHeader={false} /&gt;
@@ -10768,7 +10768,7 @@ _No matches found_
 
 <tool-use data-tool-type="generic" data-tool-name="list_dir">
 <details>
-            <summary>Tool use: **list_directory** • Listed directory undefined • **0** results</summary>
+            <summary>Tool use: **list_dir** • Listed directory undefined • **0** results</summary>
         
 No results found
 </details>
@@ -10857,7 +10857,7 @@ Az ORDER jogosultságok már léteznek. Létrehozzuk az OrderService-t és az Or
 
 <tool-use data-tool-type="write" data-tool-name="write">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/crm/enums/order-status.enum.ts</summary>
+<details><summary>Tool use: **write** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/crm/enums/order-status.enum.ts</summary>
 
 **Chunk 1**
 Lines added: 8, lines removed: 1
@@ -10866,11 +10866,11 @@ Lines added: 8, lines removed: 1
 @@ -1,1 +1,8 @@
 - 
 + export enum OrderStatus {
-+   NEW = &#39;NEW&#39;,
-+   IN_PROCESS = &#39;IN_PROCESS&#39;,
-+   SHIPPED = &#39;SHIPPED&#39;,
-+   COMPLETED = &#39;COMPLETED&#39;,
-+   CANCELLED = &#39;CANCELLED&#39;,
++   NEW = 'NEW',
++   IN_PROCESS = 'IN_PROCESS',
++   SHIPPED = 'SHIPPED',
++   COMPLETED = 'COMPLETED',
++   CANCELLED = 'CANCELLED',
 + }
 + 
 ```
@@ -10883,7 +10883,7 @@ Lines added: 8, lines removed: 1
 
 <tool-use data-tool-type="write" data-tool-name="write">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/crm/dto/create-order.dto.ts</summary>
+<details><summary>Tool use: **write** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/crm/dto/create-order.dto.ts</summary>
 
 **Chunk 1**
 Lines added: 43, lines removed: 1
@@ -10891,8 +10891,8 @@ Lines added: 43, lines removed: 1
 ```diff
 @@ -1,1 +1,43 @@
 - 
-+ import { IsString, IsUUID, IsOptional, IsArray, IsNumber, Min, ValidateNested, IsDateString } from &#39;class-validator&#39;;
-+ import { Type } from &#39;class-transformer&#39;;
++ import { IsString, IsUUID, IsOptional, IsArray, IsNumber, Min, ValidateNested, IsDateString } from 'class-validator';
++ import { Type } from 'class-transformer';
 + 
 + export class OrderItemDto {
 +   @IsUUID()
@@ -10944,7 +10944,7 @@ Lines added: 43, lines removed: 1
 
 <tool-use data-tool-type="write" data-tool-name="write">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/crm/dto/update-order.dto.ts</summary>
+<details><summary>Tool use: **write** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/crm/dto/update-order.dto.ts</summary>
 
 **Chunk 1**
 Lines added: 23, lines removed: 1
@@ -10952,10 +10952,10 @@ Lines added: 23, lines removed: 1
 ```diff
 @@ -1,1 +1,23 @@
 - 
-+ import { PartialType } from &#39;@nestjs/mapped-types&#39;;
-+ import { CreateOrderDto } from &#39;./create-order.dto&#39;;
-+ import { IsOptional, IsEnum, IsDateString, IsString } from &#39;class-validator&#39;;
-+ import { OrderStatus } from &#39;../enums/order-status.enum&#39;;
++ import { PartialType } from '@nestjs/mapped-types';
++ import { CreateOrderDto } from './create-order.dto';
++ import { IsOptional, IsEnum, IsDateString, IsString } from 'class-validator';
++ import { OrderStatus } from '../enums/order-status.enum';
 + 
 + export class UpdateOrderDto extends PartialType(CreateOrderDto) {
 +   @IsOptional()
@@ -10985,7 +10985,7 @@ Lines added: 23, lines removed: 1
 
 <tool-use data-tool-type="write" data-tool-name="write">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/crm/dto/order-status.dto.ts</summary>
+<details><summary>Tool use: **write** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/crm/dto/order-status.dto.ts</summary>
 
 **Chunk 1**
 Lines added: 12, lines removed: 1
@@ -10993,8 +10993,8 @@ Lines added: 12, lines removed: 1
 ```diff
 @@ -1,1 +1,12 @@
 - 
-+ import { IsEnum, IsOptional, IsString } from &#39;class-validator&#39;;
-+ import { OrderStatus } from &#39;../enums/order-status.enum&#39;;
++ import { IsEnum, IsOptional, IsString } from 'class-validator';
++ import { OrderStatus } from '../enums/order-status.enum';
 + 
 + export class OrderStatusDto {
 +   @IsEnum(OrderStatus)
@@ -11041,7 +11041,7 @@ Az OrderService implementálása a QuoteService mintájára:
 
 <tool-use data-tool-type="write" data-tool-name="write">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/crm/order.service.ts</summary>
+<details><summary>Tool use: **write** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/crm/order.service.ts</summary>
 
 **Chunk 1**
 Lines added: 394, lines removed: 1
@@ -11049,13 +11049,13 @@ Lines added: 394, lines removed: 1
 ```diff
 @@ -1,1 +1,394 @@
 - 
-+ import { Injectable, BadRequestException, NotFoundException } from &#39;@nestjs/common&#39;;
-+ import { PrismaService } from &#39;../prisma/prisma.service&#39;;
-+ import { SystemSettingsService } from &#39;../system/settings.service&#39;;
-+ import { CreateOrderDto } from &#39;./dto/create-order.dto&#39;;
-+ import { UpdateOrderDto } from &#39;./dto/update-order.dto&#39;;
-+ import { OrderStatus } from &#39;./enums/order-status.enum&#39;;
-+ import { Prisma } from &#39;@prisma/client&#39;;
++ import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
++ import { PrismaService } from '../prisma/prisma.service';
++ import { SystemSettingsService } from '../system/settings.service';
++ import { CreateOrderDto } from './dto/create-order.dto';
++ import { UpdateOrderDto } from './dto/update-order.dto';
++ import { OrderStatus } from './enums/order-status.enum';
++ import { Prisma } from '@prisma/client';
 + 
 + @Injectable()
 + export class OrderService {
@@ -11133,7 +11133,7 @@ Lines added: 394, lines removed: 1
 +             },
 +           },
 +         },
-+         orderBy: { createdAt: &#39;desc&#39; },
++         orderBy: { createdAt: 'desc' },
 +       }),
 +       this.prisma.order.count({ where }),
 +     ]);
@@ -11192,7 +11192,7 @@ Lines added: 394, lines removed: 1
 +           },
 +         },
 +       },
-+       orderBy: { createdAt: &#39;desc&#39; },
++       orderBy: { createdAt: 'desc' },
 +     });
 +   }
 + 
@@ -11213,8 +11213,8 @@ Lines added: 394, lines removed: 1
 +       if (!quote) {
 +         throw new NotFoundException(&#96;Quote with ID ${data.quoteId} not found.&#96;);
 +       }
-+       if (quote.allapot !== &#39;elfogadva&#39; &amp;&amp; quote.allapot !== &#39;jovahagyott&#39;) {
-+         throw new BadRequestException(&#39;Only approved or accepted quotes can be converted to orders.&#39;);
++       if (quote.allapot !== 'elfogadva' &amp;&amp; quote.allapot !== 'jovahagyott') {
++         throw new BadRequestException('Only approved or accepted quotes can be converted to orders.');
 +       }
 +     }
 + 
@@ -11287,7 +11287,7 @@ Lines added: 394, lines removed: 1
 + 
 +     // Only allow updates to NEW orders, or status changes
 +     if (existingOrder.allapot !== OrderStatus.NEW &amp;&amp; data.allapot === undefined) {
-+       throw new BadRequestException(&#39;Only NEW orders can be updated. Use status change endpoint for workflow changes.&#39;);
++       throw new BadRequestException('Only NEW orders can be updated. Use status change endpoint for workflow changes.');
 +     }
 + 
 +     // If updating items, recalculate totals
@@ -11371,7 +11371,7 @@ Lines added: 394, lines removed: 1
 +     const allowedStatuses = validTransitions[order.allapot as OrderStatus];
 +     if (!allowedStatuses || !allowedStatuses.includes(newStatus)) {
 +       throw new BadRequestException(
-+         &#96;Cannot change status from ${order.allapot} to ${newStatus}. Valid transitions: ${allowedStatuses.join(&#39;, &#39;)}&#96;,
++         &#96;Cannot change status from ${order.allapot} to ${newStatus}. Valid transitions: ${allowedStatuses.join(', ')}&#96;,
 +       );
 +     }
 + 
@@ -11410,7 +11410,7 @@ Lines added: 394, lines removed: 1
 + 
 +     // Only allow deletion of NEW or CANCELLED orders
 +     if (order.allapot !== OrderStatus.NEW &amp;&amp; order.allapot !== OrderStatus.CANCELLED) {
-+       throw new BadRequestException(&#39;Only NEW or CANCELLED orders can be deleted.&#39;);
++       throw new BadRequestException('Only NEW or CANCELLED orders can be deleted.');
 +     }
 + 
 +     return await this.prisma.order.delete({
@@ -11419,8 +11419,8 @@ Lines added: 394, lines removed: 1
 +   }
 + 
 +   private async generateOrderNumber(): Promise&lt;string&gt; {
-+     const prefix = await this.settingsService.get(&#39;order.number.prefix&#39;);
-+     const prefixValue = prefix || &#39;REND&#39;;
++     const prefix = await this.settingsService.get('order.number.prefix');
++     const prefixValue = prefix || 'REND';
 + 
 +     const lastOrder = await this.prisma.order.findFirst({
 +       where: {
@@ -11429,17 +11429,17 @@ Lines added: 394, lines removed: 1
 +         },
 +       },
 +       orderBy: {
-+         azonosito: &#39;desc&#39;,
++         azonosito: 'desc',
 +       },
 +     });
 + 
 +     let nextNumber = 1;
 +     if (lastOrder) {
-+       const lastNumber = parseInt(lastOrder.azonosito.replace(prefixValue, &#39;&#39;)) || 0;
++       const lastNumber = parseInt(lastOrder.azonosito.replace(prefixValue, '')) || 0;
 +       nextNumber = lastNumber + 1;
 +     }
 + 
-+     return &#96;${prefixValue}-${nextNumber.toString().padStart(6, &#39;0&#39;)}&#96;;
++     return &#96;${prefixValue}-${nextNumber.toString().padStart(6, '0')}&#96;;
 +   }
 + }
 + 
@@ -11453,7 +11453,7 @@ Lines added: 394, lines removed: 1
 
 <tool-use data-tool-type="write" data-tool-name="write">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/crm/order.controller.ts</summary>
+<details><summary>Tool use: **write** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/crm/order.controller.ts</summary>
 
 **Chunk 1**
 Lines added: 122, lines removed: 1
@@ -11472,18 +11472,18 @@ Lines added: 122, lines removed: 1
 +   Query,
 +   UseGuards,
 +   Request,
-+ } from &#39;@nestjs/common&#39;;
-+ import { OrderService } from &#39;./order.service&#39;;
-+ import { CreateOrderDto } from &#39;./dto/create-order.dto&#39;;
-+ import { UpdateOrderDto } from &#39;./dto/update-order.dto&#39;;
-+ import { OrderStatusDto } from &#39;./dto/order-status.dto&#39;;
-+ import { Permissions } from &#39;../common/rbac/rbac.decorator&#39;;
-+ import { Permission } from &#39;../common/rbac/permission.enum&#39;;
-+ import { RbacGuard } from &#39;../common/rbac/rbac.guard&#39;;
-+ import { AuditService } from &#39;../common/audit/audit.service&#39;;
-+ import { OrderStatus } from &#39;./enums/order-status.enum&#39;;
++ } from '@nestjs/common';
++ import { OrderService } from './order.service';
++ import { CreateOrderDto } from './dto/create-order.dto';
++ import { UpdateOrderDto } from './dto/update-order.dto';
++ import { OrderStatusDto } from './dto/order-status.dto';
++ import { Permissions } from '../common/rbac/rbac.decorator';
++ import { Permission } from '../common/rbac/permission.enum';
++ import { RbacGuard } from '../common/rbac/rbac.guard';
++ import { AuditService } from '../common/audit/audit.service';
++ import { OrderStatus } from './enums/order-status.enum';
 + 
-+ @Controller(&#39;crm/orders&#39;)
++ @Controller('crm/orders')
 + @UseGuards(RbacGuard)
 + export class OrderController {
 +   constructor(
@@ -11495,19 +11495,19 @@ Lines added: 122, lines removed: 1
 +   @Permissions(Permission.ORDER_CREATE)
 +   async create(@Request() req: any, @Body() dto: CreateOrderDto) {
 +     const newOrder = await this.orderService.create(dto);
-+     await this.auditService.logCreate(&#39;order&#39;, newOrder.id, newOrder);
++     await this.auditService.logCreate('order', newOrder.id, newOrder);
 +     return newOrder;
 +   }
 + 
 +   @Get()
 +   @Permissions(Permission.ORDER_VIEW)
 +   async findAll(
-+     @Query(&#39;skip&#39;) skip?: string,
-+     @Query(&#39;take&#39;) take?: string,
-+     @Query(&#39;allapot&#39;) allapot?: string,
-+     @Query(&#39;accountId&#39;) accountId?: string,
-+     @Query(&#39;startDate&#39;) startDate?: string,
-+     @Query(&#39;endDate&#39;) endDate?: string,
++     @Query('skip') skip?: string,
++     @Query('take') take?: string,
++     @Query('allapot') allapot?: string,
++     @Query('accountId') accountId?: string,
++     @Query('startDate') startDate?: string,
++     @Query('endDate') endDate?: string,
 +   ) {
 +     const filters = { allapot, accountId, startDate, endDate };
 +     return this.orderService.findAll(
@@ -11517,26 +11517,26 @@ Lines added: 122, lines removed: 1
 +     );
 +   }
 + 
-+   @Get(&#39;:id&#39;)
++   @Get(':id')
 +   @Permissions(Permission.ORDER_VIEW)
-+   async findOne(@Param(&#39;id&#39;) id: string) {
++   async findOne(@Param('id') id: string) {
 +     return this.orderService.findOne(id);
 +   }
 + 
-+   @Put(&#39;:id&#39;)
++   @Put(':id')
 +   @Permissions(Permission.ORDER_EDIT)
-+   async update(@Param(&#39;id&#39;) id: string, @Body() dto: UpdateOrderDto) {
++   async update(@Param('id') id: string, @Body() dto: UpdateOrderDto) {
 +     const oldOrder = await this.orderService.findOne(id);
 +     const updatedOrder = await this.orderService.update(id, dto);
-+     await this.auditService.logUpdate(&#39;order&#39;, id, oldOrder, updatedOrder);
++     await this.auditService.logUpdate('order', id, oldOrder, updatedOrder);
 +     return updatedOrder;
 +   }
 + 
-+   @Post(&#39;:id/status&#39;)
++   @Post(':id/status')
 +   @Permissions(Permission.ORDER_FULFILL)
 +   async changeStatus(
 +     @Request() req: any,
-+     @Param(&#39;id&#39;) id: string,
++     @Param('id') id: string,
 +     @Body() dto: OrderStatusDto,
 +   ) {
 +     const oldOrder = await this.orderService.findOne(id);
@@ -11546,7 +11546,7 @@ Lines added: 122, lines removed: 1
 +       dto.megjegyzesek,
 +     );
 +     await this.auditService.logUpdate(
-+       &#39;order&#39;,
++       'order',
 +       id,
 +       oldOrder,
 +       updatedOrder,
@@ -11555,30 +11555,30 @@ Lines added: 122, lines removed: 1
 +     return updatedOrder;
 +   }
 + 
-+   @Post(&#39;:id/cancel&#39;)
++   @Post(':id/cancel')
 +   @Permissions(Permission.ORDER_CANCEL)
-+   async cancel(@Request() req: any, @Param(&#39;id&#39;) id: string, @Body() dto: OrderStatusDto) {
++   async cancel(@Request() req: any, @Param('id') id: string, @Body() dto: OrderStatusDto) {
 +     const oldOrder = await this.orderService.findOne(id);
 +     const cancelledOrder = await this.orderService.changeStatus(
 +       id,
 +       OrderStatus.CANCELLED,
-+       dto.megjegyzesek || &#39;Rendelés visszavonva&#39;,
++       dto.megjegyzesek || 'Rendelés visszavonva',
 +     );
 +     await this.auditService.logUpdate(
-+       &#39;order&#39;,
++       'order',
 +       id,
 +       oldOrder,
 +       cancelledOrder,
-+       &#39;Order cancelled&#39;,
++       'Order cancelled',
 +     );
 +     return cancelledOrder;
 +   }
 + 
-+   @Delete(&#39;:id&#39;)
++   @Delete(':id')
 +   @Permissions(Permission.ORDER_DELETE)
-+   async delete(@Param(&#39;id&#39;) id: string) {
++   async delete(@Param('id') id: string) {
 +     const deletedOrder = await this.orderService.delete(id);
-+     await this.auditService.logDelete(&#39;order&#39;, id, deletedOrder);
++     await this.auditService.logDelete('order', id, deletedOrder);
 +     return deletedOrder;
 +   }
 + }
@@ -11601,19 +11601,19 @@ Lines added: 122, lines removed: 1
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/crm/crm.module.ts</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/crm/crm.module.ts</summary>
 
 **Chunk 1**
 Lines added: 4, lines removed: 1
 
 ```diff
 @@ -10,8 +10,11 @@
-  import { QuoteController } from &#39;./quote.controller&#39;;
-  import { QuoteService } from &#39;./quote.service&#39;;
-+ import { OrderController } from &#39;./order.controller&#39;;
-+ import { OrderService } from &#39;./order.service&#39;;
-  import { SystemModule } from &#39;../system/system.module&#39;;
-+ import { AuditModule } from &#39;../common/audit/audit.module&#39;;
+  import { QuoteController } from './quote.controller';
+  import { QuoteService } from './quote.service';
++ import { OrderController } from './order.controller';
++ import { OrderService } from './order.service';
+  import { SystemModule } from '../system/system.module';
++ import { AuditModule } from '../common/audit/audit.module';
   
   @Module({
 -   imports: [SystemModule],
@@ -11696,7 +11696,7 @@ Could not find file '/Users/liviuszberger/mbit-erp/apps/web/src/lib/api/crm.ts' 
 
 <tool-use data-tool-type="generic" data-tool-name="list_dir">
 <details>
-            <summary>Tool use: **list_directory** • Listed directory undefined • **0** results</summary>
+            <summary>Tool use: **list_dir** • Listed directory undefined • **0** results</summary>
         
 No results found
 </details>
@@ -11752,7 +11752,7 @@ Létrehozzuk a CRM API hooks fájlt, majd az Orders oldalakat:
 
 <tool-use data-tool-type="write" data-tool-name="write">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/lib/api/crm.ts</summary>
+<details><summary>Tool use: **write** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/lib/api/crm.ts</summary>
 
 **Chunk 1**
 Lines added: 191, lines removed: 1
@@ -11760,8 +11760,8 @@ Lines added: 191, lines removed: 1
 ```diff
 @@ -1,1 +1,191 @@
 - 
-+ import { useQuery, useMutation, useQueryClient } from &#39;@tanstack/react-query&#39;;
-+ import axios from &#39;../lib/axios&#39;;
++ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
++ import axios from '../lib/axios';
 + 
 + // Order Interfaces
 + export interface Order {
@@ -11854,15 +11854,15 @@ Lines added: 191, lines removed: 1
 + // Order Hooks
 + export function useOrders(filters?: OrderFilters, skip = 0, take = 50) {
 +   return useQuery&lt;any, Error, { total: number; data: Order[] }&gt;({
-+     queryKey: [&#39;orders&#39;, filters, skip, take],
++     queryKey: ['orders', filters, skip, take],
 +     queryFn: async () =&gt; {
 +       const params = new URLSearchParams();
-+       if (filters?.allapot) params.append(&#39;allapot&#39;, filters.allapot);
-+       if (filters?.accountId) params.append(&#39;accountId&#39;, filters.accountId);
-+       if (filters?.startDate) params.append(&#39;startDate&#39;, filters.startDate);
-+       if (filters?.endDate) params.append(&#39;endDate&#39;, filters.endDate);
-+       params.append(&#39;skip&#39;, String(skip));
-+       params.append(&#39;take&#39;, String(take));
++       if (filters?.allapot) params.append('allapot', filters.allapot);
++       if (filters?.accountId) params.append('accountId', filters.accountId);
++       if (filters?.startDate) params.append('startDate', filters.startDate);
++       if (filters?.endDate) params.append('endDate', filters.endDate);
++       params.append('skip', String(skip));
++       params.append('take', String(take));
 +       const response = await axios.get(&#96;/api/crm/orders?${params.toString()}&#96;);
 +       return response.data;
 +     },
@@ -11871,7 +11871,7 @@ Lines added: 191, lines removed: 1
 + 
 + export function useOrder(id: string) {
 +   return useQuery&lt;any, Error, Order&gt;({
-+     queryKey: [&#39;order&#39;, id],
++     queryKey: ['order', id],
 +     queryFn: async () =&gt; {
 +       const response = await axios.get(&#96;/api/crm/orders/${id}&#96;);
 +       return response.data;
@@ -11884,12 +11884,12 @@ Lines added: 191, lines removed: 1
 +   const queryClient = useQueryClient();
 +   return useMutation&lt;Order, Error, CreateOrderDto&gt;({
 +     mutationFn: async (newOrder: CreateOrderDto) =&gt; {
-+       const response = await axios.post(&#39;/api/crm/orders&#39;, newOrder);
++       const response = await axios.post('/api/crm/orders', newOrder);
 +       return response.data;
 +     },
 +     onSuccess: () =&gt; {
-+       queryClient.invalidateQueries({ queryKey: [&#39;orders&#39;] });
-+       queryClient.invalidateQueries({ queryKey: [&#39;quotes&#39;] });
++       queryClient.invalidateQueries({ queryKey: ['orders'] });
++       queryClient.invalidateQueries({ queryKey: ['quotes'] });
 +     },
 +   });
 + }
@@ -11902,8 +11902,8 @@ Lines added: 191, lines removed: 1
 +       return response.data;
 +     },
 +     onSuccess: (_, variables) =&gt; {
-+       queryClient.invalidateQueries({ queryKey: [&#39;orders&#39;] });
-+       queryClient.invalidateQueries({ queryKey: [&#39;order&#39;, variables.id] });
++       queryClient.invalidateQueries({ queryKey: ['orders'] });
++       queryClient.invalidateQueries({ queryKey: ['order', variables.id] });
 +     },
 +   });
 + }
@@ -11916,8 +11916,8 @@ Lines added: 191, lines removed: 1
 +       return response.data;
 +     },
 +     onSuccess: (_, variables) =&gt; {
-+       queryClient.invalidateQueries({ queryKey: [&#39;orders&#39;] });
-+       queryClient.invalidateQueries({ queryKey: [&#39;order&#39;, variables.id] });
++       queryClient.invalidateQueries({ queryKey: ['orders'] });
++       queryClient.invalidateQueries({ queryKey: ['order', variables.id] });
 +     },
 +   });
 + }
@@ -11927,14 +11927,14 @@ Lines added: 191, lines removed: 1
 +   return useMutation&lt;Order, Error, { id: string; megjegyzesek?: string }&gt;({
 +     mutationFn: async ({ id, megjegyzesek }) =&gt; {
 +       const response = await axios.post(&#96;/api/crm/orders/${id}/cancel&#96;, {
-+         allapot: &#39;CANCELLED&#39;,
++         allapot: 'CANCELLED',
 +         megjegyzesek,
 +       });
 +       return response.data;
 +     },
 +     onSuccess: (_, variables) =&gt; {
-+       queryClient.invalidateQueries({ queryKey: [&#39;orders&#39;] });
-+       queryClient.invalidateQueries({ queryKey: [&#39;order&#39;, variables.id] });
++       queryClient.invalidateQueries({ queryKey: ['orders'] });
++       queryClient.invalidateQueries({ queryKey: ['order', variables.id] });
 +     },
 +   });
 + }
@@ -11946,7 +11946,7 @@ Lines added: 191, lines removed: 1
 +       await axios.delete(&#96;/api/crm/orders/${id}&#96;);
 +     },
 +     onSuccess: () =&gt; {
-+       queryClient.invalidateQueries({ queryKey: [&#39;orders&#39;] });
++       queryClient.invalidateQueries({ queryKey: ['orders'] });
 +     },
 +   });
 + }
@@ -11979,7 +11979,7 @@ Létrehozzuk az Orders.tsx oldalt a CRM modulban:
 
 <tool-use data-tool-type="write" data-tool-name="write">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Orders.tsx</summary>
+<details><summary>Tool use: **write** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Orders.tsx</summary>
 
 **Chunk 1**
 Lines added: 942, lines removed: 1
@@ -11987,8 +11987,8 @@ Lines added: 942, lines removed: 1
 ```diff
 @@ -1,1 +1,942 @@
 - 
-+ import { useState, useEffect } from &#39;react&#39;;
-+ import Modal from &#39;../components/Modal&#39;;
++ import { useState, useEffect } from 'react';
++ import Modal from '../components/Modal';
 + import {
 +   useOrders,
 +   useCreateOrder,
@@ -11999,9 +11999,9 @@ Lines added: 942, lines removed: 1
 +   Order,
 +   CreateOrderDto,
 +   OrderFilters,
-+ } from &#39;../lib/api/crm&#39;;
-+ import { apiFetch } from &#39;../lib/api&#39;;
-+ import { OrderStatus } from &#39;../lib/api/crm&#39;;
++ } from '../lib/api/crm';
++ import { apiFetch } from '../lib/api';
++ import { OrderStatus } from '../lib/api/crm';
 + 
 + interface Account {
 +   id: string;
@@ -12041,11 +12041,11 @@ Lines added: 942, lines removed: 1
 + }
 + 
 + const ORDER_STATUSES = [
-+   { kod: &#39;NEW&#39;, nev: &#39;Új&#39;, szin: &#39;bg-blue-100 text-blue-800&#39; },
-+   { kod: &#39;IN_PROCESS&#39;, nev: &#39;Feldolgozás alatt&#39;, szin: &#39;bg-yellow-100 text-yellow-800&#39; },
-+   { kod: &#39;SHIPPED&#39;, nev: &#39;Szállítva&#39;, szin: &#39;bg-purple-100 text-purple-800&#39; },
-+   { kod: &#39;COMPLETED&#39;, nev: &#39;Teljesítve&#39;, szin: &#39;bg-green-100 text-green-800&#39; },
-+   { kod: &#39;CANCELLED&#39;, nev: &#39;Visszavonva&#39;, szin: &#39;bg-red-100 text-red-800&#39; },
++   { kod: 'NEW', nev: 'Új', szin: 'bg-blue-100 text-blue-800' },
++   { kod: 'IN_PROCESS', nev: 'Feldolgozás alatt', szin: 'bg-yellow-100 text-yellow-800' },
++   { kod: 'SHIPPED', nev: 'Szállítva', szin: 'bg-purple-100 text-purple-800' },
++   { kod: 'COMPLETED', nev: 'Teljesítve', szin: 'bg-green-100 text-green-800' },
++   { kod: 'CANCELLED', nev: 'Visszavonva', szin: 'bg-red-100 text-red-800' },
 + ];
 + 
 + export default function Orders() {
@@ -12058,8 +12058,8 @@ Lines added: 942, lines removed: 1
 +   const [quotes, setQuotes] = useState&lt;Quote[]&gt;([]);
 +   const [items, setItems] = useState&lt;Item[]&gt;([]);
 +   const [saving, setSaving] = useState(false);
-+   const [error, setError] = useState&lt;string&gt;(&#39;&#39;);
-+   const [success, setSuccess] = useState&lt;string&gt;(&#39;&#39;);
++   const [error, setError] = useState&lt;string&gt;('');
++   const [success, setSuccess] = useState&lt;string&gt;('');
 + 
 +   const { data: ordersData, isLoading, refetch } = useOrders(filters, 0, 100);
 + 
@@ -12070,11 +12070,11 @@ Lines added: 942, lines removed: 1
 +   const deleteOrder = useDeleteOrder();
 + 
 +   const [formData, setFormData] = useState&lt;CreateOrderDto&gt;({
-+     accountId: &#39;&#39;,
-+     quoteId: &#39;&#39;,
-+     szallitasiDatum: &#39;&#39;,
-+     megjegyzesek: &#39;&#39;,
-+     items: [{ itemId: &#39;&#39;, mennyiseg: 1, egysegAr: 0, kedvezmeny: 0 }],
++     accountId: '',
++     quoteId: '',
++     szallitasiDatum: '',
++     megjegyzesek: '',
++     items: [{ itemId: '', mennyiseg: 1, egysegAr: 0, kedvezmeny: 0 }],
 +   });
 + 
 +   useEffect(() =&gt; {
@@ -12087,43 +12087,43 @@ Lines added: 942, lines removed: 1
 + 
 +   const loadAccounts = async () =&gt; {
 +     try {
-+       const response = await apiFetch(&#39;/crm/accounts?skip=0&amp;take=100&#39;);
++       const response = await apiFetch('/crm/accounts?skip=0&amp;take=100');
 +       if (response.ok) {
 +         const data = await response.json();
 +         setAccounts(data.items || data.data || []);
 +       }
 +     } catch (error) {
-+       console.error(&#39;Hiba az ügyfelek betöltésekor:&#39;, error);
++       console.error('Hiba az ügyfelek betöltésekor:', error);
 +     }
 +   };
 + 
 +   const loadQuotes = async () =&gt; {
 +     try {
-+       const response = await apiFetch(&#39;/crm/quotes?allapot=jovahagyott&amp;skip=0&amp;take=100&#39;);
++       const response = await apiFetch('/crm/quotes?allapot=jovahagyott&amp;skip=0&amp;take=100');
 +       if (response.ok) {
 +         const data = await response.json();
 +         setQuotes(data.data || []);
 +       }
 +     } catch (error) {
-+       console.error(&#39;Hiba az árajánlatok betöltésekor:&#39;, error);
++       console.error('Hiba az árajánlatok betöltésekor:', error);
 +     }
 +   };
 + 
 +   const loadItems = async () =&gt; {
 +     try {
-+       const response = await apiFetch(&#39;/logistics/items?skip=0&amp;take=100&#39;);
++       const response = await apiFetch('/logistics/items?skip=0&amp;take=100');
 +       if (response.ok) {
 +         const data = await response.json();
 +         setItems(data.items || []);
 +       }
 +     } catch (error) {
-+       console.error(&#39;Hiba a termékek betöltésekor:&#39;, error);
++       console.error('Hiba a termékek betöltésekor:', error);
 +     }
 +   };
 + 
 +   const handleOpenModal = async (order?: Order) =&gt; {
-+     setError(&#39;&#39;);
-+     setSuccess(&#39;&#39;);
++     setError('');
++     setSuccess('');
 +     if (order) {
 +       setEditingOrderId(order.id);
 +       try {
@@ -12132,11 +12132,11 @@ Lines added: 942, lines removed: 1
 +           const fullOrder = await response.json();
 +           setFormData({
 +             accountId: fullOrder.accountId,
-+             quoteId: fullOrder.quoteId || &#39;&#39;,
++             quoteId: fullOrder.quoteId || '',
 +             szallitasiDatum: fullOrder.szallitasiDatum
-+               ? new Date(fullOrder.szallitasiDatum).toISOString().split(&#39;T&#39;)[0]
-+               : &#39;&#39;,
-+             megjegyzesek: fullOrder.megjegyzesek || &#39;&#39;,
++               ? new Date(fullOrder.szallitasiDatum).toISOString().split('T')[0]
++               : '',
++             megjegyzesek: fullOrder.megjegyzesek || '',
 +             items:
 +               fullOrder.items &amp;&amp; fullOrder.items.length &gt; 0
 +                 ? fullOrder.items.map((item: any) =&gt; ({
@@ -12145,20 +12145,20 @@ Lines added: 942, lines removed: 1
 +                     egysegAr: item.egysegAr,
 +                     kedvezmeny: item.kedvezmeny || 0,
 +                   }))
-+                 : [{ itemId: &#39;&#39;, mennyiseg: 1, egysegAr: 0, kedvezmeny: 0 }],
++                 : [{ itemId: '', mennyiseg: 1, egysegAr: 0, kedvezmeny: 0 }],
 +           });
 +         }
 +       } catch (err) {
-+         console.error(&#39;Hiba a rendelés betöltésekor:&#39;, err);
++         console.error('Hiba a rendelés betöltésekor:', err);
 +       }
 +     } else {
 +       setEditingOrderId(null);
 +       setFormData({
-+         accountId: &#39;&#39;,
-+         quoteId: &#39;&#39;,
-+         szallitasiDatum: &#39;&#39;,
-+         megjegyzesek: &#39;&#39;,
-+         items: [{ itemId: &#39;&#39;, mennyiseg: 1, egysegAr: 0, kedvezmeny: 0 }],
++         accountId: '',
++         quoteId: '',
++         szallitasiDatum: '',
++         megjegyzesek: '',
++         items: [{ itemId: '', mennyiseg: 1, egysegAr: 0, kedvezmeny: 0 }],
 +       });
 +     }
 +     setIsModalOpen(true);
@@ -12167,15 +12167,15 @@ Lines added: 942, lines removed: 1
 +   const handleCloseModal = () =&gt; {
 +     setIsModalOpen(false);
 +     setEditingOrderId(null);
-+     setError(&#39;&#39;);
-+     setSuccess(&#39;&#39;);
++     setError('');
++     setSuccess('');
 +   };
 + 
 +   const handleSubmit = async (e: React.FormEvent) =&gt; {
 +     e.preventDefault();
 +     setSaving(true);
-+     setError(&#39;&#39;);
-+     setSuccess(&#39;&#39;);
++     setError('');
++     setSuccess('');
 + 
 +     try {
 +       const submitData: CreateOrderDto = {
@@ -12191,10 +12191,10 @@ Lines added: 942, lines removed: 1
 +           id: editingOrderId,
 +           data: submitData,
 +         });
-+         setSuccess(&#39;Rendelés sikeresen frissítve!&#39;);
++         setSuccess('Rendelés sikeresen frissítve!');
 +       } else {
 +         await createOrder.mutateAsync(submitData);
-+         setSuccess(&#39;Rendelés sikeresen létrehozva!&#39;);
++         setSuccess('Rendelés sikeresen létrehozva!');
 +       }
 + 
 +       setTimeout(() =&gt; {
@@ -12202,7 +12202,7 @@ Lines added: 942, lines removed: 1
 +         refetch();
 +       }, 1500);
 +     } catch (err: any) {
-+       setError(err.response?.data?.message || &#39;Hiba történt a mentés során&#39;);
++       setError(err.response?.data?.message || 'Hiba történt a mentés során');
 +     } finally {
 +       setSaving(false);
 +     }
@@ -12211,13 +12211,13 @@ Lines added: 942, lines removed: 1
 +   const handleAddItem = () =&gt; {
 +     setFormData({
 +       ...formData,
-+       items: [...formData.items, { itemId: &#39;&#39;, mennyiseg: 1, egysegAr: 0, kedvezmeny: 0 }],
++       items: [...formData.items, { itemId: '', mennyiseg: 1, egysegAr: 0, kedvezmeny: 0 }],
 +     });
 +   };
 + 
 +   const handleRemoveItem = (index: number) =&gt; {
 +     const newItems = formData.items.filter((_, i) =&gt; i !== index);
-+     setFormData({ ...formData, items: newItems.length &gt; 0 ? newItems : [{ itemId: &#39;&#39;, mennyiseg: 1, egysegAr: 0, kedvezmeny: 0 }] });
++     setFormData({ ...formData, items: newItems.length &gt; 0 ? newItems : [{ itemId: '', mennyiseg: 1, egysegAr: 0, kedvezmeny: 0 }] });
 +   };
 + 
 +   const handleItemChange = (index: number, field: keyof OrderItem, value: string | number) =&gt; {
@@ -12225,7 +12225,7 @@ Lines added: 942, lines removed: 1
 +     newItems[index] = { ...newItems[index], [field]: value };
 + 
 +     // Auto-fill price when item is selected
-+     if (field === &#39;itemId&#39; &amp;&amp; typeof value === &#39;string&#39;) {
++     if (field === 'itemId' &amp;&amp; typeof value === 'string') {
 +       const selectedItem = items.find((item) =&gt; item.id === value);
 +       if (selectedItem) {
 +         newItems[index].egysegAr = selectedItem.eladasiAr;
@@ -12260,35 +12260,35 @@ Lines added: 942, lines removed: 1
 +         id,
 +         data: { allapot: newStatus },
 +       });
-+       setSuccess(&#39;Státusz sikeresen megváltoztatva!&#39;);
++       setSuccess('Státusz sikeresen megváltoztatva!');
 +       refetch();
 +     } catch (err: any) {
-+       setError(err.response?.data?.message || &#39;Hiba történt a státusz változtatás során&#39;);
++       setError(err.response?.data?.message || 'Hiba történt a státusz változtatás során');
 +     }
 +   };
 + 
 +   const handleCancel = async (id: string) =&gt; {
-+     const reason = prompt(&#39;Visszavonás oka:&#39;);
++     const reason = prompt('Visszavonás oka:');
 +     if (reason === null) return;
 + 
 +     try {
 +       await cancelOrder.mutateAsync({ id, megjegyzesek: reason });
-+       setSuccess(&#39;Rendelés sikeresen visszavonva!&#39;);
++       setSuccess('Rendelés sikeresen visszavonva!');
 +       refetch();
 +     } catch (err: any) {
-+       setError(err.response?.data?.message || &#39;Hiba történt a visszavonás során&#39;);
++       setError(err.response?.data?.message || 'Hiba történt a visszavonás során');
 +     }
 +   };
 + 
 +   const handleDelete = async (id: string) =&gt; {
-+     if (!confirm(&#39;Biztosan törli ezt a rendelést?&#39;)) return;
++     if (!confirm('Biztosan törli ezt a rendelést?')) return;
 + 
 +     try {
 +       await deleteOrder.mutateAsync(id);
-+       setSuccess(&#39;Rendelés sikeresen törölve!&#39;);
++       setSuccess('Rendelés sikeresen törölve!');
 +       refetch();
 +     } catch (err: any) {
-+       setError(err.response?.data?.message || &#39;Hiba történt a törlés során&#39;);
++       setError(err.response?.data?.message || 'Hiba történt a törlés során');
 +     }
 +   };
 + 
@@ -12300,7 +12300,7 @@ Lines added: 942, lines removed: 1
 +     const statusInfo = ORDER_STATUSES.find((s) =&gt; s.kod === status) || {
 +       kod: status,
 +       nev: status,
-+       szin: &#39;bg-gray-100 text-gray-800&#39;,
++       szin: 'bg-gray-100 text-gray-800',
 +     };
 +     return (
 +       &lt;span className={&#96;px-2 py-1 rounded text-xs font-medium ${statusInfo.szin}&#96;}&gt;
@@ -12311,69 +12311,69 @@ Lines added: 942, lines removed: 1
 + 
 +   const handleExportCSV = () =&gt; {
 +     if (!ordersData?.data || ordersData.data.length === 0) {
-+       alert(&#39;Nincs exportálandó adat!&#39;);
++       alert('Nincs exportálandó adat!');
 +       return;
 +     }
 + 
 +     const headers = [
-+       &#39;Rendelés azonosító&#39;,
-+       &#39;Ügyfél&#39;,
-+       &#39;Árajánlat&#39;,
-+       &#39;Rendelés dátuma&#39;,
-+       &#39;Szállítási dátum&#39;,
-+       &#39;Teljesítési dátum&#39;,
-+       &#39;Összeg&#39;,
-+       &#39;ÁFA&#39;,
-+       &#39;Végösszeg&#39;,
-+       &#39;Állapot&#39;,
-+       &#39;Megjegyzések&#39;,
++       'Rendelés azonosító',
++       'Ügyfél',
++       'Árajánlat',
++       'Rendelés dátuma',
++       'Szállítási dátum',
++       'Teljesítési dátum',
++       'Összeg',
++       'ÁFA',
++       'Végösszeg',
++       'Állapot',
++       'Megjegyzések',
 +     ];
 + 
 +     const rows = ordersData.data.map((order: Order) =&gt; [
 +       order.azonosito,
-+       order.account?.nev || &#39;-&#39;,
-+       order.quote?.azonosito || &#39;-&#39;,
-+       new Date(order.rendelesiDatum).toLocaleDateString(&#39;hu-HU&#39;),
-+       order.szallitasiDatum ? new Date(order.szallitasiDatum).toLocaleDateString(&#39;hu-HU&#39;) : &#39;-&#39;,
-+       order.teljesitesiDatum ? new Date(order.teljesitesiDatum).toLocaleDateString(&#39;hu-HU&#39;) : &#39;-&#39;,
-+       order.osszeg.toLocaleString(&#39;hu-HU&#39;),
-+       order.afa.toLocaleString(&#39;hu-HU&#39;),
-+       order.vegosszeg.toLocaleString(&#39;hu-HU&#39;),
++       order.account?.nev || '-',
++       order.quote?.azonosito || '-',
++       new Date(order.rendelesiDatum).toLocaleDateString('hu-HU'),
++       order.szallitasiDatum ? new Date(order.szallitasiDatum).toLocaleDateString('hu-HU') : '-',
++       order.teljesitesiDatum ? new Date(order.teljesitesiDatum).toLocaleDateString('hu-HU') : '-',
++       order.osszeg.toLocaleString('hu-HU'),
++       order.afa.toLocaleString('hu-HU'),
++       order.vegosszeg.toLocaleString('hu-HU'),
 +       getStatusLabel(order.allapot),
-+       order.megjegyzesek || &#39;&#39;,
++       order.megjegyzesek || '',
 +     ]);
 + 
 +     const csvContent = [
-+       headers.join(&#39;,&#39;),
-+       ...rows.map((row: string[]) =&gt; row.map((cell: string) =&gt; &#96;&quot;${cell}&quot;&#96;).join(&#39;,&#39;)),
-+     ].join(&#39;\n&#39;);
++       headers.join(','),
++       ...rows.map((row: string[]) =&gt; row.map((cell: string) =&gt; &#96;"${cell}"&#96;).join(',')),
++     ].join('\n');
 + 
-+     const blob = new Blob([&#39;\ufeff&#39; + csvContent], { type: &#39;text/csv;charset=utf-8;&#39; });
-+     const link = document.createElement(&#39;a&#39;);
++     const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
++     const link = document.createElement('a');
 +     const url = URL.createObjectURL(blob);
-+     link.setAttribute(&#39;href&#39;, url);
-+     link.setAttribute(&#39;download&#39;, &#96;rendelesek_export_${new Date().toISOString().split(&#39;T&#39;)[0]}.csv&#96;);
-+     link.style.visibility = &#39;hidden&#39;;
++     link.setAttribute('href', url);
++     link.setAttribute('download', &#96;rendelesek_export_${new Date().toISOString().split('T')[0]}.csv&#96;);
++     link.style.visibility = 'hidden';
 +     document.body.appendChild(link);
 +     link.click();
 +     document.body.removeChild(link);
 +   };
 + 
 +   return (
-+     &lt;div className=&quot;p-6&quot;&gt;
-+       &lt;div className=&quot;flex justify-between items-center mb-6&quot;&gt;
-+         &lt;h1 className=&quot;text-3xl font-bold&quot;&gt;Rendelések&lt;/h1&gt;
-+         &lt;div className=&quot;flex gap-2&quot;&gt;
++     &lt;div className="p-6"&gt;
++       &lt;div className="flex justify-between items-center mb-6"&gt;
++         &lt;h1 className="text-3xl font-bold"&gt;Rendelések&lt;/h1&gt;
++         &lt;div className="flex gap-2"&gt;
 +           &lt;button
 +             onClick={handleExportCSV}
-+             className=&quot;bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm&quot;
-+             title=&quot;CSV export&quot;
++             className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm"
++             title="CSV export"
 +           &gt;
 +             📥 Export CSV
 +           &lt;/button&gt;
 +           &lt;button
 +             onClick={() =&gt; handleOpenModal()}
-+             className=&quot;bg-mbit-blue text-white px-4 py-2 rounded-lg hover:bg-blue-700&quot;
++             className="bg-mbit-blue text-white px-4 py-2 rounded-lg hover:bg-blue-700"
 +           &gt;
 +             + Új rendelés
 +           &lt;/button&gt;
@@ -12381,31 +12381,31 @@ Lines added: 942, lines removed: 1
 +       &lt;/div&gt;
 + 
 +       {error &amp;&amp; (
-+         &lt;div className=&quot;mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded&quot;&gt;
++         &lt;div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded"&gt;
 +           {error}
 +         &lt;/div&gt;
 +       )}
 + 
 +       {success &amp;&amp; (
-+         &lt;div className=&quot;mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded&quot;&gt;
++         &lt;div className="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded"&gt;
 +           {success}
 +         &lt;/div&gt;
 +       )}
 + 
 +       {/* Filters */}
-+       &lt;div className=&quot;bg-white rounded-lg shadow p-4 mb-6&quot;&gt;
-+         &lt;h2 className=&quot;text-lg font-semibold mb-4&quot;&gt;Szűrők&lt;/h2&gt;
-+         &lt;div className=&quot;grid grid-cols-1 md:grid-cols-4 gap-4&quot;&gt;
++       &lt;div className="bg-white rounded-lg shadow p-4 mb-6"&gt;
++         &lt;h2 className="text-lg font-semibold mb-4"&gt;Szűrők&lt;/h2&gt;
++         &lt;div className="grid grid-cols-1 md:grid-cols-4 gap-4"&gt;
 +           &lt;div&gt;
-+             &lt;label className=&quot;block text-sm font-medium text-gray-700 mb-1&quot;&gt;Állapot&lt;/label&gt;
++             &lt;label className="block text-sm font-medium text-gray-700 mb-1"&gt;Állapot&lt;/label&gt;
 +             &lt;select
-+               value={filters.allapot || &#39;&#39;}
++               value={filters.allapot || ''}
 +               onChange={(e) =&gt;
 +                 setFilters({ ...filters, allapot: e.target.value || undefined })
 +               }
-+               className=&quot;w-full px-3 py-2 border border-gray-300 rounded-lg&quot;
++               className="w-full px-3 py-2 border border-gray-300 rounded-lg"
 +             &gt;
-+               &lt;option value=&quot;&quot;&gt;Összes&lt;/option&gt;
++               &lt;option value=""&gt;Összes&lt;/option&gt;
 +               {ORDER_STATUSES.map((status) =&gt; (
 +                 &lt;option key={status.kod} value={status.kod}&gt;
 +                   {status.nev}
@@ -12415,39 +12415,39 @@ Lines added: 942, lines removed: 1
 +           &lt;/div&gt;
 + 
 +           &lt;div&gt;
-+             &lt;label className=&quot;block text-sm font-medium text-gray-700 mb-1&quot;&gt;Kezdő dátum&lt;/label&gt;
++             &lt;label className="block text-sm font-medium text-gray-700 mb-1"&gt;Kezdő dátum&lt;/label&gt;
 +             &lt;input
-+               type=&quot;date&quot;
-+               value={filters.startDate || &#39;&#39;}
++               type="date"
++               value={filters.startDate || ''}
 +               onChange={(e) =&gt;
 +                 setFilters({ ...filters, startDate: e.target.value || undefined })
 +               }
-+               className=&quot;w-full px-3 py-2 border border-gray-300 rounded-lg&quot;
++               className="w-full px-3 py-2 border border-gray-300 rounded-lg"
 +             /&gt;
 +           &lt;/div&gt;
 + 
 +           &lt;div&gt;
-+             &lt;label className=&quot;block text-sm font-medium text-gray-700 mb-1&quot;&gt;Vég dátum&lt;/label&gt;
++             &lt;label className="block text-sm font-medium text-gray-700 mb-1"&gt;Vég dátum&lt;/label&gt;
 +             &lt;input
-+               type=&quot;date&quot;
-+               value={filters.endDate || &#39;&#39;}
++               type="date"
++               value={filters.endDate || ''}
 +               onChange={(e) =&gt;
 +                 setFilters({ ...filters, endDate: e.target.value || undefined })
 +               }
-+               className=&quot;w-full px-3 py-2 border border-gray-300 rounded-lg&quot;
++               className="w-full px-3 py-2 border border-gray-300 rounded-lg"
 +             /&gt;
 +           &lt;/div&gt;
 + 
 +           &lt;div&gt;
-+             &lt;label className=&quot;block text-sm font-medium text-gray-700 mb-1&quot;&gt;Ügyfél&lt;/label&gt;
++             &lt;label className="block text-sm font-medium text-gray-700 mb-1"&gt;Ügyfél&lt;/label&gt;
 +             &lt;select
-+               value={filters.accountId || &#39;&#39;}
++               value={filters.accountId || ''}
 +               onChange={(e) =&gt;
 +                 setFilters({ ...filters, accountId: e.target.value || undefined })
 +               }
-+               className=&quot;w-full px-3 py-2 border border-gray-300 rounded-lg&quot;
++               className="w-full px-3 py-2 border border-gray-300 rounded-lg"
 +             &gt;
-+               &lt;option value=&quot;&quot;&gt;Összes ügyfél&lt;/option&gt;
++               &lt;option value=""&gt;Összes ügyfél&lt;/option&gt;
 +               {accounts.map((account) =&gt; (
 +                 &lt;option key={account.id} value={account.id}&gt;
 +                   {account.nev} ({account.azonosito})
@@ -12459,125 +12459,125 @@ Lines added: 942, lines removed: 1
 +       &lt;/div&gt;
 + 
 +       {/* Orders Table */}
-+       &lt;div className=&quot;bg-white rounded-lg shadow overflow-hidden&quot;&gt;
-+         &lt;div className=&quot;px-6 py-4 bg-gray-50 border-b border-gray-200&quot;&gt;
-+           &lt;h2 className=&quot;text-lg font-semibold&quot;&gt;Rendelések ({ordersData?.total || 0})&lt;/h2&gt;
++       &lt;div className="bg-white rounded-lg shadow overflow-hidden"&gt;
++         &lt;div className="px-6 py-4 bg-gray-50 border-b border-gray-200"&gt;
++           &lt;h2 className="text-lg font-semibold"&gt;Rendelések ({ordersData?.total || 0})&lt;/h2&gt;
 +         &lt;/div&gt;
 +         {isLoading ? (
-+           &lt;div className=&quot;p-6&quot;&gt;Betöltés...&lt;/div&gt;
++           &lt;div className="p-6"&gt;Betöltés...&lt;/div&gt;
 +         ) : (
-+           &lt;table className=&quot;min-w-full divide-y divide-gray-200&quot;&gt;
-+             &lt;thead className=&quot;bg-gray-50&quot;&gt;
++           &lt;table className="min-w-full divide-y divide-gray-200"&gt;
++             &lt;thead className="bg-gray-50"&gt;
 +               &lt;tr&gt;
-+                 &lt;th className=&quot;px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase&quot;&gt;
++                 &lt;th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"&gt;
 +                   Azonosító
 +                 &lt;/th&gt;
-+                 &lt;th className=&quot;px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase&quot;&gt;
++                 &lt;th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"&gt;
 +                   Ügyfél
 +                 &lt;/th&gt;
-+                 &lt;th className=&quot;px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase&quot;&gt;
++                 &lt;th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"&gt;
 +                   Árajánlat
 +                 &lt;/th&gt;
-+                 &lt;th className=&quot;px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase&quot;&gt;
++                 &lt;th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"&gt;
 +                   Rendelés dátuma
 +                 &lt;/th&gt;
-+                 &lt;th className=&quot;px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase&quot;&gt;
++                 &lt;th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase"&gt;
 +                   Végösszeg
 +                 &lt;/th&gt;
-+                 &lt;th className=&quot;px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase&quot;&gt;
++                 &lt;th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"&gt;
 +                   Állapot
 +                 &lt;/th&gt;
-+                 &lt;th className=&quot;px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase&quot;&gt;
++                 &lt;th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase"&gt;
 +                   Műveletek
 +                 &lt;/th&gt;
 +               &lt;/tr&gt;
 +             &lt;/thead&gt;
-+             &lt;tbody className=&quot;bg-white divide-y divide-gray-200&quot;&gt;
++             &lt;tbody className="bg-white divide-y divide-gray-200"&gt;
 +               {ordersData?.data?.map((order: Order) =&gt; (
-+                 &lt;tr key={order.id} className=&quot;hover:bg-gray-50&quot;&gt;
-+                   &lt;td className=&quot;px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900&quot;&gt;
++                 &lt;tr key={order.id} className="hover:bg-gray-50"&gt;
++                   &lt;td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"&gt;
 +                     {order.azonosito}
 +                   &lt;/td&gt;
-+                   &lt;td className=&quot;px-6 py-4 text-sm text-gray-900&quot;&gt;
-+                     {order.account?.nev || &#39;-&#39;}
++                   &lt;td className="px-6 py-4 text-sm text-gray-900"&gt;
++                     {order.account?.nev || '-'}
 +                   &lt;/td&gt;
-+                   &lt;td className=&quot;px-6 py-4 whitespace-nowrap text-sm text-gray-500&quot;&gt;
-+                     {order.quote?.azonosito || &#39;-&#39;}
++                   &lt;td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500"&gt;
++                     {order.quote?.azonosito || '-'}
 +                   &lt;/td&gt;
-+                   &lt;td className=&quot;px-6 py-4 whitespace-nowrap text-sm text-gray-500&quot;&gt;
-+                     {new Date(order.rendelesiDatum).toLocaleDateString(&#39;hu-HU&#39;)}
++                   &lt;td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500"&gt;
++                     {new Date(order.rendelesiDatum).toLocaleDateString('hu-HU')}
 +                   &lt;/td&gt;
-+                   &lt;td className=&quot;px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900&quot;&gt;
-+                     {order.vegosszeg.toLocaleString(&#39;hu-HU&#39;)} Ft
++                   &lt;td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900"&gt;
++                     {order.vegosszeg.toLocaleString('hu-HU')} Ft
 +                   &lt;/td&gt;
-+                   &lt;td className=&quot;px-6 py-4 whitespace-nowrap&quot;&gt;{getStatusBadge(order.allapot)}&lt;/td&gt;
-+                   &lt;td className=&quot;px-6 py-4 whitespace-nowrap text-center text-sm font-medium&quot;&gt;
-+                     &lt;div className=&quot;flex justify-center gap-2&quot;&gt;
++                   &lt;td className="px-6 py-4 whitespace-nowrap"&gt;{getStatusBadge(order.allapot)}&lt;/td&gt;
++                   &lt;td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium"&gt;
++                     &lt;div className="flex justify-center gap-2"&gt;
 +                       &lt;button
 +                         onClick={() =&gt; {
 +                           setSelectedOrder(order);
 +                           setIsDetailsModalOpen(true);
 +                         }}
-+                         className=&quot;text-gray-600 hover:text-gray-900&quot;
-+                         title=&quot;Részletek&quot;
++                         className="text-gray-600 hover:text-gray-900"
++                         title="Részletek"
 +                       &gt;
 +                         👁
 +                       &lt;/button&gt;
-+                       {order.allapot === &#39;NEW&#39; &amp;&amp; (
++                       {order.allapot === 'NEW' &amp;&amp; (
 +                         &lt;&gt;
 +                           &lt;button
 +                             onClick={() =&gt; handleOpenModal(order)}
-+                             className=&quot;text-blue-600 hover:text-blue-900&quot;
-+                             title=&quot;Szerkesztés&quot;
++                             className="text-blue-600 hover:text-blue-900"
++                             title="Szerkesztés"
 +                           &gt;
 +                             ✎
 +                           &lt;/button&gt;
 +                           &lt;button
-+                             onClick={() =&gt; handleStatusChange(order.id, &#39;IN_PROCESS&#39;)}
-+                             className=&quot;text-yellow-600 hover:text-yellow-900&quot;
-+                             title=&quot;Feldolgozásba&quot;
++                             onClick={() =&gt; handleStatusChange(order.id, 'IN_PROCESS')}
++                             className="text-yellow-600 hover:text-yellow-900"
++                             title="Feldolgozásba"
 +                           &gt;
 +                             ⚙
 +                           &lt;/button&gt;
 +                           &lt;button
 +                             onClick={() =&gt; handleCancel(order.id)}
-+                             className=&quot;text-red-600 hover:text-red-900&quot;
-+                             title=&quot;Visszavonás&quot;
++                             className="text-red-600 hover:text-red-900"
++                             title="Visszavonás"
 +                           &gt;
 +                             ✗
 +                           &lt;/button&gt;
 +                           &lt;button
 +                             onClick={() =&gt; handleDelete(order.id)}
-+                             className=&quot;text-red-600 hover:text-red-900&quot;
-+                             title=&quot;Törlés&quot;
++                             className="text-red-600 hover:text-red-900"
++                             title="Törlés"
 +                           &gt;
 +                             🗑
 +                           &lt;/button&gt;
 +                         &lt;/&gt;
 +                       )}
-+                       {order.allapot === &#39;IN_PROCESS&#39; &amp;&amp; (
++                       {order.allapot === 'IN_PROCESS' &amp;&amp; (
 +                         &lt;&gt;
 +                           &lt;button
-+                             onClick={() =&gt; handleStatusChange(order.id, &#39;SHIPPED&#39;)}
-+                             className=&quot;text-purple-600 hover:text-purple-900&quot;
-+                             title=&quot;Szállítva&quot;
++                             onClick={() =&gt; handleStatusChange(order.id, 'SHIPPED')}
++                             className="text-purple-600 hover:text-purple-900"
++                             title="Szállítva"
 +                           &gt;
 +                             🚚
 +                           &lt;/button&gt;
 +                           &lt;button
 +                             onClick={() =&gt; handleCancel(order.id)}
-+                             className=&quot;text-red-600 hover:text-red-900&quot;
-+                             title=&quot;Visszavonás&quot;
++                             className="text-red-600 hover:text-red-900"
++                             title="Visszavonás"
 +                           &gt;
 +                             ✗
 +                           &lt;/button&gt;
 +                         &lt;/&gt;
 +                       )}
-+                       {order.allapot === &#39;SHIPPED&#39; &amp;&amp; (
++                       {order.allapot === 'SHIPPED' &amp;&amp; (
 +                         &lt;button
-+                           onClick={() =&gt; handleStatusChange(order.id, &#39;COMPLETED&#39;)}
-+                           className=&quot;text-green-600 hover:text-green-900&quot;
-+                           title=&quot;Teljesítve&quot;
++                           onClick={() =&gt; handleStatusChange(order.id, 'COMPLETED')}
++                           className="text-green-600 hover:text-green-900"
++                           title="Teljesítve"
 +                         &gt;
 +                           ✓
 +                         &lt;/button&gt;
@@ -12595,34 +12595,34 @@ Lines added: 942, lines removed: 1
 +       &lt;Modal
 +         isOpen={isModalOpen}
 +         onClose={handleCloseModal}
-+         title={editingOrderId ? &#39;Rendelés szerkesztése&#39; : &#39;Új rendelés&#39;}
-+         size=&quot;xl&quot;
++         title={editingOrderId ? 'Rendelés szerkesztése' : 'Új rendelés'}
++         size="xl"
 +       &gt;
-+         &lt;form onSubmit={handleSubmit} className=&quot;space-y-4&quot;&gt;
++         &lt;form onSubmit={handleSubmit} className="space-y-4"&gt;
 +           {error &amp;&amp; (
-+             &lt;div className=&quot;bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded&quot;&gt;
++             &lt;div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded"&gt;
 +               {error}
 +             &lt;/div&gt;
 +           )}
 + 
 +           {success &amp;&amp; (
-+             &lt;div className=&quot;bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded&quot;&gt;
++             &lt;div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded"&gt;
 +               {success}
 +             &lt;/div&gt;
 +           )}
 + 
-+           &lt;div className=&quot;grid grid-cols-2 gap-4&quot;&gt;
++           &lt;div className="grid grid-cols-2 gap-4"&gt;
 +             &lt;div&gt;
-+               &lt;label className=&quot;block text-sm font-medium text-gray-700 mb-1&quot;&gt;
-+                 Ügyfél &lt;span className=&quot;text-red-500&quot;&gt;*&lt;/span&gt;
++               &lt;label className="block text-sm font-medium text-gray-700 mb-1"&gt;
++                 Ügyfél &lt;span className="text-red-500"&gt;*&lt;/span&gt;
 +               &lt;/label&gt;
 +               &lt;select
 +                 value={formData.accountId}
 +                 onChange={(e) =&gt; setFormData({ ...formData, accountId: e.target.value })}
-+                 className=&quot;w-full px-3 py-2 border border-gray-300 rounded-lg&quot;
++                 className="w-full px-3 py-2 border border-gray-300 rounded-lg"
 +                 required
 +               &gt;
-+                 &lt;option value=&quot;&quot;&gt;Válasszon ügyfelet&lt;/option&gt;
++                 &lt;option value=""&gt;Válasszon ügyfelet&lt;/option&gt;
 +                 {accounts.map((account) =&gt; (
 +                   &lt;option key={account.id} value={account.id}&gt;
 +                     {account.nev} ({account.azonosito})
@@ -12632,7 +12632,7 @@ Lines added: 942, lines removed: 1
 +             &lt;/div&gt;
 + 
 +             &lt;div&gt;
-+               &lt;label className=&quot;block text-sm font-medium text-gray-700 mb-1&quot;&gt;
++               &lt;label className="block text-sm font-medium text-gray-700 mb-1"&gt;
 +                 Árajánlat (opcionális)
 +               &lt;/label&gt;
 +               &lt;select
@@ -12643,9 +12643,9 @@ Lines added: 942, lines removed: 1
 +                     handleLoadFromQuote(e.target.value);
 +                   }
 +                 }}
-+                 className=&quot;w-full px-3 py-2 border border-gray-300 rounded-lg&quot;
++                 className="w-full px-3 py-2 border border-gray-300 rounded-lg"
 +               &gt;
-+                 &lt;option value=&quot;&quot;&gt;Nincs árajánlat&lt;/option&gt;
++                 &lt;option value=""&gt;Nincs árajánlat&lt;/option&gt;
 +                 {quotes.map((quote) =&gt; (
 +                   &lt;option key={quote.id} value={quote.id}&gt;
 +                     {quote.azonosito}
@@ -12656,58 +12656,58 @@ Lines added: 942, lines removed: 1
 +           &lt;/div&gt;
 + 
 +           &lt;div&gt;
-+             &lt;label className=&quot;block text-sm font-medium text-gray-700 mb-1&quot;&gt;
++             &lt;label className="block text-sm font-medium text-gray-700 mb-1"&gt;
 +               Szállítási dátum
 +             &lt;/label&gt;
 +             &lt;input
-+               type=&quot;date&quot;
++               type="date"
 +               value={formData.szallitasiDatum}
 +               onChange={(e) =&gt;
 +                 setFormData({ ...formData, szallitasiDatum: e.target.value })
 +               }
-+               className=&quot;w-full px-3 py-2 border border-gray-300 rounded-lg&quot;
++               className="w-full px-3 py-2 border border-gray-300 rounded-lg"
 +             /&gt;
 +           &lt;/div&gt;
 + 
 +           &lt;div&gt;
-+             &lt;label className=&quot;block text-sm font-medium text-gray-700 mb-1&quot;&gt;Megjegyzések&lt;/label&gt;
++             &lt;label className="block text-sm font-medium text-gray-700 mb-1"&gt;Megjegyzések&lt;/label&gt;
 +             &lt;textarea
 +               value={formData.megjegyzesek}
 +               onChange={(e) =&gt; setFormData({ ...formData, megjegyzesek: e.target.value })}
-+               className=&quot;w-full px-3 py-2 border border-gray-300 rounded-lg&quot;
++               className="w-full px-3 py-2 border border-gray-300 rounded-lg"
 +               rows={3}
 +             /&gt;
 +           &lt;/div&gt;
 + 
-+           &lt;div className=&quot;border-t pt-4&quot;&gt;
-+             &lt;div className=&quot;flex items-center justify-between mb-2&quot;&gt;
-+               &lt;label className=&quot;block text-sm font-medium text-gray-700&quot;&gt;Rendelés tételek&lt;/label&gt;
++           &lt;div className="border-t pt-4"&gt;
++             &lt;div className="flex items-center justify-between mb-2"&gt;
++               &lt;label className="block text-sm font-medium text-gray-700"&gt;Rendelés tételek&lt;/label&gt;
 +               &lt;button
-+                 type=&quot;button&quot;
++                 type="button"
 +                 onClick={handleAddItem}
-+                 className=&quot;text-sm bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600&quot;
++                 className="text-sm bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
 +               &gt;
 +                 + Tétel hozzáadása
 +               &lt;/button&gt;
 +             &lt;/div&gt;
-+             &lt;div className=&quot;space-y-3 max-h-64 overflow-y-auto&quot;&gt;
++             &lt;div className="space-y-3 max-h-64 overflow-y-auto"&gt;
 +               {formData.items.map((item, index) =&gt; (
 +                 &lt;div
 +                   key={index}
-+                   className=&quot;flex gap-2 items-start border border-gray-200 rounded p-3 bg-gray-50&quot;
++                   className="flex gap-2 items-start border border-gray-200 rounded p-3 bg-gray-50"
 +                 &gt;
-+                   &lt;div className=&quot;flex-1 grid grid-cols-4 gap-2&quot;&gt;
++                   &lt;div className="flex-1 grid grid-cols-4 gap-2"&gt;
 +                     &lt;div&gt;
-+                       &lt;label className=&quot;block text-xs font-medium text-gray-600 mb-1&quot;&gt;
++                       &lt;label className="block text-xs font-medium text-gray-600 mb-1"&gt;
 +                         Termék
 +                       &lt;/label&gt;
 +                       &lt;select
 +                         value={item.itemId}
-+                         onChange={(e) =&gt; handleItemChange(index, &#39;itemId&#39;, e.target.value)}
-+                         className=&quot;w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500&quot;
++                         onChange={(e) =&gt; handleItemChange(index, 'itemId', e.target.value)}
++                         className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
 +                         required
 +                       &gt;
-+                         &lt;option value=&quot;&quot;&gt;-- Válasszon --&lt;/option&gt;
++                         &lt;option value=""&gt;-- Válasszon --&lt;/option&gt;
 +                         {items.map((i) =&gt; (
 +                           &lt;option key={i.id} value={i.id}&gt;
 +                             {i.azonosito} - {i.nev}
@@ -12716,66 +12716,66 @@ Lines added: 942, lines removed: 1
 +                       &lt;/select&gt;
 +                     &lt;/div&gt;
 +                     &lt;div&gt;
-+                       &lt;label className=&quot;block text-xs font-medium text-gray-600 mb-1&quot;&gt;
++                       &lt;label className="block text-xs font-medium text-gray-600 mb-1"&gt;
 +                         Mennyiség
 +                       &lt;/label&gt;
 +                       &lt;input
-+                         type=&quot;number&quot;
-+                         min=&quot;0.01&quot;
-+                         step=&quot;0.01&quot;
++                         type="number"
++                         min="0.01"
++                         step="0.01"
 +                         value={item.mennyiseg}
 +                         onChange={(e) =&gt;
-+                           handleItemChange(index, &#39;mennyiseg&#39;, parseFloat(e.target.value) || 0)
++                           handleItemChange(index, 'mennyiseg', parseFloat(e.target.value) || 0)
 +                         }
-+                         className=&quot;w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500&quot;
++                         className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
 +                         required
 +                       /&gt;
 +                     &lt;/div&gt;
 +                     &lt;div&gt;
-+                       &lt;label className=&quot;block text-xs font-medium text-gray-600 mb-1&quot;&gt;
++                       &lt;label className="block text-xs font-medium text-gray-600 mb-1"&gt;
 +                         Egységár
 +                       &lt;/label&gt;
 +                       &lt;input
-+                         type=&quot;number&quot;
-+                         min=&quot;0&quot;
-+                         step=&quot;0.01&quot;
++                         type="number"
++                         min="0"
++                         step="0.01"
 +                         value={item.egysegAr}
 +                         onChange={(e) =&gt;
-+                           handleItemChange(index, &#39;egysegAr&#39;, parseFloat(e.target.value) || 0)
++                           handleItemChange(index, 'egysegAr', parseFloat(e.target.value) || 0)
 +                         }
-+                         className=&quot;w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500&quot;
++                         className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
 +                         required
 +                       /&gt;
 +                     &lt;/div&gt;
 +                     &lt;div&gt;
-+                       &lt;label className=&quot;block text-xs font-medium text-gray-600 mb-1&quot;&gt;
++                       &lt;label className="block text-xs font-medium text-gray-600 mb-1"&gt;
 +                         Kedvezmény (%)
 +                       &lt;/label&gt;
 +                       &lt;input
-+                         type=&quot;number&quot;
-+                         min=&quot;0&quot;
-+                         max=&quot;100&quot;
-+                         step=&quot;0.01&quot;
++                         type="number"
++                         min="0"
++                         max="100"
++                         step="0.01"
 +                         value={item.kedvezmeny}
 +                         onChange={(e) =&gt;
-+                           handleItemChange(index, &#39;kedvezmeny&#39;, parseFloat(e.target.value) || 0)
++                           handleItemChange(index, 'kedvezmeny', parseFloat(e.target.value) || 0)
 +                         }
-+                         className=&quot;w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500&quot;
++                         className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
 +                       /&gt;
 +                     &lt;/div&gt;
 +                   &lt;/div&gt;
 +                   &lt;button
-+                     type=&quot;button&quot;
++                     type="button"
 +                     onClick={() =&gt; handleRemoveItem(index)}
-+                     className=&quot;mt-5 text-red-500 hover:text-red-700&quot;
-+                     title=&quot;Tétel eltávolítása&quot;
++                     className="mt-5 text-red-500 hover:text-red-700"
++                     title="Tétel eltávolítása"
 +                   &gt;
-+                     &lt;svg className=&quot;w-5 h-5&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; viewBox=&quot;0 0 24 24&quot;&gt;
++                     &lt;svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"&gt;
 +                       &lt;path
-+                         strokeLinecap=&quot;round&quot;
-+                         strokeLinejoin=&quot;round&quot;
++                         strokeLinecap="round"
++                         strokeLinejoin="round"
 +                         strokeWidth={2}
-+                         d=&quot;M6 18L18 6M6 6l12 12&quot;
++                         d="M6 18L18 6M6 6l12 12"
 +                       /&gt;
 +                     &lt;/svg&gt;
 +                   &lt;/button&gt;
@@ -12784,21 +12784,21 @@ Lines added: 942, lines removed: 1
 +             &lt;/div&gt;
 +           &lt;/div&gt;
 + 
-+           &lt;div className=&quot;flex justify-end space-x-3 pt-4&quot;&gt;
++           &lt;div className="flex justify-end space-x-3 pt-4"&gt;
 +             &lt;button
-+               type=&quot;button&quot;
++               type="button"
 +               onClick={handleCloseModal}
-+               className=&quot;px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50&quot;
++               className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
 +               disabled={saving}
 +             &gt;
 +               Mégse
 +             &lt;/button&gt;
 +             &lt;button
-+               type=&quot;submit&quot;
-+               className=&quot;px-4 py-2 bg-mbit-blue text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400&quot;
++               type="submit"
++               className="px-4 py-2 bg-mbit-blue text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400"
 +               disabled={saving}
 +             &gt;
-+               {saving ? &#39;Mentés...&#39; : editingOrderId ? &#39;Frissítés&#39; : &#39;Létrehozás&#39;}
++               {saving ? 'Mentés...' : editingOrderId ? 'Frissítés' : 'Létrehozás'}
 +             &lt;/button&gt;
 +           &lt;/div&gt;
 +         &lt;/form&gt;
@@ -12812,84 +12812,84 @@ Lines added: 942, lines removed: 1
 +           setSelectedOrder(null);
 +         }}
 +         title={&#96;Rendelés részletei: ${selectedOrder?.azonosito}&#96;}
-+         size=&quot;lg&quot;
++         size="lg"
 +       &gt;
 +         {selectedOrder &amp;&amp; (
-+           &lt;div className=&quot;space-y-4&quot;&gt;
-+             &lt;div className=&quot;grid grid-cols-2 gap-4&quot;&gt;
++           &lt;div className="space-y-4"&gt;
++             &lt;div className="grid grid-cols-2 gap-4"&gt;
 +               &lt;div&gt;
-+                 &lt;label className=&quot;block text-sm font-medium text-gray-700&quot;&gt;Ügyfél&lt;/label&gt;
-+                 &lt;p className=&quot;text-sm text-gray-900&quot;&gt;{selectedOrder.account?.nev}&lt;/p&gt;
++                 &lt;label className="block text-sm font-medium text-gray-700"&gt;Ügyfél&lt;/label&gt;
++                 &lt;p className="text-sm text-gray-900"&gt;{selectedOrder.account?.nev}&lt;/p&gt;
 +               &lt;/div&gt;
 +               &lt;div&gt;
-+                 &lt;label className=&quot;block text-sm font-medium text-gray-700&quot;&gt;Árajánlat&lt;/label&gt;
-+                 &lt;p className=&quot;text-sm text-gray-900&quot;&gt;
-+                   {selectedOrder.quote?.azonosito || &#39;-&#39;}
++                 &lt;label className="block text-sm font-medium text-gray-700"&gt;Árajánlat&lt;/label&gt;
++                 &lt;p className="text-sm text-gray-900"&gt;
++                   {selectedOrder.quote?.azonosito || '-'}
 +                 &lt;/p&gt;
 +               &lt;/div&gt;
 +               &lt;div&gt;
-+                 &lt;label className=&quot;block text-sm font-medium text-gray-700&quot;&gt;Rendelés dátuma&lt;/label&gt;
-+                 &lt;p className=&quot;text-sm text-gray-900&quot;&gt;
-+                   {new Date(selectedOrder.rendelesiDatum).toLocaleDateString(&#39;hu-HU&#39;)}
++                 &lt;label className="block text-sm font-medium text-gray-700"&gt;Rendelés dátuma&lt;/label&gt;
++                 &lt;p className="text-sm text-gray-900"&gt;
++                   {new Date(selectedOrder.rendelesiDatum).toLocaleDateString('hu-HU')}
 +                 &lt;/p&gt;
 +               &lt;/div&gt;
 +               &lt;div&gt;
-+                 &lt;label className=&quot;block text-sm font-medium text-gray-700&quot;&gt;Szállítási dátum&lt;/label&gt;
-+                 &lt;p className=&quot;text-sm text-gray-900&quot;&gt;
++                 &lt;label className="block text-sm font-medium text-gray-700"&gt;Szállítási dátum&lt;/label&gt;
++                 &lt;p className="text-sm text-gray-900"&gt;
 +                   {selectedOrder.szallitasiDatum
-+                     ? new Date(selectedOrder.szallitasiDatum).toLocaleDateString(&#39;hu-HU&#39;)
-+                     : &#39;-&#39;}
++                     ? new Date(selectedOrder.szallitasiDatum).toLocaleDateString('hu-HU')
++                     : '-'}
 +                 &lt;/p&gt;
 +               &lt;/div&gt;
 +               &lt;div&gt;
-+                 &lt;label className=&quot;block text-sm font-medium text-gray-700&quot;&gt;Állapot&lt;/label&gt;
-+                 &lt;div className=&quot;mt-1&quot;&gt;{getStatusBadge(selectedOrder.allapot)}&lt;/div&gt;
++                 &lt;label className="block text-sm font-medium text-gray-700"&gt;Állapot&lt;/label&gt;
++                 &lt;div className="mt-1"&gt;{getStatusBadge(selectedOrder.allapot)}&lt;/div&gt;
 +               &lt;/div&gt;
 +               &lt;div&gt;
-+                 &lt;label className=&quot;block text-sm font-medium text-gray-700&quot;&gt;Végösszeg&lt;/label&gt;
-+                 &lt;p className=&quot;text-sm text-gray-900 font-semibold&quot;&gt;
-+                   {selectedOrder.vegosszeg.toLocaleString(&#39;hu-HU&#39;)} Ft
++                 &lt;label className="block text-sm font-medium text-gray-700"&gt;Végösszeg&lt;/label&gt;
++                 &lt;p className="text-sm text-gray-900 font-semibold"&gt;
++                   {selectedOrder.vegosszeg.toLocaleString('hu-HU')} Ft
 +                 &lt;/p&gt;
 +               &lt;/div&gt;
 +             &lt;/div&gt;
 + 
 +             {selectedOrder.items &amp;&amp; selectedOrder.items.length &gt; 0 &amp;&amp; (
 +               &lt;div&gt;
-+                 &lt;label className=&quot;block text-sm font-medium text-gray-700 mb-2&quot;&gt;
++                 &lt;label className="block text-sm font-medium text-gray-700 mb-2"&gt;
 +                   Rendelés tételek
 +                 &lt;/label&gt;
-+                 &lt;div className=&quot;bg-gray-50 rounded-lg p-4&quot;&gt;
-+                   &lt;table className=&quot;min-w-full&quot;&gt;
++                 &lt;div className="bg-gray-50 rounded-lg p-4"&gt;
++                   &lt;table className="min-w-full"&gt;
 +                     &lt;thead&gt;
-+                       &lt;tr className=&quot;border-b&quot;&gt;
-+                         &lt;th className=&quot;text-left text-xs font-medium text-gray-600 pb-2&quot;&gt;
++                       &lt;tr className="border-b"&gt;
++                         &lt;th className="text-left text-xs font-medium text-gray-600 pb-2"&gt;
 +                           Termék
 +                         &lt;/th&gt;
-+                         &lt;th className=&quot;text-right text-xs font-medium text-gray-600 pb-2&quot;&gt;
++                         &lt;th className="text-right text-xs font-medium text-gray-600 pb-2"&gt;
 +                           Mennyiség
 +                         &lt;/th&gt;
-+                         &lt;th className=&quot;text-right text-xs font-medium text-gray-600 pb-2&quot;&gt;
++                         &lt;th className="text-right text-xs font-medium text-gray-600 pb-2"&gt;
 +                           Egységár
 +                         &lt;/th&gt;
-+                         &lt;th className=&quot;text-right text-xs font-medium text-gray-600 pb-2&quot;&gt;
++                         &lt;th className="text-right text-xs font-medium text-gray-600 pb-2"&gt;
 +                           Összeg
 +                         &lt;/th&gt;
 +                       &lt;/tr&gt;
 +                     &lt;/thead&gt;
 +                     &lt;tbody&gt;
 +                       {selectedOrder.items.map((item) =&gt; (
-+                         &lt;tr key={item.id} className=&quot;border-b&quot;&gt;
-+                           &lt;td className=&quot;text-sm text-gray-900 py-2&quot;&gt;
++                         &lt;tr key={item.id} className="border-b"&gt;
++                           &lt;td className="text-sm text-gray-900 py-2"&gt;
 +                             {item.item?.azonosito} - {item.item?.nev}
 +                           &lt;/td&gt;
-+                           &lt;td className=&quot;text-sm text-right text-gray-900 py-2&quot;&gt;
++                           &lt;td className="text-sm text-right text-gray-900 py-2"&gt;
 +                             {item.mennyiseg}
 +                           &lt;/td&gt;
-+                           &lt;td className=&quot;text-sm text-right text-gray-900 py-2&quot;&gt;
-+                             {item.egysegAr.toLocaleString(&#39;hu-HU&#39;)} Ft
++                           &lt;td className="text-sm text-right text-gray-900 py-2"&gt;
++                             {item.egysegAr.toLocaleString('hu-HU')} Ft
 +                           &lt;/td&gt;
-+                           &lt;td className=&quot;text-sm text-right text-gray-900 font-medium py-2&quot;&gt;
-+                             {item.osszeg.toLocaleString(&#39;hu-HU&#39;)} Ft
++                           &lt;td className="text-sm text-right text-gray-900 font-medium py-2"&gt;
++                             {item.osszeg.toLocaleString('hu-HU')} Ft
 +                           &lt;/td&gt;
 +                         &lt;/tr&gt;
 +                       ))}
@@ -12901,11 +12901,11 @@ Lines added: 942, lines removed: 1
 + 
 +             {selectedOrder.returns &amp;&amp; selectedOrder.returns.length &gt; 0 &amp;&amp; (
 +               &lt;div&gt;
-+                 &lt;label className=&quot;block text-sm font-medium text-gray-700 mb-2&quot;&gt;
++                 &lt;label className="block text-sm font-medium text-gray-700 mb-2"&gt;
 +                   Visszárúk ({selectedOrder.returns.length})
 +                 &lt;/label&gt;
-+                 &lt;div className=&quot;bg-yellow-50 rounded-lg p-4&quot;&gt;
-+                   &lt;p className=&quot;text-sm text-gray-700&quot;&gt;
++                 &lt;div className="bg-yellow-50 rounded-lg p-4"&gt;
++                   &lt;p className="text-sm text-gray-700"&gt;
 +                     {selectedOrder.returns.length} visszárú kapcsolódik ehhez a rendeléshez.
 +                   &lt;/p&gt;
 +                 &lt;/div&gt;
@@ -12914,10 +12914,10 @@ Lines added: 942, lines removed: 1
 + 
 +             {selectedOrder.megjegyzesek &amp;&amp; (
 +               &lt;div&gt;
-+                 &lt;label className=&quot;block text-sm font-medium text-gray-700 mb-1&quot;&gt;
++                 &lt;label className="block text-sm font-medium text-gray-700 mb-1"&gt;
 +                   Megjegyzések
 +                 &lt;/label&gt;
-+                 &lt;p className=&quot;text-sm text-gray-900 whitespace-pre-wrap&quot;&gt;
++                 &lt;p className="text-sm text-gray-900 whitespace-pre-wrap"&gt;
 +                   {selectedOrder.megjegyzesek}
 +                 &lt;/p&gt;
 +               &lt;/div&gt;
@@ -12957,19 +12957,19 @@ Frissítjük az App.tsx-et, hogy tartalmazza az Orders oldalt, majd létrehozzuk
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/App.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/App.tsx</summary>
 
 **Chunk 1**
 Lines added: 2, lines removed: undefined
 
 ```diff
 @@ -11,4 +11,6 @@
-  import Opportunities from &#39;./pages/Opportunities&#39;;
-  import Quotes from &#39;./pages/Quotes&#39;;
-+ import Orders from &#39;./pages/Orders&#39;;
-+ import OrdersLogistics from &#39;./pages/OrdersLogistics&#39;;
-  import Team from &#39;./pages/Team&#39;;
-  import Login from &#39;./pages/Login&#39;;
+  import Opportunities from './pages/Opportunities';
+  import Quotes from './pages/Quotes';
++ import Orders from './pages/Orders';
++ import OrdersLogistics from './pages/OrdersLogistics';
+  import Team from './pages/Team';
+  import Login from './pages/Login';
 ```
 
 </details>
@@ -12980,18 +12980,18 @@ Lines added: 2, lines removed: undefined
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/App.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/App.tsx</summary>
 
 **Chunk 1**
 Lines added: 2, lines removed: 1
 
 ```diff
 @@ -165,5 +165,6 @@
-                      { to: &#39;/crm&#39;, label: &#39;Partnerek&#39; },
-                      { to: &#39;/opportunities&#39;, label: &#39;Lehetőségek&#39; },
--                     { to: &#39;/quotes&#39;, label: &#39;Árajánlatok&#39; }
-+                     { to: &#39;/quotes&#39;, label: &#39;Árajánlatok&#39; },
-+                     { to: &#39;/orders&#39;, label: &#39;Rendelések&#39; }
+                      { to: '/crm', label: 'Partnerek' },
+                      { to: '/opportunities', label: 'Lehetőségek' },
+-                     { to: '/quotes', label: 'Árajánlatok' }
++                     { to: '/quotes', label: 'Árajánlatok' },
++                     { to: '/orders', label: 'Rendelések' }
                     ]}
                   /&gt;
 ```
@@ -13004,18 +13004,18 @@ Lines added: 2, lines removed: 1
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/App.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/App.tsx</summary>
 
 **Chunk 1**
 Lines added: 2, lines removed: 1
 
 ```diff
 @@ -201,5 +201,6 @@
-                      { to: &#39;/products&#39;, label: &#39;Termékek&#39; },
-                      { to: &#39;/returns&#39;, label: &#39;Visszárúk&#39; },
--                     { to: &#39;/suppliers&#39;, label: &#39;Szállítók&#39; }
-+                     { to: &#39;/suppliers&#39;, label: &#39;Szállítók&#39; },
-+                     { to: &#39;/orders-logistics&#39;, label: &#39;Rendelések&#39; }
+                      { to: '/products', label: 'Termékek' },
+                      { to: '/returns', label: 'Visszárúk' },
+-                     { to: '/suppliers', label: 'Szállítók' }
++                     { to: '/suppliers', label: 'Szállítók' },
++                     { to: '/orders-logistics', label: 'Rendelések' }
                     ]}
                   /&gt;
 ```
@@ -13028,18 +13028,18 @@ Lines added: 2, lines removed: 1
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/App.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/App.tsx</summary>
 
 **Chunk 1**
 Lines added: 1, lines removed: undefined
 
 ```diff
 @@ -242,4 +242,5 @@
-            &lt;Route path=&quot;/opportunities&quot; element={&lt;Opportunities /&gt;} /&gt;
-            &lt;Route path=&quot;/quotes&quot; element={&lt;Quotes /&gt;} /&gt;
-+           &lt;Route path=&quot;/orders&quot; element={&lt;Orders /&gt;} /&gt;
-            &lt;Route path=&quot;/documents&quot; element={&lt;Documents /&gt;} /&gt;
-            &lt;Route path=&quot;/team&quot; element={&lt;Team /&gt;} /&gt;
+            &lt;Route path="/opportunities" element={&lt;Opportunities /&gt;} /&gt;
+            &lt;Route path="/quotes" element={&lt;Quotes /&gt;} /&gt;
++           &lt;Route path="/orders" element={&lt;Orders /&gt;} /&gt;
+            &lt;Route path="/documents" element={&lt;Documents /&gt;} /&gt;
+            &lt;Route path="/team" element={&lt;Team /&gt;} /&gt;
 ```
 
 **Chunk 2**
@@ -13047,10 +13047,10 @@ Lines added: 1, lines removed: undefined
 
 ```diff
 @@ -248,4 +249,5 @@
-            &lt;Route path=&quot;/returns&quot; element={&lt;Returns /&gt;} /&gt;
-            &lt;Route path=&quot;/suppliers&quot; element={&lt;Suppliers /&gt;} /&gt;
-+           &lt;Route path=&quot;/orders-logistics&quot; element={&lt;OrdersLogistics /&gt;} /&gt;
-            &lt;Route path=&quot;/settings&quot; element={&lt;Settings /&gt;} /&gt;
+            &lt;Route path="/returns" element={&lt;Returns /&gt;} /&gt;
+            &lt;Route path="/suppliers" element={&lt;Suppliers /&gt;} /&gt;
++           &lt;Route path="/orders-logistics" element={&lt;OrdersLogistics /&gt;} /&gt;
+            &lt;Route path="/settings" element={&lt;Settings /&gt;} /&gt;
           &lt;/Routes&gt;
 ```
 
@@ -13080,7 +13080,7 @@ Létrehozzuk az OrdersLogistics.tsx oldalt a Logisztika modulhoz:
 
 <tool-use data-tool-type="write" data-tool-name="write">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/OrdersLogistics.tsx</summary>
+<details><summary>Tool use: **write** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/OrdersLogistics.tsx</summary>
 
 **Chunk 1**
 Lines added: 480, lines removed: 1
@@ -13088,34 +13088,34 @@ Lines added: 480, lines removed: 1
 ```diff
 @@ -1,1 +1,480 @@
 - 
-+ import { useState } from &#39;react&#39;;
-+ import Modal from &#39;../components/Modal&#39;;
++ import { useState } from 'react';
++ import Modal from '../components/Modal';
 + import {
 +   useOrders,
 +   useOrderStatusChange,
 +   Order,
 +   OrderFilters,
-+ } from &#39;../lib/api/crm&#39;;
-+ import { useReturns } from &#39;../lib/api/logistics&#39;;
-+ import { apiFetch } from &#39;../lib/api&#39;;
-+ import { Link } from &#39;react-router-dom&#39;;
++ } from '../lib/api/crm';
++ import { useReturns } from '../lib/api/logistics';
++ import { apiFetch } from '../lib/api';
++ import { Link } from 'react-router-dom';
 + 
 + const ORDER_STATUSES = [
-+   { kod: &#39;NEW&#39;, nev: &#39;Új&#39;, szin: &#39;bg-blue-100 text-blue-800&#39; },
-+   { kod: &#39;IN_PROCESS&#39;, nev: &#39;Feldolgozás alatt&#39;, szin: &#39;bg-yellow-100 text-yellow-800&#39; },
-+   { kod: &#39;SHIPPED&#39;, nev: &#39;Szállítva&#39;, szin: &#39;bg-purple-100 text-purple-800&#39; },
-+   { kod: &#39;COMPLETED&#39;, nev: &#39;Teljesítve&#39;, szin: &#39;bg-green-100 text-green-800&#39; },
-+   { kod: &#39;CANCELLED&#39;, nev: &#39;Visszavonva&#39;, szin: &#39;bg-red-100 text-red-800&#39; },
++   { kod: 'NEW', nev: 'Új', szin: 'bg-blue-100 text-blue-800' },
++   { kod: 'IN_PROCESS', nev: 'Feldolgozás alatt', szin: 'bg-yellow-100 text-yellow-800' },
++   { kod: 'SHIPPED', nev: 'Szállítva', szin: 'bg-purple-100 text-purple-800' },
++   { kod: 'COMPLETED', nev: 'Teljesítve', szin: 'bg-green-100 text-green-800' },
++   { kod: 'CANCELLED', nev: 'Visszavonva', szin: 'bg-red-100 text-red-800' },
 + ];
 + 
 + export default function OrdersLogistics() {
 +   const [filters, setFilters] = useState&lt;OrderFilters&gt;({
-+     allapot: &#39;IN_PROCESS&#39;, // Default: only show orders in process
++     allapot: 'IN_PROCESS', // Default: only show orders in process
 +   });
 +   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
 +   const [selectedOrder, setSelectedOrder] = useState&lt;Order | null&gt;(null);
-+   const [error, setError] = useState&lt;string&gt;(&#39;&#39;);
-+   const [success, setSuccess] = useState&lt;string&gt;(&#39;&#39;);
++   const [error, setError] = useState&lt;string&gt;('');
++   const [success, setSuccess] = useState&lt;string&gt;('');
 + 
 +   const { data: ordersData, isLoading, refetch } = useOrders(filters, 0, 100);
 + 
@@ -13138,10 +13138,10 @@ Lines added: 480, lines removed: 1
 +         id,
 +         data: { allapot: newStatus },
 +       });
-+       setSuccess(&#39;Státusz sikeresen megváltoztatva!&#39;);
++       setSuccess('Státusz sikeresen megváltoztatva!');
 +       refetch();
 +     } catch (err: any) {
-+       setError(err.response?.data?.message || &#39;Hiba történt a státusz változtatás során&#39;);
++       setError(err.response?.data?.message || 'Hiba történt a státusz változtatás során');
 +     }
 +   };
 + 
@@ -13153,7 +13153,7 @@ Lines added: 480, lines removed: 1
 +     const statusInfo = ORDER_STATUSES.find((s) =&gt; s.kod === status) || {
 +       kod: status,
 +       nev: status,
-+       szin: &#39;bg-gray-100 text-gray-800&#39;,
++       szin: 'bg-gray-100 text-gray-800',
 +     };
 +     return (
 +       &lt;span className={&#96;px-2 py-1 rounded text-xs font-medium ${statusInfo.szin}&#96;}&gt;
@@ -13171,65 +13171,65 @@ Lines added: 480, lines removed: 1
 +         setIsDetailsModalOpen(true);
 +       }
 +     } catch (err) {
-+       console.error(&#39;Hiba a rendelés betöltésekor:&#39;, err);
++       console.error('Hiba a rendelés betöltésekor:', err);
 +     }
 +   };
 + 
 +   const handleExportCSV = () =&gt; {
 +     if (!ordersData?.data || ordersData.data.length === 0) {
-+       alert(&#39;Nincs exportálandó adat!&#39;);
++       alert('Nincs exportálandó adat!');
 +       return;
 +     }
 + 
 +     const headers = [
-+       &#39;Rendelés azonosító&#39;,
-+       &#39;Ügyfél&#39;,
-+       &#39;Rendelés dátuma&#39;,
-+       &#39;Szállítási dátum&#39;,
-+       &#39;Teljesítési dátum&#39;,
-+       &#39;Összeg&#39;,
-+       &#39;Végösszeg&#39;,
-+       &#39;Állapot&#39;,
-+       &#39;Visszárúk száma&#39;,
++       'Rendelés azonosító',
++       'Ügyfél',
++       'Rendelés dátuma',
++       'Szállítási dátum',
++       'Teljesítési dátum',
++       'Összeg',
++       'Végösszeg',
++       'Állapot',
++       'Visszárúk száma',
 +     ];
 + 
 +     const rows = ordersData.data.map((order: Order) =&gt; [
 +       order.azonosito,
-+       order.account?.nev || &#39;-&#39;,
-+       new Date(order.rendelesiDatum).toLocaleDateString(&#39;hu-HU&#39;),
-+       order.szallitasiDatum ? new Date(order.szallitasiDatum).toLocaleDateString(&#39;hu-HU&#39;) : &#39;-&#39;,
-+       order.teljesitesiDatum ? new Date(order.teljesitesiDatum).toLocaleDateString(&#39;hu-HU&#39;) : &#39;-&#39;,
-+       order.osszeg.toLocaleString(&#39;hu-HU&#39;),
-+       order.vegosszeg.toLocaleString(&#39;hu-HU&#39;),
++       order.account?.nev || '-',
++       new Date(order.rendelesiDatum).toLocaleDateString('hu-HU'),
++       order.szallitasiDatum ? new Date(order.szallitasiDatum).toLocaleDateString('hu-HU') : '-',
++       order.teljesitesiDatum ? new Date(order.teljesitesiDatum).toLocaleDateString('hu-HU') : '-',
++       order.osszeg.toLocaleString('hu-HU'),
++       order.vegosszeg.toLocaleString('hu-HU'),
 +       getStatusLabel(order.allapot),
 +       order.returns?.length || 0,
 +     ]);
 + 
 +     const csvContent = [
-+       headers.join(&#39;,&#39;),
-+       ...rows.map((row: string[]) =&gt; row.map((cell: string) =&gt; &#96;&quot;${cell}&quot;&#96;).join(&#39;,&#39;)),
-+     ].join(&#39;\n&#39;);
++       headers.join(','),
++       ...rows.map((row: string[]) =&gt; row.map((cell: string) =&gt; &#96;"${cell}"&#96;).join(',')),
++     ].join('\n');
 + 
-+     const blob = new Blob([&#39;\ufeff&#39; + csvContent], { type: &#39;text/csv;charset=utf-8;&#39; });
-+     const link = document.createElement(&#39;a&#39;);
++     const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
++     const link = document.createElement('a');
 +     const url = URL.createObjectURL(blob);
-+     link.setAttribute(&#39;href&#39;, url);
-+     link.setAttribute(&#39;download&#39;, &#96;rendelesek_logisztika_export_${new Date().toISOString().split(&#39;T&#39;)[0]}.csv&#96;);
-+     link.style.visibility = &#39;hidden&#39;;
++     link.setAttribute('href', url);
++     link.setAttribute('download', &#96;rendelesek_logisztika_export_${new Date().toISOString().split('T')[0]}.csv&#96;);
++     link.style.visibility = 'hidden';
 +     document.body.appendChild(link);
 +     link.click();
 +     document.body.removeChild(link);
 +   };
 + 
 +   return (
-+     &lt;div className=&quot;p-6&quot;&gt;
-+       &lt;div className=&quot;flex justify-between items-center mb-6&quot;&gt;
-+         &lt;h1 className=&quot;text-3xl font-bold&quot;&gt;Rendelések - Logisztikai nézet&lt;/h1&gt;
-+         &lt;div className=&quot;flex gap-2&quot;&gt;
++     &lt;div className="p-6"&gt;
++       &lt;div className="flex justify-between items-center mb-6"&gt;
++         &lt;h1 className="text-3xl font-bold"&gt;Rendelések - Logisztikai nézet&lt;/h1&gt;
++         &lt;div className="flex gap-2"&gt;
 +           &lt;button
 +             onClick={handleExportCSV}
-+             className=&quot;bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm&quot;
-+             title=&quot;CSV export&quot;
++             className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm"
++             title="CSV export"
 +           &gt;
 +             📥 Export CSV
 +           &lt;/button&gt;
@@ -13237,31 +13237,31 @@ Lines added: 480, lines removed: 1
 +       &lt;/div&gt;
 + 
 +       {error &amp;&amp; (
-+         &lt;div className=&quot;mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded&quot;&gt;
++         &lt;div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded"&gt;
 +           {error}
 +         &lt;/div&gt;
 +       )}
 + 
 +       {success &amp;&amp; (
-+         &lt;div className=&quot;mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded&quot;&gt;
++         &lt;div className="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded"&gt;
 +           {success}
 +         &lt;/div&gt;
 +       )}
 + 
 +       {/* Filters */}
-+       &lt;div className=&quot;bg-white rounded-lg shadow p-4 mb-6&quot;&gt;
-+         &lt;h2 className=&quot;text-lg font-semibold mb-4&quot;&gt;Szűrők&lt;/h2&gt;
-+         &lt;div className=&quot;grid grid-cols-1 md:grid-cols-4 gap-4&quot;&gt;
++       &lt;div className="bg-white rounded-lg shadow p-4 mb-6"&gt;
++         &lt;h2 className="text-lg font-semibold mb-4"&gt;Szűrők&lt;/h2&gt;
++         &lt;div className="grid grid-cols-1 md:grid-cols-4 gap-4"&gt;
 +           &lt;div&gt;
-+             &lt;label className=&quot;block text-sm font-medium text-gray-700 mb-1&quot;&gt;Állapot&lt;/label&gt;
++             &lt;label className="block text-sm font-medium text-gray-700 mb-1"&gt;Állapot&lt;/label&gt;
 +             &lt;select
-+               value={filters.allapot || &#39;&#39;}
++               value={filters.allapot || ''}
 +               onChange={(e) =&gt;
 +                 setFilters({ ...filters, allapot: e.target.value || undefined })
 +               }
-+               className=&quot;w-full px-3 py-2 border border-gray-300 rounded-lg&quot;
++               className="w-full px-3 py-2 border border-gray-300 rounded-lg"
 +             &gt;
-+               &lt;option value=&quot;&quot;&gt;Összes&lt;/option&gt;
++               &lt;option value=""&gt;Összes&lt;/option&gt;
 +               {ORDER_STATUSES.map((status) =&gt; (
 +                 &lt;option key={status.kod} value={status.kod}&gt;
 +                   {status.nev}
@@ -13271,33 +13271,33 @@ Lines added: 480, lines removed: 1
 +           &lt;/div&gt;
 + 
 +           &lt;div&gt;
-+             &lt;label className=&quot;block text-sm font-medium text-gray-700 mb-1&quot;&gt;Kezdő dátum&lt;/label&gt;
++             &lt;label className="block text-sm font-medium text-gray-700 mb-1"&gt;Kezdő dátum&lt;/label&gt;
 +             &lt;input
-+               type=&quot;date&quot;
-+               value={filters.startDate || &#39;&#39;}
++               type="date"
++               value={filters.startDate || ''}
 +               onChange={(e) =&gt;
 +                 setFilters({ ...filters, startDate: e.target.value || undefined })
 +               }
-+               className=&quot;w-full px-3 py-2 border border-gray-300 rounded-lg&quot;
++               className="w-full px-3 py-2 border border-gray-300 rounded-lg"
 +             /&gt;
 +           &lt;/div&gt;
 + 
 +           &lt;div&gt;
-+             &lt;label className=&quot;block text-sm font-medium text-gray-700 mb-1&quot;&gt;Vég dátum&lt;/label&gt;
++             &lt;label className="block text-sm font-medium text-gray-700 mb-1"&gt;Vég dátum&lt;/label&gt;
 +             &lt;input
-+               type=&quot;date&quot;
-+               value={filters.endDate || &#39;&#39;}
++               type="date"
++               value={filters.endDate || ''}
 +               onChange={(e) =&gt;
 +                 setFilters({ ...filters, endDate: e.target.value || undefined })
 +               }
-+               className=&quot;w-full px-3 py-2 border border-gray-300 rounded-lg&quot;
++               className="w-full px-3 py-2 border border-gray-300 rounded-lg"
 +             /&gt;
 +           &lt;/div&gt;
 + 
-+           &lt;div className=&quot;flex items-end&quot;&gt;
++           &lt;div className="flex items-end"&gt;
 +             &lt;button
 +               onClick={() =&gt; setFilters({})}
-+               className=&quot;w-full px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm&quot;
++               className="w-full px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm"
 +             &gt;
 +               Szűrők törlése
 +             &lt;/button&gt;
@@ -13306,108 +13306,108 @@ Lines added: 480, lines removed: 1
 +       &lt;/div&gt;
 + 
 +       {/* Orders Table */}
-+       &lt;div className=&quot;bg-white rounded-lg shadow overflow-hidden&quot;&gt;
-+         &lt;div className=&quot;px-6 py-4 bg-gray-50 border-b border-gray-200&quot;&gt;
-+           &lt;h2 className=&quot;text-lg font-semibold&quot;&gt;
++       &lt;div className="bg-white rounded-lg shadow overflow-hidden"&gt;
++         &lt;div className="px-6 py-4 bg-gray-50 border-b border-gray-200"&gt;
++           &lt;h2 className="text-lg font-semibold"&gt;
 +             Rendelések ({ordersData?.total || 0}) - Logisztikai nézet
 +           &lt;/h2&gt;
 +         &lt;/div&gt;
 +         {isLoading ? (
-+           &lt;div className=&quot;p-6&quot;&gt;Betöltés...&lt;/div&gt;
++           &lt;div className="p-6"&gt;Betöltés...&lt;/div&gt;
 +         ) : (
-+           &lt;table className=&quot;min-w-full divide-y divide-gray-200&quot;&gt;
-+             &lt;thead className=&quot;bg-gray-50&quot;&gt;
++           &lt;table className="min-w-full divide-y divide-gray-200"&gt;
++             &lt;thead className="bg-gray-50"&gt;
 +               &lt;tr&gt;
-+                 &lt;th className=&quot;px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase&quot;&gt;
++                 &lt;th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"&gt;
 +                   Azonosító
 +                 &lt;/th&gt;
-+                 &lt;th className=&quot;px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase&quot;&gt;
++                 &lt;th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"&gt;
 +                   Ügyfél
 +                 &lt;/th&gt;
-+                 &lt;th className=&quot;px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase&quot;&gt;
++                 &lt;th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"&gt;
 +                   Rendelés dátuma
 +                 &lt;/th&gt;
-+                 &lt;th className=&quot;px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase&quot;&gt;
++                 &lt;th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"&gt;
 +                   Szállítási dátum
 +                 &lt;/th&gt;
-+                 &lt;th className=&quot;px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase&quot;&gt;
++                 &lt;th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"&gt;
 +                   Teljesítési dátum
 +                 &lt;/th&gt;
-+                 &lt;th className=&quot;px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase&quot;&gt;
++                 &lt;th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase"&gt;
 +                   Végösszeg
 +                 &lt;/th&gt;
-+                 &lt;th className=&quot;px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase&quot;&gt;
++                 &lt;th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"&gt;
 +                   Állapot
 +                 &lt;/th&gt;
-+                 &lt;th className=&quot;px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase&quot;&gt;
++                 &lt;th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase"&gt;
 +                   Visszárúk
 +                 &lt;/th&gt;
-+                 &lt;th className=&quot;px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase&quot;&gt;
++                 &lt;th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase"&gt;
 +                   Műveletek
 +                 &lt;/th&gt;
 +               &lt;/tr&gt;
 +             &lt;/thead&gt;
-+             &lt;tbody className=&quot;bg-white divide-y divide-gray-200&quot;&gt;
++             &lt;tbody className="bg-white divide-y divide-gray-200"&gt;
 +               {ordersData?.data?.map((order: Order) =&gt; (
-+                 &lt;tr key={order.id} className=&quot;hover:bg-gray-50&quot;&gt;
-+                   &lt;td className=&quot;px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900&quot;&gt;
++                 &lt;tr key={order.id} className="hover:bg-gray-50"&gt;
++                   &lt;td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"&gt;
 +                     {order.azonosito}
 +                   &lt;/td&gt;
-+                   &lt;td className=&quot;px-6 py-4 text-sm text-gray-900&quot;&gt;
-+                     {order.account?.nev || &#39;-&#39;}
++                   &lt;td className="px-6 py-4 text-sm text-gray-900"&gt;
++                     {order.account?.nev || '-'}
 +                   &lt;/td&gt;
-+                   &lt;td className=&quot;px-6 py-4 whitespace-nowrap text-sm text-gray-500&quot;&gt;
-+                     {new Date(order.rendelesiDatum).toLocaleDateString(&#39;hu-HU&#39;)}
++                   &lt;td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500"&gt;
++                     {new Date(order.rendelesiDatum).toLocaleDateString('hu-HU')}
 +                   &lt;/td&gt;
-+                   &lt;td className=&quot;px-6 py-4 whitespace-nowrap text-sm text-gray-500&quot;&gt;
++                   &lt;td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500"&gt;
 +                     {order.szallitasiDatum
-+                       ? new Date(order.szallitasiDatum).toLocaleDateString(&#39;hu-HU&#39;)
-+                       : &#39;-&#39;}
++                       ? new Date(order.szallitasiDatum).toLocaleDateString('hu-HU')
++                       : '-'}
 +                   &lt;/td&gt;
-+                   &lt;td className=&quot;px-6 py-4 whitespace-nowrap text-sm text-gray-500&quot;&gt;
++                   &lt;td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500"&gt;
 +                     {order.teljesitesiDatum
-+                       ? new Date(order.teljesitesiDatum).toLocaleDateString(&#39;hu-HU&#39;)
-+                       : &#39;-&#39;}
++                       ? new Date(order.teljesitesiDatum).toLocaleDateString('hu-HU')
++                       : '-'}
 +                   &lt;/td&gt;
-+                   &lt;td className=&quot;px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900&quot;&gt;
-+                     {order.vegosszeg.toLocaleString(&#39;hu-HU&#39;)} Ft
++                   &lt;td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900"&gt;
++                     {order.vegosszeg.toLocaleString('hu-HU')} Ft
 +                   &lt;/td&gt;
-+                   &lt;td className=&quot;px-6 py-4 whitespace-nowrap&quot;&gt;{getStatusBadge(order.allapot)}&lt;/td&gt;
-+                   &lt;td className=&quot;px-6 py-4 whitespace-nowrap text-center&quot;&gt;
++                   &lt;td className="px-6 py-4 whitespace-nowrap"&gt;{getStatusBadge(order.allapot)}&lt;/td&gt;
++                   &lt;td className="px-6 py-4 whitespace-nowrap text-center"&gt;
 +                     {order.returns &amp;&amp; order.returns.length &gt; 0 ? (
 +                       &lt;Link
 +                         to={&#96;/returns?orderId=${order.id}&#96;}
-+                         className=&quot;text-orange-600 hover:text-orange-900 font-medium&quot;
++                         className="text-orange-600 hover:text-orange-900 font-medium"
 +                       &gt;
 +                         {order.returns.length} db
 +                       &lt;/Link&gt;
 +                     ) : (
-+                       &lt;span className=&quot;text-gray-400&quot;&gt;-&lt;/span&gt;
++                       &lt;span className="text-gray-400"&gt;-&lt;/span&gt;
 +                     )}
 +                   &lt;/td&gt;
-+                   &lt;td className=&quot;px-6 py-4 whitespace-nowrap text-center text-sm font-medium&quot;&gt;
-+                     &lt;div className=&quot;flex justify-center gap-2&quot;&gt;
++                   &lt;td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium"&gt;
++                     &lt;div className="flex justify-center gap-2"&gt;
 +                       &lt;button
 +                         onClick={() =&gt; handleViewDetails(order)}
-+                         className=&quot;text-gray-600 hover:text-gray-900&quot;
-+                         title=&quot;Részletek&quot;
++                         className="text-gray-600 hover:text-gray-900"
++                         title="Részletek"
 +                       &gt;
 +                         👁
 +                       &lt;/button&gt;
-+                       {order.allapot === &#39;IN_PROCESS&#39; &amp;&amp; (
++                       {order.allapot === 'IN_PROCESS' &amp;&amp; (
 +                         &lt;button
-+                           onClick={() =&gt; handleStatusChange(order.id, &#39;SHIPPED&#39;)}
-+                           className=&quot;text-purple-600 hover:text-purple-900&quot;
-+                           title=&quot;Szállítva&quot;
++                           onClick={() =&gt; handleStatusChange(order.id, 'SHIPPED')}
++                           className="text-purple-600 hover:text-purple-900"
++                           title="Szállítva"
 +                         &gt;
 +                           🚚
 +                         &lt;/button&gt;
 +                       )}
-+                       {order.allapot === &#39;SHIPPED&#39; &amp;&amp; (
++                       {order.allapot === 'SHIPPED' &amp;&amp; (
 +                         &lt;button
-+                           onClick={() =&gt; handleStatusChange(order.id, &#39;COMPLETED&#39;)}
-+                           className=&quot;text-green-600 hover:text-green-900&quot;
-+                           title=&quot;Teljesítve&quot;
++                           onClick={() =&gt; handleStatusChange(order.id, 'COMPLETED')}
++                           className="text-green-600 hover:text-green-900"
++                           title="Teljesítve"
 +                         &gt;
 +                           ✓
 +                         &lt;/button&gt;
@@ -13429,86 +13429,86 @@ Lines added: 480, lines removed: 1
 +           setSelectedOrder(null);
 +         }}
 +         title={&#96;Rendelés részletei: ${selectedOrder?.azonosito}&#96;}
-+         size=&quot;lg&quot;
++         size="lg"
 +       &gt;
 +         {selectedOrder &amp;&amp; (
-+           &lt;div className=&quot;space-y-4&quot;&gt;
-+             &lt;div className=&quot;grid grid-cols-2 gap-4&quot;&gt;
++           &lt;div className="space-y-4"&gt;
++             &lt;div className="grid grid-cols-2 gap-4"&gt;
 +               &lt;div&gt;
-+                 &lt;label className=&quot;block text-sm font-medium text-gray-700&quot;&gt;Ügyfél&lt;/label&gt;
-+                 &lt;p className=&quot;text-sm text-gray-900&quot;&gt;{selectedOrder.account?.nev}&lt;/p&gt;
++                 &lt;label className="block text-sm font-medium text-gray-700"&gt;Ügyfél&lt;/label&gt;
++                 &lt;p className="text-sm text-gray-900"&gt;{selectedOrder.account?.nev}&lt;/p&gt;
 +               &lt;/div&gt;
 +               &lt;div&gt;
-+                 &lt;label className=&quot;block text-sm font-medium text-gray-700&quot;&gt;Állapot&lt;/label&gt;
-+                 &lt;div className=&quot;mt-1&quot;&gt;{getStatusBadge(selectedOrder.allapot)}&lt;/div&gt;
++                 &lt;label className="block text-sm font-medium text-gray-700"&gt;Állapot&lt;/label&gt;
++                 &lt;div className="mt-1"&gt;{getStatusBadge(selectedOrder.allapot)}&lt;/div&gt;
 +               &lt;/div&gt;
 +               &lt;div&gt;
-+                 &lt;label className=&quot;block text-sm font-medium text-gray-700&quot;&gt;Rendelés dátuma&lt;/label&gt;
-+                 &lt;p className=&quot;text-sm text-gray-900&quot;&gt;
-+                   {new Date(selectedOrder.rendelesiDatum).toLocaleDateString(&#39;hu-HU&#39;)}
++                 &lt;label className="block text-sm font-medium text-gray-700"&gt;Rendelés dátuma&lt;/label&gt;
++                 &lt;p className="text-sm text-gray-900"&gt;
++                   {new Date(selectedOrder.rendelesiDatum).toLocaleDateString('hu-HU')}
 +                 &lt;/p&gt;
 +               &lt;/div&gt;
 +               &lt;div&gt;
-+                 &lt;label className=&quot;block text-sm font-medium text-gray-700&quot;&gt;Szállítási dátum&lt;/label&gt;
-+                 &lt;p className=&quot;text-sm text-gray-900&quot;&gt;
++                 &lt;label className="block text-sm font-medium text-gray-700"&gt;Szállítási dátum&lt;/label&gt;
++                 &lt;p className="text-sm text-gray-900"&gt;
 +                   {selectedOrder.szallitasiDatum
-+                     ? new Date(selectedOrder.szallitasiDatum).toLocaleDateString(&#39;hu-HU&#39;)
-+                     : &#39;-&#39;}
++                     ? new Date(selectedOrder.szallitasiDatum).toLocaleDateString('hu-HU')
++                     : '-'}
 +                 &lt;/p&gt;
 +               &lt;/div&gt;
 +               &lt;div&gt;
-+                 &lt;label className=&quot;block text-sm font-medium text-gray-700&quot;&gt;Teljesítési dátum&lt;/label&gt;
-+                 &lt;p className=&quot;text-sm text-gray-900&quot;&gt;
++                 &lt;label className="block text-sm font-medium text-gray-700"&gt;Teljesítési dátum&lt;/label&gt;
++                 &lt;p className="text-sm text-gray-900"&gt;
 +                   {selectedOrder.teljesitesiDatum
-+                     ? new Date(selectedOrder.teljesitesiDatum).toLocaleDateString(&#39;hu-HU&#39;)
-+                     : &#39;-&#39;}
++                     ? new Date(selectedOrder.teljesitesiDatum).toLocaleDateString('hu-HU')
++                     : '-'}
 +                 &lt;/p&gt;
 +               &lt;/div&gt;
 +               &lt;div&gt;
-+                 &lt;label className=&quot;block text-sm font-medium text-gray-700&quot;&gt;Végösszeg&lt;/label&gt;
-+                 &lt;p className=&quot;text-sm text-gray-900 font-semibold&quot;&gt;
-+                   {selectedOrder.vegosszeg.toLocaleString(&#39;hu-HU&#39;)} Ft
++                 &lt;label className="block text-sm font-medium text-gray-700"&gt;Végösszeg&lt;/label&gt;
++                 &lt;p className="text-sm text-gray-900 font-semibold"&gt;
++                   {selectedOrder.vegosszeg.toLocaleString('hu-HU')} Ft
 +                 &lt;/p&gt;
 +               &lt;/div&gt;
 +             &lt;/div&gt;
 + 
 +             {selectedOrder.items &amp;&amp; selectedOrder.items.length &gt; 0 &amp;&amp; (
 +               &lt;div&gt;
-+                 &lt;label className=&quot;block text-sm font-medium text-gray-700 mb-2&quot;&gt;
++                 &lt;label className="block text-sm font-medium text-gray-700 mb-2"&gt;
 +                   Rendelés tételek
 +                 &lt;/label&gt;
-+                 &lt;div className=&quot;bg-gray-50 rounded-lg p-4&quot;&gt;
-+                   &lt;table className=&quot;min-w-full&quot;&gt;
++                 &lt;div className="bg-gray-50 rounded-lg p-4"&gt;
++                   &lt;table className="min-w-full"&gt;
 +                     &lt;thead&gt;
-+                       &lt;tr className=&quot;border-b&quot;&gt;
-+                         &lt;th className=&quot;text-left text-xs font-medium text-gray-600 pb-2&quot;&gt;
++                       &lt;tr className="border-b"&gt;
++                         &lt;th className="text-left text-xs font-medium text-gray-600 pb-2"&gt;
 +                           Termék
 +                         &lt;/th&gt;
-+                         &lt;th className=&quot;text-right text-xs font-medium text-gray-600 pb-2&quot;&gt;
++                         &lt;th className="text-right text-xs font-medium text-gray-600 pb-2"&gt;
 +                           Mennyiség
 +                         &lt;/th&gt;
-+                         &lt;th className=&quot;text-right text-xs font-medium text-gray-600 pb-2&quot;&gt;
++                         &lt;th className="text-right text-xs font-medium text-gray-600 pb-2"&gt;
 +                           Egységár
 +                         &lt;/th&gt;
-+                         &lt;th className=&quot;text-right text-xs font-medium text-gray-600 pb-2&quot;&gt;
++                         &lt;th className="text-right text-xs font-medium text-gray-600 pb-2"&gt;
 +                           Összeg
 +                         &lt;/th&gt;
 +                       &lt;/tr&gt;
 +                     &lt;/thead&gt;
 +                     &lt;tbody&gt;
 +                       {selectedOrder.items.map((item) =&gt; (
-+                         &lt;tr key={item.id} className=&quot;border-b&quot;&gt;
-+                           &lt;td className=&quot;text-sm text-gray-900 py-2&quot;&gt;
++                         &lt;tr key={item.id} className="border-b"&gt;
++                           &lt;td className="text-sm text-gray-900 py-2"&gt;
 +                             {item.item?.azonosito} - {item.item?.nev}
 +                           &lt;/td&gt;
-+                           &lt;td className=&quot;text-sm text-right text-gray-900 py-2&quot;&gt;
++                           &lt;td className="text-sm text-right text-gray-900 py-2"&gt;
 +                             {item.mennyiseg}
 +                           &lt;/td&gt;
-+                           &lt;td className=&quot;text-sm text-right text-gray-900 py-2&quot;&gt;
-+                             {item.egysegAr.toLocaleString(&#39;hu-HU&#39;)} Ft
++                           &lt;td className="text-sm text-right text-gray-900 py-2"&gt;
++                             {item.egysegAr.toLocaleString('hu-HU')} Ft
 +                           &lt;/td&gt;
-+                           &lt;td className=&quot;text-sm text-right text-gray-900 font-medium py-2&quot;&gt;
-+                             {item.osszeg.toLocaleString(&#39;hu-HU&#39;)} Ft
++                           &lt;td className="text-sm text-right text-gray-900 font-medium py-2"&gt;
++                             {item.osszeg.toLocaleString('hu-HU')} Ft
 +                           &lt;/td&gt;
 +                         &lt;/tr&gt;
 +                       ))}
@@ -13520,27 +13520,27 @@ Lines added: 480, lines removed: 1
 + 
 +             {returnsData?.items &amp;&amp; returnsData.items.length &gt; 0 &amp;&amp; (
 +               &lt;div&gt;
-+                 &lt;label className=&quot;block text-sm font-medium text-gray-700 mb-2&quot;&gt;
++                 &lt;label className="block text-sm font-medium text-gray-700 mb-2"&gt;
 +                   Visszárúk ({returnsData.items.length})
 +                 &lt;/label&gt;
-+                 &lt;div className=&quot;bg-yellow-50 rounded-lg p-4&quot;&gt;
-+                   &lt;div className=&quot;space-y-2&quot;&gt;
++                 &lt;div className="bg-yellow-50 rounded-lg p-4"&gt;
++                   &lt;div className="space-y-2"&gt;
 +                     {returnsData.items.map((returnItem: any) =&gt; (
 +                       &lt;div
 +                         key={returnItem.id}
-+                         className=&quot;flex justify-between items-center border-b pb-2&quot;
++                         className="flex justify-between items-center border-b pb-2"
 +                       &gt;
 +                         &lt;div&gt;
-+                           &lt;p className=&quot;text-sm font-medium text-gray-900&quot;&gt;
++                           &lt;p className="text-sm font-medium text-gray-900"&gt;
 +                             {returnItem.item?.azonosito} - {returnItem.item?.nev}
 +                           &lt;/p&gt;
-+                           &lt;p className=&quot;text-xs text-gray-600&quot;&gt;
++                           &lt;p className="text-xs text-gray-600"&gt;
 +                             Mennyiség: {returnItem.mennyiseg} | Raktár: {returnItem.warehouse?.nev}
 +                           &lt;/p&gt;
 +                         &lt;/div&gt;
 +                         &lt;Link
 +                           to={&#96;/returns&#96;}
-+                           className=&quot;text-blue-600 hover:text-blue-900 text-sm&quot;
++                           className="text-blue-600 hover:text-blue-900 text-sm"
 +                         &gt;
 +                           Részletek →
 +                         &lt;/Link&gt;
@@ -13553,10 +13553,10 @@ Lines added: 480, lines removed: 1
 + 
 +             {selectedOrder.megjegyzesek &amp;&amp; (
 +               &lt;div&gt;
-+                 &lt;label className=&quot;block text-sm font-medium text-gray-700 mb-1&quot;&gt;
++                 &lt;label className="block text-sm font-medium text-gray-700 mb-1"&gt;
 +                   Megjegyzések
 +                 &lt;/label&gt;
-+                 &lt;p className=&quot;text-sm text-gray-900 whitespace-pre-wrap&quot;&gt;
++                 &lt;p className="text-sm text-gray-900 whitespace-pre-wrap"&gt;
 +                   {selectedOrder.megjegyzesek}
 +                 &lt;/p&gt;
 +               &lt;/div&gt;
@@ -13644,16 +13644,16 @@ Output mode: content
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Orders.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Orders.tsx</summary>
 
 **Chunk 1**
 Lines added: undefined, lines removed: 1
 
 ```diff
 @@ -13,5 +13,4 @@
-  } from &#39;../lib/api/crm&#39;;
-  import { apiFetch } from &#39;../lib/api&#39;;
-- import { OrderStatus } from &#39;../lib/api/crm&#39;;
+  } from '../lib/api/crm';
+  import { apiFetch } from '../lib/api';
+- import { OrderStatus } from '../lib/api/crm';
   
   interface Account {
 ```
@@ -13761,7 +13761,7 @@ A Returns.tsx frissítése a rendelés kapcsolódás javításához. A részlete
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Returns.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Returns.tsx</summary>
 
 **Chunk 1**
 Lines added: 69, lines removed: 32
@@ -13769,9 +13769,9 @@ Lines added: 69, lines removed: 32
 ```diff
 @@ -635,41 +635,78 @@
           &gt;
-            &lt;div className=&quot;space-y-4&quot;&gt;
+            &lt;div className="space-y-4"&gt;
 -             &lt;div&gt;
--               &lt;strong&gt;Rendelés:&lt;/strong&gt; {selectedReturn.order?.azonosito || &#39;-&#39;}
+-               &lt;strong&gt;Rendelés:&lt;/strong&gt; {selectedReturn.order?.azonosito || '-'}
 -             &lt;/div&gt;
 -             &lt;div&gt;
 -               &lt;strong&gt;Áru:&lt;/strong&gt; {selectedReturn.item?.azonosito} - {selectedReturn.item?.nev}
@@ -13789,50 +13789,50 @@ Lines added: 69, lines removed: 32
 -               &lt;strong&gt;Állapot:&lt;/strong&gt; {getStatusBadge(selectedReturn.allapot)}
 -             &lt;/div&gt;
 -             &lt;div&gt;
--               &lt;strong&gt;Dátum:&lt;/strong&gt;{&#39; &#39;}
--               {new Date(selectedReturn.visszaruDatum).toLocaleDateString(&#39;hu-HU&#39;)}
-+             &lt;div className=&quot;grid grid-cols-2 gap-4&quot;&gt;
+-               &lt;strong&gt;Dátum:&lt;/strong&gt;{' '}
+-               {new Date(selectedReturn.visszaruDatum).toLocaleDateString('hu-HU')}
++             &lt;div className="grid grid-cols-2 gap-4"&gt;
 +               &lt;div&gt;
-+                 &lt;label className=&quot;block text-sm font-medium text-gray-700&quot;&gt;Rendelés&lt;/label&gt;
-+                 &lt;p className=&quot;text-sm text-gray-900&quot;&gt;
++                 &lt;label className="block text-sm font-medium text-gray-700"&gt;Rendelés&lt;/label&gt;
++                 &lt;p className="text-sm text-gray-900"&gt;
 +                   {selectedReturn.order?.azonosito ? (
 +                     &lt;Link
 +                       to={&#96;/orders-logistics?orderId=${selectedReturn.orderId}&#96;}
-+                       className=&quot;text-blue-600 hover:text-blue-900&quot;
++                       className="text-blue-600 hover:text-blue-900"
 +                     &gt;
 +                       {selectedReturn.order.azonosito} →
 +                     &lt;/Link&gt;
 +                   ) : (
-+                     &#39;-&#39;
++                     '-'
 +                   )}
 +                 &lt;/p&gt;
 +               &lt;/div&gt;
 +               &lt;div&gt;
-+                 &lt;label className=&quot;block text-sm font-medium text-gray-700&quot;&gt;Áru&lt;/label&gt;
-+                 &lt;p className=&quot;text-sm text-gray-900&quot;&gt;
++                 &lt;label className="block text-sm font-medium text-gray-700"&gt;Áru&lt;/label&gt;
++                 &lt;p className="text-sm text-gray-900"&gt;
 +                   {selectedReturn.item?.azonosito} - {selectedReturn.item?.nev}
 +                 &lt;/p&gt;
 +               &lt;/div&gt;
 +               &lt;div&gt;
-+                 &lt;label className=&quot;block text-sm font-medium text-gray-700&quot;&gt;Raktár&lt;/label&gt;
-+                 &lt;p className=&quot;text-sm text-gray-900&quot;&gt;{selectedReturn.warehouse?.nev}&lt;/p&gt;
++                 &lt;label className="block text-sm font-medium text-gray-700"&gt;Raktár&lt;/label&gt;
++                 &lt;p className="text-sm text-gray-900"&gt;{selectedReturn.warehouse?.nev}&lt;/p&gt;
 +               &lt;/div&gt;
 +               &lt;div&gt;
-+                 &lt;label className=&quot;block text-sm font-medium text-gray-700&quot;&gt;Mennyiség&lt;/label&gt;
-+                 &lt;p className=&quot;text-sm text-gray-900&quot;&gt;{selectedReturn.mennyiseg}&lt;/p&gt;
++                 &lt;label className="block text-sm font-medium text-gray-700"&gt;Mennyiség&lt;/label&gt;
++                 &lt;p className="text-sm text-gray-900"&gt;{selectedReturn.mennyiseg}&lt;/p&gt;
 +               &lt;/div&gt;
 +               &lt;div&gt;
-+                 &lt;label className=&quot;block text-sm font-medium text-gray-700&quot;&gt;Ok&lt;/label&gt;
-+                 &lt;p className=&quot;text-sm text-gray-900&quot;&gt;{getOkLabel(selectedReturn.ok)}&lt;/p&gt;
++                 &lt;label className="block text-sm font-medium text-gray-700"&gt;Ok&lt;/label&gt;
++                 &lt;p className="text-sm text-gray-900"&gt;{getOkLabel(selectedReturn.ok)}&lt;/p&gt;
 +               &lt;/div&gt;
 +               &lt;div&gt;
-+                 &lt;label className=&quot;block text-sm font-medium text-gray-700&quot;&gt;Állapot&lt;/label&gt;
-+                 &lt;div className=&quot;mt-1&quot;&gt;{getStatusBadge(selectedReturn.allapot)}&lt;/div&gt;
++                 &lt;label className="block text-sm font-medium text-gray-700"&gt;Állapot&lt;/label&gt;
++                 &lt;div className="mt-1"&gt;{getStatusBadge(selectedReturn.allapot)}&lt;/div&gt;
 +               &lt;/div&gt;
 +               &lt;div&gt;
-+                 &lt;label className=&quot;block text-sm font-medium text-gray-700&quot;&gt;Dátum&lt;/label&gt;
-+                 &lt;p className=&quot;text-sm text-gray-900&quot;&gt;
-+                   {new Date(selectedReturn.visszaruDatum).toLocaleDateString(&#39;hu-HU&#39;)}
++                 &lt;label className="block text-sm font-medium text-gray-700"&gt;Dátum&lt;/label&gt;
++                 &lt;p className="text-sm text-gray-900"&gt;
++                   {new Date(selectedReturn.visszaruDatum).toLocaleDateString('hu-HU')}
 +                 &lt;/p&gt;
 +               &lt;/div&gt;
               &lt;/div&gt;
@@ -13840,10 +13840,10 @@ Lines added: 69, lines removed: 32
               {selectedReturn.megjegyzesek &amp;&amp; (
                 &lt;div&gt;
 -                 &lt;strong&gt;Megjegyzések:&lt;/strong&gt; {selectedReturn.megjegyzesek}
-+                 &lt;label className=&quot;block text-sm font-medium text-gray-700 mb-1&quot;&gt;
++                 &lt;label className="block text-sm font-medium text-gray-700 mb-1"&gt;
 +                   Megjegyzések
 +                 &lt;/label&gt;
-+                 &lt;p className=&quot;text-sm text-gray-900 whitespace-pre-wrap&quot;&gt;
++                 &lt;p className="text-sm text-gray-900 whitespace-pre-wrap"&gt;
 +                   {selectedReturn.megjegyzesek}
 +                 &lt;/p&gt;
                 &lt;/div&gt;
@@ -13860,20 +13860,20 @@ Lines added: 69, lines removed: 32
 -                 {selectedReturn.approvedBy.email})
 + 
 +             {(selectedReturn.createdBy || selectedReturn.approvedBy) &amp;&amp; (
-+               &lt;div className=&quot;border-t pt-4&quot;&gt;
-+                 &lt;h3 className=&quot;text-sm font-medium text-gray-700 mb-2&quot;&gt;Művelet történet&lt;/h3&gt;
++               &lt;div className="border-t pt-4"&gt;
++                 &lt;h3 className="text-sm font-medium text-gray-700 mb-2"&gt;Művelet történet&lt;/h3&gt;
 +                 {selectedReturn.createdBy &amp;&amp; (
-+                   &lt;div className=&quot;text-sm text-gray-600 mb-1&quot;&gt;
++                   &lt;div className="text-sm text-gray-600 mb-1"&gt;
 +                     &lt;strong&gt;Létrehozta:&lt;/strong&gt; {selectedReturn.createdBy.nev} (
-+                     {selectedReturn.createdBy.email}) -{&#39; &#39;}
-+                     {new Date(selectedReturn.createdAt).toLocaleDateString(&#39;hu-HU&#39;)}
++                     {selectedReturn.createdBy.email}) -{' '}
++                     {new Date(selectedReturn.createdAt).toLocaleDateString('hu-HU')}
 +                   &lt;/div&gt;
 +                 )}
 +                 {selectedReturn.approvedBy &amp;&amp; (
-+                   &lt;div className=&quot;text-sm text-gray-600&quot;&gt;
++                   &lt;div className="text-sm text-gray-600"&gt;
 +                     &lt;strong&gt;Jóváhagyta:&lt;/strong&gt; {selectedReturn.approvedBy.nev} (
-+                     {selectedReturn.approvedBy.email}) -{&#39; &#39;}
-+                     {new Date(selectedReturn.updatedAt).toLocaleDateString(&#39;hu-HU&#39;)}
++                     {selectedReturn.approvedBy.email}) -{' '}
++                     {new Date(selectedReturn.updatedAt).toLocaleDateString('hu-HU')}
 +                   &lt;/div&gt;
 +                 )}
                 &lt;/div&gt;
@@ -13896,16 +13896,16 @@ Lines added: 69, lines removed: 32
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Returns.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Returns.tsx</summary>
 
 **Chunk 1**
 Lines added: 1, lines removed: undefined
 
 ```diff
 @@ -1,3 +1,4 @@
-  import { useState } from &#39;react&#39;;
-+ import { Link } from &#39;react-router-dom&#39;;
-  import Modal from &#39;../components/Modal&#39;;
+  import { useState } from 'react';
++ import { Link } from 'react-router-dom';
+  import Modal from '../components/Modal';
   import {
 ```
 
@@ -14069,7 +14069,7 @@ Directory: **/Users/liviuszberger/mbit-erp/.github/workflows** (1 file)
 
 <tool-use data-tool-type="generic" data-tool-name="list_dir">
 <details>
-            <summary>Tool use: **list_directory** • Listed directory undefined • **0** results</summary>
+            <summary>Tool use: **list_dir** • Listed directory undefined • **0** results</summary>
         
 No results found
 </details>
@@ -14082,7 +14082,7 @@ Could not find file '/Users/liviuszberger/mbit-erp/.github/workflows/ci.yml' in 
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git status</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && git status</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp && git status
@@ -14090,12 +14090,12 @@ cd /Users/liviuszberger/mbit-erp && git status
 
 ```
 On branch main
-Your branch is up to date with &#39;origin/main&#39;.
+Your branch is up to date with 'origin/main'.
 
 Changes not staged for commit:
-  (use &quot;git add &lt;file&gt;...&quot; to update what will be committed)
-  (use &quot;git restore &lt;file&gt;...&quot; to discard changes in working directory)
-	modified:   &quot;.specstory/history/2025-11-16_13-58Z-csapat-kommunik\303\241ci\303\263s-modul-fejleszt\303\251se.md&quot;
+  (use "git add &lt;file&gt;..." to update what will be committed)
+  (use "git restore &lt;file&gt;..." to discard changes in working directory)
+	modified:   ".specstory/history/2025-11-16_13-58Z-csapat-kommunik\303\241ci\303\263s-modul-fejleszt\303\251se.md"
 	modified:   apps/server/prisma/prisma/dev.db
 	modified:   apps/server/src/crm/crm.module.ts
 	modified:   apps/web/src/App.tsx
@@ -14104,9 +14104,9 @@ Changes not staged for commit:
 	modified:   apps/web/src/pages/Returns.tsx
 
 Untracked files:
-  (use &quot;git add &lt;file&gt;...&quot; to include in what will be committed)
+  (use "git add &lt;file&gt;..." to include in what will be committed)
 	.specstory/history/2025-11-17_14-55Z-run-build-for-aws-s3-upload.md
-	&quot;.specstory/history/2025-11-19_10-57Z-fejleszt\303\251si-terv-a-k\303\251szletnyilv\303\241ntart\303\241s-funkci\303\263khoz.md&quot;
+	".specstory/history/2025-11-19_10-57Z-fejleszt\303\251si-terv-a-k\303\251szletnyilv\303\241ntart\303\241s-funkci\303\263khoz.md"
 	apps/server/prisma/prisma/prisma/
 	apps/server/src/crm/dto/
 	apps/server/src/crm/enums/
@@ -14116,7 +14116,7 @@ Untracked files:
 	apps/web/src/pages/Orders.tsx
 	apps/web/src/pages/OrdersLogistics.tsx
 
-no changes added to commit (use &quot;git add&quot; and/or &quot;git commit -a&quot;)
+no changes added to commit (use "git add" and/or "git commit -a")
 
 ```
 </details>
@@ -14143,7 +14143,7 @@ Checking the CI workflow, then committing and pushing the changes:
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git add apps/server/src/crm/dto/ apps/server/src/crm/enums/ apps/server/src/crm/order.controller.ts apps/server/src/crm/order.service.ts apps/server/src/crm/crm.module.ts apps/web/src/lib/api/crm.ts apps/web/src/pages/Orders.tsx apps/web/src/pages/OrdersLogistics.tsx apps/web/src/App.tsx apps/web/src/components/logistics/ProductSuppliers.tsx apps/web/src/pages/Products.tsx apps/web/src/pages/Returns.tsx</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && git add apps/server/src/crm/dto/ apps/server/src/crm/enums/ apps/server/src/crm/order.controller.ts apps/server/src/crm/order.service.ts apps/server/src/crm/crm.module.ts apps/web/src/lib/api/crm.ts apps/web/src/pages/Orders.tsx apps/web/src/pages/OrdersLogistics.tsx apps/web/src/App.tsx apps/web/src/components/logistics/ProductSuppliers.tsx apps/web/src/pages/Products.tsx apps/web/src/pages/Returns.tsx</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp && git add apps/server/src/crm/dto/ apps/server/src/crm/enums/ apps/server/src/crm/order.controller.ts apps/server/src/crm/order.service.ts apps/server/src/crm/crm.module.ts apps/web/src/lib/api/crm.ts apps/web/src/pages/Orders.tsx apps/web/src/pages/OrdersLogistics.tsx apps/web/src/App.tsx apps/web/src/components/logistics/ProductSuppliers.tsx apps/web/src/pages/Products.tsx apps/web/src/pages/Returns.tsx
@@ -14154,7 +14154,7 @@ cd /Users/liviuszberger/mbit-erp && git add apps/server/src/crm/dto/ apps/server
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git status</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && git status</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp && git status
@@ -14162,10 +14162,10 @@ cd /Users/liviuszberger/mbit-erp && git status
 
 ```
 On branch main
-Your branch is up to date with &#39;origin/main&#39;.
+Your branch is up to date with 'origin/main'.
 
 Changes to be committed:
-  (use &quot;git restore --staged &lt;file&gt;...&quot; to unstage)
+  (use "git restore --staged &lt;file&gt;..." to unstage)
 	modified:   apps/server/src/crm/crm.module.ts
 	new file:   apps/server/src/crm/dto/create-order.dto.ts
 	new file:   apps/server/src/crm/dto/order-status.dto.ts
@@ -14182,15 +14182,15 @@ Changes to be committed:
 	modified:   apps/web/src/pages/Returns.tsx
 
 Changes not staged for commit:
-  (use &quot;git add &lt;file&gt;...&quot; to update what will be committed)
-  (use &quot;git restore &lt;file&gt;...&quot; to discard changes in working directory)
-	modified:   &quot;.specstory/history/2025-11-16_13-58Z-csapat-kommunik\303\241ci\303\263s-modul-fejleszt\303\251se.md&quot;
+  (use "git add &lt;file&gt;..." to update what will be committed)
+  (use "git restore &lt;file&gt;..." to discard changes in working directory)
+	modified:   ".specstory/history/2025-11-16_13-58Z-csapat-kommunik\303\241ci\303\263s-modul-fejleszt\303\251se.md"
 	modified:   apps/server/prisma/prisma/dev.db
 
 Untracked files:
-  (use &quot;git add &lt;file&gt;...&quot; to include in what will be committed)
+  (use "git add &lt;file&gt;..." to include in what will be committed)
 	.specstory/history/2025-11-17_14-55Z-run-build-for-aws-s3-upload.md
-	&quot;.specstory/history/2025-11-19_10-57Z-fejleszt\303\251si-terv-a-k\303\251szletnyilv\303\241ntart\303\241s-funkci\303\263khoz.md&quot;
+	".specstory/history/2025-11-19_10-57Z-fejleszt\303\251si-terv-a-k\303\251szletnyilv\303\241ntart\303\241s-funkci\303\263khoz.md"
 	apps/server/prisma/prisma/prisma/
 
 
@@ -14211,7 +14211,7 @@ Committing and pushing the changes to trigger the CI workflow:
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git commit -m "feat: Add order management system and fix ProductSuppliers modal
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && git commit -m "feat: Add order management system and fix ProductSuppliers modal
 
 - Add OrderService and OrderController with full CRUD and workflow
 - Add Order DTOs (CreateOrderDto, UpdateOrderDto, OrderStatusDto)
@@ -14259,7 +14259,7 @@ cd /Users/liviuszberger/mbit-erp && git commit -m "feat: Add order management sy
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git push origin main</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && git push origin main</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp && git push origin main
@@ -14369,7 +14369,6 @@ _**Agent (model composer-1, mode Agent)**_
 
 ---
 
-
 Fixing the build errors:
 1. Missing `@nestjs/mapped-types` dependency
 2. `UpdateOrderDto` missing `items` property
@@ -14425,7 +14424,6 @@ Output mode: content
 
 ---
 
-
 Checking how other services handle Prisma types:
 
 
@@ -14468,7 +14466,6 @@ Output mode: content
 
 ---
 
-
 Fixing the issues:
 
 
@@ -14476,18 +14473,18 @@ Fixing the issues:
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/package.json</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/package.json</summary>
 
 **Chunk 1**
 Lines added: 1, lines removed: undefined
 
 ```diff
 @@ -20,4 +20,5 @@
-      &quot;@nestjs/core&quot;: &quot;^10.3.0&quot;,
-      &quot;@nestjs/jwt&quot;: &quot;^10.2.0&quot;,
-+     &quot;@nestjs/mapped-types&quot;: &quot;^2.0.4&quot;,
-      &quot;@nestjs/passport&quot;: &quot;^10.0.3&quot;,
-      &quot;@nestjs/platform-express&quot;: &quot;^10.3.0&quot;,
+      "@nestjs/core": "^10.3.0",
+      "@nestjs/jwt": "^10.2.0",
++     "@nestjs/mapped-types": "^2.0.4",
+      "@nestjs/passport": "^10.0.3",
+      "@nestjs/platform-express": "^10.3.0",
 ```
 
 </details>
@@ -14498,20 +14495,20 @@ Lines added: 1, lines removed: undefined
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/crm/dto/update-order.dto.ts</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/crm/dto/update-order.dto.ts</summary>
 
 **Chunk 1**
 Lines added: 3, lines removed: 2
 
 ```diff
 @@ -1,5 +1,6 @@
-  import { PartialType } from &#39;@nestjs/mapped-types&#39;;
-- import { CreateOrderDto } from &#39;./create-order.dto&#39;;
-- import { IsOptional, IsEnum, IsDateString, IsString } from &#39;class-validator&#39;;
-+ import { CreateOrderDto, OrderItemDto } from &#39;./create-order.dto&#39;;
-+ import { IsOptional, IsEnum, IsDateString, IsString, IsArray, ValidateNested } from &#39;class-validator&#39;;
-+ import { Type } from &#39;class-transformer&#39;;
-  import { OrderStatus } from &#39;../enums/order-status.enum&#39;;
+  import { PartialType } from '@nestjs/mapped-types';
+- import { CreateOrderDto } from './create-order.dto';
+- import { IsOptional, IsEnum, IsDateString, IsString } from 'class-validator';
++ import { CreateOrderDto, OrderItemDto } from './create-order.dto';
++ import { IsOptional, IsEnum, IsDateString, IsString, IsArray, ValidateNested } from 'class-validator';
++ import { Type } from 'class-transformer';
+  import { OrderStatus } from '../enums/order-status.enum';
   
 ```
 
@@ -14540,16 +14537,16 @@ Lines added: 6, lines removed: undefined
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/crm/order.service.ts</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/crm/order.service.ts</summary>
 
 **Chunk 1**
 Lines added: undefined, lines removed: 1
 
 ```diff
 @@ -5,5 +5,4 @@
-  import { UpdateOrderDto } from &#39;./dto/update-order.dto&#39;;
-  import { OrderStatus } from &#39;./enums/order-status.enum&#39;;
-- import { Prisma } from &#39;@prisma/client&#39;;
+  import { UpdateOrderDto } from './dto/update-order.dto';
+  import { OrderStatus } from './enums/order-status.enum';
+- import { Prisma } from '@prisma/client';
   
   @Injectable()
 ```
@@ -14562,7 +14559,7 @@ Lines added: undefined, lines removed: 1
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/crm/order.service.ts</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/crm/order.service.ts</summary>
 
 **Chunk 1**
 Lines added: 1, lines removed: 1
@@ -14584,7 +14581,7 @@ Lines added: 1, lines removed: 1
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git add apps/server/package.json apps/server/src/crm/dto/update-order.dto.ts apps/server/src/crm/order.service.ts</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && git add apps/server/package.json apps/server/src/crm/dto/update-order.dto.ts apps/server/src/crm/order.service.ts</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp && git add apps/server/package.json apps/server/src/crm/dto/update-order.dto.ts apps/server/src/crm/order.service.ts
@@ -14595,7 +14592,7 @@ cd /Users/liviuszberger/mbit-erp && git add apps/server/package.json apps/server
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git commit -m "fix: Fix build errors - add @nestjs/mapped-types, fix UpdateOrderDto and Prisma types"</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && git commit -m "fix: Fix build errors - add @nestjs/mapped-types, fix UpdateOrderDto and Prisma types"</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp && git commit -m "fix: Fix build errors - add @nestjs/mapped-types, fix UpdateOrderDto and Prisma types"
@@ -14612,7 +14609,7 @@ cd /Users/liviuszberger/mbit-erp && git commit -m "fix: Fix build errors - add @
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git push origin main</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && git push origin main</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp && git push origin main
@@ -14631,7 +14628,6 @@ To https://github.com/BergerLiviusz/mbit-erp.git
 
 
 ---
-
 
 Checking if OrderItemDto needs to be exported:
 
@@ -14666,7 +14662,6 @@ Lint results
 
 
 ---
-
 
 All fixes are complete. Summary:
 
@@ -14776,14 +14771,13 @@ _**Agent (model composer-1, mode Agent)**_
 
 ---
 
-
 Updating `package-lock.json` to include the new dependency:
 
 
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && npm install</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && npm install</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp && npm install
@@ -14813,7 +14807,7 @@ Run &#96;npm audit&#96; for details.
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git status</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && git status</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp && git status
@@ -14821,22 +14815,22 @@ cd /Users/liviuszberger/mbit-erp && git status
 
 ```
 On branch main
-Your branch is up to date with &#39;origin/main&#39;.
+Your branch is up to date with 'origin/main'.
 
 Changes not staged for commit:
-  (use &quot;git add &lt;file&gt;...&quot; to update what will be committed)
-  (use &quot;git restore &lt;file&gt;...&quot; to discard changes in working directory)
-	modified:   &quot;.specstory/history/2025-11-16_13-58Z-csapat-kommunik\303\241ci\303\263s-modul-fejleszt\303\251se.md&quot;
+  (use "git add &lt;file&gt;..." to update what will be committed)
+  (use "git restore &lt;file&gt;..." to discard changes in working directory)
+	modified:   ".specstory/history/2025-11-16_13-58Z-csapat-kommunik\303\241ci\303\263s-modul-fejleszt\303\251se.md"
 	modified:   apps/server/prisma/prisma/dev.db
 	modified:   package-lock.json
 
 Untracked files:
-  (use &quot;git add &lt;file&gt;...&quot; to include in what will be committed)
+  (use "git add &lt;file&gt;..." to include in what will be committed)
 	.specstory/history/2025-11-17_14-55Z-run-build-for-aws-s3-upload.md
-	&quot;.specstory/history/2025-11-19_10-57Z-fejleszt\303\251si-terv-a-k\303\251szletnyilv\303\241ntart\303\241s-funkci\303\263khoz.md&quot;
+	".specstory/history/2025-11-19_10-57Z-fejleszt\303\251si-terv-a-k\303\251szletnyilv\303\241ntart\303\241s-funkci\303\263khoz.md"
 	apps/server/prisma/prisma/prisma/
 
-no changes added to commit (use &quot;git add&quot; and/or &quot;git commit -a&quot;)
+no changes added to commit (use "git add" and/or "git commit -a")
 
 ```
 </details>
@@ -14848,14 +14842,13 @@ no changes added to commit (use &quot;git add&quot; and/or &quot;git commit -a&q
 
 ---
 
-
 Committing and pushing the updated `package-lock.json`:
 
 
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git add package-lock.json</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && git add package-lock.json</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp && git add package-lock.json
@@ -14866,7 +14859,7 @@ cd /Users/liviuszberger/mbit-erp && git add package-lock.json
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git commit -m "chore: Update package-lock.json with @nestjs/mapped-types dependency"</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && git commit -m "chore: Update package-lock.json with @nestjs/mapped-types dependency"</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp && git commit -m "chore: Update package-lock.json with @nestjs/mapped-types dependency"
@@ -14883,7 +14876,7 @@ cd /Users/liviuszberger/mbit-erp && git commit -m "chore: Update package-lock.js
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git push origin main</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && git push origin main</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp && git push origin main
@@ -14902,7 +14895,6 @@ To https://github.com/BergerLiviusz/mbit-erp.git
 
 
 ---
-
 
 Updated and pushed the `package-lock.json` file. The CI should now pass the dependency installation step.
 
@@ -15085,7 +15077,6 @@ _**Agent (model composer-1, mode Agent)**_
 
 ---
 
-
 Fixing TypeScript build errors in the frontend:
 
 
@@ -15163,7 +15154,6 @@ Output mode: content
 
 ---
 
-
 Checking the `useReturns` function signature:
 
 
@@ -15189,7 +15179,6 @@ Checking the `useReturns` function signature:
 
 ---
 
-
 Fixing the issues:
 
 
@@ -15197,16 +15186,16 @@ Fixing the issues:
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/lib/api/crm.ts</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/lib/api/crm.ts</summary>
 
 **Chunk 1**
 Lines added: 1, lines removed: 1
 
 ```diff
 @@ -1,4 +1,4 @@
-  import { useQuery, useMutation, useQueryClient } from &#39;@tanstack/react-query&#39;;
-- import axios from &#39;../lib/axios&#39;;
-+ import axios from &#39;../axios&#39;;
+  import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+- import axios from '../lib/axios';
++ import axios from '../axios';
   
   // Order Interfaces
 ```
@@ -15219,7 +15208,7 @@ Lines added: 1, lines removed: 1
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/OrdersLogistics.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/OrdersLogistics.tsx</summary>
 
 **Chunk 1**
 Lines added: 1, lines removed: 3
@@ -15244,24 +15233,24 @@ Lines added: 1, lines removed: 3
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/OrdersLogistics.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/OrdersLogistics.tsx</summary>
 
 **Chunk 1**
 Lines added: 2, lines removed: 2
 
 ```diff
 @@ -111,10 +111,10 @@
-        order.vegosszeg.toLocaleString(&#39;hu-HU&#39;),
+        order.vegosszeg.toLocaleString('hu-HU'),
         getStatusLabel(order.allapot),
 -       order.returns?.length || 0,
 +       String(order.returns?.length || 0),
       ]);
   
       const csvContent = [
-        headers.join(&#39;,&#39;),
--       ...rows.map((row: string[]) =&gt; row.map((cell: string) =&gt; &#96;&quot;${cell}&quot;&#96;).join(&#39;,&#39;)),
-+       ...rows.map((row: (string | number)[]) =&gt; row.map((cell: string | number) =&gt; &#96;&quot;${String(cell)}&quot;&#96;).join(&#39;,&#39;)),
-      ].join(&#39;\n&#39;);
+        headers.join(','),
+-       ...rows.map((row: string[]) =&gt; row.map((cell: string) =&gt; &#96;"${cell}"&#96;).join(',')),
++       ...rows.map((row: (string | number)[]) =&gt; row.map((cell: string | number) =&gt; &#96;"${String(cell)}"&#96;).join(',')),
+      ].join('\n');
   
 ```
 
@@ -15290,7 +15279,7 @@ Lint results
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git add apps/web/src/lib/api/crm.ts apps/web/src/pages/OrdersLogistics.tsx</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && git add apps/web/src/lib/api/crm.ts apps/web/src/pages/OrdersLogistics.tsx</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp && git add apps/web/src/lib/api/crm.ts apps/web/src/pages/OrdersLogistics.tsx
@@ -15301,7 +15290,7 @@ cd /Users/liviuszberger/mbit-erp && git add apps/web/src/lib/api/crm.ts apps/web
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git commit -m "fix: Fix TypeScript build errors in frontend - correct axios import path, fix useReturns call, fix CSV export types"</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && git commit -m "fix: Fix TypeScript build errors in frontend - correct axios import path, fix useReturns call, fix CSV export types"</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp && git commit -m "fix: Fix TypeScript build errors in frontend - correct axios import path, fix useReturns call, fix CSV export types"
@@ -15318,7 +15307,7 @@ cd /Users/liviuszberger/mbit-erp && git commit -m "fix: Fix TypeScript build err
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git push origin main</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && git push origin main</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp && git push origin main
@@ -15337,7 +15326,6 @@ To https://github.com/BergerLiviusz/mbit-erp.git
 
 
 ---
-
 
 Fixed all three TypeScript build errors:
 
@@ -15374,7 +15362,6 @@ _**Agent (model composer-1, mode Agent)**_
 
 
 ---
-
 
 Három probléma javítása: z-index, szállító-termék kapcsolat megjelenítése és a default szűrő. Kezdjük a z-index és a modal megjelenítés ellenőrzésével:
 
@@ -15447,7 +15434,6 @@ Output mode: content
 
 ---
 
-
 A három probléma javítása:
 
 
@@ -15498,7 +15484,6 @@ Output mode: content
 
 ---
 
-
 Javítjuk a három problémát:
 
 
@@ -15506,7 +15491,7 @@ Javítjuk a három problémát:
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/Modal.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/Modal.tsx</summary>
 
 **Chunk 1**
 Lines added: 2, lines removed: 1
@@ -15514,12 +15499,12 @@ Lines added: 2, lines removed: 1
 ```diff
 @@ -7,7 +7,8 @@
     children: ReactNode;
-    size?: &#39;sm&#39; | &#39;md&#39; | &#39;lg&#39; | &#39;xl&#39;;
+    size?: 'sm' | 'md' | 'lg' | 'xl';
 +   zIndex?: number;
   }
   
-- export default function Modal({ isOpen, onClose, title, children, size = &#39;md&#39; }: ModalProps) {
-+ export default function Modal({ isOpen, onClose, title, children, size = &#39;md&#39;, zIndex = 50 }: ModalProps) {
+- export default function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalProps) {
++ export default function Modal({ isOpen, onClose, title, children, size = 'md', zIndex = 50 }: ModalProps) {
     if (!isOpen) return null;
   
 ```
@@ -15531,9 +15516,9 @@ Lines added: 1, lines removed: 1
 @@ -20,5 +21,5 @@
   
     return (
--     &lt;div className=&quot;fixed inset-0 z-50 overflow-y-auto&quot;&gt;
-+     &lt;div className=&quot;fixed inset-0 overflow-y-auto&quot; style={{ zIndex }}&gt;
-        &lt;div className=&quot;flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0&quot;&gt;
+-     &lt;div className="fixed inset-0 z-50 overflow-y-auto"&gt;
++     &lt;div className="fixed inset-0 overflow-y-auto" style={{ zIndex }}&gt;
+        &lt;div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0"&gt;
           &lt;div 
 ```
 
@@ -15545,18 +15530,18 @@ Lines added: 1, lines removed: 1
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/logistics/ProductSuppliers.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/logistics/ProductSuppliers.tsx</summary>
 
 **Chunk 1**
 Lines added: 1, lines removed: undefined
 
 ```diff
 @@ -242,4 +242,5 @@
-          title=&quot;Szállító hozzáadása&quot;
-          size=&quot;md&quot;
+          title="Szállító hozzáadása"
+          size="md"
 +         zIndex={60}
         &gt;
-          &lt;form onSubmit={handleLinkSubmit} onClick={(e) =&gt; e.stopPropagation()} className=&quot;space-y-4&quot;&gt;
+          &lt;form onSubmit={handleLinkSubmit} onClick={(e) =&gt; e.stopPropagation()} className="space-y-4"&gt;
 ```
 
 </details>
@@ -15567,7 +15552,7 @@ Lines added: 1, lines removed: undefined
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/OrdersLogistics.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/OrdersLogistics.tsx</summary>
 
 **Chunk 1**
 Lines added: 1, lines removed: 3
@@ -15577,7 +15562,7 @@ Lines added: 1, lines removed: 3
   
   export default function OrdersLogistics() {
 -   const [filters, setFilters] = useState&lt;OrderFilters&gt;({
--     allapot: &#39;IN_PROCESS&#39;, // Default: only show orders in process
+-     allapot: 'IN_PROCESS', // Default: only show orders in process
 -   });
 +   const [filters, setFilters] = useState&lt;OrderFilters&gt;({});
     const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
@@ -15609,7 +15594,6 @@ Lines added: 1, lines removed: 3
 
 
 ---
-
 
 Bővítjük a szállító árui modal-t termék hozzárendelési funkcióval:
 
@@ -15695,7 +15679,6 @@ _No matches found_
 
 ---
 
-
 Bővítjük a szállító árui modal-t termék hozzárendelési funkcióval:
 
 
@@ -15703,16 +15686,16 @@ Bővítjük a szállító árui modal-t termék hozzárendelési funkcióval:
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Suppliers.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Suppliers.tsx</summary>
 
 **Chunk 1**
 Lines added: 1, lines removed: 1
 
 ```diff
 @@ -1,3 +1,3 @@
-- import { useState } from &#39;react&#39;;
-+ import { useState, useEffect } from &#39;react&#39;;
-  import Modal from &#39;../components/Modal&#39;;
+- import { useState } from 'react';
++ import { useState, useEffect } from 'react';
+  import Modal from '../components/Modal';
   import {
 ```
 
@@ -15728,8 +15711,8 @@ Lines added: 4, lines removed: undefined
     Supplier,
     CreateSupplierDto,
 +   LinkItemSupplierDto,
-  } from &#39;../lib/api/logistics&#39;;
-+ import { apiFetch } from &#39;../lib/api&#39;;
+  } from '../lib/api/logistics';
++ import { apiFetch } from '../lib/api';
   
   export default function Suppliers() {
 ```
@@ -15742,15 +15725,15 @@ Lines added: 4, lines removed: undefined
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Suppliers.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Suppliers.tsx</summary>
 
 **Chunk 1**
 Lines added: 24, lines removed: 1
 
 ```diff
 @@ -14,18 +14,41 @@
-  } from &#39;../lib/api/logistics&#39;;
-  import { apiFetch } from &#39;../lib/api&#39;;
+  } from '../lib/api/logistics';
+  import { apiFetch } from '../lib/api';
 + 
 + interface Item {
 +   id: string;
@@ -15760,7 +15743,7 @@ Lines added: 24, lines removed: 1
 + }
   
   export default function Suppliers() {
-    const [searchTerm, setSearchTerm] = useState(&#39;&#39;);
+    const [searchTerm, setSearchTerm] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isItemsModalOpen, setIsItemsModalOpen] = useState(false);
 +   const [isLinkItemModalOpen, setIsLinkItemModalOpen] = useState(false);
@@ -15769,24 +15752,24 @@ Lines added: 24, lines removed: 1
 +   const [items, setItems] = useState&lt;Item[]&gt;([]);
     const [saving, setSaving] = useState(false);
 +   const [linking, setLinking] = useState(false);
-    const [error, setError] = useState&lt;string&gt;(&#39;&#39;);
-    const [success, setSuccess] = useState&lt;string&gt;(&#39;&#39;);
+    const [error, setError] = useState&lt;string&gt;('');
+    const [success, setSuccess] = useState&lt;string&gt;('');
   
     const { data: suppliersData, isLoading, refetch } = useSuppliers(searchTerm, 0, 100);
   
--   const { data: supplierItems } = useSupplierItems(selectedSupplierId || &#39;&#39;);
-+   const { data: supplierItems, refetch: refetchSupplierItems } = useSupplierItems(selectedSupplierId || &#39;&#39;);
+-   const { data: supplierItems } = useSupplierItems(selectedSupplierId || '');
++   const { data: supplierItems, refetch: refetchSupplierItems } = useSupplierItems(selectedSupplierId || '');
 + 
 +   const linkItemSupplier = useLinkItemSupplier();
 +   const unlinkItemSupplier = useUnlinkItemSupplier();
 + 
 +   const [linkFormData, setLinkFormData] = useState&lt;LinkItemSupplierDto &amp; { itemId: string }&gt;({
-+     supplierId: &#39;&#39;,
-+     itemId: &#39;&#39;,
++     supplierId: '',
++     itemId: '',
 +     beszerzesiAr: undefined,
 +     minMennyiseg: undefined,
 +     szallitasiIdo: undefined,
-+     megjegyzesek: &#39;&#39;,
++     megjegyzesek: '',
 +     isPrimary: false,
 +   });
   
@@ -15801,7 +15784,7 @@ Lines added: 24, lines removed: 1
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Suppliers.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Suppliers.tsx</summary>
 
 **Chunk 1**
 Lines added: 81, lines removed: undefined
@@ -15819,13 +15802,13 @@ Lines added: 81, lines removed: undefined
 + 
 +   const loadItems = async () =&gt; {
 +     try {
-+       const response = await apiFetch(&#39;/logistics/items?skip=0&amp;take=1000&#39;);
++       const response = await apiFetch('/logistics/items?skip=0&amp;take=1000');
 +       if (response.ok) {
 +         const data = await response.json();
 +         setItems(data.items || []);
 +       }
 +     } catch (error) {
-+       console.error(&#39;Hiba a termékek betöltésekor:&#39;, error);
++       console.error('Hiba a termékek betöltésekor:', error);
 +     }
 +   };
   
@@ -15838,15 +15821,15 @@ Lines added: 81, lines removed: undefined
 +     if (!selectedSupplierId) return;
 +     setLinkFormData({
 +       supplierId: selectedSupplierId,
-+       itemId: &#39;&#39;,
++       itemId: '',
 +       beszerzesiAr: undefined,
 +       minMennyiseg: undefined,
 +       szallitasiIdo: undefined,
-+       megjegyzesek: &#39;&#39;,
++       megjegyzesek: '',
 +       isPrimary: false,
 +     });
-+     setError(&#39;&#39;);
-+     setSuccess(&#39;&#39;);
++     setError('');
++     setSuccess('');
 +     setIsLinkItemModalOpen(true);
 +   };
 + 
@@ -15855,8 +15838,8 @@ Lines added: 81, lines removed: undefined
 +     if (!selectedSupplierId || !linkFormData.itemId) return;
 + 
 +     setLinking(true);
-+     setError(&#39;&#39;);
-+     setSuccess(&#39;&#39;);
++     setError('');
++     setSuccess('');
 + 
 +     try {
 +       await linkItemSupplier.mutateAsync({
@@ -15871,11 +15854,11 @@ Lines added: 81, lines removed: undefined
 +           isPrimary: linkFormData.isPrimary,
 +         },
 +       });
-+       setSuccess(&#39;Termék sikeresen hozzárendelve!&#39;);
++       setSuccess('Termék sikeresen hozzárendelve!');
 +       setIsLinkItemModalOpen(false);
 +       refetchSupplierItems();
 +     } catch (err: any) {
-+       setError(err.response?.data?.message || &#39;Hiba történt a hozzárendelés során&#39;);
++       setError(err.response?.data?.message || 'Hiba történt a hozzárendelés során');
 +     } finally {
 +       setLinking(false);
 +     }
@@ -15883,17 +15866,17 @@ Lines added: 81, lines removed: undefined
 + 
 +   const handleUnlinkItem = async (itemId: string) =&gt; {
 +     if (!selectedSupplierId) return;
-+     if (!confirm(&#39;Biztosan eltávolítja ezt a terméket a szállítótól?&#39;)) return;
++     if (!confirm('Biztosan eltávolítja ezt a terméket a szállítótól?')) return;
 + 
 +     try {
 +       await unlinkItemSupplier.mutateAsync({
 +         itemId,
 +         supplierId: selectedSupplierId,
 +       });
-+       setSuccess(&#39;Termék sikeresen eltávolítva!&#39;);
++       setSuccess('Termék sikeresen eltávolítva!');
 +       refetchSupplierItems();
 +     } catch (err: any) {
-+       setError(err.response?.data?.message || &#39;Hiba történt az eltávolítás során&#39;);
++       setError(err.response?.data?.message || 'Hiba történt az eltávolítás során');
 +     }
 +   };
   
@@ -15908,7 +15891,7 @@ Lines added: 81, lines removed: undefined
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Suppliers.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Suppliers.tsx</summary>
 
 **Chunk 1**
 Lines added: 238, lines removed: 46
@@ -15917,49 +15900,49 @@ Lines added: 238, lines removed: 46
 @@ -507,54 +507,246 @@
             setIsItemsModalOpen(false);
             setSelectedSupplierId(null);
-+           setError(&#39;&#39;);
-+           setSuccess(&#39;&#39;);
++           setError('');
++           setSuccess('');
           }}
-          title=&quot;Szállító árui&quot;
-          size=&quot;lg&quot;
+          title="Szállító árui"
+          size="lg"
         &gt;
 -         {supplierItems &amp;&amp; supplierItems.length &gt; 0 ? (
--           &lt;table className=&quot;min-w-full divide-y divide-gray-200&quot;&gt;
--             &lt;thead className=&quot;bg-gray-50&quot;&gt;
+-           &lt;table className="min-w-full divide-y divide-gray-200"&gt;
+-             &lt;thead className="bg-gray-50"&gt;
 -               &lt;tr&gt;
--                 &lt;th className=&quot;px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase&quot;&gt;
+-                 &lt;th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"&gt;
 -                   Áru azonosító
 -                 &lt;/th&gt;
--                 &lt;th className=&quot;px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase&quot;&gt;
+-                 &lt;th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"&gt;
 -                   Név
 -                 &lt;/th&gt;
--                 &lt;th className=&quot;px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase&quot;&gt;
+-                 &lt;th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"&gt;
 -                   Egység
 -                 &lt;/th&gt;
--                 &lt;th className=&quot;px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase&quot;&gt;
+-                 &lt;th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase"&gt;
 -                   Elsődleges
 -                 &lt;/th&gt;
 -               &lt;/tr&gt;
 -             &lt;/thead&gt;
--             &lt;tbody className=&quot;bg-white divide-y divide-gray-200&quot;&gt;
+-             &lt;tbody className="bg-white divide-y divide-gray-200"&gt;
 -               {supplierItems.map((itemSupplier: any) =&gt; (
 -                 &lt;tr key={itemSupplier.id}&gt;
--                   &lt;td className=&quot;px-6 py-4 whitespace-nowrap text-sm text-gray-900&quot;&gt;
+-                   &lt;td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900"&gt;
 -                     {itemSupplier.item?.azonosito}
 -                   &lt;/td&gt;
--                   &lt;td className=&quot;px-6 py-4 text-sm text-gray-900&quot;&gt;
+-                   &lt;td className="px-6 py-4 text-sm text-gray-900"&gt;
 -                     {itemSupplier.item?.nev}
 -                   &lt;/td&gt;
--                   &lt;td className=&quot;px-6 py-4 whitespace-nowrap text-sm text-gray-500&quot;&gt;
+-                   &lt;td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500"&gt;
 -                     {itemSupplier.item?.egyseg}
 -                   &lt;/td&gt;
--                   &lt;td className=&quot;px-6 py-4 whitespace-nowrap text-center&quot;&gt;
+-                   &lt;td className="px-6 py-4 whitespace-nowrap text-center"&gt;
 -                     {itemSupplier.isPrimary ? (
--                       &lt;span className=&quot;px-2 py-1 bg-green-100 text-green-800 text-xs rounded&quot;&gt;
+-                       &lt;span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded"&gt;
 -                         ✓
 -                       &lt;/span&gt;
 -                     ) : (
--                       &lt;span className=&quot;text-gray-400&quot;&gt;-&lt;/span&gt;
+-                       &lt;span className="text-gray-400"&gt;-&lt;/span&gt;
 -                     )}
 -                   &lt;/td&gt;
 -                 &lt;/tr&gt;
@@ -15967,77 +15950,77 @@ Lines added: 238, lines removed: 46
 -             &lt;/tbody&gt;
 -           &lt;/table&gt;
 -         ) : (
--           &lt;p className=&quot;text-gray-500&quot;&gt;Nincs áru kapcsolva ehhez a szállítóhoz.&lt;/p&gt;
+-           &lt;p className="text-gray-500"&gt;Nincs áru kapcsolva ehhez a szállítóhoz.&lt;/p&gt;
 -         )}
-+         &lt;div className=&quot;space-y-4&quot;&gt;
++         &lt;div className="space-y-4"&gt;
 +           {error &amp;&amp; (
-+             &lt;div className=&quot;bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded text-sm&quot;&gt;
++             &lt;div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded text-sm"&gt;
 +               {error}
 +             &lt;/div&gt;
 +           )}
 + 
 +           {success &amp;&amp; (
-+             &lt;div className=&quot;bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded text-sm&quot;&gt;
++             &lt;div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded text-sm"&gt;
 +               {success}
 +             &lt;/div&gt;
 +           )}
 + 
-+           &lt;div className=&quot;flex justify-end&quot;&gt;
++           &lt;div className="flex justify-end"&gt;
 +             &lt;button
 +               onClick={handleOpenLinkItemModal}
-+               className=&quot;bg-mbit-blue text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm&quot;
++               className="bg-mbit-blue text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm"
 +             &gt;
 +               + Termék hozzáadása
 +             &lt;/button&gt;
 +           &lt;/div&gt;
 + 
 +           {supplierItems &amp;&amp; supplierItems.length &gt; 0 ? (
-+             &lt;table className=&quot;min-w-full divide-y divide-gray-200&quot;&gt;
-+               &lt;thead className=&quot;bg-gray-50&quot;&gt;
++             &lt;table className="min-w-full divide-y divide-gray-200"&gt;
++               &lt;thead className="bg-gray-50"&gt;
 +                 &lt;tr&gt;
-+                   &lt;th className=&quot;px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase&quot;&gt;
++                   &lt;th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"&gt;
 +                     Áru azonosító
 +                   &lt;/th&gt;
-+                   &lt;th className=&quot;px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase&quot;&gt;
++                   &lt;th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"&gt;
 +                     Név
 +                   &lt;/th&gt;
-+                   &lt;th className=&quot;px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase&quot;&gt;
++                   &lt;th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"&gt;
 +                     Egység
 +                   &lt;/th&gt;
-+                   &lt;th className=&quot;px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase&quot;&gt;
++                   &lt;th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase"&gt;
 +                     Elsődleges
 +                   &lt;/th&gt;
-+                   &lt;th className=&quot;px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase&quot;&gt;
++                   &lt;th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase"&gt;
 +                     Műveletek
 +                   &lt;/th&gt;
 +                 &lt;/tr&gt;
 +               &lt;/thead&gt;
-+               &lt;tbody className=&quot;bg-white divide-y divide-gray-200&quot;&gt;
++               &lt;tbody className="bg-white divide-y divide-gray-200"&gt;
 +                 {supplierItems.map((itemSupplier: any) =&gt; (
 +                   &lt;tr key={itemSupplier.id}&gt;
-+                     &lt;td className=&quot;px-6 py-4 whitespace-nowrap text-sm text-gray-900&quot;&gt;
++                     &lt;td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900"&gt;
 +                       {itemSupplier.item?.azonosito}
 +                     &lt;/td&gt;
-+                     &lt;td className=&quot;px-6 py-4 text-sm text-gray-900&quot;&gt;
++                     &lt;td className="px-6 py-4 text-sm text-gray-900"&gt;
 +                       {itemSupplier.item?.nev}
 +                     &lt;/td&gt;
-+                     &lt;td className=&quot;px-6 py-4 whitespace-nowrap text-sm text-gray-500&quot;&gt;
++                     &lt;td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500"&gt;
 +                       {itemSupplier.item?.egyseg}
 +                     &lt;/td&gt;
-+                     &lt;td className=&quot;px-6 py-4 whitespace-nowrap text-center&quot;&gt;
++                     &lt;td className="px-6 py-4 whitespace-nowrap text-center"&gt;
 +                       {itemSupplier.isPrimary ? (
-+                         &lt;span className=&quot;px-2 py-1 bg-green-100 text-green-800 text-xs rounded&quot;&gt;
++                         &lt;span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded"&gt;
 +                           ✓
 +                         &lt;/span&gt;
 +                       ) : (
-+                         &lt;span className=&quot;text-gray-400&quot;&gt;-&lt;/span&gt;
++                         &lt;span className="text-gray-400"&gt;-&lt;/span&gt;
 +                       )}
 +                     &lt;/td&gt;
-+                     &lt;td className=&quot;px-6 py-4 whitespace-nowrap text-center&quot;&gt;
++                     &lt;td className="px-6 py-4 whitespace-nowrap text-center"&gt;
 +                       &lt;button
 +                         onClick={() =&gt; handleUnlinkItem(itemSupplier.itemId)}
-+                         className=&quot;text-red-600 hover:text-red-900&quot;
-+                         title=&quot;Eltávolítás&quot;
++                         className="text-red-600 hover:text-red-900"
++                         title="Eltávolítás"
 +                       &gt;
 +                         🗑
 +                       &lt;/button&gt;
@@ -16047,7 +16030,7 @@ Lines added: 238, lines removed: 46
 +               &lt;/tbody&gt;
 +             &lt;/table&gt;
 +           ) : (
-+             &lt;p className=&quot;text-gray-500&quot;&gt;Nincs áru kapcsolva ehhez a szállítóhoz.&lt;/p&gt;
++             &lt;p className="text-gray-500"&gt;Nincs áru kapcsolva ehhez a szállítóhoz.&lt;/p&gt;
 +           )}
 +         &lt;/div&gt;
 +       &lt;/Modal&gt;
@@ -16057,39 +16040,39 @@ Lines added: 238, lines removed: 46
 +         isOpen={isLinkItemModalOpen}
 +         onClose={() =&gt; {
 +           setIsLinkItemModalOpen(false);
-+           setError(&#39;&#39;);
-+           setSuccess(&#39;&#39;);
++           setError('');
++           setSuccess('');
 +         }}
-+         title=&quot;Termék hozzáadása szállítóhoz&quot;
-+         size=&quot;md&quot;
++         title="Termék hozzáadása szállítóhoz"
++         size="md"
 +         zIndex={60}
 +       &gt;
-+         &lt;form onSubmit={handleLinkItemSubmit} className=&quot;space-y-4&quot;&gt;
++         &lt;form onSubmit={handleLinkItemSubmit} className="space-y-4"&gt;
 +           {error &amp;&amp; (
-+             &lt;div className=&quot;bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded text-sm&quot;&gt;
++             &lt;div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded text-sm"&gt;
 +               {error}
 +             &lt;/div&gt;
 +           )}
 + 
 +           {success &amp;&amp; (
-+             &lt;div className=&quot;bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded text-sm&quot;&gt;
++             &lt;div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded text-sm"&gt;
 +               {success}
 +             &lt;/div&gt;
 +           )}
 + 
 +           &lt;div&gt;
-+             &lt;label className=&quot;block text-sm font-medium text-gray-700 mb-1&quot;&gt;
-+               Termék &lt;span className=&quot;text-red-500&quot;&gt;*&lt;/span&gt;
++             &lt;label className="block text-sm font-medium text-gray-700 mb-1"&gt;
++               Termék &lt;span className="text-red-500"&gt;*&lt;/span&gt;
 +             &lt;/label&gt;
 +             &lt;select
 +               value={linkFormData.itemId}
 +               onChange={(e) =&gt;
 +                 setLinkFormData({ ...linkFormData, itemId: e.target.value })
 +               }
-+               className=&quot;w-full px-3 py-2 border border-gray-300 rounded-lg&quot;
++               className="w-full px-3 py-2 border border-gray-300 rounded-lg"
 +               required
 +             &gt;
-+               &lt;option value=&quot;&quot;&gt;Válasszon terméket&lt;/option&gt;
++               &lt;option value=""&gt;Válasszon terméket&lt;/option&gt;
 +               {items
 +                 .filter(
 +                   (item) =&gt;
@@ -16106,102 +16089,102 @@ Lines added: 238, lines removed: 46
 +           &lt;/div&gt;
 + 
 +           &lt;div&gt;
-+             &lt;label className=&quot;block text-sm font-medium text-gray-700 mb-1&quot;&gt;
++             &lt;label className="block text-sm font-medium text-gray-700 mb-1"&gt;
 +               Beszerzési ár (HUF)
 +             &lt;/label&gt;
 +             &lt;input
-+               type=&quot;number&quot;
-+               step=&quot;0.01&quot;
-+               min=&quot;0&quot;
-+               value={linkFormData.beszerzesiAr || &#39;&#39;}
++               type="number"
++               step="0.01"
++               min="0"
++               value={linkFormData.beszerzesiAr || ''}
 +               onChange={(e) =&gt;
 +                 setLinkFormData({
 +                   ...linkFormData,
 +                   beszerzesiAr: e.target.value ? parseFloat(e.target.value) : undefined,
 +                 })
 +               }
-+               className=&quot;w-full px-3 py-2 border border-gray-300 rounded-lg&quot;
++               className="w-full px-3 py-2 border border-gray-300 rounded-lg"
 +             /&gt;
 +           &lt;/div&gt;
 + 
 +           &lt;div&gt;
-+             &lt;label className=&quot;block text-sm font-medium text-gray-700 mb-1&quot;&gt;
++             &lt;label className="block text-sm font-medium text-gray-700 mb-1"&gt;
 +               Minimum rendelési mennyiség
 +             &lt;/label&gt;
 +             &lt;input
-+               type=&quot;number&quot;
-+               step=&quot;0.01&quot;
-+               min=&quot;0&quot;
-+               value={linkFormData.minMennyiseg || &#39;&#39;}
++               type="number"
++               step="0.01"
++               min="0"
++               value={linkFormData.minMennyiseg || ''}
 +               onChange={(e) =&gt;
 +                 setLinkFormData({
 +                   ...linkFormData,
 +                   minMennyiseg: e.target.value ? parseFloat(e.target.value) : undefined,
 +                 })
 +               }
-+               className=&quot;w-full px-3 py-2 border border-gray-300 rounded-lg&quot;
++               className="w-full px-3 py-2 border border-gray-300 rounded-lg"
 +             /&gt;
 +           &lt;/div&gt;
 + 
 +           &lt;div&gt;
-+             &lt;label className=&quot;block text-sm font-medium text-gray-700 mb-1&quot;&gt;
++             &lt;label className="block text-sm font-medium text-gray-700 mb-1"&gt;
 +               Szállítási idő (nap)
 +             &lt;/label&gt;
 +             &lt;input
-+               type=&quot;number&quot;
-+               min=&quot;0&quot;
-+               value={linkFormData.szallitasiIdo || &#39;&#39;}
++               type="number"
++               min="0"
++               value={linkFormData.szallitasiIdo || ''}
 +               onChange={(e) =&gt;
 +                 setLinkFormData({
 +                   ...linkFormData,
 +                   szallitasiIdo: e.target.value ? parseInt(e.target.value) : undefined,
 +                 })
 +               }
-+               className=&quot;w-full px-3 py-2 border border-gray-300 rounded-lg&quot;
++               className="w-full px-3 py-2 border border-gray-300 rounded-lg"
 +             /&gt;
 +           &lt;/div&gt;
 + 
 +           &lt;div&gt;
-+             &lt;label className=&quot;block text-sm font-medium text-gray-700 mb-1&quot;&gt;Megjegyzések&lt;/label&gt;
++             &lt;label className="block text-sm font-medium text-gray-700 mb-1"&gt;Megjegyzések&lt;/label&gt;
 +             &lt;textarea
 +               value={linkFormData.megjegyzesek}
 +               onChange={(e) =&gt;
 +                 setLinkFormData({ ...linkFormData, megjegyzesek: e.target.value })
 +               }
-+               className=&quot;w-full px-3 py-2 border border-gray-300 rounded-lg&quot;
++               className="w-full px-3 py-2 border border-gray-300 rounded-lg"
 +               rows={3}
 +             /&gt;
 +           &lt;/div&gt;
 + 
 +           &lt;div&gt;
-+             &lt;label className=&quot;flex items-center&quot;&gt;
++             &lt;label className="flex items-center"&gt;
 +               &lt;input
-+                 type=&quot;checkbox&quot;
++                 type="checkbox"
 +                 checked={linkFormData.isPrimary}
 +                 onChange={(e) =&gt;
 +                   setLinkFormData({ ...linkFormData, isPrimary: e.target.checked })
 +                 }
-+                 className=&quot;mr-2&quot;
++                 className="mr-2"
 +               /&gt;
-+               &lt;span className=&quot;text-sm font-medium text-gray-700&quot;&gt;Elsődleges szállító&lt;/span&gt;
++               &lt;span className="text-sm font-medium text-gray-700"&gt;Elsődleges szállító&lt;/span&gt;
 +             &lt;/label&gt;
 +           &lt;/div&gt;
 + 
-+           &lt;div className=&quot;flex justify-end gap-2 pt-4&quot;&gt;
++           &lt;div className="flex justify-end gap-2 pt-4"&gt;
 +             &lt;button
-+               type=&quot;button&quot;
++               type="button"
 +               onClick={() =&gt; setIsLinkItemModalOpen(false)}
-+               className=&quot;px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50&quot;
++               className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
 +               disabled={linking}
 +             &gt;
 +               Mégse
 +             &lt;/button&gt;
 +             &lt;button
-+               type=&quot;submit&quot;
++               type="submit"
 +               disabled={linking}
-+               className=&quot;px-4 py-2 bg-mbit-blue text-white rounded-lg hover:bg-blue-700 disabled:opacity-50&quot;
++               className="px-4 py-2 bg-mbit-blue text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
 +             &gt;
-+               {linking ? &#39;Hozzáadás...&#39; : &#39;Hozzáadás&#39;}
++               {linking ? 'Hozzáadás...' : 'Hozzáadás'}
 +             &lt;/button&gt;
 +           &lt;/div&gt;
 +         &lt;/form&gt;
@@ -16236,7 +16219,7 @@ Lint results
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git add apps/web/src/components/Modal.tsx apps/web/src/components/logistics/ProductSuppliers.tsx apps/web/src/pages/OrdersLogistics.tsx apps/web/src/pages/Suppliers.tsx</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && git add apps/web/src/components/Modal.tsx apps/web/src/components/logistics/ProductSuppliers.tsx apps/web/src/pages/OrdersLogistics.tsx apps/web/src/pages/Suppliers.tsx</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp && git add apps/web/src/components/Modal.tsx apps/web/src/components/logistics/ProductSuppliers.tsx apps/web/src/pages/OrdersLogistics.tsx apps/web/src/pages/Suppliers.tsx
@@ -16247,14 +16230,14 @@ cd /Users/liviuszberger/mbit-erp && git add apps/web/src/components/Modal.tsx ap
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git commit -m "fix: Fix modal z-index, add product linking to supplier items modal, set default filter to 'all' in OrdersLogistics"</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && git commit -m "fix: Fix modal z-index, add product linking to supplier items modal, set default filter to 'all' in OrdersLogistics"</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp && git commit -m "fix: Fix modal z-index, add product linking to supplier items modal, set default filter to 'all' in OrdersLogistics"
 ```
 
 ```
-[main 69e861d] fix: Fix modal z-index, add product linking to supplier items modal, set default filter to &#39;all&#39; in OrdersLogistics
+[main 69e861d] fix: Fix modal z-index, add product linking to supplier items modal, set default filter to 'all' in OrdersLogistics
  4 files changed, 352 insertions(+), 52 deletions(-)
 
 ```
@@ -16264,7 +16247,7 @@ cd /Users/liviuszberger/mbit-erp && git commit -m "fix: Fix modal z-index, add p
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git push origin main</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && git push origin main</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp && git push origin main
@@ -16283,7 +16266,6 @@ To https://github.com/BergerLiviusz/mbit-erp.git
 
 
 ---
-
 
 A három probléma javítva. Összefoglalás:
 

@@ -8,6 +8,7 @@ interface Document {
   iktatoSzam: string;
   nev: string;
   tipus: string;
+  irany?: string | null;
   fajlNev: string;
   fajlMeret: number;
   allapot: string;
@@ -27,7 +28,35 @@ interface Document {
     allapot: string;
     txtFajlUtvonal?: string | null;
   } | null;
+  tags?: Array<{
+    id: string;
+    tag: {
+      id: string;
+      nev: string;
+      szin?: string | null;
+    };
+  }>;
+  versions?: Array<{
+    id: string;
+    verzioSzam: number;
+    fajlUtvonal: string;
+    valtoztatasLeiras?: string | null;
+    createdAt: string;
+    createdBy?: {
+      id: string;
+      nev: string;
+      email: string;
+    } | null;
+  }>;
+  workflowLogs?: Array<{
+    id: string;
+    regiAllapot: string;
+    ujAllapot: string;
+    megjegyzes?: string | null;
+    createdAt: string;
+  }>;
   createdAt: string;
+  updatedAt: string;
 }
 
 interface Category {
@@ -38,6 +67,12 @@ interface Category {
 interface Account {
   id: string;
   nev: string;
+}
+
+interface Tag {
+  id: string;
+  nev: string;
+  szin?: string | null;
 }
 
 const TIPUSOK = [
@@ -57,9 +92,13 @@ export default function Documents() {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedAllapot, setSelectedAllapot] = useState<string>('');
+  const [selectedIrany, setSelectedIrany] = useState<string>('');
+  const [selectedTagId, setSelectedTagId] = useState<string>('');
+  const [searchTerm, setSearchTerm] = useState<string>('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
+  const [tags, setTags] = useState<Tag[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
@@ -67,22 +106,31 @@ export default function Documents() {
   const [expandedDoc, setExpandedDoc] = useState<string | null>(null);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
+  const [editingDocumentId, setEditingDocumentId] = useState<string | null>(null);
+  const [detailDocument, setDetailDocument] = useState<Document | null>(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
   const [formData, setFormData] = useState({
     nev: '',
     tipus: 'szerzodes',
+    irany: '',
     categoryId: '',
     accountId: '',
     allapot: 'aktiv',
     ervenyessegKezdet: '',
     ervenyessegVeg: '',
+    lejarat: '',
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
 
   useEffect(() => {
     loadDocuments();
-  }, [selectedAllapot]);
+  }, [selectedAllapot, selectedIrany, selectedTagId, searchTerm]);
+
+  useEffect(() => {
+    loadTags();
+  }, []);
 
   useEffect(() => {
     if (isModalOpen) {
@@ -94,11 +142,27 @@ export default function Documents() {
   const loadDocuments = async () => {
     setLoading(true);
     try {
-      const url = selectedAllapot
-        ? `/dms/documents?allapot=${selectedAllapot}&skip=0&take=100`
-        : `/dms/documents?skip=0&take=100`;
+      const params = new URLSearchParams();
+      params.append('skip', '0');
+      params.append('take', '100');
+      
+      if (selectedAllapot) {
+        params.append('allapot', selectedAllapot);
+      }
+      
+      if (selectedIrany) {
+        params.append('irany', selectedIrany);
+      }
+      
+      if (selectedTagId) {
+        params.append('tagId', selectedTagId);
+      }
+      
+      if (searchTerm) {
+        params.append('search', searchTerm);
+      }
 
-      const response = await apiFetch(url);
+      const response = await apiFetch(`/dms/documents?${params.toString()}`);
 
       if (response.ok) {
         const data = await response.json();
@@ -169,6 +233,18 @@ export default function Documents() {
     }
   };
 
+  const loadTags = async () => {
+    try {
+      const response = await apiFetch('/dms/tags');
+      if (response.ok) {
+        const data = await response.json();
+        setTags(data || []);
+      }
+    } catch (error) {
+      console.error('Hiba a tag-ek betöltésekor:', error);
+    }
+  };
+
   const loadAccounts = async () => {
     try {
       const response = await apiFetch(`/crm/accounts?skip=0&take=100`, {
@@ -184,16 +260,34 @@ export default function Documents() {
     }
   };
 
-  const handleOpenModal = () => {
-    setFormData({
-      nev: '',
-      tipus: 'szerzodes',
-      categoryId: '',
-      accountId: '',
-      allapot: 'aktiv',
-      ervenyessegKezdet: '',
-      ervenyessegVeg: '',
-    });
+  const handleOpenModal = (doc?: Document) => {
+    if (doc) {
+      setEditingDocumentId(doc.id);
+      setFormData({
+        nev: doc.nev,
+        tipus: doc.tipus,
+        irany: doc.irany || '',
+        categoryId: doc.category?.id || '',
+        accountId: doc.account?.id || '',
+        allapot: doc.allapot,
+        ervenyessegKezdet: doc.ervenyessegKezdet ? doc.ervenyessegKezdet.split('T')[0] : '',
+        ervenyessegVeg: doc.ervenyessegVeg ? doc.ervenyessegVeg.split('T')[0] : '',
+        lejarat: '',
+      });
+    } else {
+      setEditingDocumentId(null);
+      setFormData({
+        nev: '',
+        tipus: 'szerzodes',
+        irany: '',
+        categoryId: '',
+        accountId: '',
+        allapot: 'aktiv',
+        ervenyessegKezdet: '',
+        ervenyessegVeg: '',
+        lejarat: '',
+      });
+    }
     setSelectedFile(null);
     setError('');
     setSuccess('');
@@ -202,14 +296,17 @@ export default function Documents() {
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
+    setEditingDocumentId(null);
     setFormData({
       nev: '',
       tipus: 'szerzodes',
+      irany: '',
       categoryId: '',
       accountId: '',
       allapot: 'aktiv',
       ervenyessegKezdet: '',
       ervenyessegVeg: '',
+      lejarat: '',
     });
     setSelectedFile(null);
     setError('');
@@ -230,7 +327,8 @@ export default function Documents() {
       return;
     }
 
-    if (!selectedFile) {
+    // File only required for new documents
+    if (!editingDocumentId && !selectedFile) {
       setError('Kérem válasszon ki egy fájlt');
       return;
     }
@@ -238,16 +336,58 @@ export default function Documents() {
     setSaving(true);
 
     try {
+      if (editingDocumentId) {
+        // Update existing document
+        const updateData = {
+          nev: formData.nev,
+          tipus: formData.tipus,
+          irany: formData.irany || undefined,
+          categoryId: formData.categoryId || undefined,
+          accountId: formData.accountId || undefined,
+          allapot: formData.allapot,
+          ervenyessegKezdet: formData.ervenyessegKezdet || undefined,
+          ervenyessegVeg: formData.ervenyessegVeg || undefined,
+          lejarat: formData.lejarat || undefined,
+        };
 
+        const updateResponse = await apiFetch(`/dms/documents/${editingDocumentId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(updateData),
+        });
+
+        if (!updateResponse.ok) {
+          if (updateResponse.status === 401) {
+            throw new Error('Nincs hitelesítve. Kérem jelentkezzen be újra.');
+          } else if (updateResponse.status === 403) {
+            throw new Error('Nincs jogosultsága ehhez a művelethez.');
+          } else {
+            const errorData = await updateResponse.json();
+            throw new Error(errorData.message || 'Hiba a dokumentum frissítésekor');
+          }
+        }
+
+        setSuccess('Dokumentum sikeresen frissítve!');
+        await loadDocuments();
+        setTimeout(() => {
+          handleCloseModal();
+        }, 1500);
+        return;
+      }
+
+      // Create new document
       const documentData = {
         nev: formData.nev,
         tipus: formData.tipus,
+        irany: formData.irany || undefined,
         categoryId: formData.categoryId || undefined,
         accountId: formData.accountId || undefined,
         allapot: formData.allapot,
-        fajlNev: selectedFile.name,
-        fajlMeret: selectedFile.size,
-        mimeType: selectedFile.type,
+        fajlNev: selectedFile!.name,
+        fajlMeret: selectedFile!.size,
+        mimeType: selectedFile!.type,
         ervenyessegKezdet: formData.ervenyessegKezdet || undefined,
         ervenyessegVeg: formData.ervenyessegVeg || undefined,
       };
@@ -423,6 +563,20 @@ export default function Documents() {
     }
   };
 
+  const handleViewDetails = async (documentId: string) => {
+    try {
+      const response = await apiFetch(`/dms/documents/${documentId}`);
+      if (response.ok) {
+        const doc = await response.json();
+        setDetailDocument(doc);
+        setIsDetailModalOpen(true);
+      }
+    } catch (error) {
+      console.error('Hiba a dokumentum részleteinek betöltésekor:', error);
+      setError('Nem sikerült betölteni a dokumentum részleteit');
+    }
+  };
+
   const handleDeleteDocument = async (documentId: string, documentName: string) => {
     if (!confirm(`Biztosan törölni szeretné a dokumentumot: ${documentName}?`)) {
       return;
@@ -561,30 +715,92 @@ export default function Documents() {
         </div>
       </div>
 
-      <div className="mb-4 flex gap-2 flex-wrap">
-        <button
-          onClick={() => setSelectedAllapot('')}
-          className={`px-4 py-2 rounded ${
-            selectedAllapot === ''
-              ? 'bg-mbit-blue text-white'
-              : 'bg-white border border-gray-300 hover:bg-gray-50'
-          }`}
-        >
-          Összes
-        </button>
-        {ALLAPOTOK.map(all => (
+      <div className="mb-4 space-y-4">
+        <div className="flex gap-2 flex-wrap">
           <button
-            key={all.kod}
-            onClick={() => setSelectedAllapot(all.kod)}
+            onClick={() => setSelectedAllapot('')}
             className={`px-4 py-2 rounded ${
-              selectedAllapot === all.kod
+              selectedAllapot === ''
                 ? 'bg-mbit-blue text-white'
                 : 'bg-white border border-gray-300 hover:bg-gray-50'
             }`}
           >
-            {all.nev}
+            Összes állapot
           </button>
-        ))}
+          {ALLAPOTOK.map(all => (
+            <button
+              key={all.kod}
+              onClick={() => setSelectedAllapot(all.kod)}
+              className={`px-4 py-2 rounded ${
+                selectedAllapot === all.kod
+                  ? 'bg-mbit-blue text-white'
+                  : 'bg-white border border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              {all.nev}
+            </button>
+          ))}
+        </div>
+        
+        <div className="flex gap-2 flex-wrap items-center">
+          <span className="text-sm font-medium text-gray-700">Irány:</span>
+          <button
+            onClick={() => setSelectedIrany('')}
+            className={`px-4 py-2 rounded text-sm ${
+              selectedIrany === ''
+                ? 'bg-mbit-blue text-white'
+                : 'bg-white border border-gray-300 hover:bg-gray-50'
+            }`}
+          >
+            Összes
+          </button>
+          <button
+            onClick={() => setSelectedIrany('bejovo')}
+            className={`px-4 py-2 rounded text-sm ${
+              selectedIrany === 'bejovo'
+                ? 'bg-mbit-blue text-white'
+                : 'bg-white border border-gray-300 hover:bg-gray-50'
+            }`}
+          >
+            Beérkező
+          </button>
+          <button
+            onClick={() => setSelectedIrany('kimeno')}
+            className={`px-4 py-2 rounded text-sm ${
+              selectedIrany === 'kimeno'
+                ? 'bg-mbit-blue text-white'
+                : 'bg-white border border-gray-300 hover:bg-gray-50'
+            }`}
+          >
+            Kimenő
+          </button>
+        </div>
+
+        <div className="flex gap-2 items-center">
+          <span className="text-sm font-medium text-gray-700">Címszó:</span>
+          <select
+            value={selectedTagId}
+            onChange={(e) => setSelectedTagId(e.target.value)}
+            className="px-4 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">Összes címszó</option>
+            {tags.map((tag) => (
+              <option key={tag.id} value={tag.id}>
+                {tag.nev}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="flex gap-2 items-center">
+          <input
+            type="text"
+            placeholder="Keresés (név, iktatószám, tartalom, címszó...)"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="flex-1 px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
       </div>
 
       <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -600,6 +816,7 @@ export default function Documents() {
                   <th className="text-left p-4 font-medium text-gray-700">Iktatószám</th>
                   <th className="text-left p-4 font-medium text-gray-700">Név</th>
                   <th className="text-left p-4 font-medium text-gray-700">Típus</th>
+                  <th className="text-left p-4 font-medium text-gray-700">Irány</th>
                   <th className="text-left p-4 font-medium text-gray-700">Kategória</th>
                   <th className="text-left p-4 font-medium text-gray-700">Ügyfél</th>
                   <th className="text-left p-4 font-medium text-gray-700">Állapot</th>
@@ -619,8 +836,37 @@ export default function Documents() {
                       <td className="p-4">
                         <div className="font-medium">{doc.nev}</div>
                         <div className="text-xs text-gray-500">{doc.fajlNev}</div>
+                        {doc.tags && doc.tags.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {doc.tags.map((dt) => (
+                              <span
+                                key={dt.id}
+                                className="px-1.5 py-0.5 rounded text-xs"
+                                style={{
+                                  backgroundColor: dt.tag.szin ? `${dt.tag.szin}20` : '#e5e7eb',
+                                  color: dt.tag.szin || '#6b7280',
+                                }}
+                              >
+                                {dt.tag.nev}
+                              </span>
+                            ))}
+                          </div>
+                        )}
                       </td>
                       <td className="p-4">{getTipusBadge(doc.tipus)}</td>
+                      <td className="p-4">
+                        {doc.irany ? (
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${
+                            doc.irany === 'bejovo' 
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-blue-100 text-blue-800'
+                          }`}>
+                            {doc.irany === 'bejovo' ? 'Beérkező' : 'Kimenő'}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400 text-xs">-</span>
+                        )}
+                      </td>
                       <td className="p-4 text-sm">
                         {doc.category ? doc.category.nev : '-'}
                       </td>
@@ -674,6 +920,20 @@ export default function Documents() {
                             </button>
                           )}
                           <button
+                            onClick={() => handleViewDetails(doc.id)}
+                            className="px-3 py-1 rounded text-sm bg-blue-600 text-white hover:bg-blue-700"
+                            title="Részletek"
+                          >
+                            Részletek
+                          </button>
+                          <button
+                            onClick={() => handleOpenModal(doc)}
+                            className="px-3 py-1 rounded text-sm bg-yellow-600 text-white hover:bg-yellow-700"
+                            title="Szerkesztés"
+                          >
+                            Szerkesztés
+                          </button>
+                          <button
                             onClick={() => handleDeleteDocument(doc.id, doc.nev)}
                             className="px-3 py-1 rounded text-sm bg-red-600 text-white hover:bg-red-700"
                           >
@@ -684,7 +944,7 @@ export default function Documents() {
                     </tr>
                     {expandedDoc === doc.id && (
                       <tr className="bg-gray-50">
-                        <td colSpan={9} className="p-4">
+                        <td colSpan={10} className="p-4">
                           <div className="border border-gray-200 rounded-lg bg-white p-4">
                             <div className="flex justify-between items-center mb-3">
                               <h3 className="font-semibold text-gray-800">OCR Eredmény</h3>
@@ -774,6 +1034,21 @@ export default function Documents() {
             </div>
 
             <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Irány
+              </label>
+              <select
+                value={formData.irany}
+                onChange={(e) => setFormData({ ...formData, irany: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">-- Válasszon --</option>
+                <option value="bejovo">Beérkező</option>
+                <option value="kimeno">Kimenő</option>
+              </select>
+            </div>
+
+            <div>
               <div className="flex items-center justify-between mb-1">
                 <label className="block text-sm font-medium text-gray-700">
                   Kategória
@@ -857,12 +1132,55 @@ export default function Documents() {
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Fájl <span className="text-red-500">*</span>
-              </label>
-              <FileUpload onFileSelect={handleFileSelect} />
-            </div>
+            {!editingDocumentId && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Fájl <span className="text-red-500">*</span>
+                </label>
+                <FileUpload onFileSelect={handleFileSelect} />
+              </div>
+            )}
+            
+            {editingDocumentId && (
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Érvényesség kezdete
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.ervenyessegKezdet}
+                    onChange={(e) => setFormData({ ...formData, ervenyessegKezdet: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Érvényesség vége
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.ervenyessegVeg}
+                    onChange={(e) => setFormData({ ...formData, ervenyessegVeg: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+            )}
+            
+            {editingDocumentId && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Lejárat
+                </label>
+                <input
+                  type="date"
+                  value={formData.lejarat}
+                  onChange={(e) => setFormData({ ...formData, lejarat: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            )}
           </div>
 
           <div className="mt-6 flex justify-end gap-3">
@@ -893,6 +1211,7 @@ export default function Documents() {
           setNewCategoryName('');
         }}
         title="Új kategória hozzáadása"
+        zIndex={200}
       >
         <div className="space-y-4">
           <div>
@@ -936,6 +1255,145 @@ export default function Documents() {
             </button>
           </div>
         </div>
+      </Modal>
+
+      {/* Részletes nézet modal */}
+      <Modal 
+        isOpen={isDetailModalOpen} 
+        onClose={() => {
+          setIsDetailModalOpen(false);
+          setDetailDocument(null);
+        }} 
+        title={detailDocument ? `Dokumentum részletei: ${detailDocument.nev}` : 'Részletek'} 
+        size="xl" 
+        zIndex={150}
+      >
+        {detailDocument && (
+          <div className="space-y-6">
+            {/* Alap információk */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <div className="text-sm text-gray-600">Iktatószám</div>
+                <div className="font-medium">{detailDocument.iktatoSzam}</div>
+              </div>
+              <div>
+                <div className="text-sm text-gray-600">Név</div>
+                <div className="font-medium">{detailDocument.nev}</div>
+              </div>
+              <div>
+                <div className="text-sm text-gray-600">Típus</div>
+                <div>{getTipusBadge(detailDocument.tipus)}</div>
+              </div>
+              <div>
+                <div className="text-sm text-gray-600">Irány</div>
+                <div>
+                  {detailDocument.irany ? (
+                    <span className={`px-2 py-1 rounded text-xs font-medium ${
+                      detailDocument.irany === 'bejovo' 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-blue-100 text-blue-800'
+                    }`}>
+                      {detailDocument.irany === 'bejovo' ? 'Beérkező' : 'Kimenő'}
+                    </span>
+                  ) : (
+                    <span className="text-gray-400">-</span>
+                  )}
+                </div>
+              </div>
+              <div>
+                <div className="text-sm text-gray-600">Kategória</div>
+                <div>{detailDocument.category?.nev || '-'}</div>
+              </div>
+              <div>
+                <div className="text-sm text-gray-600">Ügyfél</div>
+                <div>{detailDocument.account?.nev || '-'}</div>
+              </div>
+              <div>
+                <div className="text-sm text-gray-600">Állapot</div>
+                <div>{getAllapotBadge(detailDocument.allapot)}</div>
+              </div>
+              <div>
+                <div className="text-sm text-gray-600">Létrehozva</div>
+                <div>{formatDate(detailDocument.createdAt)}</div>
+              </div>
+              <div>
+                <div className="text-sm text-gray-600">Módosítva</div>
+                <div>{formatDate(detailDocument.updatedAt)}</div>
+              </div>
+              <div>
+                <div className="text-sm text-gray-600">Létrehozta</div>
+                <div>{detailDocument.createdBy?.nev || '-'}</div>
+              </div>
+            </div>
+
+            {/* Érvényesség információk */}
+            {(detailDocument.ervenyessegKezdet || detailDocument.ervenyessegVeg) && (
+              <div className="border-t pt-4">
+                <h3 className="font-semibold mb-2">Érvényesség</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <div className="text-sm text-gray-600">Érvényesség kezdete</div>
+                    <div>{formatDate(detailDocument.ervenyessegKezdet)}</div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-600">Érvényesség vége</div>
+                    <div>{formatDate(detailDocument.ervenyessegVeg)}</div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Verziók */}
+            {detailDocument.versions && detailDocument.versions.length > 0 && (
+              <div className="border-t pt-4">
+                <h3 className="font-semibold mb-2">Verziók ({detailDocument.versions.length})</h3>
+                <div className="space-y-2 max-h-48 overflow-y-auto">
+                  {detailDocument.versions.map((version) => (
+                    <div key={version.id} className="bg-gray-50 p-3 rounded">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <div className="font-medium">Verzió {version.verzioSzam}</div>
+                          {version.valtoztatasLeiras && (
+                            <div className="text-sm text-gray-600 mt-1">{version.valtoztatasLeiras}</div>
+                          )}
+                          <div className="text-xs text-gray-500 mt-1">
+                            {formatDate(version.createdAt)} {version.createdBy && `- ${version.createdBy.nev}`}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Workflow logok */}
+            {detailDocument.workflowLogs && detailDocument.workflowLogs.length > 0 && (
+              <div className="border-t pt-4">
+                <h3 className="font-semibold mb-2">Állapot változások ({detailDocument.workflowLogs.length})</h3>
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {detailDocument.workflowLogs.map((log) => (
+                    <div key={log.id} className="bg-gray-50 p-3 rounded">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium">{getAllapotBadge(log.regiAllapot).nev}</span>
+                            <span className="text-gray-400">→</span>
+                            <span className="text-sm font-medium">{getAllapotBadge(log.ujAllapot).nev}</span>
+                          </div>
+                          {log.megjegyzes && (
+                            <div className="text-sm text-gray-600 mt-1">{log.megjegyzes}</div>
+                          )}
+                          <div className="text-xs text-gray-500 mt-1">{formatDate(log.createdAt)}</div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </Modal>
     </div>
   );

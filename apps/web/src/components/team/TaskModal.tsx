@@ -69,8 +69,8 @@ export default function TaskModal({ taskId, onClose, onTaskUpdate }: TaskModalPr
   };
 
   const handleSendNotification = async () => {
-    if (!task?.assignedToId) {
-      setNotificationError('Nincs hozzárendelt felhasználó a feladathoz');
+    if (!task?.assignedToId || !task?.assignedTo?.email) {
+      setNotificationError('Nincs hozzárendelt felhasználó vagy email cím a feladathoz');
       return;
     }
 
@@ -83,10 +83,28 @@ export default function TaskModal({ taskId, onClose, onTaskUpdate }: TaskModalPr
         userId: task.assignedToId,
       });
 
-      // Open mailto link
-      window.location.href = result.mailtoUrl;
+      // Check if running in Electron
+      const isElectron = !!(window as any).electron;
       
-      setNotificationSuccess('Email kliens megnyitva!');
+      if (isElectron && (window as any).electron?.openEmailClient) {
+        // Use Electron IPC to open email client
+        const emailResult = await (window as any).electron.openEmailClient(
+          result.recipient.email,
+          result.subject,
+          result.body
+        );
+        
+        if (emailResult.success) {
+          setNotificationSuccess('Email kliens megnyitva!');
+        } else {
+          setNotificationError(emailResult.error || 'Nem sikerült megnyitni az email klienst');
+        }
+      } else {
+        // Fallback to mailto link for web
+        window.location.href = result.mailtoUrl;
+        setNotificationSuccess('Email kliens megnyitva!');
+      }
+      
       setTimeout(() => {
         setNotificationSuccess('');
       }, 3000);

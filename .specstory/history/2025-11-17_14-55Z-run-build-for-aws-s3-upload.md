@@ -55,7 +55,7 @@ Running the build to generate the dist folder for S3 deployment.
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && npm run build</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && npm run build</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp && npm run build
@@ -70,7 +70,7 @@ cd /Users/liviuszberger/mbit-erp && npm run build
 Attention:
 Turborepo now collects completely anonymous telemetry regarding usage.
 This information is used to shape the Turborepo roadmap and prioritize features.
-You can learn more, including how to opt-out if you&#39;d not like to participate in this anonymous program, by visiting the following URL:
+You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
 https://turborepo.com/docs/telemetry
 
 turbo 2.6.0
@@ -102,8 +102,8 @@ turbo 2.6.0
 @mbit-erp/desktop:build: &gt; @mbit-erp/desktop@1.0.0 clean
 @mbit-erp/desktop:build: &gt; npx rimraf dist-electron release
 @mbit-erp/desktop:build: 
-@mbit-erp/ui:build: error TS18003: No inputs were found in config file &#39;/Users/liviuszberger/mbit-erp/packages/ui/tsconfig.json&#39;. Specified &#39;include&#39; paths were &#39;[&quot;src/**/*&quot;]&#39; and &#39;exclude&#39; paths were &#39;[&quot;node_modules&quot;,&quot;dist&quot;]&#39;.
-@mbit-erp/types:build: error TS18003: No inputs were found in config file &#39;/Users/liviuszberger/mbit-erp/packages/types/tsconfig.json&#39;. Specified &#39;include&#39; paths were &#39;[&quot;src/**/*&quot;]&#39; and &#39;exclude&#39; paths were &#39;[&quot;node_modules&quot;,&quot;dist&quot;]&#39;.
+@mbit-erp/ui:build: error TS18003: No inputs were found in config file '/Users/liviuszberger/mbit-erp/packages/ui/tsconfig.json'. Specified 'include' paths were '["src/**/*"]' and 'exclude' paths were '["node_modules","dist"]'.
+@mbit-erp/types:build: error TS18003: No inputs were found in config file '/Users/liviuszberger/mbit-erp/packages/types/tsconfig.json'. Specified 'include' paths were '["src/**/*"]' and 'exclude' paths were '["node_modules","dist"]'.
 @mbit-erp/ui:build: npm error Lifecycle script &#96;build&#96; failed with error:
 @mbit-erp/ui:build: npm error code 2
 @mbit-erp/ui:build: npm error path /Users/liviuszberger/mbit-erp/packages/ui
@@ -144,7 +144,7 @@ Some packages are missing source files. Building only the web app for S3 deploym
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp/apps/web && npm run build</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp/apps/web && npm run build</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp/apps/web && npm run build

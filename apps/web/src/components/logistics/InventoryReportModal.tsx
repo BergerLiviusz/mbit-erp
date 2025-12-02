@@ -30,6 +30,14 @@ export default function InventoryReportModal({
     },
   });
 
+  const { data: itemGroupsData } = useQuery({
+    queryKey: ['itemGroups'],
+    queryFn: async () => {
+      const response = await apiFetch('/logistics/item-groups?skip=0&take=100');
+      return response.json();
+    },
+  });
+
   const handleGenerate = async () => {
     setGenerating(true);
     try {
@@ -60,6 +68,24 @@ export default function InventoryReportModal({
             {warehousesData?.data?.map((warehouse: any) => (
               <option key={warehouse.id} value={warehouse.id}>
                 {warehouse.nev}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Cikkcsoport</label>
+          <select
+            value={filters.itemGroupId || ''}
+            onChange={(e) =>
+              setFilters({ ...filters, itemGroupId: e.target.value || undefined })
+            }
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+          >
+            <option value="">Összes cikkcsoport</option>
+            {itemGroupsData?.data?.map((group: any) => (
+              <option key={group.id} value={group.id}>
+                {group.nev}
               </option>
             ))}
           </select>

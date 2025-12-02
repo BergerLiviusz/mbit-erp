@@ -5,8 +5,10 @@ import {
   useLinkItemSupplier,
   useUnlinkItemSupplier,
   useSetPrimarySupplier,
+  useCreateSupplier,
   ItemSupplier,
   LinkItemSupplierDto,
+  CreateSupplierDto,
 } from '../../lib/api/logistics';
 import { useQuery } from '@tanstack/react-query';
 import axios from '../../lib/axios';
@@ -18,13 +20,14 @@ interface ProductSuppliersProps {
 
 export default function ProductSuppliers({ itemId, showHeader = true }: ProductSuppliersProps) {
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
+  const [isCreateSupplierModalOpen, setIsCreateSupplierModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
 
   const { data: itemSuppliers, isLoading, refetch } = useItemSuppliers(itemId);
 
-  const { data: suppliersData } = useQuery({
+  const { data: suppliersData, refetch: refetchSuppliers } = useQuery({
     queryKey: ['suppliers'],
     queryFn: async () => {
       const response = await axios.get('/api/logistics/suppliers?skip=0&take=1000');
@@ -35,6 +38,7 @@ export default function ProductSuppliers({ itemId, showHeader = true }: ProductS
   const linkSupplier = useLinkItemSupplier();
   const unlinkSupplier = useUnlinkItemSupplier();
   const setPrimary = useSetPrimarySupplier();
+  const createSupplier = useCreateSupplier();
 
   const [linkFormData, setLinkFormData] = useState<LinkItemSupplierDto>({
     supplierId: '',
@@ -43,6 +47,15 @@ export default function ProductSuppliers({ itemId, showHeader = true }: ProductS
     szallitasiIdo: undefined,
     megjegyzesek: '',
     isPrimary: false,
+  });
+
+  const [createSupplierFormData, setCreateSupplierFormData] = useState<CreateSupplierDto>({
+    nev: '',
+    adoszam: '',
+    cim: '',
+    email: '',
+    telefon: '',
+    aktiv: true,
   });
 
   const handleOpenLinkModal = () => {
@@ -257,9 +270,21 @@ export default function ProductSuppliers({ itemId, showHeader = true }: ProductS
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Szállító <span className="text-red-500">*</span>
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-sm font-medium text-gray-700">
+                Szállító <span className="text-red-500">*</span>
+              </label>
+              <button
+                type="button"
+                onClick={() => setIsCreateSupplierModalOpen(true)}
+                className="text-sm text-mbit-blue hover:text-blue-800 flex items-center gap-1"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                Új szállító létrehozása
+              </button>
+            </div>
             <select
               value={linkFormData.supplierId}
               onChange={(e) =>
@@ -375,6 +400,153 @@ export default function ProductSuppliers({ itemId, showHeader = true }: ProductS
               className="px-4 py-2 bg-mbit-blue text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
             >
               {saving ? 'Hozzáadás...' : 'Hozzáadás'}
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Create Supplier Modal */}
+      <Modal
+        isOpen={isCreateSupplierModalOpen}
+        onClose={() => {
+          setIsCreateSupplierModalOpen(false);
+          setCreateSupplierFormData({
+            nev: '',
+            adoszam: '',
+            cim: '',
+            email: '',
+            telefon: '',
+            aktiv: true,
+          });
+          setError('');
+        }}
+        title="Új szállító létrehozása"
+        size="md"
+        zIndex={70}
+      >
+        <form
+          onSubmit={async (e) => {
+            e.preventDefault();
+            setError('');
+            setSuccess('');
+
+            if (!createSupplierFormData.nev.trim()) {
+              setError('A név megadása kötelező');
+              return;
+            }
+
+            try {
+              const newSupplier = await createSupplier.mutateAsync(createSupplierFormData);
+              setSuccess('Szállító sikeresen létrehozva!');
+              
+              // Refresh suppliers list
+              await refetchSuppliers();
+              
+              // Auto-select the newly created supplier
+              setLinkFormData({ ...linkFormData, supplierId: newSupplier.id });
+              
+              // Close create modal
+              setIsCreateSupplierModalOpen(false);
+              
+              setTimeout(() => {
+                setSuccess('');
+              }, 2000);
+            } catch (err: any) {
+              setError(err.response?.data?.message || 'Hiba történt a szállító létrehozásakor');
+            }
+          }}
+          onClick={(e) => e.stopPropagation()}
+          className="space-y-4"
+        >
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded text-sm">
+              {error}
+            </div>
+          )}
+
+          {success && (
+            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded text-sm">
+              {success}
+            </div>
+          )}
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Név <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={createSupplierFormData.nev}
+              onChange={(e) =>
+                setCreateSupplierFormData({ ...createSupplierFormData, nev: e.target.value })
+              }
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Adószám</label>
+            <input
+              type="text"
+              value={createSupplierFormData.adoszam}
+              onChange={(e) =>
+                setCreateSupplierFormData({ ...createSupplierFormData, adoszam: e.target.value })
+              }
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Cím</label>
+            <input
+              type="text"
+              value={createSupplierFormData.cim}
+              onChange={(e) =>
+                setCreateSupplierFormData({ ...createSupplierFormData, cim: e.target.value })
+              }
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <input
+              type="email"
+              value={createSupplierFormData.email}
+              onChange={(e) =>
+                setCreateSupplierFormData({ ...createSupplierFormData, email: e.target.value })
+              }
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Telefon</label>
+            <input
+              type="tel"
+              value={createSupplierFormData.telefon}
+              onChange={(e) =>
+                setCreateSupplierFormData({ ...createSupplierFormData, telefon: e.target.value })
+              }
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+            />
+          </div>
+
+          <div className="flex justify-end gap-2 pt-4">
+            <button
+              type="button"
+              onClick={() => setIsCreateSupplierModalOpen(false)}
+              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+            >
+              Mégse
+            </button>
+            <button
+              type="submit"
+              disabled={createSupplier.isPending}
+              className="px-4 py-2 bg-mbit-blue text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+            >
+              {createSupplier.isPending ? 'Létrehozás...' : 'Létrehozás'}
             </button>
           </div>
         </form>

@@ -5,6 +5,7 @@ import { SystemSettingsService } from '../system/settings.service';
 export interface CreateDocumentDto {
   nev: string;
   tipus: string;
+  irany?: string; // "bejovo" vagy "kimeno"
   categoryId?: string;
   accountId?: string;
   allapot: string;
@@ -13,22 +14,31 @@ export interface CreateDocumentDto {
   mimeType: string;
   megjegyzesek?: string;
   fajlUtvonal?: string;
+  ervenyessegKezdet?: string;
+  ervenyessegVeg?: string;
+  lejarat?: string;
 }
 
 export interface UpdateDocumentDto {
   nev?: string;
   tipus?: string;
+  irany?: string; // "bejovo" vagy "kimeno"
   categoryId?: string;
   accountId?: string;
   allapot?: string;
   megjegyzesek?: string;
+  ervenyessegKezdet?: string;
+  ervenyessegVeg?: string;
+  lejarat?: string;
 }
 
 export interface DocumentFilters {
   categoryId?: string;
   allapot?: string;
   accountId?: string;
+  irany?: string; // "bejovo" vagy "kimeno"
   search?: string;
+  tagId?: string; // Címszó alapú szűrés
 }
 
 @Injectable()
@@ -38,7 +48,7 @@ export class DocumentService {
     private systemSettings: SystemSettingsService,
   ) {}
 
-  async findAll(skip = 0, take = 50, filters?: DocumentFilters) {
+  async findAll(skip = 0, take = 50, filters?: DocumentFilters, userId?: string, isAdmin: boolean = false) {
     const where: any = {};
 
     if (filters?.categoryId) {
@@ -53,11 +63,62 @@ export class DocumentService {
       where.accountId = filters.accountId;
     }
 
-    if (filters?.search) {
+    if (filters?.irany) {
+      where.irany = filters.irany;
+    }
+
+    if (filters?.tagId) {
+      where.tags = {
+        some: {
+          tagId: filters.tagId,
+        },
+      };
+    }
+
+    // Permission-based filtering: non-admin users only see documents they created or have access to
+    if (!isAdmin && userId) {
       where.OR = [
-        { nev: { contains: filters.search } },
-        { iktatoSzam: { contains: filters.search } },
+        { createdById: userId },
+        { access: { some: { userId } } },
       ];
+    }
+
+    if (filters?.search) {
+      const searchConditions = [
+        { nev: { contains: filters.search, mode: 'insensitive' } },
+        { iktatoSzam: { contains: filters.search, mode: 'insensitive' } },
+        { tartalom: { contains: filters.search, mode: 'insensitive' } },
+        { 
+          tags: {
+            some: {
+              tag: {
+                nev: { contains: filters.search, mode: 'insensitive' }
+              }
+            }
+          }
+        },
+        {
+          category: {
+            nev: { contains: filters.search, mode: 'insensitive' }
+          }
+        },
+        {
+          account: {
+            nev: { contains: filters.search, mode: 'insensitive' }
+          }
+        },
+      ];
+
+      // If we already have an OR condition for permissions, we need to combine them
+      if (where.OR) {
+        where.AND = [
+          { OR: where.OR },
+          { OR: searchConditions },
+        ];
+        delete where.OR;
+      } else {
+        where.OR = searchConditions;
+      }
     }
 
     const [total, data] = await Promise.all([
@@ -93,6 +154,28 @@ export class DocumentService {
               txtFajlUtvonal: true,
             },
           },
+          tags: {
+            include: {
+              tag: {
+                select: {
+                  id: true,
+                  nev: true,
+                  szin: true,
+                },
+              },
+            },
+          },
+          access: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  nev: true,
+                  email: true,
+                },
+              },
+            },
+          },
         },
         orderBy: { createdAt: 'desc' },
       }),
@@ -104,8 +187,8 @@ export class DocumentService {
     return { data, total, page, pageSize };
   }
 
-  async findOne(id: string) {
-    return this.prisma.document.findUnique({
+  async findOne(id: string, userId?: string, isAdmin: boolean = false) {
+    const document = await this.prisma.document.findUnique({
       where: { id },
       include: {
         category: true,
@@ -120,21 +203,62 @@ export class DocumentService {
         versions: {
           orderBy: { createdAt: 'desc' },
           take: 10,
+          include: {
+            createdBy: {
+              select: {
+                id: true,
+                nev: true,
+                email: true,
+              },
+            },
+          },
+        },
+        workflowLogs: {
+          orderBy: { createdAt: 'desc' },
+          take: 50,
         },
         ocrJob: true,
         tags: { include: { tag: true } },
-        access: { include: { user: true } },
+        access: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                nev: true,
+                email: true,
+              },
+            },
+          },
+        },
       },
     });
+
+    if (!document) {
+      return null;
+    }
+
+    // Check permissions: admin can see all, others only if they created it or have access
+    if (!isAdmin && userId) {
+      const hasAccess = 
+        document.createdById === userId ||
+        document.access.some(acc => acc.userId === userId);
+      
+      if (!hasAccess) {
+        return null;
+      }
+    }
+
+    return document;
   }
 
-  async create(dto: CreateDocumentDto) {
+  async create(dto: CreateDocumentDto, userId?: string) {
     const iktatoSzam = await this.generateIktatoSzam();
 
-    return this.prisma.document.create({
+    const document = await this.prisma.document.create({
       data: {
         nev: dto.nev,
         tipus: dto.tipus,
+        irany: dto.irany || null,
         categoryId: dto.categoryId,
         accountId: dto.accountId,
         allapot: dto.allapot,
@@ -143,15 +267,36 @@ export class DocumentService {
         fajlUtvonal: dto.fajlUtvonal || '',
         mimeType: dto.mimeType,
         megjegyzesek: dto.megjegyzesek,
+        ervenyessegKezdet: dto.ervenyessegKezdet ? new Date(dto.ervenyessegKezdet) : null,
+        ervenyessegVeg: dto.ervenyessegVeg ? new Date(dto.ervenyessegVeg) : null,
+        lejarat: dto.lejarat ? new Date(dto.lejarat) : null,
         iktatoSzam,
       },
     });
   }
 
   async update(id: string, dto: UpdateDocumentDto) {
+    const updateData: any = { ...dto };
+    
+    // Convert date strings to Date objects if provided
+    if (dto.ervenyessegKezdet !== undefined) {
+      updateData.ervenyessegKezdet = dto.ervenyessegKezdet ? new Date(dto.ervenyessegKezdet) : null;
+    }
+    if (dto.ervenyessegVeg !== undefined) {
+      updateData.ervenyessegVeg = dto.ervenyessegVeg ? new Date(dto.ervenyessegVeg) : null;
+    }
+    if (dto.lejarat !== undefined) {
+      updateData.lejarat = dto.lejarat ? new Date(dto.lejarat) : null;
+    }
+    
+    // Handle irany: empty string should be null
+    if (dto.irany !== undefined) {
+      updateData.irany = dto.irany || null;
+    }
+
     return this.prisma.document.update({
       where: { id },
-      data: dto,
+      data: updateData,
     });
   }
 

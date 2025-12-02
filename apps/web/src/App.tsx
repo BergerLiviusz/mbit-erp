@@ -13,6 +13,7 @@ import Quotes from './pages/Quotes';
 import Orders from './pages/Orders';
 import OrdersLogistics from './pages/OrdersLogistics';
 import Team from './pages/Team';
+import Workflows from './pages/Workflows';
 import Login from './pages/Login';
 import BugReport from './pages/BugReport';
 import InventorySheets from './pages/InventorySheets';
@@ -198,19 +199,34 @@ function App() {
                 </Link>
                 {/* Csapat kommunikáció - csak ha Team modul engedélyezve */}
                 {isModuleEnabled('team') && (
-                  <Link 
-                    to="/team" 
-                    className="hover:bg-gray-800 px-3 py-2 rounded"
-                    onClick={() => {
-                      if (isElectron) {
-                        import('./components/DebugPanel').then(module => {
-                          module.addLog('info', 'Navigation: Clicked Csapat kommunikáció', { to: '/team' });
-                        }).catch(() => {});
-                      }
-                    }}
-                  >
-                    Csapat kommunikáció
-                  </Link>
+                  <>
+                    <Link 
+                      to="/team" 
+                      className="hover:bg-gray-800 px-3 py-2 rounded"
+                      onClick={() => {
+                        if (isElectron) {
+                          import('./components/DebugPanel').then(module => {
+                            module.addLog('info', 'Navigation: Clicked Csapat kommunikáció', { to: '/team' });
+                          }).catch(() => {});
+                        }
+                      }}
+                    >
+                      Csapat kommunikáció
+                    </Link>
+                    <Link 
+                      to="/workflows" 
+                      className="hover:bg-gray-800 px-3 py-2 rounded"
+                      onClick={() => {
+                        if (isElectron) {
+                          import('./components/DebugPanel').then(module => {
+                            module.addLog('info', 'Navigation: Clicked Folyamatleltár', { to: '/workflows' });
+                          }).catch(() => {});
+                        }
+                      }}
+                    >
+                      Folyamatleltár
+                    </Link>
+                  </>
                 )}
                 {/* Logisztika - csak ha Logistics modul engedélyezve */}
                 {isModuleEnabled('logistics') && (
@@ -278,7 +294,10 @@ function App() {
           
           {/* Team route - csak ha engedélyezve */}
           {isModuleEnabled('team') ? (
-            <Route path="/team" element={<ModuleRouteGuard module="team"><Team /></ModuleRouteGuard>} />
+            <>
+              <Route path="/team" element={<ModuleRouteGuard module="team"><Team /></ModuleRouteGuard>} />
+              <Route path="/workflows" element={<ModuleRouteGuard module="team"><Workflows /></ModuleRouteGuard>} />
+            </>
           ) : null}
           
           {/* Logistics routes - csak ha engedélyezve */}

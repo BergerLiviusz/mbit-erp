@@ -35,9 +35,10 @@ export const MODULE_DOCUMENTS: ModuleConfig = {
 export const MODULE_TEAM: ModuleConfig = {
   enabled: false,
   name: 'Csapatmunka',
-  routes: ['/team'],
+  routes: ['/team', '/workflows'],
   menuItems: [
-    { to: '/team', label: 'Csapat kommunikáció' }
+    { to: '/team', label: 'Csapat kommunikáció' },
+    { to: '/workflows', label: 'Folyamatleltár' }
   ]
 };
 

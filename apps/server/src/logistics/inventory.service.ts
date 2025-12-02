@@ -69,7 +69,11 @@ export class InventoryService {
         skip,
         take,
         include: {
-          item: true,
+          item: {
+            include: {
+              itemGroup: true,
+            },
+          },
           warehouse: true,
           location: true,
         },
@@ -91,7 +95,14 @@ export class InventoryService {
     const stockLevels = await this.prisma.stockLevel.findMany({
       where: { warehouseId },
       include: {
-        item: true,
+        item: {
+          include: {
+            stockLots: {
+              where: { warehouseId },
+              orderBy: { createdAt: 'desc' },
+            },
+          },
+        },
         warehouse: true,
         location: true,
       },
@@ -169,7 +180,11 @@ export class InventoryService {
           maximum: data.maximum !== undefined ? data.maximum : existing.maximum,
         },
         include: {
-          item: true,
+          item: {
+            include: {
+              itemGroup: true,
+            },
+          },
           warehouse: true,
           location: true,
         },

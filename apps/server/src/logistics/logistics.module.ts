@@ -4,7 +4,7 @@ import { AuditModule } from '../common/audit/audit.module';
 import { StorageModule } from '../common/storage/storage.module';
 import { SystemModule } from '../system/system.module';
 
-import { ItemController } from './item.controller';
+import { ItemController, ItemGroupController } from './item.controller';
 import { ItemService } from './item.service';
 import { WarehouseController } from './warehouse.controller';
 import { WarehouseService } from './warehouse.service';
@@ -35,6 +35,7 @@ import { StockReservationService } from './stock-reservation.service';
   imports: [PrismaModule, AuditModule, StorageModule, SystemModule],
   controllers: [
     ItemController,
+    ItemGroupController,
     WarehouseController,
     StockController,
     InventoryController,

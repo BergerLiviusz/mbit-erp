@@ -90,7 +90,7 @@ _**Agent (model composer-1, mode Ask)**_
 
 <tool-use data-tool-type="generic" data-tool-name="list_dir">
 <details>
-            <summary>Tool use: **list_directory** • Listed directory undefined • **0** results</summary>
+            <summary>Tool use: **list_dir** • Listed directory undefined • **0** results</summary>
         
 No results found
 </details>
@@ -893,20 +893,20 @@ Parameters:
 
 ```json
 {
-  &quot;plan&quot;: &quot;# Csapat Kommunikáció Modul - Build Terv\n\n## 1. Adatbázis Séma Bővítések\n\n### 1.1 Prisma Schema Módosítások\n**Fájl:** &#96;apps/server/prisma/schema.prisma&#96;\n\n- Task modell bővítése:\n  - &#96;createdById&#96; (User relation)\n  - &#96;boardId&#96; (TaskBoard relation)\n  - &#96;position&#96; (Int, drag&amp;drop pozíció)\n  - &#96;tags&#96; (String, JSON array)\n  - &#96;completedAt&#96; (DateTime?)\n  - Kapcsolatok: &#96;accountId&#96;, &#96;opportunityId&#96;, &#96;leadId&#96;, &#96;quoteId&#96;, &#96;orderId&#96;, &#96;ticketId&#96;, &#96;documentId&#96;\n\n- Új modellek:\n  - &#96;TaskBoard&#96; (név, leírás, szín, aktiv, isDefault, createdById)\n  - &#96;TaskColumn&#96; (boardId, név, állapot, pozíció, limit/WIP)\n  - &#96;TaskBoardMember&#96; (boardId, userId, jogosultsag: VIEW/EDIT/ADMIN)\n  - &#96;TaskComment&#96; (taskId, userId, szöveg)\n  - &#96;TaskActivity&#96; (taskId, userId, tipus, leírás, régi/új értékek)\n  - &#96;TaskAttachment&#96; (taskId, fájl adatok, uploadedById)\n  - &#96;TaskWatcher&#96; (taskId, userId)\n\n- User modell bővítése:\n  - Új relációk: &#96;createdTasks&#96;, &#96;createdBoards&#96;, &#96;boardMemberships&#96;, &#96;taskComments&#96;, &#96;taskActivities&#96;, &#96;taskAttachments&#96;, &#96;taskWatchers&#96;\n\n- Más modulok bővítése:\n  - Account, Opportunity, Lead, Quote, Order, Ticket, Document modellekhez &#96;tasks&#96; reláció\n\n### 1.2 Migration\n- Prisma migration létrehozása: &#96;npx prisma migrate dev --name add_team_communication_module&#96;\n- Prisma Client generálás: &#96;npx prisma generate&#96;\n\n## 2. Backend Implementáció\n\n### 2.1 Modul Struktúra\n**Új könyvtár:** &#96;apps/server/src/team/&#96;\n\n&#96;&#96;&#96;\nteam/\n├── team.module.ts\n├── task/\n│   ├── task.controller.ts\n│   ├── task.service.ts\n│   └── dto/\n│       ├── create-task.dto.ts\n│       ├── update-task.dto.ts\n│       ├── task-filter.dto.ts\n│       └── move-task.dto.ts\n├── board/\n│   ├── board.controller.ts\n│   ├── board.service.ts\n│   └── dto/\n│       ├── create-board.dto.ts\n│       ├── update-board.dto.ts\n│       └── add-member.dto.ts\n├── comment/\n│   ├── comment.controller.ts\n│   └── comment.service.ts\n└── activity/\n    └── activity.service.ts\n&#96;&#96;&#96;\n\n### 2.2 API Endpoints\n\n**Task Controller** (&#96;apps/server/src/team/task/task.controller.ts&#96;):\n- &#96;GET /team/tasks&#96; - Lista szűrőkkel (assignedTo, status, priority, boardId, relatedEntity)\n- &#96;GET /team/tasks/:id&#96; - Részletes nézet\n- &#96;POST /team/tasks&#96; - Új feladat\n- &#96;PUT /team/tasks/:id&#96; - Frissítés\n- &#96;DELETE /team/tasks/:id&#96; - Törlés\n- &#96;PATCH /team/tasks/:id/status&#96; - Státusz változtatás\n- &#96;PATCH /team/tasks/:id/assign&#96; - Hozzárendelés\n- &#96;PATCH /team/tasks/:id/move&#96; - Board-on mozgatás (position update)\n- &#96;GET /team/tasks/my&#96; - Saját feladatok\n- &#96;GET /team/tasks/assigned-to/:userId&#96; - Felhasználó feladatai\n\n**Board Controller** (&#96;apps/server/src/team/board/board.controller.ts&#96;):\n- &#96;GET /team/boards&#96; - Board lista (user boards only if not admin)\n- &#96;GET /team/boards/:id&#96; - Board részletes (tasks-szel, columns-szel)\n- &#96;POST /team/boards&#96; - Új board\n- &#96;PUT /team/boards/:id&#96; - Board frissítés\n- &#96;DELETE /team/boards/:id&#96; - Board törlés\n- &#96;POST /team/boards/:id/members&#96; - Tag hozzáadása\n- &#96;DELETE /team/boards/:id/members/:userId&#96; - Tag eltávolítása\n- &#96;GET /team/boards/:id/columns&#96; - Oszlopok listája\n- &#96;POST /team/boards/:id/columns&#96; - Oszlop létrehozása\n- &#96;PUT /team/boards/:id/columns/:columnId&#96; - Oszlop frissítés\n- &#96;DELETE /team/boards/:id/columns/:columnId&#96; - Oszlop törlés\n\n**Comment Controller** (&#96;apps/server/src/team/comment/comment.controller.ts&#96;):\n- &#96;GET /team/tasks/:taskId/comments&#96; - Kommentek\n- &#96;POST /team/tasks/:taskId/comments&#96; - Új komment\n- &#96;PUT /team/comments/:id&#96; - Komment szerkesztés\n- &#96;DELETE /team/comments/:id&#96; - Komment törlés\n\n**Dashboard Endpoint** (Task Controller-ben):\n- &#96;GET /team/dashboard/stats&#96; - Statisztikák (total tasks, by status, by priority, overdue)\n- &#96;GET /team/dashboard/my-tasks&#96; - Saját feladatok összesítve\n\n### 2.3 Service Logika\n\n**Task Service** (&#96;apps/server/src/team/task/task.service.ts&#96;):\n- &#96;findAll()&#96; - Admin: minden feladat, User: csak saját + hozzárendelt + board tagként látható\n- &#96;create()&#96; - Audit log, activity log\n- &#96;update()&#96; - Activity log változásokról\n- &#96;move()&#96; - Position update, activity log\n- &#96;assign()&#96; - Activity log, watcher hozzáadás\n\n**Board Service** (&#96;apps/server/src/team/board/board.service.ts&#96;):\n- &#96;findUserBoards()&#96; - Csak azok a board-ok, ahol tag vagy admin\n- &#96;create()&#96; - Default columns létrehozása (TODO, IN_PROGRESS, DONE)\n- &#96;addMember()&#96; - Jogosultság ellenőrzés\n- &#96;removeMember()&#96; - Jogosultság ellenőrzés\n\n**Activity Service** (&#96;apps/server/src/team/activity/activity.service.ts&#96;):\n- Automatikus activity log minden változásról\n- Tipusok: CREATED, UPDATED, STATUS_CHANGED, ASSIGNED, COMMENTED, MOVED, ATTACHMENT_ADDED\n\n### 2.4 Jogosultságok\n\n**Permission Enum Bővítés** (&#96;apps/server/src/common/rbac/permission.enum.ts&#96;):\n- &#96;TEAM_VIEW = &#39;team:view&#39;&#96;\n- &#96;TEAM_CREATE = &#39;team:create&#39;&#96;\n- &#96;TEAM_EDIT = &#39;team:edit&#39;&#96;\n- &#96;TEAM_DELETE = &#39;team:delete&#39;&#96;\n- &#96;TASK_VIEW = &#39;task:view&#39;&#96;\n- &#96;TASK_CREATE = &#39;task:create&#39;&#96;\n- &#96;TASK_EDIT = &#39;task:edit&#39;&#96;\n- &#96;TASK_DELETE = &#39;task:delete&#39;&#96;\n- &#96;TASK_ASSIGN = &#39;task:assign&#39;&#96;\n- &#96;TASK_MANAGE_ALL = &#39;task:manage_all&#39;&#96; (admin)\n- &#96;BOARD_VIEW = &#39;board:view&#39;&#96;\n- &#96;BOARD_CREATE = &#39;board:create&#39;&#96;\n- &#96;BOARD_EDIT = &#39;board:edit&#39;&#96;\n- &#96;BOARD_DELETE = &#39;board:delete&#39;&#96;\n- &#96;BOARD_MANAGE_MEMBERS = &#39;board:manage_members&#39;&#96;\n\n**Permission Descriptions** hozzáadása ugyanebben a fájlban.\n\n### 2.5 Modul Regisztráció\n\n**App Module** (&#96;apps/server/src/app.module.ts&#96;):\n- &#96;TeamModule&#96; import hozzáadása\n\n**Team Module** (&#96;apps/server/src/team/team.module.ts&#96;):\n- PrismaModule import\n- SystemModule import (audit, settings)\n- Controllers és Services regisztráció\n\n## 3. Frontend Implementáció\n\n### 3.1 Új Dependenciák\n\n**Fájl:** &#96;apps/web/package.json&#96;\n\nHozzáadandó dependencies:\n- &#96;@dnd-kit/core&#96; - Drag and drop core\n- &#96;@dnd-kit/sortable&#96; - Sortable items\n- &#96;@dnd-kit/utilities&#96; - Utilities\n\n&#96;&#96;&#96;json\n\&quot;@dnd-kit/core\&quot;: \&quot;^6.1.0\&quot;,\n\&quot;@dnd-kit/sortable\&quot;: \&quot;^8.0.0\&quot;,\n\&quot;@dnd-kit/utilities\&quot;: \&quot;^3.2.2\&quot;\n&#96;&#96;&#96;\n\n### 3.2 Komponens Struktúra\n\n**Új könyvtár:** &#96;apps/web/src/components/team/&#96;\n\n&#96;&#96;&#96;\ncomponents/team/\n├── TaskBoard.tsx              # Fő Kanban board komponens\n├── TaskColumn.tsx             # Oszlop komponens\n├── TaskCard.tsx               # Feladat kártya\n├── TaskModal.tsx              # Feladat szerkesztő modal\n├── TaskList.tsx               # Lista nézet (opcionális)\n├── TaskFilter.tsx             # Szűrők\n├── TaskCommentSection.tsx     # Kommentek szekció\n├── TaskActivityTimeline.tsx   # Tevékenység idővonal\n├── BoardSelector.tsx          # Board választó\n├── BoardSettingsModal.tsx     # Board beállítások\n├── TaskQuickCreate.tsx        # Gyors létrehozás\n└── TaskDashboard.tsx         # Dashboard statisztikák\n&#96;&#96;&#96;\n\n### 3.3 Oldal Komponens\n\n**Fájl:** &#96;apps/web/src/pages/Team.tsx&#96;\n\n- Főoldal a Team modulhoz\n- Board selector\n- TaskBoard komponens renderelés\n- TaskFilter komponens\n- TaskQuickCreate gomb\n- Dashboard stats widget\n\n### 3.4 API Hívások\n\n**Új fájl:** &#96;apps/web/src/lib/api/team.ts&#96;\n\n- TanStack Query hooks:\n  - &#96;useTasks()&#96;, &#96;useTask()&#96;, &#96;useCreateTask()&#96;, &#96;useUpdateTask()&#96;, &#96;useDeleteTask()&#96;\n  - &#96;useBoards()&#96;, &#96;useBoard()&#96;, &#96;useCreateBoard()&#96;, &#96;useUpdateBoard()&#96;\n  - &#96;useTaskComments()&#96;, &#96;useCreateComment()&#96;\n  - &#96;useDashboardStats()&#96;\n  - &#96;useMoveTask()&#96; - Optimistic update-pel\n\n### 3.5 Routing\n\n**Fájl:** &#96;apps/web/src/App.tsx&#96;\n\n- Új route: &#96;/team&#96; → &#96;&lt;Team /&gt;&#96; komponens\n- Navigáció menüben \&quot;Csapat kommunikáció\&quot; menüpont\n\n### 3.6 Integrációk Más Modulokkal\n\n**CRM Modul** (&#96;apps/web/src/pages/CRM.tsx&#96;):\n- Account, Opportunity, Lead, Quote, Order, Ticket oldalakon:\n  - \&quot;Kapcsolódó feladatok\&quot; szekció\n  - \&quot;Új feladat létrehozása\&quot; gomb (modal megnyitása taskId-val)\n\n**DMS Modul** (&#96;apps/web/src/pages/DMS.tsx&#96;):\n- Document oldalon kapcsolódó feladatok megjelenítése\n\n**Logistics Modul** (&#96;apps/web/src/pages/Logistics.tsx&#96;):\n- Purchase Order, Shipment oldalakon kapcsolódó feladatok\n\n## 4. Build Script-ek és CI/CD\n\n### 4.1 Package.json Script-ek\n\n**Fájl:** &#96;apps/server/package.json&#96;\n- Nincs változás (build script már létezik)\n\n**Fájl:** &#96;apps/web/package.json&#96;\n- Nincs változás (build script már létezik)\n\n**Fájl:** &#96;apps/desktop/package.json&#96;\n- Nincs változás (build script már létezik)\n\n### 4.2 CI/CD Workflow Frissítés\n\n**Fájl:** &#96;.github/workflows/build-desktop.yml&#96;\n\n**Változások:**\n- Nincs változás a build folyamatban (automatikusan tartalmazza az új modult)\n- Prisma migration automatikusan lefut a &#96;npx prisma generate&#96; során\n- Új frontend dependencies automatikusan települnek &#96;npm ci&#96; során\n\n**Ellenőrzés:**\n- A workflow már tartalmazza a backend build-et és a frontend build-et\n- A Prisma Client generálás már benne van\n- Nincs szükség további lépésekre\n\n### 4.3 Seed Adatok (Opcionális)\n\n**Fájl:** &#96;apps/server/prisma/seed.ts&#96;\n\n- Alapértelmezett board létrehozása\n- Alapértelmezett oszlopok (TODO, IN_PROGRESS, DONE)\n- Teszt feladatok (opcionális)\n\n## 5. Implementációs Sorrend\n\n### Fázis 1: Adatbázis és Backend Alapok\n1. Prisma schema módosítások\n2. Migration létrehozása és futtatása\n3. Backend modul struktúra létrehozása\n4. Task Service és Controller (alap CRUD)\n5. Board Service és Controller (alap CRUD)\n6. Permission enum bővítés\n7. Team Module regisztráció\n\n### Fázis 2: Frontend Alapok\n1. Frontend dependencies telepítése\n2. API hooks létrehozása\n3. Alap TaskBoard komponens (statikus)\n4. TaskCard komponens\n5. TaskModal komponens\n6. Team oldal létrehozása\n7. Routing hozzáadása\n\n### Fázis 3: Kanban Funkcionalitás\n1. Drag &amp; drop implementáció (@dnd-kit)\n2. TaskColumn komponens\n3. Position update API\n4. Optimistic updates\n5. Board selector\n6. Oszlopok kezelése (CRUD)\n\n### Fázis 4: Szűrők és Dashboard\n1. TaskFilter komponens\n2. Szűrő logika backend-ben\n3. Dashboard stats API\n4. Dashboard widget frontend-en\n\n### Fázis 5: Kommunikáció\n1. Comment komponens és API\n2. Activity timeline komponens\n3. TaskAttachment (opcionális, később)\n\n### Fázis 6: Integrációk\n1. CRM modul integráció (Account, Opportunity, Lead, Quote, Order, Ticket)\n2. DMS modul integráció (Document)\n3. Logistics integráció (PurchaseOrder, Shipment)\n4. \&quot;Új feladat\&quot; gombok más modulokban\n\n### Fázis 7: Finomhangolás\n1. Jogosultságok tesztelése\n2. UI/UX finomhangolás\n3. Hibakezelés\n4. Loading states\n5. Error boundaries\n\n## 6. Tesztelési Terv\n\n### Unit Tesztek\n- Task Service logika (jogosultságok, szűrők)\n- Board Service logika (tag kezelés)\n- Activity Service logika\n\n### Integration Tesztek\n- API endpoints tesztelése\n- Prisma query-ek tesztelése\n- Jogosultság guard-ok tesztelése\n\n### E2E Tesztek (Manuális)\n- Kanban drag &amp; drop működése\n- Feladat létrehozás/szerkesztés\n- Board tagok kezelése\n- Integrációk más modulokkal\n\n## 7. Dokumentáció\n\n### API Dokumentáció\n- Swagger/OpenAPI spec (opcionális, később)\n- Endpoint dokumentáció kommentekben\n\n### Felhasználói Dokumentáció\n- Team modul használati útmutató (később)\n- Kanban board használat (később)\n\n## 8. Build és Deploy\n\n### Lokális Build Tesztelés\n&#96;&#96;&#96;bash\n# 1. Dependencies telepítése\nnpm install\ncd apps/web &amp;&amp; npm install\n\n# 2. Prisma migration\ncd apps/server\nnpx prisma migrate dev --name add_team_communication_module\nnpx prisma generate\n\n# 3. Backend build\nnpm run build\n\n# 4. Frontend build\ncd ../web\nnpm run build\n\n# 5. Desktop build (opcionális)\ncd ../desktop\nnpm run build\nnpm run package:win\n&#96;&#96;&#96;\n\n### CI/CD Automatikus Build\n- Push &#96;main&#96; branch-re vagy tag létrehozása\n- GitHub Actions automatikusan build-eli\n- Windows installer készül\n- Artifacts feltöltése\n\n## 9. Kritikus Pontok\n\n### Adatbázis Migration\n- Migration sorrend fontos (User modell bővítése előtt TaskBoard)\n- Backward compatibility (opcionális mezők)\n\n### Jogosultságok\n- Admin vs User jogosultságok helyes implementálása\n- Board tag jogosultságok ellenőrzése\n\n### Drag &amp; Drop\n- Position update atomic művelet legyen\n- Optimistic update rollback kezelése\n- Concurrent updates kezelése\n\n### Integrációk\n- Más modulok oldalain a \&quot;Kapcsolódó feladatok\&quot; szekció\n- \&quot;Új feladat\&quot; gomb működése\n- Related entity ID-k helyes átadása\n\n## 10. Későbbi Bővítések (Scaffold)\n\n- Task templates\n- Automatizálások (workflow rules)\n- Értesítések (notifications)\n- Email integráció\n- Export funkciók (CSV, PDF)\n- Advanced reporting\n- Task dependencies\n- Time tracking\n- File attachments (TaskAttachment modell már kész)&quot;,
-  &quot;name&quot;: &quot;Csapat kommunikáció modul build terv&quot;,
-  &quot;overview&quot;: &quot;Csapat kommunikáció modul implementálása Kanban dashboard-dal, feladatkezeléssel és integrációkkal a meglévő modulokhoz. Windows desktop build és CI/CD workflow frissítés.&quot;
+  "plan": "# Csapat Kommunikáció Modul - Build Terv\n\n## 1. Adatbázis Séma Bővítések\n\n### 1.1 Prisma Schema Módosítások\n**Fájl:** &#96;apps/server/prisma/schema.prisma&#96;\n\n- Task modell bővítése:\n  - &#96;createdById&#96; (User relation)\n  - &#96;boardId&#96; (TaskBoard relation)\n  - &#96;position&#96; (Int, drag&amp;drop pozíció)\n  - &#96;tags&#96; (String, JSON array)\n  - &#96;completedAt&#96; (DateTime?)\n  - Kapcsolatok: &#96;accountId&#96;, &#96;opportunityId&#96;, &#96;leadId&#96;, &#96;quoteId&#96;, &#96;orderId&#96;, &#96;ticketId&#96;, &#96;documentId&#96;\n\n- Új modellek:\n  - &#96;TaskBoard&#96; (név, leírás, szín, aktiv, isDefault, createdById)\n  - &#96;TaskColumn&#96; (boardId, név, állapot, pozíció, limit/WIP)\n  - &#96;TaskBoardMember&#96; (boardId, userId, jogosultsag: VIEW/EDIT/ADMIN)\n  - &#96;TaskComment&#96; (taskId, userId, szöveg)\n  - &#96;TaskActivity&#96; (taskId, userId, tipus, leírás, régi/új értékek)\n  - &#96;TaskAttachment&#96; (taskId, fájl adatok, uploadedById)\n  - &#96;TaskWatcher&#96; (taskId, userId)\n\n- User modell bővítése:\n  - Új relációk: &#96;createdTasks&#96;, &#96;createdBoards&#96;, &#96;boardMemberships&#96;, &#96;taskComments&#96;, &#96;taskActivities&#96;, &#96;taskAttachments&#96;, &#96;taskWatchers&#96;\n\n- Más modulok bővítése:\n  - Account, Opportunity, Lead, Quote, Order, Ticket, Document modellekhez &#96;tasks&#96; reláció\n\n### 1.2 Migration\n- Prisma migration létrehozása: &#96;npx prisma migrate dev --name add_team_communication_module&#96;\n- Prisma Client generálás: &#96;npx prisma generate&#96;\n\n## 2. Backend Implementáció\n\n### 2.1 Modul Struktúra\n**Új könyvtár:** &#96;apps/server/src/team/&#96;\n\n&#96;&#96;&#96;\nteam/\n├── team.module.ts\n├── task/\n│   ├── task.controller.ts\n│   ├── task.service.ts\n│   └── dto/\n│       ├── create-task.dto.ts\n│       ├── update-task.dto.ts\n│       ├── task-filter.dto.ts\n│       └── move-task.dto.ts\n├── board/\n│   ├── board.controller.ts\n│   ├── board.service.ts\n│   └── dto/\n│       ├── create-board.dto.ts\n│       ├── update-board.dto.ts\n│       └── add-member.dto.ts\n├── comment/\n│   ├── comment.controller.ts\n│   └── comment.service.ts\n└── activity/\n    └── activity.service.ts\n&#96;&#96;&#96;\n\n### 2.2 API Endpoints\n\n**Task Controller** (&#96;apps/server/src/team/task/task.controller.ts&#96;):\n- &#96;GET /team/tasks&#96; - Lista szűrőkkel (assignedTo, status, priority, boardId, relatedEntity)\n- &#96;GET /team/tasks/:id&#96; - Részletes nézet\n- &#96;POST /team/tasks&#96; - Új feladat\n- &#96;PUT /team/tasks/:id&#96; - Frissítés\n- &#96;DELETE /team/tasks/:id&#96; - Törlés\n- &#96;PATCH /team/tasks/:id/status&#96; - Státusz változtatás\n- &#96;PATCH /team/tasks/:id/assign&#96; - Hozzárendelés\n- &#96;PATCH /team/tasks/:id/move&#96; - Board-on mozgatás (position update)\n- &#96;GET /team/tasks/my&#96; - Saját feladatok\n- &#96;GET /team/tasks/assigned-to/:userId&#96; - Felhasználó feladatai\n\n**Board Controller** (&#96;apps/server/src/team/board/board.controller.ts&#96;):\n- &#96;GET /team/boards&#96; - Board lista (user boards only if not admin)\n- &#96;GET /team/boards/:id&#96; - Board részletes (tasks-szel, columns-szel)\n- &#96;POST /team/boards&#96; - Új board\n- &#96;PUT /team/boards/:id&#96; - Board frissítés\n- &#96;DELETE /team/boards/:id&#96; - Board törlés\n- &#96;POST /team/boards/:id/members&#96; - Tag hozzáadása\n- &#96;DELETE /team/boards/:id/members/:userId&#96; - Tag eltávolítása\n- &#96;GET /team/boards/:id/columns&#96; - Oszlopok listája\n- &#96;POST /team/boards/:id/columns&#96; - Oszlop létrehozása\n- &#96;PUT /team/boards/:id/columns/:columnId&#96; - Oszlop frissítés\n- &#96;DELETE /team/boards/:id/columns/:columnId&#96; - Oszlop törlés\n\n**Comment Controller** (&#96;apps/server/src/team/comment/comment.controller.ts&#96;):\n- &#96;GET /team/tasks/:taskId/comments&#96; - Kommentek\n- &#96;POST /team/tasks/:taskId/comments&#96; - Új komment\n- &#96;PUT /team/comments/:id&#96; - Komment szerkesztés\n- &#96;DELETE /team/comments/:id&#96; - Komment törlés\n\n**Dashboard Endpoint** (Task Controller-ben):\n- &#96;GET /team/dashboard/stats&#96; - Statisztikák (total tasks, by status, by priority, overdue)\n- &#96;GET /team/dashboard/my-tasks&#96; - Saját feladatok összesítve\n\n### 2.3 Service Logika\n\n**Task Service** (&#96;apps/server/src/team/task/task.service.ts&#96;):\n- &#96;findAll()&#96; - Admin: minden feladat, User: csak saját + hozzárendelt + board tagként látható\n- &#96;create()&#96; - Audit log, activity log\n- &#96;update()&#96; - Activity log változásokról\n- &#96;move()&#96; - Position update, activity log\n- &#96;assign()&#96; - Activity log, watcher hozzáadás\n\n**Board Service** (&#96;apps/server/src/team/board/board.service.ts&#96;):\n- &#96;findUserBoards()&#96; - Csak azok a board-ok, ahol tag vagy admin\n- &#96;create()&#96; - Default columns létrehozása (TODO, IN_PROGRESS, DONE)\n- &#96;addMember()&#96; - Jogosultság ellenőrzés\n- &#96;removeMember()&#96; - Jogosultság ellenőrzés\n\n**Activity Service** (&#96;apps/server/src/team/activity/activity.service.ts&#96;):\n- Automatikus activity log minden változásról\n- Tipusok: CREATED, UPDATED, STATUS_CHANGED, ASSIGNED, COMMENTED, MOVED, ATTACHMENT_ADDED\n\n### 2.4 Jogosultságok\n\n**Permission Enum Bővítés** (&#96;apps/server/src/common/rbac/permission.enum.ts&#96;):\n- &#96;TEAM_VIEW = 'team:view'&#96;\n- &#96;TEAM_CREATE = 'team:create'&#96;\n- &#96;TEAM_EDIT = 'team:edit'&#96;\n- &#96;TEAM_DELETE = 'team:delete'&#96;\n- &#96;TASK_VIEW = 'task:view'&#96;\n- &#96;TASK_CREATE = 'task:create'&#96;\n- &#96;TASK_EDIT = 'task:edit'&#96;\n- &#96;TASK_DELETE = 'task:delete'&#96;\n- &#96;TASK_ASSIGN = 'task:assign'&#96;\n- &#96;TASK_MANAGE_ALL = 'task:manage_all'&#96; (admin)\n- &#96;BOARD_VIEW = 'board:view'&#96;\n- &#96;BOARD_CREATE = 'board:create'&#96;\n- &#96;BOARD_EDIT = 'board:edit'&#96;\n- &#96;BOARD_DELETE = 'board:delete'&#96;\n- &#96;BOARD_MANAGE_MEMBERS = 'board:manage_members'&#96;\n\n**Permission Descriptions** hozzáadása ugyanebben a fájlban.\n\n### 2.5 Modul Regisztráció\n\n**App Module** (&#96;apps/server/src/app.module.ts&#96;):\n- &#96;TeamModule&#96; import hozzáadása\n\n**Team Module** (&#96;apps/server/src/team/team.module.ts&#96;):\n- PrismaModule import\n- SystemModule import (audit, settings)\n- Controllers és Services regisztráció\n\n## 3. Frontend Implementáció\n\n### 3.1 Új Dependenciák\n\n**Fájl:** &#96;apps/web/package.json&#96;\n\nHozzáadandó dependencies:\n- &#96;@dnd-kit/core&#96; - Drag and drop core\n- &#96;@dnd-kit/sortable&#96; - Sortable items\n- &#96;@dnd-kit/utilities&#96; - Utilities\n\n&#96;&#96;&#96;json\n\"@dnd-kit/core\": \"^6.1.0\",\n\"@dnd-kit/sortable\": \"^8.0.0\",\n\"@dnd-kit/utilities\": \"^3.2.2\"\n&#96;&#96;&#96;\n\n### 3.2 Komponens Struktúra\n\n**Új könyvtár:** &#96;apps/web/src/components/team/&#96;\n\n&#96;&#96;&#96;\ncomponents/team/\n├── TaskBoard.tsx              # Fő Kanban board komponens\n├── TaskColumn.tsx             # Oszlop komponens\n├── TaskCard.tsx               # Feladat kártya\n├── TaskModal.tsx              # Feladat szerkesztő modal\n├── TaskList.tsx               # Lista nézet (opcionális)\n├── TaskFilter.tsx             # Szűrők\n├── TaskCommentSection.tsx     # Kommentek szekció\n├── TaskActivityTimeline.tsx   # Tevékenység idővonal\n├── BoardSelector.tsx          # Board választó\n├── BoardSettingsModal.tsx     # Board beállítások\n├── TaskQuickCreate.tsx        # Gyors létrehozás\n└── TaskDashboard.tsx         # Dashboard statisztikák\n&#96;&#96;&#96;\n\n### 3.3 Oldal Komponens\n\n**Fájl:** &#96;apps/web/src/pages/Team.tsx&#96;\n\n- Főoldal a Team modulhoz\n- Board selector\n- TaskBoard komponens renderelés\n- TaskFilter komponens\n- TaskQuickCreate gomb\n- Dashboard stats widget\n\n### 3.4 API Hívások\n\n**Új fájl:** &#96;apps/web/src/lib/api/team.ts&#96;\n\n- TanStack Query hooks:\n  - &#96;useTasks()&#96;, &#96;useTask()&#96;, &#96;useCreateTask()&#96;, &#96;useUpdateTask()&#96;, &#96;useDeleteTask()&#96;\n  - &#96;useBoards()&#96;, &#96;useBoard()&#96;, &#96;useCreateBoard()&#96;, &#96;useUpdateBoard()&#96;\n  - &#96;useTaskComments()&#96;, &#96;useCreateComment()&#96;\n  - &#96;useDashboardStats()&#96;\n  - &#96;useMoveTask()&#96; - Optimistic update-pel\n\n### 3.5 Routing\n\n**Fájl:** &#96;apps/web/src/App.tsx&#96;\n\n- Új route: &#96;/team&#96; → &#96;&lt;Team /&gt;&#96; komponens\n- Navigáció menüben \"Csapat kommunikáció\" menüpont\n\n### 3.6 Integrációk Más Modulokkal\n\n**CRM Modul** (&#96;apps/web/src/pages/CRM.tsx&#96;):\n- Account, Opportunity, Lead, Quote, Order, Ticket oldalakon:\n  - \"Kapcsolódó feladatok\" szekció\n  - \"Új feladat létrehozása\" gomb (modal megnyitása taskId-val)\n\n**DMS Modul** (&#96;apps/web/src/pages/DMS.tsx&#96;):\n- Document oldalon kapcsolódó feladatok megjelenítése\n\n**Logistics Modul** (&#96;apps/web/src/pages/Logistics.tsx&#96;):\n- Purchase Order, Shipment oldalakon kapcsolódó feladatok\n\n## 4. Build Script-ek és CI/CD\n\n### 4.1 Package.json Script-ek\n\n**Fájl:** &#96;apps/server/package.json&#96;\n- Nincs változás (build script már létezik)\n\n**Fájl:** &#96;apps/web/package.json&#96;\n- Nincs változás (build script már létezik)\n\n**Fájl:** &#96;apps/desktop/package.json&#96;\n- Nincs változás (build script már létezik)\n\n### 4.2 CI/CD Workflow Frissítés\n\n**Fájl:** &#96;.github/workflows/build-desktop.yml&#96;\n\n**Változások:**\n- Nincs változás a build folyamatban (automatikusan tartalmazza az új modult)\n- Prisma migration automatikusan lefut a &#96;npx prisma generate&#96; során\n- Új frontend dependencies automatikusan települnek &#96;npm ci&#96; során\n\n**Ellenőrzés:**\n- A workflow már tartalmazza a backend build-et és a frontend build-et\n- A Prisma Client generálás már benne van\n- Nincs szükség további lépésekre\n\n### 4.3 Seed Adatok (Opcionális)\n\n**Fájl:** &#96;apps/server/prisma/seed.ts&#96;\n\n- Alapértelmezett board létrehozása\n- Alapértelmezett oszlopok (TODO, IN_PROGRESS, DONE)\n- Teszt feladatok (opcionális)\n\n## 5. Implementációs Sorrend\n\n### Fázis 1: Adatbázis és Backend Alapok\n1. Prisma schema módosítások\n2. Migration létrehozása és futtatása\n3. Backend modul struktúra létrehozása\n4. Task Service és Controller (alap CRUD)\n5. Board Service és Controller (alap CRUD)\n6. Permission enum bővítés\n7. Team Module regisztráció\n\n### Fázis 2: Frontend Alapok\n1. Frontend dependencies telepítése\n2. API hooks létrehozása\n3. Alap TaskBoard komponens (statikus)\n4. TaskCard komponens\n5. TaskModal komponens\n6. Team oldal létrehozása\n7. Routing hozzáadása\n\n### Fázis 3: Kanban Funkcionalitás\n1. Drag &amp; drop implementáció (@dnd-kit)\n2. TaskColumn komponens\n3. Position update API\n4. Optimistic updates\n5. Board selector\n6. Oszlopok kezelése (CRUD)\n\n### Fázis 4: Szűrők és Dashboard\n1. TaskFilter komponens\n2. Szűrő logika backend-ben\n3. Dashboard stats API\n4. Dashboard widget frontend-en\n\n### Fázis 5: Kommunikáció\n1. Comment komponens és API\n2. Activity timeline komponens\n3. TaskAttachment (opcionális, később)\n\n### Fázis 6: Integrációk\n1. CRM modul integráció (Account, Opportunity, Lead, Quote, Order, Ticket)\n2. DMS modul integráció (Document)\n3. Logistics integráció (PurchaseOrder, Shipment)\n4. \"Új feladat\" gombok más modulokban\n\n### Fázis 7: Finomhangolás\n1. Jogosultságok tesztelése\n2. UI/UX finomhangolás\n3. Hibakezelés\n4. Loading states\n5. Error boundaries\n\n## 6. Tesztelési Terv\n\n### Unit Tesztek\n- Task Service logika (jogosultságok, szűrők)\n- Board Service logika (tag kezelés)\n- Activity Service logika\n\n### Integration Tesztek\n- API endpoints tesztelése\n- Prisma query-ek tesztelése\n- Jogosultság guard-ok tesztelése\n\n### E2E Tesztek (Manuális)\n- Kanban drag &amp; drop működése\n- Feladat létrehozás/szerkesztés\n- Board tagok kezelése\n- Integrációk más modulokkal\n\n## 7. Dokumentáció\n\n### API Dokumentáció\n- Swagger/OpenAPI spec (opcionális, később)\n- Endpoint dokumentáció kommentekben\n\n### Felhasználói Dokumentáció\n- Team modul használati útmutató (később)\n- Kanban board használat (később)\n\n## 8. Build és Deploy\n\n### Lokális Build Tesztelés\n&#96;&#96;&#96;bash\n# 1. Dependencies telepítése\nnpm install\ncd apps/web &amp;&amp; npm install\n\n# 2. Prisma migration\ncd apps/server\nnpx prisma migrate dev --name add_team_communication_module\nnpx prisma generate\n\n# 3. Backend build\nnpm run build\n\n# 4. Frontend build\ncd ../web\nnpm run build\n\n# 5. Desktop build (opcionális)\ncd ../desktop\nnpm run build\nnpm run package:win\n&#96;&#96;&#96;\n\n### CI/CD Automatikus Build\n- Push &#96;main&#96; branch-re vagy tag létrehozása\n- GitHub Actions automatikusan build-eli\n- Windows installer készül\n- Artifacts feltöltése\n\n## 9. Kritikus Pontok\n\n### Adatbázis Migration\n- Migration sorrend fontos (User modell bővítése előtt TaskBoard)\n- Backward compatibility (opcionális mezők)\n\n### Jogosultságok\n- Admin vs User jogosultságok helyes implementálása\n- Board tag jogosultságok ellenőrzése\n\n### Drag &amp; Drop\n- Position update atomic művelet legyen\n- Optimistic update rollback kezelése\n- Concurrent updates kezelése\n\n### Integrációk\n- Más modulok oldalain a \"Kapcsolódó feladatok\" szekció\n- \"Új feladat\" gomb működése\n- Related entity ID-k helyes átadása\n\n## 10. Későbbi Bővítések (Scaffold)\n\n- Task templates\n- Automatizálások (workflow rules)\n- Értesítések (notifications)\n- Email integráció\n- Export funkciók (CSV, PDF)\n- Advanced reporting\n- Task dependencies\n- Time tracking\n- File attachments (TaskAttachment modell már kész)",
+  "name": "Csapat kommunikáció modul build terv",
+  "overview": "Csapat kommunikáció modul implementálása Kanban dashboard-dal, feladatkezeléssel és integrációkkal a meglévő modulokhoz. Windows desktop build és CI/CD workflow frissítés."
 }
 ```
 Additional data:
 
 ```json
 {
-  &quot;status&quot;: &quot;accepted&quot;,
-  &quot;reviewData&quot;: {
-    &quot;status&quot;: &quot;Done&quot;,
-    &quot;selectedOption&quot;: &quot;approve&quot;,
-    &quot;isShowingInput&quot;: false
+  "status": "accepted",
+  "reviewData": {
+    "status": "Done",
+    "selectedOption": "approve",
+    "isShowingInput": false
   }
 }
 ```
@@ -914,7 +914,7 @@ Result:
 
 ```json
 {
-  &quot;accepted&quot;: {}
+  "accepted": {}
 }
 ```
 Status: **completed**
@@ -993,7 +993,7 @@ Bővítem a Task modellt és hozzáadom az új modelleket:
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/prisma/schema.prisma</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/prisma/schema.prisma</summary>
 
 **Chunk 1**
 Lines added: 39, lines removed: 1
@@ -1022,8 +1022,8 @@ Lines added: 39, lines removed: 1
 -   assignedTo     User?     @relation(fields: [assignedToId], references: [id], onDelete: SetNull)
 +   
 +   // Relations
-+   assignedTo     User?     @relation(&quot;AssignedTasks&quot;, fields: [assignedToId], references: [id], onDelete: SetNull)
-+   createdBy      User?     @relation(&quot;CreatedTasks&quot;, fields: [createdById], references: [id], onDelete: SetNull)
++   assignedTo     User?     @relation("AssignedTasks", fields: [assignedToId], references: [id], onDelete: SetNull)
++   createdBy      User?     @relation("CreatedTasks", fields: [createdById], references: [id], onDelete: SetNull)
 +   board          TaskBoard? @relation(fields: [boardId], references: [id], onDelete: SetNull)
 +   
 +   // Más modulok kapcsolatai
@@ -1047,7 +1047,7 @@ Lines added: 39, lines removed: 1
     @@index([allapot])
 +   @@index([accountId])
 +   @@index([opportunityId])
-    @@map(&quot;feladatok&quot;)
+    @@map("feladatok")
   }
 ```
 
@@ -1059,7 +1059,7 @@ Lines added: 39, lines removed: 1
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/prisma/schema.prisma</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/prisma/schema.prisma</summary>
 
 **Chunk 1**
 Lines added: 8, lines removed: 1
@@ -1067,23 +1067,23 @@ Lines added: 8, lines removed: 1
 ```diff
 @@ -20,10 +20,17 @@
     auditLogs         AuditLog[]
-    ownedAccounts     Account[]      @relation(&quot;AccountOwner&quot;)
+    ownedAccounts     Account[]      @relation("AccountOwner")
 -   assignedTasks     Task[]
-+   assignedTasks     Task[]         @relation(&quot;AssignedTasks&quot;)
-+   createdTasks      Task[]         @relation(&quot;CreatedTasks&quot;)
++   assignedTasks     Task[]         @relation("AssignedTasks")
++   createdTasks      Task[]         @relation("CreatedTasks")
     createdCampaigns  Campaign[]
     createdLeads      Lead[]
     createdTickets    Ticket[]
     createdDocuments  Document[]
     documentAccess    DocumentAccess[]
-+   createdBoards     TaskBoard[]    @relation(&quot;CreatedBoards&quot;)
-+   boardMemberships  TaskBoardMember[] @relation(&quot;BoardMembers&quot;)
-+   taskComments      TaskComment[]  @relation(&quot;TaskComments&quot;)
-+   taskActivities    TaskActivity[] @relation(&quot;TaskActivities&quot;)
-+   taskAttachments   TaskAttachment[] @relation(&quot;TaskAttachments&quot;)
-+   taskWatchers      TaskWatcher[]  @relation(&quot;TaskWatchers&quot;)
++   createdBoards     TaskBoard[]    @relation("CreatedBoards")
++   boardMemberships  TaskBoardMember[] @relation("BoardMembers")
++   taskComments      TaskComment[]  @relation("TaskComments")
++   taskActivities    TaskActivity[] @relation("TaskActivities")
++   taskAttachments   TaskAttachment[] @relation("TaskAttachments")
++   taskWatchers      TaskWatcher[]  @relation("TaskWatchers")
   
-    @@map(&quot;felhasznalok&quot;)
+    @@map("felhasznalok")
 ```
 
 </details>
@@ -1094,7 +1094,7 @@ Lines added: 8, lines removed: 1
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/prisma/schema.prisma</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/prisma/schema.prisma</summary>
 
 **Chunk 1**
 Lines added: 1, lines removed: undefined
@@ -1116,7 +1116,7 @@ Lines added: 1, lines removed: undefined
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/prisma/schema.prisma</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/prisma/schema.prisma</summary>
 
 **Chunk 1**
 Lines added: 1, lines removed: undefined
@@ -1138,7 +1138,7 @@ Lines added: 1, lines removed: undefined
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/prisma/schema.prisma</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/prisma/schema.prisma</summary>
 
 **Chunk 1**
 Lines added: 1, lines removed: undefined
@@ -1160,7 +1160,7 @@ Lines added: 1, lines removed: undefined
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/prisma/schema.prisma</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/prisma/schema.prisma</summary>
 
 **Chunk 1**
 Lines added: 1, lines removed: undefined
@@ -1182,7 +1182,7 @@ Lines added: 1, lines removed: undefined
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/prisma/schema.prisma</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/prisma/schema.prisma</summary>
 
 **Chunk 1**
 Lines added: 1, lines removed: undefined
@@ -1204,7 +1204,7 @@ Lines added: 1, lines removed: undefined
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/prisma/schema.prisma</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/prisma/schema.prisma</summary>
 
 **Chunk 1**
 Lines added: 1, lines removed: undefined
@@ -1226,7 +1226,7 @@ Lines added: 1, lines removed: undefined
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/prisma/schema.prisma</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/prisma/schema.prisma</summary>
 
 **Chunk 1**
 Lines added: 1, lines removed: undefined
@@ -1276,14 +1276,14 @@ Hozzáadom az új modelleket a schema végéhez:
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/prisma/schema.prisma</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/prisma/schema.prisma</summary>
 
 **Chunk 1**
 Lines added: 114, lines removed: undefined
 
 ```diff
 @@ -957,3 +957,117 @@
-    @@map(&quot;szallitolevelek&quot;)
+    @@map("szallitolevelek")
   }
 + 
 + model TaskBoard {
@@ -1297,13 +1297,13 @@ Lines added: 114, lines removed: undefined
 +   createdAt         DateTime  @default(now())
 +   updatedAt         DateTime  @updatedAt
 +   
-+   createdBy         User?     @relation(&quot;CreatedBoards&quot;, fields: [createdById], references: [id], onDelete: SetNull)
++   createdBy         User?     @relation("CreatedBoards", fields: [createdById], references: [id], onDelete: SetNull)
 +   tasks             Task[]
 +   columns           TaskColumn[]
 +   members           TaskBoardMember[]
 +   
 +   @@index([createdById])
-+   @@map(&quot;task_boardok&quot;)
++   @@map("task_boardok")
 + }
 + 
 + model TaskColumn {
@@ -1320,7 +1320,7 @@ Lines added: 114, lines removed: undefined
 +   
 +   @@unique([boardId, allapot])
 +   @@index([boardId])
-+   @@map(&quot;task_oszlopok&quot;)
++   @@map("task_oszlopok")
 + }
 + 
 + model TaskBoardMember {
@@ -1331,10 +1331,10 @@ Lines added: 114, lines removed: undefined
 +   createdAt         DateTime  @default(now())
 +   
 +   board             TaskBoard @relation(fields: [boardId], references: [id], onDelete: Cascade)
-+   user              User      @relation(&quot;BoardMembers&quot;, fields: [userId], references: [id], onDelete: Cascade)
++   user              User      @relation("BoardMembers", fields: [userId], references: [id], onDelete: Cascade)
 +   
 +   @@unique([boardId, userId])
-+   @@map(&quot;task_board_tagok&quot;)
++   @@map("task_board_tagok")
 + }
 + 
 + model TaskComment {
@@ -1346,10 +1346,10 @@ Lines added: 114, lines removed: undefined
 +   updatedAt         DateTime  @updatedAt
 +   
 +   task              Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
-+   user              User      @relation(&quot;TaskComments&quot;, fields: [userId], references: [id], onDelete: Cascade)
++   user              User      @relation("TaskComments", fields: [userId], references: [id], onDelete: Cascade)
 +   
 +   @@index([taskId])
-+   @@map(&quot;task_kommentek&quot;)
++   @@map("task_kommentek")
 + }
 + 
 + model TaskActivity {
@@ -1363,11 +1363,11 @@ Lines added: 114, lines removed: undefined
 +   createdAt         DateTime  @default(now())
 +   
 +   task              Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
-+   user              User?     @relation(&quot;TaskActivities&quot;, fields: [userId], references: [id], onDelete: SetNull)
++   user              User?     @relation("TaskActivities", fields: [userId], references: [id], onDelete: SetNull)
 +   
 +   @@index([taskId])
 +   @@index([createdAt])
-+   @@map(&quot;task_tevekenysegek&quot;)
++   @@map("task_tevekenysegek")
 + }
 + 
 + model TaskAttachment {
@@ -1381,10 +1381,10 @@ Lines added: 114, lines removed: undefined
 +   createdAt         DateTime  @default(now())
 +   
 +   task              Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
-+   uploadedBy        User      @relation(&quot;TaskAttachments&quot;, fields: [uploadedById], references: [id], onDelete: Cascade)
++   uploadedBy        User      @relation("TaskAttachments", fields: [uploadedById], references: [id], onDelete: Cascade)
 +   
 +   @@index([taskId])
-+   @@map(&quot;task_mellekletek&quot;)
++   @@map("task_mellekletek")
 + }
 + 
 + model TaskWatcher {
@@ -1394,10 +1394,10 @@ Lines added: 114, lines removed: undefined
 +   createdAt         DateTime  @default(now())
 +   
 +   task              Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
-+   user              User      @relation(&quot;TaskWatchers&quot;, fields: [userId], references: [id], onDelete: Cascade)
++   user              User      @relation("TaskWatchers", fields: [userId], references: [id], onDelete: Cascade)
 +   
 +   @@unique([taskId, userId])
-+   @@map(&quot;task_figyelok&quot;)
++   @@map("task_figyelok")
 + }
   
 ```
@@ -1458,7 +1458,7 @@ Létrehozom a backend modul struktúráját. Először a könyvtárakat és a DT
 
 <tool-use data-tool-type="write" data-tool-name="write">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/team/task/dto/create-task.dto.ts</summary>
+<details><summary>Tool use: **write** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/team/task/dto/create-task.dto.ts</summary>
 
 **Chunk 1**
 Lines added: 77, lines removed: 1
@@ -1466,22 +1466,22 @@ Lines added: 77, lines removed: 1
 ```diff
 @@ -1,1 +1,77 @@
 - 
-+ import { IsString, IsOptional, IsDateString, IsEnum, IsUUID } from &#39;class-validator&#39;;
++ import { IsString, IsOptional, IsDateString, IsEnum, IsUUID } from 'class-validator';
 + 
 + export enum TaskPriority {
-+   LOW = &#39;LOW&#39;,
-+   MEDIUM = &#39;MEDIUM&#39;,
-+   HIGH = &#39;HIGH&#39;,
-+   URGENT = &#39;URGENT&#39;,
++   LOW = 'LOW',
++   MEDIUM = 'MEDIUM',
++   HIGH = 'HIGH',
++   URGENT = 'URGENT',
 + }
 + 
 + export enum TaskStatus {
-+   TODO = &#39;TODO&#39;,
-+   IN_PROGRESS = &#39;IN_PROGRESS&#39;,
-+   IN_REVIEW = &#39;IN_REVIEW&#39;,
-+   DONE = &#39;DONE&#39;,
-+   BLOCKED = &#39;BLOCKED&#39;,
-+   CANCELLED = &#39;CANCELLED&#39;,
++   TODO = 'TODO',
++   IN_PROGRESS = 'IN_PROGRESS',
++   IN_REVIEW = 'IN_REVIEW',
++   DONE = 'DONE',
++   BLOCKED = 'BLOCKED',
++   CANCELLED = 'CANCELLED',
 + }
 + 
 + export class CreateTaskDto {
@@ -1553,7 +1553,7 @@ Lines added: 77, lines removed: 1
 
 <tool-use data-tool-type="write" data-tool-name="write">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/team/task/dto/update-task.dto.ts</summary>
+<details><summary>Tool use: **write** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/team/task/dto/update-task.dto.ts</summary>
 
 **Chunk 1**
 Lines added: 69, lines removed: 1
@@ -1561,8 +1561,8 @@ Lines added: 69, lines removed: 1
 ```diff
 @@ -1,1 +1,69 @@
 - 
-+ import { IsString, IsOptional, IsDateString, IsEnum, IsUUID, IsInt } from &#39;class-validator&#39;;
-+ import { TaskPriority, TaskStatus } from &#39;./create-task.dto&#39;;
++ import { IsString, IsOptional, IsDateString, IsEnum, IsUUID, IsInt } from 'class-validator';
++ import { TaskPriority, TaskStatus } from './create-task.dto';
 + 
 + export class UpdateTaskDto {
 +   @IsOptional()
@@ -1640,7 +1640,7 @@ Lines added: 69, lines removed: 1
 
 <tool-use data-tool-type="write" data-tool-name="write">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/team/task/dto/task-filter.dto.ts</summary>
+<details><summary>Tool use: **write** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/team/task/dto/task-filter.dto.ts</summary>
 
 **Chunk 1**
 Lines added: 53, lines removed: 1
@@ -1648,8 +1648,8 @@ Lines added: 53, lines removed: 1
 ```diff
 @@ -1,1 +1,53 @@
 - 
-+ import { IsOptional, IsEnum, IsUUID, IsString } from &#39;class-validator&#39;;
-+ import { TaskPriority, TaskStatus } from &#39;./create-task.dto&#39;;
++ import { IsOptional, IsEnum, IsUUID, IsString } from 'class-validator';
++ import { TaskPriority, TaskStatus } from './create-task.dto';
 + 
 + export class TaskFilterDto {
 +   @IsOptional()
@@ -1711,7 +1711,7 @@ Lines added: 53, lines removed: 1
 
 <tool-use data-tool-type="write" data-tool-name="write">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/team/task/dto/move-task.dto.ts</summary>
+<details><summary>Tool use: **write** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/team/task/dto/move-task.dto.ts</summary>
 
 **Chunk 1**
 Lines added: 14, lines removed: 1
@@ -1719,8 +1719,8 @@ Lines added: 14, lines removed: 1
 ```diff
 @@ -1,1 +1,14 @@
 - 
-+ import { IsUUID, IsInt, IsEnum } from &#39;class-validator&#39;;
-+ import { TaskStatus } from &#39;./create-task.dto&#39;;
++ import { IsUUID, IsInt, IsEnum } from 'class-validator';
++ import { TaskStatus } from './create-task.dto';
 + 
 + export class MoveTaskDto {
 +   @IsUUID()
@@ -1743,7 +1743,7 @@ Lines added: 14, lines removed: 1
 
 <tool-use data-tool-type="write" data-tool-name="write">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/team/board/dto/create-board.dto.ts</summary>
+<details><summary>Tool use: **write** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/team/board/dto/create-board.dto.ts</summary>
 
 **Chunk 1**
 Lines added: 19, lines removed: 1
@@ -1751,7 +1751,7 @@ Lines added: 19, lines removed: 1
 ```diff
 @@ -1,1 +1,19 @@
 - 
-+ import { IsString, IsOptional, IsBoolean } from &#39;class-validator&#39;;
++ import { IsString, IsOptional, IsBoolean } from 'class-validator';
 + 
 + export class CreateBoardDto {
 +   @IsString()
@@ -1780,7 +1780,7 @@ Lines added: 19, lines removed: 1
 
 <tool-use data-tool-type="write" data-tool-name="write">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/team/board/dto/update-board.dto.ts</summary>
+<details><summary>Tool use: **write** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/team/board/dto/update-board.dto.ts</summary>
 
 **Chunk 1**
 Lines added: 24, lines removed: 1
@@ -1788,7 +1788,7 @@ Lines added: 24, lines removed: 1
 ```diff
 @@ -1,1 +1,24 @@
 - 
-+ import { IsString, IsOptional, IsBoolean } from &#39;class-validator&#39;;
++ import { IsString, IsOptional, IsBoolean } from 'class-validator';
 + 
 + export class UpdateBoardDto {
 +   @IsOptional()
@@ -1822,7 +1822,7 @@ Lines added: 24, lines removed: 1
 
 <tool-use data-tool-type="write" data-tool-name="write">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/team/board/dto/add-member.dto.ts</summary>
+<details><summary>Tool use: **write** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/team/board/dto/add-member.dto.ts</summary>
 
 **Chunk 1**
 Lines added: 16, lines removed: 1
@@ -1830,12 +1830,12 @@ Lines added: 16, lines removed: 1
 ```diff
 @@ -1,1 +1,16 @@
 - 
-+ import { IsUUID, IsEnum } from &#39;class-validator&#39;;
++ import { IsUUID, IsEnum } from 'class-validator';
 + 
 + export enum BoardMemberPermission {
-+   VIEW = &#39;VIEW&#39;,
-+   EDIT = &#39;EDIT&#39;,
-+   ADMIN = &#39;ADMIN&#39;,
++   VIEW = 'VIEW',
++   EDIT = 'EDIT',
++   ADMIN = 'ADMIN',
 + }
 + 
 + export class AddMemberDto {
@@ -1856,7 +1856,7 @@ Lines added: 16, lines removed: 1
 
 <tool-use data-tool-type="write" data-tool-name="write">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/team/comment/dto/create-comment.dto.ts</summary>
+<details><summary>Tool use: **write** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/team/comment/dto/create-comment.dto.ts</summary>
 
 **Chunk 1**
 Lines added: 7, lines removed: 1
@@ -1864,7 +1864,7 @@ Lines added: 7, lines removed: 1
 ```diff
 @@ -1,1 +1,7 @@
 - 
-+ import { IsString } from &#39;class-validator&#39;;
++ import { IsString } from 'class-validator';
 + 
 + export class CreateCommentDto {
 +   @IsString()
@@ -1881,7 +1881,7 @@ Lines added: 7, lines removed: 1
 
 <tool-use data-tool-type="write" data-tool-name="write">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/team/comment/dto/update-comment.dto.ts</summary>
+<details><summary>Tool use: **write** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/team/comment/dto/update-comment.dto.ts</summary>
 
 **Chunk 1**
 Lines added: 7, lines removed: 1
@@ -1889,7 +1889,7 @@ Lines added: 7, lines removed: 1
 ```diff
 @@ -1,1 +1,7 @@
 - 
-+ import { IsString } from &#39;class-validator&#39;;
++ import { IsString } from 'class-validator';
 + 
 + export class UpdateCommentDto {
 +   @IsString()
@@ -1916,7 +1916,7 @@ Létrehozom a service-eket:
 
 <tool-use data-tool-type="write" data-tool-name="write">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/team/activity/activity.service.ts</summary>
+<details><summary>Tool use: **write** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/team/activity/activity.service.ts</summary>
 
 **Chunk 1**
 Lines added: 63, lines removed: 1
@@ -1924,17 +1924,17 @@ Lines added: 63, lines removed: 1
 ```diff
 @@ -1,1 +1,63 @@
 - 
-+ import { Injectable } from &#39;@nestjs/common&#39;;
-+ import { PrismaService } from &#39;../../prisma/prisma.service&#39;;
++ import { Injectable } from '@nestjs/common';
++ import { PrismaService } from '../../prisma/prisma.service';
 + 
 + export enum TaskActivityType {
-+   CREATED = &#39;CREATED&#39;,
-+   UPDATED = &#39;UPDATED&#39;,
-+   STATUS_CHANGED = &#39;STATUS_CHANGED&#39;,
-+   ASSIGNED = &#39;ASSIGNED&#39;,
-+   COMMENTED = &#39;COMMENTED&#39;,
-+   MOVED = &#39;MOVED&#39;,
-+   ATTACHMENT_ADDED = &#39;ATTACHMENT_ADDED&#39;,
++   CREATED = 'CREATED',
++   UPDATED = 'UPDATED',
++   STATUS_CHANGED = 'STATUS_CHANGED',
++   ASSIGNED = 'ASSIGNED',
++   COMMENTED = 'COMMENTED',
++   MOVED = 'MOVED',
++   ATTACHMENT_ADDED = 'ATTACHMENT_ADDED',
 + }
 + 
 + @Injectable()
@@ -1982,7 +1982,7 @@ Lines added: 63, lines removed: 1
 +           },
 +         },
 +       },
-+       orderBy: { createdAt: &#39;desc&#39; },
++       orderBy: { createdAt: 'desc' },
 +     });
 +   }
 + }
@@ -2015,7 +2015,7 @@ Létrehozom a Task Service-t:
 
 <tool-use data-tool-type="write" data-tool-name="write">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/team/task/task.service.ts</summary>
+<details><summary>Tool use: **write** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/team/task/task.service.ts</summary>
 
 **Chunk 1**
 Lines added: 548, lines removed: 1
@@ -2023,14 +2023,14 @@ Lines added: 548, lines removed: 1
 ```diff
 @@ -1,1 +1,548 @@
 - 
-+ import { Injectable, NotFoundException, ForbiddenException } from &#39;@nestjs/common&#39;;
-+ import { PrismaService } from &#39;../../prisma/prisma.service&#39;;
-+ import { CreateTaskDto } from &#39;./dto/create-task.dto&#39;;
-+ import { UpdateTaskDto } from &#39;./dto/update-task.dto&#39;;
-+ import { TaskFilterDto } from &#39;./dto/task-filter.dto&#39;;
-+ import { MoveTaskDto } from &#39;./dto/move-task.dto&#39;;
-+ import { ActivityService, TaskActivityType } from &#39;../activity/activity.service&#39;;
-+ import { AuditService } from &#39;../../common/audit/audit.service&#39;;
++ import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
++ import { PrismaService } from '../../prisma/prisma.service';
++ import { CreateTaskDto } from './dto/create-task.dto';
++ import { UpdateTaskDto } from './dto/update-task.dto';
++ import { TaskFilterDto } from './dto/task-filter.dto';
++ import { MoveTaskDto } from './dto/move-task.dto';
++ import { ActivityService, TaskActivityType } from '../activity/activity.service';
++ import { AuditService } from '../../common/audit/audit.service';
 + 
 + @Injectable()
 + export class TaskService {
@@ -2183,8 +2183,8 @@ Lines added: 548, lines removed: 1
 +           },
 +         },
 +         orderBy: [
-+           { position: &#39;asc&#39; },
-+           { createdAt: &#39;desc&#39; },
++           { position: 'asc' },
++           { createdAt: 'desc' },
 +         ],
 +       }),
 +     ]);
@@ -2213,7 +2213,7 @@ Lines added: 548, lines removed: 1
 +         board: {
 +           include: {
 +             columns: {
-+               orderBy: { pozicio: &#39;asc&#39; },
++               orderBy: { pozicio: 'asc' },
 +             },
 +           },
 +         },
@@ -2234,7 +2234,7 @@ Lines added: 548, lines removed: 1
 +               },
 +             },
 +           },
-+           orderBy: { createdAt: &#39;desc&#39; },
++           orderBy: { createdAt: 'desc' },
 +         },
 +         activities: {
 +           include: {
@@ -2246,7 +2246,7 @@ Lines added: 548, lines removed: 1
 +               },
 +             },
 +           },
-+           orderBy: { createdAt: &#39;desc&#39; },
++           orderBy: { createdAt: 'desc' },
 +         },
 +         attachments: {
 +           include: {
@@ -2273,7 +2273,7 @@ Lines added: 548, lines removed: 1
 +     });
 + 
 +     if (!task) {
-+       throw new NotFoundException(&#39;Feladat nem található&#39;);
++       throw new NotFoundException('Feladat nem található');
 +     }
 + 
 +     // Jogosultság ellenőrzés
@@ -2284,7 +2284,7 @@ Lines added: 548, lines removed: 1
 +         (task.board &amp;&amp; task.board.members?.some((m: any) =&gt; m.userId === userId));
 + 
 +       if (!canView) {
-+         throw new ForbiddenException(&#39;Nincs jogosultságod a feladat megtekintéséhez&#39;);
++         throw new ForbiddenException('Nincs jogosultságod a feladat megtekintéséhez');
 +       }
 +     }
 + 
@@ -2325,7 +2325,7 @@ Lines added: 548, lines removed: 1
 +     );
 + 
 +     // Audit log
-+     await this.auditService.logCreate(&#39;Task&#39;, task.id, task, userId);
++     await this.auditService.logCreate('Task', task.id, task, userId);
 + 
 +     // Ha van assignedTo, akkor watcher hozzáadása
 +     if (task.assignedToId) {
@@ -2352,7 +2352,7 @@ Lines added: 548, lines removed: 1
 + 
 +     // Jogosultság ellenőrzés: csak admin vagy létrehozó vagy assignedTo szerkeszthet
 +     if (!isAdmin &amp;&amp; task.createdById !== userId &amp;&amp; task.assignedToId !== userId) {
-+       throw new ForbiddenException(&#39;Nincs jogosultságod a feladat szerkesztéséhez&#39;);
++       throw new ForbiddenException('Nincs jogosultságod a feladat szerkesztéséhez');
 +     }
 + 
 +     const oldData = { ...task };
@@ -2364,9 +2364,9 @@ Lines added: 548, lines removed: 1
 + 
 +     // Ha státusz változott, completedAt beállítása
 +     if (dto.allapot &amp;&amp; dto.allapot !== task.allapot) {
-+       if (dto.allapot === &#39;DONE&#39; &amp;&amp; !task.completedAt) {
++       if (dto.allapot === 'DONE' &amp;&amp; !task.completedAt) {
 +         updateData.completedAt = new Date();
-+       } else if (dto.allapot !== &#39;DONE&#39;) {
++       } else if (dto.allapot !== 'DONE') {
 +         updateData.completedAt = null;
 +       }
 +     }
@@ -2440,14 +2440,14 @@ Lines added: 548, lines removed: 1
 +         id,
 +         userId,
 +         TaskActivityType.UPDATED,
-+         &#39;Feladat frissítve&#39;,
++         'Feladat frissítve',
 +         oldData,
 +         updatedTask,
 +       );
 +     }
 + 
 +     // Audit log
-+     await this.auditService.logUpdate(&#39;Task&#39;, id, oldData, updatedTask, userId);
++     await this.auditService.logUpdate('Task', id, oldData, updatedTask, userId);
 + 
 +     return updatedTask;
 +   }
@@ -2457,7 +2457,7 @@ Lines added: 548, lines removed: 1
 + 
 +     // Jogosultság ellenőrzés: csak admin vagy létrehozó törölhet
 +     if (!isAdmin &amp;&amp; task.createdById !== userId) {
-+       throw new ForbiddenException(&#39;Nincs jogosultságod a feladat törléséhez&#39;);
++       throw new ForbiddenException('Nincs jogosultságod a feladat törléséhez');
 +     }
 + 
 +     await this.prisma.task.delete({
@@ -2465,7 +2465,7 @@ Lines added: 548, lines removed: 1
 +     });
 + 
 +     // Audit log
-+     await this.auditService.logDelete(&#39;Task&#39;, id, task, userId);
++     await this.auditService.logDelete('Task', id, task, userId);
 + 
 +     return { success: true };
 +   }
@@ -2475,7 +2475,7 @@ Lines added: 548, lines removed: 1
 + 
 +     // Jogosultság ellenőrzés
 +     if (!isAdmin &amp;&amp; task.createdById !== userId &amp;&amp; task.assignedToId !== userId) {
-+       throw new ForbiddenException(&#39;Nincs jogosultságod a feladat mozgatásához&#39;);
++       throw new ForbiddenException('Nincs jogosultságod a feladat mozgatásához');
 +     }
 + 
 +     const updatedTask = await this.prisma.task.update({
@@ -2534,12 +2534,12 @@ Lines added: 548, lines removed: 1
 +     const [total, byStatus, byPriority, overdue] = await Promise.all([
 +       this.prisma.task.count({ where }),
 +       this.prisma.task.groupBy({
-+         by: [&#39;allapot&#39;],
++         by: ['allapot'],
 +         where,
 +         _count: true,
 +       }),
 +       this.prisma.task.groupBy({
-+         by: [&#39;prioritas&#39;],
++         by: ['prioritas'],
 +         where,
 +         _count: true,
 +       }),
@@ -2550,7 +2550,7 @@ Lines added: 548, lines removed: 1
 +             lt: new Date(),
 +           },
 +           allapot: {
-+             not: &#39;DONE&#39;,
++             not: 'DONE',
 +           },
 +         },
 +       }),
@@ -2591,7 +2591,7 @@ Létrehozom a Board Service-t és a Comment Service-t:
 
 <tool-use data-tool-type="write" data-tool-name="write">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/team/board/board.service.ts</summary>
+<details><summary>Tool use: **write** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/team/board/board.service.ts</summary>
 
 **Chunk 1**
 Lines added: 358, lines removed: 1
@@ -2599,12 +2599,12 @@ Lines added: 358, lines removed: 1
 ```diff
 @@ -1,1 +1,358 @@
 - 
-+ import { Injectable, NotFoundException, ForbiddenException } from &#39;@nestjs/common&#39;;
-+ import { PrismaService } from &#39;../../prisma/prisma.service&#39;;
-+ import { CreateBoardDto } from &#39;./dto/create-board.dto&#39;;
-+ import { UpdateBoardDto } from &#39;./dto/update-board.dto&#39;;
-+ import { AddMemberDto, BoardMemberPermission } from &#39;./dto/add-member.dto&#39;;
-+ import { AuditService } from &#39;../../common/audit/audit.service&#39;;
++ import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
++ import { PrismaService } from '../../prisma/prisma.service';
++ import { CreateBoardDto } from './dto/create-board.dto';
++ import { UpdateBoardDto } from './dto/update-board.dto';
++ import { AddMemberDto, BoardMemberPermission } from './dto/add-member.dto';
++ import { AuditService } from '../../common/audit/audit.service';
 + 
 + @Injectable()
 + export class BoardService {
@@ -2632,8 +2632,8 @@ Lines added: 358, lines removed: 1
 +           },
 +         },
 +         orderBy: [
-+           { isDefault: &#39;desc&#39; },
-+           { createdAt: &#39;desc&#39; },
++           { isDefault: 'desc' },
++           { createdAt: 'desc' },
 +         ],
 +       });
 +     }
@@ -2661,8 +2661,8 @@ Lines added: 358, lines removed: 1
 +         },
 +       },
 +       orderBy: [
-+         { isDefault: &#39;desc&#39; },
-+         { createdAt: &#39;desc&#39; },
++         { isDefault: 'desc' },
++         { createdAt: 'desc' },
 +       ],
 +     });
 +   }
@@ -2679,7 +2679,7 @@ Lines added: 358, lines removed: 1
 +           },
 +         },
 +         columns: {
-+           orderBy: { pozicio: &#39;asc&#39; },
++           orderBy: { pozicio: 'asc' },
 +         },
 +         members: {
 +           include: {
@@ -2716,15 +2716,15 @@ Lines added: 358, lines removed: 1
 +             },
 +           },
 +           orderBy: [
-+             { position: &#39;asc&#39; },
-+             { createdAt: &#39;desc&#39; },
++             { position: 'asc' },
++             { createdAt: 'desc' },
 +           ],
 +         },
 +       },
 +     });
 + 
 +     if (!board) {
-+       throw new NotFoundException(&#39;Board nem található&#39;);
++       throw new NotFoundException('Board nem található');
 +     }
 + 
 +     // Jogosultság ellenőrzés
@@ -2734,7 +2734,7 @@ Lines added: 358, lines removed: 1
 +         board.members.some((m) =&gt; m.userId === userId);
 + 
 +       if (!canView) {
-+         throw new ForbiddenException(&#39;Nincs jogosultságod a board megtekintéséhez&#39;);
++         throw new ForbiddenException('Nincs jogosultságod a board megtekintéséhez');
 +       }
 +     }
 + 
@@ -2760,9 +2760,9 @@ Lines added: 358, lines removed: 1
 + 
 +     // Alapértelmezett oszlopok létrehozása
 +     const defaultColumns = [
-+       { nev: &#39;Teendők&#39;, allapot: &#39;TODO&#39;, pozicio: 0 },
-+       { nev: &#39;Folyamatban&#39;, allapot: &#39;IN_PROGRESS&#39;, pozicio: 1 },
-+       { nev: &#39;Kész&#39;, allapot: &#39;DONE&#39;, pozicio: 2 },
++       { nev: 'Teendők', allapot: 'TODO', pozicio: 0 },
++       { nev: 'Folyamatban', allapot: 'IN_PROGRESS', pozicio: 1 },
++       { nev: 'Kész', allapot: 'DONE', pozicio: 2 },
 +     ];
 + 
 +     await Promise.all(
@@ -2786,7 +2786,7 @@ Lines added: 358, lines removed: 1
 +     });
 + 
 +     // Audit log
-+     await this.auditService.logCreate(&#39;TaskBoard&#39;, board.id, board, userId);
++     await this.auditService.logCreate('TaskBoard', board.id, board, userId);
 + 
 +     return this.findOne(board.id, userId, true);
 +   }
@@ -2798,7 +2798,7 @@ Lines added: 358, lines removed: 1
 +     if (!isAdmin) {
 +       const member = board.members.find((m) =&gt; m.userId === userId);
 +       if (!member || member.jogosultsag !== BoardMemberPermission.ADMIN) {
-+         throw new ForbiddenException(&#39;Nincs jogosultságod a board szerkesztéséhez&#39;);
++         throw new ForbiddenException('Nincs jogosultságod a board szerkesztéséhez');
 +       }
 +     }
 + 
@@ -2809,7 +2809,7 @@ Lines added: 358, lines removed: 1
 +     });
 + 
 +     // Audit log
-+     await this.auditService.logUpdate(&#39;TaskBoard&#39;, id, oldData, updatedBoard, userId);
++     await this.auditService.logUpdate('TaskBoard', id, oldData, updatedBoard, userId);
 + 
 +     return this.findOne(id, userId, isAdmin);
 +   }
@@ -2819,7 +2819,7 @@ Lines added: 358, lines removed: 1
 + 
 +     // Jogosultság ellenőrzés: csak admin vagy board létrehozó törölhet
 +     if (!isAdmin &amp;&amp; board.createdById !== userId) {
-+       throw new ForbiddenException(&#39;Nincs jogosultságod a board törléséhez&#39;);
++       throw new ForbiddenException('Nincs jogosultságod a board törléséhez');
 +     }
 + 
 +     await this.prisma.taskBoard.delete({
@@ -2827,7 +2827,7 @@ Lines added: 358, lines removed: 1
 +     });
 + 
 +     // Audit log
-+     await this.auditService.logDelete(&#39;TaskBoard&#39;, id, board, userId);
++     await this.auditService.logDelete('TaskBoard', id, board, userId);
 + 
 +     return { success: true };
 +   }
@@ -2839,7 +2839,7 @@ Lines added: 358, lines removed: 1
 +     if (!isAdmin) {
 +       const member = board.members.find((m) =&gt; m.userId === userId);
 +       if (!member || member.jogosultsag !== BoardMemberPermission.ADMIN) {
-+         throw new ForbiddenException(&#39;Nincs jogosultságod tag hozzáadásához&#39;);
++         throw new ForbiddenException('Nincs jogosultságod tag hozzáadásához');
 +       }
 +     }
 + 
@@ -2870,13 +2870,13 @@ Lines added: 358, lines removed: 1
 +     if (!isAdmin) {
 +       const member = board.members.find((m) =&gt; m.userId === userId);
 +       if (!member || member.jogosultsag !== BoardMemberPermission.ADMIN) {
-+         throw new ForbiddenException(&#39;Nincs jogosultságod tag eltávolításához&#39;);
++         throw new ForbiddenException('Nincs jogosultságod tag eltávolításához');
 +       }
 +     }
 + 
 +     // Létrehozó nem távolítható el
 +     if (board.createdById === memberUserId) {
-+       throw new ForbiddenException(&#39;A board létrehozója nem távolítható el&#39;);
++       throw new ForbiddenException('A board létrehozója nem távolítható el');
 +     }
 + 
 +     await this.prisma.taskBoardMember.delete({
@@ -2903,7 +2903,7 @@ Lines added: 358, lines removed: 1
 +     if (!isAdmin) {
 +       const member = board.members.find((m) =&gt; m.userId === userId);
 +       if (!member || member.jogosultsag !== BoardMemberPermission.ADMIN) {
-+         throw new ForbiddenException(&#39;Nincs jogosultságod oszlop létrehozásához&#39;);
++         throw new ForbiddenException('Nincs jogosultságod oszlop létrehozásához');
 +       }
 +     }
 + 
@@ -2925,7 +2925,7 @@ Lines added: 358, lines removed: 1
 +       const board = await this.findOne(boardId, userId, isAdmin);
 +       const member = board.members.find((m) =&gt; m.userId === userId);
 +       if (!member || member.jogosultsag !== BoardMemberPermission.ADMIN) {
-+         throw new ForbiddenException(&#39;Nincs jogosultságod oszlop szerkesztéséhez&#39;);
++         throw new ForbiddenException('Nincs jogosultságod oszlop szerkesztéséhez');
 +       }
 +     }
 + 
@@ -2945,7 +2945,7 @@ Lines added: 358, lines removed: 1
 +       const board = await this.findOne(boardId, userId, isAdmin);
 +       const member = board.members.find((m) =&gt; m.userId === userId);
 +       if (!member || member.jogosultsag !== BoardMemberPermission.ADMIN) {
-+         throw new ForbiddenException(&#39;Nincs jogosultságod oszlop törléséhez&#39;);
++         throw new ForbiddenException('Nincs jogosultságod oszlop törléséhez');
 +       }
 +     }
 + 
@@ -2967,7 +2967,7 @@ Lines added: 358, lines removed: 1
 
 <tool-use data-tool-type="write" data-tool-name="write">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/team/comment/comment.service.ts</summary>
+<details><summary>Tool use: **write** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/team/comment/comment.service.ts</summary>
 
 **Chunk 1**
 Lines added: 135, lines removed: 1
@@ -2975,11 +2975,11 @@ Lines added: 135, lines removed: 1
 ```diff
 @@ -1,1 +1,135 @@
 - 
-+ import { Injectable, NotFoundException, ForbiddenException } from &#39;@nestjs/common&#39;;
-+ import { PrismaService } from &#39;../../prisma/prisma.service&#39;;
-+ import { CreateCommentDto } from &#39;./dto/create-comment.dto&#39;;
-+ import { UpdateCommentDto } from &#39;./dto/update-comment.dto&#39;;
-+ import { ActivityService, TaskActivityType } from &#39;../activity/activity.service&#39;;
++ import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
++ import { PrismaService } from '../../prisma/prisma.service';
++ import { CreateCommentDto } from './dto/create-comment.dto';
++ import { UpdateCommentDto } from './dto/update-comment.dto';
++ import { ActivityService, TaskActivityType } from '../activity/activity.service';
 + 
 + @Injectable()
 + export class CommentService {
@@ -3000,7 +3000,7 @@ Lines added: 135, lines removed: 1
 +           },
 +         },
 +       },
-+       orderBy: { createdAt: &#39;desc&#39; },
++       orderBy: { createdAt: 'desc' },
 +     });
 +   }
 + 
@@ -3018,7 +3018,7 @@ Lines added: 135, lines removed: 1
 +     });
 + 
 +     if (!task) {
-+       throw new NotFoundException(&#39;Feladat nem található&#39;);
++       throw new NotFoundException('Feladat nem található');
 +     }
 + 
 +     // Jogosultság ellenőrzés: csak board tag vagy admin kommentelhet
@@ -3028,7 +3028,7 @@ Lines added: 135, lines removed: 1
 +       : true;
 + 
 +     if (!canComment) {
-+       throw new ForbiddenException(&#39;Nincs jogosultságod kommenteléshez&#39;);
++       throw new ForbiddenException('Nincs jogosultságod kommenteléshez');
 +     }
 + 
 +     const comment = await this.prisma.taskComment.create({
@@ -3065,12 +3065,12 @@ Lines added: 135, lines removed: 1
 +     });
 + 
 +     if (!comment) {
-+       throw new NotFoundException(&#39;Komment nem található&#39;);
++       throw new NotFoundException('Komment nem található');
 +     }
 + 
 +     // Csak a saját kommentet szerkesztheti
 +     if (comment.userId !== userId) {
-+       throw new ForbiddenException(&#39;Nincs jogosultságod a komment szerkesztéséhez&#39;);
++       throw new ForbiddenException('Nincs jogosultságod a komment szerkesztéséhez');
 +     }
 + 
 +     return this.prisma.taskComment.update({
@@ -3094,12 +3094,12 @@ Lines added: 135, lines removed: 1
 +     });
 + 
 +     if (!comment) {
-+       throw new NotFoundException(&#39;Komment nem található&#39;);
++       throw new NotFoundException('Komment nem található');
 +     }
 + 
 +     // Csak a saját kommentet törölheti
 +     if (comment.userId !== userId) {
-+       throw new ForbiddenException(&#39;Nincs jogosultságod a komment törléséhez&#39;);
++       throw new ForbiddenException('Nincs jogosultságod a komment törléséhez');
 +     }
 + 
 +     await this.prisma.taskComment.delete({
@@ -3148,7 +3148,7 @@ Létrehozom a Task Controller-t:
 
 <tool-use data-tool-type="write" data-tool-name="write">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/team/task/task.controller.ts</summary>
+<details><summary>Tool use: **write** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/team/task/task.controller.ts</summary>
 
 **Chunk 1**
 Lines added: 176, lines removed: 1
@@ -3169,17 +3169,17 @@ Lines added: 176, lines removed: 1
 +   UseGuards,
 +   Request,
 +   BadRequestException,
-+ } from &#39;@nestjs/common&#39;;
-+ import { TaskService } from &#39;./task.service&#39;;
-+ import { CreateTaskDto } from &#39;./dto/create-task.dto&#39;;
-+ import { UpdateTaskDto } from &#39;./dto/update-task.dto&#39;;
-+ import { TaskFilterDto } from &#39;./dto/task-filter.dto&#39;;
-+ import { MoveTaskDto } from &#39;./dto/move-task.dto&#39;;
-+ import { Permissions } from &#39;../../common/rbac/rbac.decorator&#39;;
-+ import { Permission } from &#39;../../common/rbac/permission.enum&#39;;
-+ import { RbacGuard } from &#39;../../common/rbac/rbac.guard&#39;;
++ } from '@nestjs/common';
++ import { TaskService } from './task.service';
++ import { CreateTaskDto } from './dto/create-task.dto';
++ import { UpdateTaskDto } from './dto/update-task.dto';
++ import { TaskFilterDto } from './dto/task-filter.dto';
++ import { MoveTaskDto } from './dto/move-task.dto';
++ import { Permissions } from '../../common/rbac/rbac.decorator';
++ import { Permission } from '../../common/rbac/permission.enum';
++ import { RbacGuard } from '../../common/rbac/rbac.guard';
 + 
-+ @Controller(&#39;team/tasks&#39;)
++ @Controller('team/tasks')
 + @UseGuards(RbacGuard)
 + export class TaskController {
 +   constructor(private taskService: TaskService) {}
@@ -3189,31 +3189,31 @@ Lines added: 176, lines removed: 1
 +   async findAll(
 +     @Request() req: any,
 +     @Query() filters: TaskFilterDto,
-+     @Query(&#39;skip&#39;) skipParam?: string,
-+     @Query(&#39;take&#39;) takeParam?: string,
++     @Query('skip') skipParam?: string,
++     @Query('take') takeParam?: string,
 +   ) {
 +     const skip = skipParam ? parseInt(skipParam, 10) : 0;
 +     const take = takeParam ? parseInt(takeParam, 10) : 50;
 + 
 +     if (isNaN(skip) || skip &lt; 0) {
-+       throw new BadRequestException(&#39;Invalid skip parameter&#39;);
++       throw new BadRequestException('Invalid skip parameter');
 +     }
 +     if (isNaN(take) || take &lt; 1) {
-+       throw new BadRequestException(&#39;Invalid take parameter&#39;);
++       throw new BadRequestException('Invalid take parameter');
 +     }
 + 
 +     const userId = req.user.id;
-+     const isAdmin = req.user.roles?.includes(&#39;Admin&#39;) || false;
++     const isAdmin = req.user.roles?.includes('Admin') || false;
 + 
 +     return await this.taskService.findAll(userId, isAdmin, filters, skip, take);
 +   }
 + 
-+   @Get(&#39;my&#39;)
++   @Get('my')
 +   @Permissions(Permission.TASK_VIEW)
 +   async getMyTasks(
 +     @Request() req: any,
-+     @Query(&#39;skip&#39;) skipParam?: string,
-+     @Query(&#39;take&#39;) takeParam?: string,
++     @Query('skip') skipParam?: string,
++     @Query('take') takeParam?: string,
 +   ) {
 +     const skip = skipParam ? parseInt(skipParam, 10) : 0;
 +     const take = takeParam ? parseInt(takeParam, 10) : 50;
@@ -3221,12 +3221,12 @@ Lines added: 176, lines removed: 1
 +     return await this.taskService.getMyTasks(req.user.id, skip, take);
 +   }
 + 
-+   @Get(&#39;assigned-to/:userId&#39;)
++   @Get('assigned-to/:userId')
 +   @Permissions(Permission.TASK_VIEW)
 +   async getAssignedToTasks(
-+     @Param(&#39;userId&#39;) userId: string,
-+     @Query(&#39;skip&#39;) skipParam?: string,
-+     @Query(&#39;take&#39;) takeParam?: string,
++     @Param('userId') userId: string,
++     @Query('skip') skipParam?: string,
++     @Query('take') takeParam?: string,
 +   ) {
 +     const skip = skipParam ? parseInt(skipParam, 10) : 0;
 +     const take = takeParam ? parseInt(takeParam, 10) : 50;
@@ -3234,11 +3234,11 @@ Lines added: 176, lines removed: 1
 +     return await this.taskService.getAssignedToTasks(userId, skip, take);
 +   }
 + 
-+   @Get(&#39;:id&#39;)
++   @Get(':id')
 +   @Permissions(Permission.TASK_VIEW)
-+   async findOne(@Request() req: any, @Param(&#39;id&#39;) id: string) {
++   async findOne(@Request() req: any, @Param('id') id: string) {
 +     const userId = req.user.id;
-+     const isAdmin = req.user.roles?.includes(&#39;Admin&#39;) || false;
++     const isAdmin = req.user.roles?.includes('Admin') || false;
 + 
 +     return await this.taskService.findOne(id, userId, isAdmin);
 +   }
@@ -3249,83 +3249,83 @@ Lines added: 176, lines removed: 1
 +     return await this.taskService.create(dto, req.user.id);
 +   }
 + 
-+   @Put(&#39;:id&#39;)
++   @Put(':id')
 +   @Permissions(Permission.TASK_EDIT)
 +   async update(
 +     @Request() req: any,
-+     @Param(&#39;id&#39;) id: string,
++     @Param('id') id: string,
 +     @Body() dto: UpdateTaskDto,
 +   ) {
 +     const userId = req.user.id;
-+     const isAdmin = req.user.roles?.includes(&#39;Admin&#39;) || false;
++     const isAdmin = req.user.roles?.includes('Admin') || false;
 + 
 +     return await this.taskService.update(id, dto, userId, isAdmin);
 +   }
 + 
-+   @Delete(&#39;:id&#39;)
++   @Delete(':id')
 +   @Permissions(Permission.TASK_DELETE)
-+   async delete(@Request() req: any, @Param(&#39;id&#39;) id: string) {
++   async delete(@Request() req: any, @Param('id') id: string) {
 +     const userId = req.user.id;
-+     const isAdmin = req.user.roles?.includes(&#39;Admin&#39;) || false;
++     const isAdmin = req.user.roles?.includes('Admin') || false;
 + 
 +     return await this.taskService.delete(id, userId, isAdmin);
 +   }
 + 
-+   @Patch(&#39;:id/status&#39;)
++   @Patch(':id/status')
 +   @Permissions(Permission.TASK_EDIT)
 +   async updateStatus(
 +     @Request() req: any,
-+     @Param(&#39;id&#39;) id: string,
++     @Param('id') id: string,
 +     @Body() body: { allapot: string },
 +   ) {
 +     const userId = req.user.id;
-+     const isAdmin = req.user.roles?.includes(&#39;Admin&#39;) || false;
++     const isAdmin = req.user.roles?.includes('Admin') || false;
 + 
 +     return await this.taskService.update(id, { allapot: body.allapot as any }, userId, isAdmin);
 +   }
 + 
-+   @Patch(&#39;:id/assign&#39;)
++   @Patch(':id/assign')
 +   @Permissions(Permission.TASK_ASSIGN)
 +   async assign(
 +     @Request() req: any,
-+     @Param(&#39;id&#39;) id: string,
++     @Param('id') id: string,
 +     @Body() body: { assignedToId: string },
 +   ) {
 +     const userId = req.user.id;
-+     const isAdmin = req.user.roles?.includes(&#39;Admin&#39;) || false;
++     const isAdmin = req.user.roles?.includes('Admin') || false;
 + 
 +     return await this.taskService.update(id, { assignedToId: body.assignedToId }, userId, isAdmin);
 +   }
 + 
-+   @Patch(&#39;:id/move&#39;)
++   @Patch(':id/move')
 +   @Permissions(Permission.TASK_EDIT)
 +   async move(
 +     @Request() req: any,
-+     @Param(&#39;id&#39;) id: string,
++     @Param('id') id: string,
 +     @Body() dto: MoveTaskDto,
 +   ) {
 +     const userId = req.user.id;
-+     const isAdmin = req.user.roles?.includes(&#39;Admin&#39;) || false;
++     const isAdmin = req.user.roles?.includes('Admin') || false;
 + 
 +     return await this.taskService.move(id, dto, userId, isAdmin);
 +   }
 + }
 + 
-+ @Controller(&#39;team/dashboard&#39;)
++ @Controller('team/dashboard')
 + @UseGuards(RbacGuard)
 + export class DashboardController {
 +   constructor(private taskService: TaskService) {}
 + 
-+   @Get(&#39;stats&#39;)
++   @Get('stats')
 +   @Permissions(Permission.TASK_VIEW)
 +   async getStats(@Request() req: any) {
 +     const userId = req.user.id;
-+     const isAdmin = req.user.roles?.includes(&#39;Admin&#39;) || false;
++     const isAdmin = req.user.roles?.includes('Admin') || false;
 + 
 +     return await this.taskService.getDashboardStats(userId, isAdmin);
 +   }
 + 
-+   @Get(&#39;my-tasks&#39;)
++   @Get('my-tasks')
 +   @Permissions(Permission.TASK_VIEW)
 +   async getMyTasks(@Request() req: any) {
 +     return await this.taskService.getMyTasks(req.user.id, 0, 10);
@@ -3342,7 +3342,7 @@ Lines added: 176, lines removed: 1
 
 <tool-use data-tool-type="write" data-tool-name="write">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/team/board/board.controller.ts</summary>
+<details><summary>Tool use: **write** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/team/board/board.controller.ts</summary>
 
 **Chunk 1**
 Lines added: 146, lines removed: 1
@@ -3360,16 +3360,16 @@ Lines added: 146, lines removed: 1
 +   Param,
 +   UseGuards,
 +   Request,
-+ } from &#39;@nestjs/common&#39;;
-+ import { BoardService } from &#39;./board.service&#39;;
-+ import { CreateBoardDto } from &#39;./dto/create-board.dto&#39;;
-+ import { UpdateBoardDto } from &#39;./dto/update-board.dto&#39;;
-+ import { AddMemberDto } from &#39;./dto/add-member.dto&#39;;
-+ import { Permissions } from &#39;../../common/rbac/rbac.decorator&#39;;
-+ import { Permission } from &#39;../../common/rbac/permission.enum&#39;;
-+ import { RbacGuard } from &#39;../../common/rbac/rbac.guard&#39;;
++ } from '@nestjs/common';
++ import { BoardService } from './board.service';
++ import { CreateBoardDto } from './dto/create-board.dto';
++ import { UpdateBoardDto } from './dto/update-board.dto';
++ import { AddMemberDto } from './dto/add-member.dto';
++ import { Permissions } from '../../common/rbac/rbac.decorator';
++ import { Permission } from '../../common/rbac/permission.enum';
++ import { RbacGuard } from '../../common/rbac/rbac.guard';
 + 
-+ @Controller(&#39;team/boards&#39;)
++ @Controller('team/boards')
 + @UseGuards(RbacGuard)
 + export class BoardController {
 +   constructor(private boardService: BoardService) {}
@@ -3378,16 +3378,16 @@ Lines added: 146, lines removed: 1
 +   @Permissions(Permission.BOARD_VIEW)
 +   async findAll(@Request() req: any) {
 +     const userId = req.user.id;
-+     const isAdmin = req.user.roles?.includes(&#39;Admin&#39;) || false;
++     const isAdmin = req.user.roles?.includes('Admin') || false;
 + 
 +     return await this.boardService.findUserBoards(userId, isAdmin);
 +   }
 + 
-+   @Get(&#39;:id&#39;)
++   @Get(':id')
 +   @Permissions(Permission.BOARD_VIEW)
-+   async findOne(@Request() req: any, @Param(&#39;id&#39;) id: string) {
++   async findOne(@Request() req: any, @Param('id') id: string) {
 +     const userId = req.user.id;
-+     const isAdmin = req.user.roles?.includes(&#39;Admin&#39;) || false;
++     const isAdmin = req.user.roles?.includes('Admin') || false;
 + 
 +     return await this.boardService.findOne(id, userId, isAdmin);
 +   }
@@ -3398,99 +3398,99 @@ Lines added: 146, lines removed: 1
 +     return await this.boardService.create(dto, req.user.id);
 +   }
 + 
-+   @Put(&#39;:id&#39;)
++   @Put(':id')
 +   @Permissions(Permission.BOARD_EDIT)
 +   async update(
 +     @Request() req: any,
-+     @Param(&#39;id&#39;) id: string,
++     @Param('id') id: string,
 +     @Body() dto: UpdateBoardDto,
 +   ) {
 +     const userId = req.user.id;
-+     const isAdmin = req.user.roles?.includes(&#39;Admin&#39;) || false;
++     const isAdmin = req.user.roles?.includes('Admin') || false;
 + 
 +     return await this.boardService.update(id, dto, userId, isAdmin);
 +   }
 + 
-+   @Delete(&#39;:id&#39;)
++   @Delete(':id')
 +   @Permissions(Permission.BOARD_DELETE)
-+   async delete(@Request() req: any, @Param(&#39;id&#39;) id: string) {
++   async delete(@Request() req: any, @Param('id') id: string) {
 +     const userId = req.user.id;
-+     const isAdmin = req.user.roles?.includes(&#39;Admin&#39;) || false;
++     const isAdmin = req.user.roles?.includes('Admin') || false;
 + 
 +     return await this.boardService.delete(id, userId, isAdmin);
 +   }
 + 
-+   @Post(&#39;:id/members&#39;)
++   @Post(':id/members')
 +   @Permissions(Permission.BOARD_MANAGE_MEMBERS)
 +   async addMember(
 +     @Request() req: any,
-+     @Param(&#39;id&#39;) id: string,
++     @Param('id') id: string,
 +     @Body() dto: AddMemberDto,
 +   ) {
 +     const userId = req.user.id;
-+     const isAdmin = req.user.roles?.includes(&#39;Admin&#39;) || false;
++     const isAdmin = req.user.roles?.includes('Admin') || false;
 + 
 +     return await this.boardService.addMember(id, dto, userId, isAdmin);
 +   }
 + 
-+   @Delete(&#39;:id/members/:userId&#39;)
++   @Delete(':id/members/:userId')
 +   @Permissions(Permission.BOARD_MANAGE_MEMBERS)
 +   async removeMember(
 +     @Request() req: any,
-+     @Param(&#39;id&#39;) id: string,
-+     @Param(&#39;userId&#39;) memberUserId: string,
++     @Param('id') id: string,
++     @Param('userId') memberUserId: string,
 +   ) {
 +     const userId = req.user.id;
-+     const isAdmin = req.user.roles?.includes(&#39;Admin&#39;) || false;
++     const isAdmin = req.user.roles?.includes('Admin') || false;
 + 
 +     return await this.boardService.removeMember(id, memberUserId, userId, isAdmin);
 +   }
 + 
-+   @Get(&#39;:id/columns&#39;)
++   @Get(':id/columns')
 +   @Permissions(Permission.BOARD_VIEW)
-+   async getColumns(@Request() req: any, @Param(&#39;id&#39;) id: string) {
++   async getColumns(@Request() req: any, @Param('id') id: string) {
 +     const userId = req.user.id;
-+     const isAdmin = req.user.roles?.includes(&#39;Admin&#39;) || false;
++     const isAdmin = req.user.roles?.includes('Admin') || false;
 + 
 +     return await this.boardService.getColumns(id, userId, isAdmin);
 +   }
 + 
-+   @Post(&#39;:id/columns&#39;)
++   @Post(':id/columns')
 +   @Permissions(Permission.BOARD_EDIT)
 +   async createColumn(
 +     @Request() req: any,
-+     @Param(&#39;id&#39;) id: string,
++     @Param('id') id: string,
 +     @Body() data: { nev: string; allapot: string; pozicio: number; limit?: number },
 +   ) {
 +     const userId = req.user.id;
-+     const isAdmin = req.user.roles?.includes(&#39;Admin&#39;) || false;
++     const isAdmin = req.user.roles?.includes('Admin') || false;
 + 
 +     return await this.boardService.createColumn(id, data, userId, isAdmin);
 +   }
 + 
-+   @Put(&#39;:id/columns/:columnId&#39;)
++   @Put(':id/columns/:columnId')
 +   @Permissions(Permission.BOARD_EDIT)
 +   async updateColumn(
 +     @Request() req: any,
-+     @Param(&#39;id&#39;) id: string,
-+     @Param(&#39;columnId&#39;) columnId: string,
++     @Param('id') id: string,
++     @Param('columnId') columnId: string,
 +     @Body() data: { nev?: string; pozicio?: number; limit?: number },
 +   ) {
 +     const userId = req.user.id;
-+     const isAdmin = req.user.roles?.includes(&#39;Admin&#39;) || false;
++     const isAdmin = req.user.roles?.includes('Admin') || false;
 + 
 +     return await this.boardService.updateColumn(id, columnId, data, userId, isAdmin);
 +   }
 + 
-+   @Delete(&#39;:id/columns/:columnId&#39;)
++   @Delete(':id/columns/:columnId')
 +   @Permissions(Permission.BOARD_EDIT)
 +   async deleteColumn(
 +     @Request() req: any,
-+     @Param(&#39;id&#39;) id: string,
-+     @Param(&#39;columnId&#39;) columnId: string,
++     @Param('id') id: string,
++     @Param('columnId') columnId: string,
 +   ) {
 +     const userId = req.user.id;
-+     const isAdmin = req.user.roles?.includes(&#39;Admin&#39;) || false;
++     const isAdmin = req.user.roles?.includes('Admin') || false;
 + 
 +     return await this.boardService.deleteColumn(id, columnId, userId, isAdmin);
 +   }
@@ -3506,7 +3506,7 @@ Lines added: 146, lines removed: 1
 
 <tool-use data-tool-type="write" data-tool-name="write">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/team/comment/comment.controller.ts</summary>
+<details><summary>Tool use: **write** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/team/comment/comment.controller.ts</summary>
 
 **Chunk 1**
 Lines added: 56, lines removed: 1
@@ -3524,48 +3524,48 @@ Lines added: 56, lines removed: 1
 +   Param,
 +   UseGuards,
 +   Request,
-+ } from &#39;@nestjs/common&#39;;
-+ import { CommentService } from &#39;./comment.service&#39;;
-+ import { CreateCommentDto } from &#39;./dto/create-comment.dto&#39;;
-+ import { UpdateCommentDto } from &#39;./dto/update-comment.dto&#39;;
-+ import { Permissions } from &#39;../../common/rbac/rbac.decorator&#39;;
-+ import { Permission } from &#39;../../common/rbac/permission.enum&#39;;
-+ import { RbacGuard } from &#39;../../common/rbac/rbac.guard&#39;;
++ } from '@nestjs/common';
++ import { CommentService } from './comment.service';
++ import { CreateCommentDto } from './dto/create-comment.dto';
++ import { UpdateCommentDto } from './dto/update-comment.dto';
++ import { Permissions } from '../../common/rbac/rbac.decorator';
++ import { Permission } from '../../common/rbac/permission.enum';
++ import { RbacGuard } from '../../common/rbac/rbac.guard';
 + 
-+ @Controller(&#39;team/tasks&#39;)
++ @Controller('team/tasks')
 + @UseGuards(RbacGuard)
 + export class CommentController {
 +   constructor(private commentService: CommentService) {}
 + 
-+   @Get(&#39;:taskId/comments&#39;)
++   @Get(':taskId/comments')
 +   @Permissions(Permission.TASK_VIEW)
-+   async getTaskComments(@Param(&#39;taskId&#39;) taskId: string) {
++   async getTaskComments(@Param('taskId') taskId: string) {
 +     return await this.commentService.getTaskComments(taskId);
 +   }
 + 
-+   @Post(&#39;:taskId/comments&#39;)
++   @Post(':taskId/comments')
 +   @Permissions(Permission.TASK_EDIT)
 +   async create(
 +     @Request() req: any,
-+     @Param(&#39;taskId&#39;) taskId: string,
++     @Param('taskId') taskId: string,
 +     @Body() dto: CreateCommentDto,
 +   ) {
 +     return await this.commentService.create(taskId, dto, req.user.id);
 +   }
 + 
-+   @Put(&#39;comments/:id&#39;)
++   @Put('comments/:id')
 +   @Permissions(Permission.TASK_EDIT)
 +   async update(
 +     @Request() req: any,
-+     @Param(&#39;id&#39;) id: string,
++     @Param('id') id: string,
 +     @Body() dto: UpdateCommentDto,
 +   ) {
 +     return await this.commentService.update(id, dto, req.user.id);
 +   }
 + 
-+   @Delete(&#39;comments/:id&#39;)
++   @Delete('comments/:id')
 +   @Permissions(Permission.TASK_EDIT)
-+   async delete(@Request() req: any, @Param(&#39;id&#39;) id: string) {
++   async delete(@Request() req: any, @Param('id') id: string) {
 +     return await this.commentService.delete(id, req.user.id);
 +   }
 + }
@@ -3590,7 +3590,7 @@ Létrehozom a Team Module-t, majd frissítem az App Module-t és a Permission en
 
 <tool-use data-tool-type="write" data-tool-name="write">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/team/team.module.ts</summary>
+<details><summary>Tool use: **write** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/team/team.module.ts</summary>
 
 **Chunk 1**
 Lines added: 29, lines removed: 1
@@ -3598,16 +3598,16 @@ Lines added: 29, lines removed: 1
 ```diff
 @@ -1,1 +1,29 @@
 - 
-+ import { Module } from &#39;@nestjs/common&#39;;
-+ import { PrismaModule } from &#39;../prisma/prisma.module&#39;;
-+ import { SystemModule } from &#39;../system/system.module&#39;;
-+ import { TaskController, DashboardController } from &#39;./task/task.controller&#39;;
-+ import { TaskService } from &#39;./task/task.service&#39;;
-+ import { BoardController } from &#39;./board/board.controller&#39;;
-+ import { BoardService } from &#39;./board/board.service&#39;;
-+ import { CommentController } from &#39;./comment/comment.controller&#39;;
-+ import { CommentService } from &#39;./comment/comment.service&#39;;
-+ import { ActivityService } from &#39;./activity/activity.service&#39;;
++ import { Module } from '@nestjs/common';
++ import { PrismaModule } from '../prisma/prisma.module';
++ import { SystemModule } from '../system/system.module';
++ import { TaskController, DashboardController } from './task/task.controller';
++ import { TaskService } from './task/task.service';
++ import { BoardController } from './board/board.controller';
++ import { BoardService } from './board/board.service';
++ import { CommentController } from './comment/comment.controller';
++ import { CommentService } from './comment/comment.service';
++ import { ActivityService } from './activity/activity.service';
 + 
 + @Module({
 +   imports: [PrismaModule, SystemModule],
@@ -3655,16 +3655,16 @@ Hozzáadom a TeamModule-t az AppModule-hoz, majd frissítem a Permission enum-ot
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/app.module.ts</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/app.module.ts</summary>
 
 **Chunk 1**
 Lines added: 1, lines removed: undefined
 
 ```diff
 @@ -14,4 +14,5 @@
-  import { SystemModule } from &#39;./system/system.module&#39;;
-  import { SeedModule } from &#39;./seed/seed.module&#39;;
-+ import { TeamModule } from &#39;./team/team.module&#39;;
+  import { SystemModule } from './system/system.module';
+  import { SeedModule } from './seed/seed.module';
++ import { TeamModule } from './team/team.module';
   
   @Module({
 ```
@@ -3707,36 +3707,36 @@ Hozzáadom a Team modulhoz tartozó jogosultságokat a Permission enum-hoz:
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/common/rbac/permission.enum.ts</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/common/rbac/permission.enum.ts</summary>
 
 **Chunk 1**
 Lines added: 21, lines removed: undefined
 
 ```diff
 @@ -134,4 +134,25 @@
-    REPORT_CREATE = &#39;report:create&#39;,
-    REPORT_EXPORT = &#39;report:export&#39;,
+    REPORT_CREATE = 'report:create',
+    REPORT_EXPORT = 'report:export',
 +   
 +   // Team Communication Permissions
-+   TEAM_VIEW = &#39;team:view&#39;,
-+   TEAM_CREATE = &#39;team:create&#39;,
-+   TEAM_EDIT = &#39;team:edit&#39;,
-+   TEAM_DELETE = &#39;team:delete&#39;,
++   TEAM_VIEW = 'team:view',
++   TEAM_CREATE = 'team:create',
++   TEAM_EDIT = 'team:edit',
++   TEAM_DELETE = 'team:delete',
 +   
 +   // Task specific
-+   TASK_VIEW = &#39;task:view&#39;,
-+   TASK_CREATE = &#39;task:create&#39;,
-+   TASK_EDIT = &#39;task:edit&#39;,
-+   TASK_DELETE = &#39;task:delete&#39;,
-+   TASK_ASSIGN = &#39;task:assign&#39;,
-+   TASK_MANAGE_ALL = &#39;task:manage_all&#39;,
++   TASK_VIEW = 'task:view',
++   TASK_CREATE = 'task:create',
++   TASK_EDIT = 'task:edit',
++   TASK_DELETE = 'task:delete',
++   TASK_ASSIGN = 'task:assign',
++   TASK_MANAGE_ALL = 'task:manage_all',
 +   
 +   // Board specific
-+   BOARD_VIEW = &#39;board:view&#39;,
-+   BOARD_CREATE = &#39;board:create&#39;,
-+   BOARD_EDIT = &#39;board:edit&#39;,
-+   BOARD_DELETE = &#39;board:delete&#39;,
-+   BOARD_MANAGE_MEMBERS = &#39;board:manage_members&#39;,
++   BOARD_VIEW = 'board:view',
++   BOARD_CREATE = 'board:create',
++   BOARD_EDIT = 'board:edit',
++   BOARD_DELETE = 'board:delete',
++   BOARD_MANAGE_MEMBERS = 'board:manage_members',
   }
   
 ```
@@ -3749,33 +3749,33 @@ Lines added: 21, lines removed: undefined
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/common/rbac/permission.enum.ts</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/common/rbac/permission.enum.ts</summary>
 
 **Chunk 1**
 Lines added: 18, lines removed: undefined
 
 ```diff
 @@ -273,4 +273,22 @@
-    [Permission.REPORT_CREATE]: { nev: &#39;Jelentés készítés&#39;, modulo: &#39;Jelentések&#39;, leiras: &#39;Új riportok generálása&#39; },
-    [Permission.REPORT_EXPORT]: { nev: &#39;Jelentés exportálás&#39;, modulo: &#39;Jelentések&#39;, leiras: &#39;Riportok exportálása&#39; },
+    [Permission.REPORT_CREATE]: { nev: 'Jelentés készítés', modulo: 'Jelentések', leiras: 'Új riportok generálása' },
+    [Permission.REPORT_EXPORT]: { nev: 'Jelentés exportálás', modulo: 'Jelentések', leiras: 'Riportok exportálása' },
 +   
-+   [Permission.TEAM_VIEW]: { nev: &#39;Csapat kommunikáció megtekintése&#39;, modulo: &#39;Csapat kommunikáció&#39;, leiras: &#39;Csapat kommunikáció modulban való böngészés&#39; },
-+   [Permission.TEAM_CREATE]: { nev: &#39;Csapat kommunikáció létrehozás&#39;, modulo: &#39;Csapat kommunikáció&#39;, leiras: &#39;Új feladatok és board-ok létrehozása&#39; },
-+   [Permission.TEAM_EDIT]: { nev: &#39;Csapat kommunikáció szerkesztés&#39;, modulo: &#39;Csapat kommunikáció&#39;, leiras: &#39;Feladatok és board-ok módosítása&#39; },
-+   [Permission.TEAM_DELETE]: { nev: &#39;Csapat kommunikáció törlés&#39;, modulo: &#39;Csapat kommunikáció&#39;, leiras: &#39;Feladatok és board-ok törlése&#39; },
++   [Permission.TEAM_VIEW]: { nev: 'Csapat kommunikáció megtekintése', modulo: 'Csapat kommunikáció', leiras: 'Csapat kommunikáció modulban való böngészés' },
++   [Permission.TEAM_CREATE]: { nev: 'Csapat kommunikáció létrehozás', modulo: 'Csapat kommunikáció', leiras: 'Új feladatok és board-ok létrehozása' },
++   [Permission.TEAM_EDIT]: { nev: 'Csapat kommunikáció szerkesztés', modulo: 'Csapat kommunikáció', leiras: 'Feladatok és board-ok módosítása' },
++   [Permission.TEAM_DELETE]: { nev: 'Csapat kommunikáció törlés', modulo: 'Csapat kommunikáció', leiras: 'Feladatok és board-ok törlése' },
 +   
-+   [Permission.TASK_VIEW]: { nev: &#39;Feladatok megtekintése&#39;, modulo: &#39;Csapat kommunikáció&#39;, leiras: &#39;Feladatok böngészése&#39; },
-+   [Permission.TASK_CREATE]: { nev: &#39;Feladat létrehozás&#39;, modulo: &#39;Csapat kommunikáció&#39;, leiras: &#39;Új feladatok rögzítése&#39; },
-+   [Permission.TASK_EDIT]: { nev: &#39;Feladat szerkesztés&#39;, modulo: &#39;Csapat kommunikáció&#39;, leiras: &#39;Feladatok módosítása&#39; },
-+   [Permission.TASK_DELETE]: { nev: &#39;Feladat törlés&#39;, modulo: &#39;Csapat kommunikáció&#39;, leiras: &#39;Feladatok törlése&#39; },
-+   [Permission.TASK_ASSIGN]: { nev: &#39;Feladat hozzárendelés&#39;, modulo: &#39;Csapat kommunikáció&#39;, leiras: &#39;Feladatok kiosztása felhasználóknak&#39; },
-+   [Permission.TASK_MANAGE_ALL]: { nev: &#39;Minden feladat kezelése&#39;, modulo: &#39;Csapat kommunikáció&#39;, leiras: &#39;Admin jogosultság: minden feladat kezelése&#39; },
++   [Permission.TASK_VIEW]: { nev: 'Feladatok megtekintése', modulo: 'Csapat kommunikáció', leiras: 'Feladatok böngészése' },
++   [Permission.TASK_CREATE]: { nev: 'Feladat létrehozás', modulo: 'Csapat kommunikáció', leiras: 'Új feladatok rögzítése' },
++   [Permission.TASK_EDIT]: { nev: 'Feladat szerkesztés', modulo: 'Csapat kommunikáció', leiras: 'Feladatok módosítása' },
++   [Permission.TASK_DELETE]: { nev: 'Feladat törlés', modulo: 'Csapat kommunikáció', leiras: 'Feladatok törlése' },
++   [Permission.TASK_ASSIGN]: { nev: 'Feladat hozzárendelés', modulo: 'Csapat kommunikáció', leiras: 'Feladatok kiosztása felhasználóknak' },
++   [Permission.TASK_MANAGE_ALL]: { nev: 'Minden feladat kezelése', modulo: 'Csapat kommunikáció', leiras: 'Admin jogosultság: minden feladat kezelése' },
 +   
-+   [Permission.BOARD_VIEW]: { nev: &#39;Board-ok megtekintése&#39;, modulo: &#39;Csapat kommunikáció&#39;, leiras: &#39;Kanban board-ok böngészése&#39; },
-+   [Permission.BOARD_CREATE]: { nev: &#39;Board létrehozás&#39;, modulo: &#39;Csapat kommunikáció&#39;, leiras: &#39;Új Kanban board-ok létrehozása&#39; },
-+   [Permission.BOARD_EDIT]: { nev: &#39;Board szerkesztés&#39;, modulo: &#39;Csapat kommunikáció&#39;, leiras: &#39;Board-ok módosítása&#39; },
-+   [Permission.BOARD_DELETE]: { nev: &#39;Board törlés&#39;, modulo: &#39;Csapat kommunikáció&#39;, leiras: &#39;Board-ok törlése&#39; },
-+   [Permission.BOARD_MANAGE_MEMBERS]: { nev: &#39;Board tagok kezelése&#39;, modulo: &#39;Csapat kommunikáció&#39;, leiras: &#39;Board tagok hozzáadása és eltávolítása&#39; },
++   [Permission.BOARD_VIEW]: { nev: 'Board-ok megtekintése', modulo: 'Csapat kommunikáció', leiras: 'Kanban board-ok böngészése' },
++   [Permission.BOARD_CREATE]: { nev: 'Board létrehozás', modulo: 'Csapat kommunikáció', leiras: 'Új Kanban board-ok létrehozása' },
++   [Permission.BOARD_EDIT]: { nev: 'Board szerkesztés', modulo: 'Csapat kommunikáció', leiras: 'Board-ok módosítása' },
++   [Permission.BOARD_DELETE]: { nev: 'Board törlés', modulo: 'Csapat kommunikáció', leiras: 'Board-ok törlése' },
++   [Permission.BOARD_MANAGE_MEMBERS]: { nev: 'Board tagok kezelése', modulo: 'Csapat kommunikáció', leiras: 'Board tagok hozzáadása és eltávolítása' },
   };
   
 ```
@@ -3845,22 +3845,22 @@ Hozzáadom a drag-and-drop függőségeket a package.json-hoz:
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/package.json</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/package.json</summary>
 
 **Chunk 1**
 Lines added: 4, lines removed: 1
 
 ```diff
 @@ -32,5 +32,8 @@
-      &quot;dexie&quot;: &quot;^3.2.4&quot;,
-      &quot;dexie-react-hooks&quot;: &quot;^1.1.7&quot;,
--     &quot;lucide-react&quot;: &quot;^0.309.0&quot;
-+     &quot;lucide-react&quot;: &quot;^0.309.0&quot;,
-+     &quot;@dnd-kit/core&quot;: &quot;^6.1.0&quot;,
-+     &quot;@dnd-kit/sortable&quot;: &quot;^8.0.0&quot;,
-+     &quot;@dnd-kit/utilities&quot;: &quot;^3.2.2&quot;
+      "dexie": "^3.2.4",
+      "dexie-react-hooks": "^1.1.7",
+-     "lucide-react": "^0.309.0"
++     "lucide-react": "^0.309.0",
++     "@dnd-kit/core": "^6.1.0",
++     "@dnd-kit/sortable": "^8.0.0",
++     "@dnd-kit/utilities": "^3.2.2"
     },
-    &quot;devDependencies&quot;: {
+    "devDependencies": {
 ```
 
 </details>
@@ -3889,7 +3889,7 @@ Létrehozom az API hooks-okat:
 
 <tool-use data-tool-type="write" data-tool-name="write">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/lib/api/team.ts</summary>
+<details><summary>Tool use: **write** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/lib/api/team.ts</summary>
 
 **Chunk 1**
 Lines added: 419, lines removed: 1
@@ -3897,16 +3897,16 @@ Lines added: 419, lines removed: 1
 ```diff
 @@ -1,1 +1,419 @@
 - 
-+ import { useQuery, useMutation, useQueryClient } from &#39;@tanstack/react-query&#39;;
-+ import axios from &#39;../axios&#39;;
++ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
++ import axios from '../axios';
 + 
 + // Types
 + export interface Task {
 +   id: string;
 +   cim: string;
 +   leiras?: string;
-+   allapot: &#39;TODO&#39; | &#39;IN_PROGRESS&#39; | &#39;IN_REVIEW&#39; | &#39;DONE&#39; | &#39;BLOCKED&#39; | &#39;CANCELLED&#39;;
-+   prioritas: &#39;LOW&#39; | &#39;MEDIUM&#39; | &#39;HIGH&#39; | &#39;URGENT&#39;;
++   allapot: 'TODO' | 'IN_PROGRESS' | 'IN_REVIEW' | 'DONE' | 'BLOCKED' | 'CANCELLED';
++   prioritas: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
 +   hataridoDatum?: string;
 +   assignedToId?: string;
 +   createdById?: string;
@@ -3976,7 +3976,7 @@ Lines added: 419, lines removed: 1
 +   id: string;
 +   boardId: string;
 +   userId: string;
-+   jogosultsag: &#39;VIEW&#39; | &#39;EDIT&#39; | &#39;ADMIN&#39;;
++   jogosultsag: 'VIEW' | 'EDIT' | 'ADMIN';
 +   user?: {
 +     id: string;
 +     nev: string;
@@ -4017,8 +4017,8 @@ Lines added: 419, lines removed: 1
 + export interface CreateTaskDto {
 +   cim: string;
 +   leiras?: string;
-+   allapot: Task[&#39;allapot&#39;];
-+   prioritas: Task[&#39;prioritas&#39;];
++   allapot: Task['allapot'];
++   prioritas: Task['prioritas'];
 +   hataridoDatum?: string;
 +   assignedToId?: string;
 +   boardId?: string;
@@ -4035,8 +4035,8 @@ Lines added: 419, lines removed: 1
 + export interface UpdateTaskDto {
 +   cim?: string;
 +   leiras?: string;
-+   allapot?: Task[&#39;allapot&#39;];
-+   prioritas?: Task[&#39;prioritas&#39;];
++   allapot?: Task['allapot'];
++   prioritas?: Task['prioritas'];
 +   hataridoDatum?: string;
 +   assignedToId?: string;
 +   boardId?: string;
@@ -4053,8 +4053,8 @@ Lines added: 419, lines removed: 1
 + 
 + export interface TaskFilter {
 +   assignedToId?: string;
-+   allapot?: Task[&#39;allapot&#39;];
-+   prioritas?: Task[&#39;prioritas&#39;];
++   allapot?: Task['allapot'];
++   prioritas?: Task['prioritas'];
 +   boardId?: string;
 +   accountId?: string;
 +   opportunityId?: string;
@@ -4068,7 +4068,7 @@ Lines added: 419, lines removed: 1
 + 
 + export interface MoveTaskDto {
 +   boardId: string;
-+   allapot: Task[&#39;allapot&#39;];
++   allapot: Task['allapot'];
 +   position: number;
 + }
 + 
@@ -4086,7 +4086,7 @@ Lines added: 419, lines removed: 1
 + // Task hooks
 + export function useTasks(filters?: TaskFilter, skip = 0, take = 50) {
 +   return useQuery({
-+     queryKey: [&#39;tasks&#39;, filters, skip, take],
++     queryKey: ['tasks', filters, skip, take],
 +     queryFn: async () =&gt; {
 +       const params = new URLSearchParams();
 +       if (filters) {
@@ -4096,8 +4096,8 @@ Lines added: 419, lines removed: 1
 +           }
 +         });
 +       }
-+       params.append(&#39;skip&#39;, String(skip));
-+       params.append(&#39;take&#39;, String(take));
++       params.append('skip', String(skip));
++       params.append('take', String(take));
 +       const response = await axios.get(&#96;/api/team/tasks?${params.toString()}&#96;);
 +       return response.data;
 +     },
@@ -4106,7 +4106,7 @@ Lines added: 419, lines removed: 1
 + 
 + export function useTask(id: string) {
 +   return useQuery({
-+     queryKey: [&#39;task&#39;, id],
++     queryKey: ['task', id],
 +     queryFn: async () =&gt; {
 +       const response = await axios.get(&#96;/api/team/tasks/${id}&#96;);
 +       return response.data;
@@ -4117,7 +4117,7 @@ Lines added: 419, lines removed: 1
 + 
 + export function useMyTasks(skip = 0, take = 50) {
 +   return useQuery({
-+     queryKey: [&#39;tasks&#39;, &#39;my&#39;, skip, take],
++     queryKey: ['tasks', 'my', skip, take],
 +     queryFn: async () =&gt; {
 +       const response = await axios.get(&#96;/api/team/tasks/my?skip=${skip}&amp;take=${take}&#96;);
 +       return response.data;
@@ -4129,12 +4129,12 @@ Lines added: 419, lines removed: 1
 +   const queryClient = useQueryClient();
 +   return useMutation({
 +     mutationFn: async (data: CreateTaskDto) =&gt; {
-+       const response = await axios.post(&#39;/api/team/tasks&#39;, data);
++       const response = await axios.post('/api/team/tasks', data);
 +       return response.data;
 +     },
 +     onSuccess: () =&gt; {
-+       queryClient.invalidateQueries({ queryKey: [&#39;tasks&#39;] });
-+       queryClient.invalidateQueries({ queryKey: [&#39;boards&#39;] });
++       queryClient.invalidateQueries({ queryKey: ['tasks'] });
++       queryClient.invalidateQueries({ queryKey: ['boards'] });
 +     },
 +   });
 + }
@@ -4147,9 +4147,9 @@ Lines added: 419, lines removed: 1
 +       return response.data;
 +     },
 +     onSuccess: (_, variables) =&gt; {
-+       queryClient.invalidateQueries({ queryKey: [&#39;tasks&#39;] });
-+       queryClient.invalidateQueries({ queryKey: [&#39;task&#39;, variables.id] });
-+       queryClient.invalidateQueries({ queryKey: [&#39;boards&#39;] });
++       queryClient.invalidateQueries({ queryKey: ['tasks'] });
++       queryClient.invalidateQueries({ queryKey: ['task', variables.id] });
++       queryClient.invalidateQueries({ queryKey: ['boards'] });
 +     },
 +   });
 + }
@@ -4162,8 +4162,8 @@ Lines added: 419, lines removed: 1
 +       return response.data;
 +     },
 +     onSuccess: () =&gt; {
-+       queryClient.invalidateQueries({ queryKey: [&#39;tasks&#39;] });
-+       queryClient.invalidateQueries({ queryKey: [&#39;boards&#39;] });
++       queryClient.invalidateQueries({ queryKey: ['tasks'] });
++       queryClient.invalidateQueries({ queryKey: ['boards'] });
 +     },
 +   });
 + }
@@ -4177,16 +4177,16 @@ Lines added: 419, lines removed: 1
 +     },
 +     onMutate: async ({ id, data }) =&gt; {
 +       // Optimistic update
-+       await queryClient.cancelQueries({ queryKey: [&#39;tasks&#39;] });
-+       await queryClient.cancelQueries({ queryKey: [&#39;task&#39;, id] });
-+       await queryClient.cancelQueries({ queryKey: [&#39;boards&#39;] });
++       await queryClient.cancelQueries({ queryKey: ['tasks'] });
++       await queryClient.cancelQueries({ queryKey: ['task', id] });
++       await queryClient.cancelQueries({ queryKey: ['boards'] });
 + 
-+       const previousTasks = queryClient.getQueryData([&#39;tasks&#39;]);
-+       const previousTask = queryClient.getQueryData([&#39;task&#39;, id]);
-+       const previousBoards = queryClient.getQueryData([&#39;boards&#39;]);
++       const previousTasks = queryClient.getQueryData(['tasks']);
++       const previousTask = queryClient.getQueryData(['task', id]);
++       const previousBoards = queryClient.getQueryData(['boards']);
 + 
 +       // Update task optimistically
-+       queryClient.setQueryData([&#39;task&#39;, id], (old: any) =&gt; {
++       queryClient.setQueryData(['task', id], (old: any) =&gt; {
 +         if (!old) return old;
 +         return {
 +           ...old,
@@ -4201,18 +4201,18 @@ Lines added: 419, lines removed: 1
 +     onError: (err, variables, context) =&gt; {
 +       // Rollback on error
 +       if (context?.previousTasks) {
-+         queryClient.setQueryData([&#39;tasks&#39;], context.previousTasks);
++         queryClient.setQueryData(['tasks'], context.previousTasks);
 +       }
 +       if (context?.previousTask) {
-+         queryClient.setQueryData([&#39;task&#39;, variables.id], context.previousTask);
++         queryClient.setQueryData(['task', variables.id], context.previousTask);
 +       }
 +       if (context?.previousBoards) {
-+         queryClient.setQueryData([&#39;boards&#39;], context.previousBoards);
++         queryClient.setQueryData(['boards'], context.previousBoards);
 +       }
 +     },
 +     onSuccess: () =&gt; {
-+       queryClient.invalidateQueries({ queryKey: [&#39;tasks&#39;] });
-+       queryClient.invalidateQueries({ queryKey: [&#39;boards&#39;] });
++       queryClient.invalidateQueries({ queryKey: ['tasks'] });
++       queryClient.invalidateQueries({ queryKey: ['boards'] });
 +     },
 +   });
 + }
@@ -4220,9 +4220,9 @@ Lines added: 419, lines removed: 1
 + // Board hooks
 + export function useBoards() {
 +   return useQuery({
-+     queryKey: [&#39;boards&#39;],
++     queryKey: ['boards'],
 +     queryFn: async () =&gt; {
-+       const response = await axios.get(&#39;/api/team/boards&#39;);
++       const response = await axios.get('/api/team/boards');
 +       return response.data;
 +     },
 +   });
@@ -4230,7 +4230,7 @@ Lines added: 419, lines removed: 1
 + 
 + export function useBoard(id: string) {
 +   return useQuery({
-+     queryKey: [&#39;board&#39;, id],
++     queryKey: ['board', id],
 +     queryFn: async () =&gt; {
 +       const response = await axios.get(&#96;/api/team/boards/${id}&#96;);
 +       return response.data;
@@ -4243,11 +4243,11 @@ Lines added: 419, lines removed: 1
 +   const queryClient = useQueryClient();
 +   return useMutation({
 +     mutationFn: async (data: CreateBoardDto) =&gt; {
-+       const response = await axios.post(&#39;/api/team/boards&#39;, data);
++       const response = await axios.post('/api/team/boards', data);
 +       return response.data;
 +     },
 +     onSuccess: () =&gt; {
-+       queryClient.invalidateQueries({ queryKey: [&#39;boards&#39;] });
++       queryClient.invalidateQueries({ queryKey: ['boards'] });
 +     },
 +   });
 + }
@@ -4260,8 +4260,8 @@ Lines added: 419, lines removed: 1
 +       return response.data;
 +     },
 +     onSuccess: (_, variables) =&gt; {
-+       queryClient.invalidateQueries({ queryKey: [&#39;boards&#39;] });
-+       queryClient.invalidateQueries({ queryKey: [&#39;board&#39;, variables.id] });
++       queryClient.invalidateQueries({ queryKey: ['boards'] });
++       queryClient.invalidateQueries({ queryKey: ['board', variables.id] });
 +     },
 +   });
 + }
@@ -4274,7 +4274,7 @@ Lines added: 419, lines removed: 1
 +       return response.data;
 +     },
 +     onSuccess: () =&gt; {
-+       queryClient.invalidateQueries({ queryKey: [&#39;boards&#39;] });
++       queryClient.invalidateQueries({ queryKey: ['boards'] });
 +     },
 +   });
 + }
@@ -4282,7 +4282,7 @@ Lines added: 419, lines removed: 1
 + // Comment hooks
 + export function useTaskComments(taskId: string) {
 +   return useQuery({
-+     queryKey: [&#39;task-comments&#39;, taskId],
++     queryKey: ['task-comments', taskId],
 +     queryFn: async () =&gt; {
 +       const response = await axios.get(&#96;/api/team/tasks/${taskId}/comments&#96;);
 +       return response.data;
@@ -4299,8 +4299,8 @@ Lines added: 419, lines removed: 1
 +       return response.data;
 +     },
 +     onSuccess: (_, variables) =&gt; {
-+       queryClient.invalidateQueries({ queryKey: [&#39;task-comments&#39;, variables.taskId] });
-+       queryClient.invalidateQueries({ queryKey: [&#39;task&#39;, variables.taskId] });
++       queryClient.invalidateQueries({ queryKey: ['task-comments', variables.taskId] });
++       queryClient.invalidateQueries({ queryKey: ['task', variables.taskId] });
 +     },
 +   });
 + }
@@ -4308,9 +4308,9 @@ Lines added: 419, lines removed: 1
 + // Dashboard hooks
 + export function useDashboardStats() {
 +   return useQuery({
-+     queryKey: [&#39;dashboard-stats&#39;],
++     queryKey: ['dashboard-stats'],
 +     queryFn: async () =&gt; {
-+       const response = await axios.get(&#39;/api/team/dashboard/stats&#39;);
++       const response = await axios.get('/api/team/dashboard/stats');
 +       return response.data;
 +     },
 +   });
@@ -4336,7 +4336,7 @@ Létrehozom az alap frontend komponenseket. Először a TaskCard és TaskModal k
 
 <tool-use data-tool-type="write" data-tool-name="write">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskCard.tsx</summary>
+<details><summary>Tool use: **write** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskCard.tsx</summary>
 
 **Chunk 1**
 Lines added: 81, lines removed: 1
@@ -4344,10 +4344,10 @@ Lines added: 81, lines removed: 1
 ```diff
 @@ -1,1 +1,81 @@
 - 
-+ import { Task } from &#39;../../lib/api/team&#39;;
-+ import { format } from &#39;date-fns&#39;;
-+ import { hu } from &#39;date-fns/locale&#39;;
-+ import { Calendar, User, Tag } from &#39;lucide-react&#39;;
++ import { Task } from '../../lib/api/team';
++ import { format } from 'date-fns';
++ import { hu } from 'date-fns/locale';
++ import { Calendar, User, Tag } from 'lucide-react';
 + 
 + interface TaskCardProps {
 +   task: Task;
@@ -4356,69 +4356,69 @@ Lines added: 81, lines removed: 1
 + 
 + export default function TaskCard({ task, onClick }: TaskCardProps) {
 +   const priorityColors = {
-+     LOW: &#39;bg-gray-100 text-gray-800&#39;,
-+     MEDIUM: &#39;bg-blue-100 text-blue-800&#39;,
-+     HIGH: &#39;bg-orange-100 text-orange-800&#39;,
-+     URGENT: &#39;bg-red-100 text-red-800&#39;,
++     LOW: 'bg-gray-100 text-gray-800',
++     MEDIUM: 'bg-blue-100 text-blue-800',
++     HIGH: 'bg-orange-100 text-orange-800',
++     URGENT: 'bg-red-100 text-red-800',
 +   };
 + 
 +   const statusColors = {
-+     TODO: &#39;bg-gray-200&#39;,
-+     IN_PROGRESS: &#39;bg-blue-200&#39;,
-+     IN_REVIEW: &#39;bg-yellow-200&#39;,
-+     DONE: &#39;bg-green-200&#39;,
-+     BLOCKED: &#39;bg-red-200&#39;,
-+     CANCELLED: &#39;bg-gray-300&#39;,
++     TODO: 'bg-gray-200',
++     IN_PROGRESS: 'bg-blue-200',
++     IN_REVIEW: 'bg-yellow-200',
++     DONE: 'bg-green-200',
++     BLOCKED: 'bg-red-200',
++     CANCELLED: 'bg-gray-300',
 +   };
 + 
-+   const isOverdue = task.hataridoDatum &amp;&amp; new Date(task.hataridoDatum) &lt; new Date() &amp;&amp; task.allapot !== &#39;DONE&#39;;
++   const isOverdue = task.hataridoDatum &amp;&amp; new Date(task.hataridoDatum) &lt; new Date() &amp;&amp; task.allapot !== 'DONE';
 + 
 +   return (
 +     &lt;div
 +       onClick={onClick}
 +       className={&#96;bg-white rounded-lg shadow-sm border border-gray-200 p-4 cursor-pointer hover:shadow-md transition-shadow ${
-+         isOverdue ? &#39;border-red-300&#39; : &#39;&#39;
++         isOverdue ? 'border-red-300' : ''
 +       }&#96;}
 +     &gt;
-+       &lt;div className=&quot;flex items-start justify-between mb-2&quot;&gt;
-+         &lt;h3 className=&quot;font-semibold text-gray-900 text-sm flex-1&quot;&gt;{task.cim}&lt;/h3&gt;
++       &lt;div className="flex items-start justify-between mb-2"&gt;
++         &lt;h3 className="font-semibold text-gray-900 text-sm flex-1"&gt;{task.cim}&lt;/h3&gt;
 +         &lt;span className={&#96;px-2 py-1 rounded text-xs font-medium ${priorityColors[task.prioritas]}&#96;}&gt;
 +           {task.prioritas}
 +         &lt;/span&gt;
 +       &lt;/div&gt;
 + 
 +       {task.leiras &amp;&amp; (
-+         &lt;p className=&quot;text-xs text-gray-600 mb-2 line-clamp-2&quot;&gt;{task.leiras}&lt;/p&gt;
++         &lt;p className="text-xs text-gray-600 mb-2 line-clamp-2"&gt;{task.leiras}&lt;/p&gt;
 +       )}
 + 
-+       &lt;div className=&quot;flex items-center gap-3 text-xs text-gray-500 mt-3&quot;&gt;
++       &lt;div className="flex items-center gap-3 text-xs text-gray-500 mt-3"&gt;
 +         {task.assignedTo &amp;&amp; (
-+           &lt;div className=&quot;flex items-center gap-1&quot;&gt;
-+             &lt;User className=&quot;w-3 h-3&quot; /&gt;
++           &lt;div className="flex items-center gap-1"&gt;
++             &lt;User className="w-3 h-3" /&gt;
 +             &lt;span&gt;{task.assignedTo.nev}&lt;/span&gt;
 +           &lt;/div&gt;
 +         )}
 + 
 +         {task.hataridoDatum &amp;&amp; (
-+           &lt;div className={&#96;flex items-center gap-1 ${isOverdue ? &#39;text-red-600 font-semibold&#39; : &#39;&#39;}&#96;}&gt;
-+             &lt;Calendar className=&quot;w-3 h-3&quot; /&gt;
++           &lt;div className={&#96;flex items-center gap-1 ${isOverdue ? 'text-red-600 font-semibold' : ''}&#96;}&gt;
++             &lt;Calendar className="w-3 h-3" /&gt;
 +             &lt;span&gt;
-+               {format(new Date(task.hataridoDatum), &#39;MMM d&#39;, { locale: hu })}
++               {format(new Date(task.hataridoDatum), 'MMM d', { locale: hu })}
 +             &lt;/span&gt;
 +           &lt;/div&gt;
 +         )}
 + 
 +         {task._count &amp;&amp; task._count.comments &gt; 0 &amp;&amp; (
-+           &lt;div className=&quot;flex items-center gap-1&quot;&gt;
-+             &lt;Tag className=&quot;w-3 h-3&quot; /&gt;
++           &lt;div className="flex items-center gap-1"&gt;
++             &lt;Tag className="w-3 h-3" /&gt;
 +             &lt;span&gt;{task._count.comments}&lt;/span&gt;
 +           &lt;/div&gt;
 +         )}
 +       &lt;/div&gt;
 + 
 +       {task.board &amp;&amp; (
-+         &lt;div className=&quot;mt-2 pt-2 border-t border-gray-100&quot;&gt;
-+           &lt;span className=&quot;text-xs text-gray-400&quot;&gt;{task.board.nev}&lt;/span&gt;
++         &lt;div className="mt-2 pt-2 border-t border-gray-100"&gt;
++           &lt;span className="text-xs text-gray-400"&gt;{task.board.nev}&lt;/span&gt;
 +         &lt;/div&gt;
 +       )}
 +     &lt;/div&gt;
@@ -4435,7 +4435,7 @@ Lines added: 81, lines removed: 1
 
 <tool-use data-tool-type="write" data-tool-name="write">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskColumn.tsx</summary>
+<details><summary>Tool use: **write** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskColumn.tsx</summary>
 
 **Chunk 1**
 Lines added: 65, lines removed: 1
@@ -4443,10 +4443,10 @@ Lines added: 65, lines removed: 1
 ```diff
 @@ -1,1 +1,65 @@
 - 
-+ import { TaskColumn as TaskColumnType, Task } from &#39;../../lib/api/team&#39;;
-+ import TaskCard from &#39;./TaskCard&#39;;
-+ import { useSortable } from &#39;@dnd-kit/sortable&#39;;
-+ import { CSS } from &#39;@dnd-kit/utilities&#39;;
++ import { TaskColumn as TaskColumnType, Task } from '../../lib/api/team';
++ import TaskCard from './TaskCard';
++ import { useSortable } from '@dnd-kit/sortable';
++ import { CSS } from '@dnd-kit/utilities';
 + 
 + interface TaskColumnProps {
 +   column: TaskColumnType;
@@ -4480,17 +4480,17 @@ Lines added: 65, lines removed: 1
 +       style={style}
 +       {...attributes}
 +       {...listeners}
-+       className=&quot;flex-shrink-0 w-80 bg-gray-50 rounded-lg p-4&quot;
++       className="flex-shrink-0 w-80 bg-gray-50 rounded-lg p-4"
 +     &gt;
-+       &lt;div className=&quot;flex items-center justify-between mb-4&quot;&gt;
-+         &lt;h3 className=&quot;font-semibold text-gray-900&quot;&gt;{column.nev}&lt;/h3&gt;
-+         &lt;span className=&quot;text-sm text-gray-500&quot;&gt;
++       &lt;div className="flex items-center justify-between mb-4"&gt;
++         &lt;h3 className="font-semibold text-gray-900"&gt;{column.nev}&lt;/h3&gt;
++         &lt;span className="text-sm text-gray-500"&gt;
 +           {columnTasks.length}
 +           {column.limit &amp;&amp; &#96; / ${column.limit}&#96;}
 +         &lt;/span&gt;
 +       &lt;/div&gt;
 + 
-+       &lt;div className=&quot;space-y-3 min-h-[200px]&quot;&gt;
++       &lt;div className="space-y-3 min-h-[200px]"&gt;
 +         {columnTasks.map((task) =&gt; (
 +           &lt;TaskCard
 +             key={task.id}
@@ -4499,7 +4499,7 @@ Lines added: 65, lines removed: 1
 +           /&gt;
 +         ))}
 +         {columnTasks.length === 0 &amp;&amp; (
-+           &lt;div className=&quot;text-center text-gray-400 text-sm py-8&quot;&gt;
++           &lt;div className="text-center text-gray-400 text-sm py-8"&gt;
 +             Nincs feladat
 +           &lt;/div&gt;
 +         )}
@@ -4518,7 +4518,7 @@ Lines added: 65, lines removed: 1
 
 <tool-use data-tool-type="write" data-tool-name="write">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskBoard.tsx</summary>
+<details><summary>Tool use: **write** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskBoard.tsx</summary>
 
 **Chunk 1**
 Lines added: 107, lines removed: 1
@@ -4526,7 +4526,7 @@ Lines added: 107, lines removed: 1
 ```diff
 @@ -1,1 +1,107 @@
 - 
-+ import { useState } from &#39;react&#39;;
++ import { useState } from 'react';
 + import {
 +   DndContext,
 +   DragEndEvent,
@@ -4535,15 +4535,15 @@ Lines added: 107, lines removed: 1
 +   PointerSensor,
 +   useSensor,
 +   useSensors,
-+ } from &#39;@dnd-kit/core&#39;;
++ } from '@dnd-kit/core';
 + import {
 +   SortableContext,
 +   horizontalListSortingStrategy,
-+ } from &#39;@dnd-kit/sortable&#39;;
-+ import { TaskBoard as TaskBoardType, Task, TaskColumn } from &#39;../../lib/api/team&#39;;
-+ import TaskColumn from &#39;./TaskColumn&#39;;
-+ import TaskCard from &#39;./TaskCard&#39;;
-+ import { useMoveTask } from &#39;../../lib/api/team&#39;;
++ } from '@dnd-kit/sortable';
++ import { TaskBoard as TaskBoardType, Task, TaskColumn } from '../../lib/api/team';
++ import TaskColumn from './TaskColumn';
++ import TaskCard from './TaskCard';
++ import { useMoveTask } from '../../lib/api/team';
 + 
 + interface TaskBoardProps {
 +   board: TaskBoardType;
@@ -4581,7 +4581,7 @@ Lines added: 107, lines removed: 1
 + 
 +     if (!task || !column) return;
 + 
-+     // Don&#39;t move if already in the same column
++     // Don't move if already in the same column
 +     if (task.allapot === column.allapot) return;
 + 
 +     // Calculate new position (at the end of the column)
@@ -4593,12 +4593,12 @@ Lines added: 107, lines removed: 1
 +         id: task.id,
 +         data: {
 +           boardId: board.id,
-+           allapot: column.allapot as Task[&#39;allapot&#39;],
++           allapot: column.allapot as Task['allapot'],
 +           position: newPosition,
 +         },
 +       });
 +     } catch (error) {
-+       console.error(&#39;Failed to move task:&#39;, error);
++       console.error('Failed to move task:', error);
 +     }
 +   };
 + 
@@ -4610,7 +4610,7 @@ Lines added: 107, lines removed: 1
 +       onDragStart={handleDragStart}
 +       onDragEnd={handleDragEnd}
 +     &gt;
-+       &lt;div className=&quot;flex gap-4 overflow-x-auto pb-4&quot;&gt;
++       &lt;div className="flex gap-4 overflow-x-auto pb-4"&gt;
 +         &lt;SortableContext
 +           items={sortedColumns.map((col) =&gt; col.id)}
 +           strategy={horizontalListSortingStrategy}
@@ -4653,7 +4653,7 @@ Létrehozom a TaskModal komponenst és a Team oldalt:
 
 <tool-use data-tool-type="write" data-tool-name="write">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskModal.tsx</summary>
+<details><summary>Tool use: **write** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskModal.tsx</summary>
 
 **Chunk 1**
 Lines added: 129, lines removed: 1
@@ -4661,11 +4661,11 @@ Lines added: 129, lines removed: 1
 ```diff
 @@ -1,1 +1,129 @@
 - 
-+ import { useState } from &#39;react&#39;;
-+ import { Task, useTask, useUpdateTask, useDeleteTask, useTaskComments, useCreateComment } from &#39;../../lib/api/team&#39;;
-+ import { format } from &#39;date-fns&#39;;
-+ import { hu } from &#39;date-fns/locale&#39;;
-+ import { X, Calendar, User, MessageSquare, Clock } from &#39;lucide-react&#39;;
++ import { useState } from 'react';
++ import { Task, useTask, useUpdateTask, useDeleteTask, useTaskComments, useCreateComment } from '../../lib/api/team';
++ import { format } from 'date-fns';
++ import { hu } from 'date-fns/locale';
++ import { X, Calendar, User, MessageSquare, Clock } from 'lucide-react';
 + 
 + interface TaskModalProps {
 +   taskId: string;
@@ -4678,7 +4678,7 @@ Lines added: 129, lines removed: 1
 +   const updateTask = useUpdateTask();
 +   const deleteTask = useDeleteTask();
 +   const createComment = useCreateComment();
-+   const [commentText, setCommentText] = useState(&#39;&#39;);
++   const [commentText, setCommentText] = useState('');
 + 
 +   const handleAddComment = async () =&gt; {
 +     if (!commentText.trim()) return;
@@ -4687,16 +4687,16 @@ Lines added: 129, lines removed: 1
 +         taskId,
 +         data: { szoveg: commentText },
 +       });
-+       setCommentText(&#39;&#39;);
++       setCommentText('');
 +     } catch (error) {
-+       console.error(&#39;Failed to add comment:&#39;, error);
++       console.error('Failed to add comment:', error);
 +     }
 +   };
 + 
 +   if (isLoading) {
 +     return (
-+       &lt;div className=&quot;fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50&quot;&gt;
-+         &lt;div className=&quot;bg-white rounded-lg p-6&quot;&gt;Betöltés...&lt;/div&gt;
++       &lt;div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"&gt;
++         &lt;div className="bg-white rounded-lg p-6"&gt;Betöltés...&lt;/div&gt;
 +       &lt;/div&gt;
 +     );
 +   }
@@ -4706,23 +4706,23 @@ Lines added: 129, lines removed: 1
 +   }
 + 
 +   return (
-+     &lt;div className=&quot;fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4&quot;&gt;
-+       &lt;div className=&quot;bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto&quot;&gt;
-+         &lt;div className=&quot;sticky top-0 bg-white border-b border-gray-200 p-6 flex items-start justify-between&quot;&gt;
-+           &lt;div className=&quot;flex-1&quot;&gt;
-+             &lt;h2 className=&quot;text-2xl font-bold text-gray-900 mb-2&quot;&gt;{task.cim}&lt;/h2&gt;
-+             &lt;div className=&quot;flex items-center gap-4 text-sm text-gray-600&quot;&gt;
++     &lt;div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"&gt;
++       &lt;div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto"&gt;
++         &lt;div className="sticky top-0 bg-white border-b border-gray-200 p-6 flex items-start justify-between"&gt;
++           &lt;div className="flex-1"&gt;
++             &lt;h2 className="text-2xl font-bold text-gray-900 mb-2"&gt;{task.cim}&lt;/h2&gt;
++             &lt;div className="flex items-center gap-4 text-sm text-gray-600"&gt;
 +               {task.assignedTo &amp;&amp; (
-+                 &lt;div className=&quot;flex items-center gap-1&quot;&gt;
-+                   &lt;User className=&quot;w-4 h-4&quot; /&gt;
++                 &lt;div className="flex items-center gap-1"&gt;
++                   &lt;User className="w-4 h-4" /&gt;
 +                   &lt;span&gt;{task.assignedTo.nev}&lt;/span&gt;
 +                 &lt;/div&gt;
 +               )}
 +               {task.hataridoDatum &amp;&amp; (
-+                 &lt;div className=&quot;flex items-center gap-1&quot;&gt;
-+                   &lt;Calendar className=&quot;w-4 h-4&quot; /&gt;
++                 &lt;div className="flex items-center gap-1"&gt;
++                   &lt;Calendar className="w-4 h-4" /&gt;
 +                   &lt;span&gt;
-+                     {format(new Date(task.hataridoDatum), &#39;yyyy. MMMM d.&#39;, { locale: hu })}
++                     {format(new Date(task.hataridoDatum), 'yyyy. MMMM d.', { locale: hu })}
 +                   &lt;/span&gt;
 +                 &lt;/div&gt;
 +               )}
@@ -4730,55 +4730,55 @@ Lines added: 129, lines removed: 1
 +           &lt;/div&gt;
 +           &lt;button
 +             onClick={onClose}
-+             className=&quot;text-gray-400 hover:text-gray-600&quot;
++             className="text-gray-400 hover:text-gray-600"
 +           &gt;
-+             &lt;X className=&quot;w-6 h-6&quot; /&gt;
++             &lt;X className="w-6 h-6" /&gt;
 +           &lt;/button&gt;
 +         &lt;/div&gt;
 + 
-+         &lt;div className=&quot;p-6 space-y-6&quot;&gt;
++         &lt;div className="p-6 space-y-6"&gt;
 +           {task.leiras &amp;&amp; (
 +             &lt;div&gt;
-+               &lt;h3 className=&quot;font-semibold text-gray-900 mb-2&quot;&gt;Leírás&lt;/h3&gt;
-+               &lt;p className=&quot;text-gray-700&quot;&gt;{task.leiras}&lt;/p&gt;
++               &lt;h3 className="font-semibold text-gray-900 mb-2"&gt;Leírás&lt;/h3&gt;
++               &lt;p className="text-gray-700"&gt;{task.leiras}&lt;/p&gt;
 +             &lt;/div&gt;
 +           )}
 + 
 +           &lt;div&gt;
-+             &lt;h3 className=&quot;font-semibold text-gray-900 mb-4&quot;&gt;Hozzászólások&lt;/h3&gt;
-+             &lt;div className=&quot;space-y-4 mb-4&quot;&gt;
++             &lt;h3 className="font-semibold text-gray-900 mb-4"&gt;Hozzászólások&lt;/h3&gt;
++             &lt;div className="space-y-4 mb-4"&gt;
 +               {comments?.map((comment: any) =&gt; (
-+                 &lt;div key={comment.id} className=&quot;border-b border-gray-100 pb-4&quot;&gt;
-+                   &lt;div className=&quot;flex items-start gap-3&quot;&gt;
-+                     &lt;div className=&quot;flex-1&quot;&gt;
-+                       &lt;div className=&quot;flex items-center gap-2 mb-1&quot;&gt;
-+                         &lt;span className=&quot;font-semibold text-gray-900&quot;&gt;
-+                           {comment.user?.nev || &#39;Ismeretlen&#39;}
++                 &lt;div key={comment.id} className="border-b border-gray-100 pb-4"&gt;
++                   &lt;div className="flex items-start gap-3"&gt;
++                     &lt;div className="flex-1"&gt;
++                       &lt;div className="flex items-center gap-2 mb-1"&gt;
++                         &lt;span className="font-semibold text-gray-900"&gt;
++                           {comment.user?.nev || 'Ismeretlen'}
 +                         &lt;/span&gt;
-+                         &lt;span className=&quot;text-xs text-gray-500&quot;&gt;
-+                           {format(new Date(comment.createdAt), &#39;yyyy. MMMM d. HH:mm&#39;, { locale: hu })}
++                         &lt;span className="text-xs text-gray-500"&gt;
++                           {format(new Date(comment.createdAt), 'yyyy. MMMM d. HH:mm', { locale: hu })}
 +                         &lt;/span&gt;
 +                       &lt;/div&gt;
-+                       &lt;p className=&quot;text-gray-700&quot;&gt;{comment.szoveg}&lt;/p&gt;
++                       &lt;p className="text-gray-700"&gt;{comment.szoveg}&lt;/p&gt;
 +                     &lt;/div&gt;
 +                   &lt;/div&gt;
 +                 &lt;/div&gt;
 +               ))}
 +             &lt;/div&gt;
 + 
-+             &lt;div className=&quot;flex gap-2&quot;&gt;
++             &lt;div className="flex gap-2"&gt;
 +               &lt;input
-+                 type=&quot;text&quot;
++                 type="text"
 +                 value={commentText}
 +                 onChange={(e) =&gt; setCommentText(e.target.value)}
-+                 onKeyPress={(e) =&gt; e.key === &#39;Enter&#39; &amp;&amp; handleAddComment()}
-+                 placeholder=&quot;Írj hozzászólást...&quot;
-+                 className=&quot;flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500&quot;
++                 onKeyPress={(e) =&gt; e.key === 'Enter' &amp;&amp; handleAddComment()}
++                 placeholder="Írj hozzászólást..."
++                 className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
 +               /&gt;
 +               &lt;button
 +                 onClick={handleAddComment}
 +                 disabled={!commentText.trim() || createComment.isPending}
-+                 className=&quot;px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50&quot;
++                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
 +               &gt;
 +                 Küldés
 +               &lt;/button&gt;
@@ -4800,7 +4800,7 @@ Lines added: 129, lines removed: 1
 
 <tool-use data-tool-type="write" data-tool-name="write">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Team.tsx</summary>
+<details><summary>Tool use: **write** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Team.tsx</summary>
 
 **Chunk 1**
 Lines added: 89, lines removed: 1
@@ -4808,11 +4808,11 @@ Lines added: 89, lines removed: 1
 ```diff
 @@ -1,1 +1,89 @@
 - 
-+ import { useState } from &#39;react&#39;;
-+ import { useBoards, useBoard, useDashboardStats, Task, TaskBoard } from &#39;../lib/api/team&#39;;
-+ import TaskBoardComponent from &#39;../components/team/TaskBoard&#39;;
-+ import TaskModal from &#39;../components/team/TaskModal&#39;;
-+ import { Plus, BarChart3 } from &#39;lucide-react&#39;;
++ import { useState } from 'react';
++ import { useBoards, useBoard, useDashboardStats, Task, TaskBoard } from '../lib/api/team';
++ import TaskBoardComponent from '../components/team/TaskBoard';
++ import TaskModal from '../components/team/TaskModal';
++ import { Plus, BarChart3 } from 'lucide-react';
 + 
 + export default function Team() {
 +   const { data: boards } = useBoards();
@@ -4821,7 +4821,7 @@ Lines added: 89, lines removed: 1
 +   const [selectedTaskId, setSelectedTaskId] = useState&lt;string | null&gt;(null);
 + 
 +   const selectedBoard = boards?.find((b: TaskBoard) =&gt; b.id === selectedBoardId) || boards?.[0];
-+   const { data: boardDetails } = useBoard(selectedBoard?.id || &#39;&#39;, {
++   const { data: boardDetails } = useBoard(selectedBoard?.id || '', {
 +     enabled: !!selectedBoard?.id,
 +   });
 + 
@@ -4830,56 +4830,56 @@ Lines added: 89, lines removed: 1
 +   };
 + 
 +   return (
-+     &lt;div className=&quot;p-6&quot;&gt;
-+       &lt;div className=&quot;mb-6&quot;&gt;
-+         &lt;h1 className=&quot;text-3xl font-bold text-gray-900 mb-4&quot;&gt;Csapat kommunikáció&lt;/h1&gt;
++     &lt;div className="p-6"&gt;
++       &lt;div className="mb-6"&gt;
++         &lt;h1 className="text-3xl font-bold text-gray-900 mb-4"&gt;Csapat kommunikáció&lt;/h1&gt;
 + 
 +         {stats &amp;&amp; (
-+           &lt;div className=&quot;grid grid-cols-4 gap-4 mb-6&quot;&gt;
-+             &lt;div className=&quot;bg-white rounded-lg shadow p-4&quot;&gt;
-+               &lt;div className=&quot;text-sm text-gray-600&quot;&gt;Összes feladat&lt;/div&gt;
-+               &lt;div className=&quot;text-2xl font-bold text-gray-900&quot;&gt;{stats.total}&lt;/div&gt;
++           &lt;div className="grid grid-cols-4 gap-4 mb-6"&gt;
++             &lt;div className="bg-white rounded-lg shadow p-4"&gt;
++               &lt;div className="text-sm text-gray-600"&gt;Összes feladat&lt;/div&gt;
++               &lt;div className="text-2xl font-bold text-gray-900"&gt;{stats.total}&lt;/div&gt;
 +             &lt;/div&gt;
-+             &lt;div className=&quot;bg-white rounded-lg shadow p-4&quot;&gt;
-+               &lt;div className=&quot;text-sm text-gray-600&quot;&gt;Teendők&lt;/div&gt;
-+               &lt;div className=&quot;text-2xl font-bold text-gray-900&quot;&gt;{stats.byStatus?.TODO || 0}&lt;/div&gt;
++             &lt;div className="bg-white rounded-lg shadow p-4"&gt;
++               &lt;div className="text-sm text-gray-600"&gt;Teendők&lt;/div&gt;
++               &lt;div className="text-2xl font-bold text-gray-900"&gt;{stats.byStatus?.TODO || 0}&lt;/div&gt;
 +             &lt;/div&gt;
-+             &lt;div className=&quot;bg-white rounded-lg shadow p-4&quot;&gt;
-+               &lt;div className=&quot;text-sm text-gray-600&quot;&gt;Folyamatban&lt;/div&gt;
-+               &lt;div className=&quot;text-2xl font-bold text-blue-600&quot;&gt;{stats.byStatus?.IN_PROGRESS || 0}&lt;/div&gt;
++             &lt;div className="bg-white rounded-lg shadow p-4"&gt;
++               &lt;div className="text-sm text-gray-600"&gt;Folyamatban&lt;/div&gt;
++               &lt;div className="text-2xl font-bold text-blue-600"&gt;{stats.byStatus?.IN_PROGRESS || 0}&lt;/div&gt;
 +             &lt;/div&gt;
-+             &lt;div className=&quot;bg-white rounded-lg shadow p-4&quot;&gt;
-+               &lt;div className=&quot;text-sm text-gray-600&quot;&gt;Lejárt&lt;/div&gt;
-+               &lt;div className=&quot;text-2xl font-bold text-red-600&quot;&gt;{stats.overdue || 0}&lt;/div&gt;
++             &lt;div className="bg-white rounded-lg shadow p-4"&gt;
++               &lt;div className="text-sm text-gray-600"&gt;Lejárt&lt;/div&gt;
++               &lt;div className="text-2xl font-bold text-red-600"&gt;{stats.overdue || 0}&lt;/div&gt;
 +             &lt;/div&gt;
 +           &lt;/div&gt;
 +         )}
 + 
-+         &lt;div className=&quot;flex items-center justify-between mb-4&quot;&gt;
-+           &lt;div className=&quot;flex gap-2&quot;&gt;
++         &lt;div className="flex items-center justify-between mb-4"&gt;
++           &lt;div className="flex gap-2"&gt;
 +             {boards?.map((board: TaskBoard) =&gt; (
 +               &lt;button
 +                 key={board.id}
 +                 onClick={() =&gt; setSelectedBoardId(board.id)}
 +                 className={&#96;px-4 py-2 rounded-lg font-medium transition-colors ${
 +                   selectedBoardId === board.id || (!selectedBoardId &amp;&amp; board.isDefault)
-+                     ? &#39;bg-blue-600 text-white&#39;
-+                     : &#39;bg-gray-100 text-gray-700 hover:bg-gray-200&#39;
++                     ? 'bg-blue-600 text-white'
++                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
 +                 }&#96;}
 +               &gt;
 +                 {board.nev}
 +               &lt;/button&gt;
 +             ))}
 +           &lt;/div&gt;
-+           &lt;button className=&quot;flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700&quot;&gt;
-+             &lt;Plus className=&quot;w-4 h-4&quot; /&gt;
++           &lt;button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"&gt;
++             &lt;Plus className="w-4 h-4" /&gt;
 +             Új feladat
 +           &lt;/button&gt;
 +         &lt;/div&gt;
 +       &lt;/div&gt;
 + 
 +       {boardDetails &amp;&amp; (
-+         &lt;div className=&quot;bg-white rounded-lg shadow p-6&quot;&gt;
++         &lt;div className="bg-white rounded-lg shadow p-6"&gt;
 +           &lt;TaskBoardComponent
 +             board={boardDetails}
 +             onTaskClick={handleTaskClick}
@@ -4943,18 +4943,18 @@ Hozzáadom a Team route-ot és a navigációs menüpontot:
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/App.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/App.tsx</summary>
 
 **Chunk 1**
 Lines added: 1, lines removed: undefined
 
 ```diff
 @@ -9,4 +9,5 @@
-  import Opportunities from &#39;./pages/Opportunities&#39;;
-  import Quotes from &#39;./pages/Quotes&#39;;
-+ import Team from &#39;./pages/Team&#39;;
-  import Login from &#39;./pages/Login&#39;;
-  import { BackendStatus } from &#39;./components/BackendStatus&#39;;
+  import Opportunities from './pages/Opportunities';
+  import Quotes from './pages/Quotes';
++ import Team from './pages/Team';
+  import Login from './pages/Login';
+  import { BackendStatus } from './components/BackendStatus';
 ```
 
 </details>
@@ -4965,7 +4965,7 @@ Lines added: 1, lines removed: undefined
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/App.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/App.tsx</summary>
 
 **Chunk 1**
 Lines added: 13, lines removed: undefined
@@ -4975,12 +4975,12 @@ Lines added: 13, lines removed: undefined
                     Dokumentumok
                   &lt;/Link&gt;
 +                 &lt;Link 
-+                   to=&quot;/team&quot; 
-+                   className=&quot;hover:bg-gray-800 px-3 py-2 rounded&quot;
++                   to="/team" 
++                   className="hover:bg-gray-800 px-3 py-2 rounded"
 +                   onClick={() =&gt; {
 +                     if (isElectron) {
-+                       import(&#39;./components/DebugPanel&#39;).then(module =&gt; {
-+                         module.addLog(&#39;info&#39;, &#39;Navigation: Clicked Csapat kommunikáció&#39;, { to: &#39;/team&#39; });
++                       import('./components/DebugPanel').then(module =&gt; {
++                         module.addLog('info', 'Navigation: Clicked Csapat kommunikáció', { to: '/team' });
 +                       }).catch(() =&gt; {});
 +                     }
 +                   }}
@@ -4988,7 +4988,7 @@ Lines added: 13, lines removed: undefined
 +                   Csapat kommunikáció
 +                 &lt;/Link&gt;
                   &lt;DropdownMenu 
-                    title=&quot;Logisztika&quot;
+                    title="Logisztika"
 ```
 
 </details>
@@ -4999,18 +4999,18 @@ Lines added: 13, lines removed: undefined
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/App.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/App.tsx</summary>
 
 **Chunk 1**
 Lines added: 1, lines removed: undefined
 
 ```diff
 @@ -235,4 +235,5 @@
-            &lt;Route path=&quot;/quotes&quot; element={&lt;Quotes /&gt;} /&gt;
-            &lt;Route path=&quot;/documents&quot; element={&lt;Documents /&gt;} /&gt;
-+           &lt;Route path=&quot;/team&quot; element={&lt;Team /&gt;} /&gt;
-            &lt;Route path=&quot;/warehouses&quot; element={&lt;Warehouses /&gt;} /&gt;
-            &lt;Route path=&quot;/products&quot; element={&lt;Products /&gt;} /&gt;
+            &lt;Route path="/quotes" element={&lt;Quotes /&gt;} /&gt;
+            &lt;Route path="/documents" element={&lt;Documents /&gt;} /&gt;
++           &lt;Route path="/team" element={&lt;Team /&gt;} /&gt;
+            &lt;Route path="/warehouses" element={&lt;Warehouses /&gt;} /&gt;
+            &lt;Route path="/products" element={&lt;Products /&gt;} /&gt;
 ```
 
 </details>
@@ -5061,19 +5061,19 @@ Javítom a drag-and-drop logikát a komponensekben:
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskColumn.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskColumn.tsx</summary>
 
 **Chunk 1**
 Lines added: 2, lines removed: 2
 
 ```diff
 @@ -1,6 +1,6 @@
-  import { TaskColumn as TaskColumnType, Task } from &#39;../../lib/api/team&#39;;
-  import TaskCard from &#39;./TaskCard&#39;;
-- import { useSortable } from &#39;@dnd-kit/sortable&#39;;
-- import { CSS } from &#39;@dnd-kit/utilities&#39;;
-+ import { useDroppable } from &#39;@dnd-kit/core&#39;;
-+ import { SortableContext, verticalListSortingStrategy } from &#39;@dnd-kit/sortable&#39;;
+  import { TaskColumn as TaskColumnType, Task } from '../../lib/api/team';
+  import TaskCard from './TaskCard';
+- import { useSortable } from '@dnd-kit/sortable';
+- import { CSS } from '@dnd-kit/utilities';
++ import { useDroppable } from '@dnd-kit/core';
++ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
   
   interface TaskColumnProps {
 ```
@@ -5114,7 +5114,7 @@ Lines added: 1, lines removed: 14
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskColumn.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskColumn.tsx</summary>
 
 **Chunk 1**
 Lines added: undefined, lines removed: 3
@@ -5126,7 +5126,7 @@ Lines added: undefined, lines removed: 3
 -       style={style}
 -       {...attributes}
 -       {...listeners}
-        className=&quot;flex-shrink-0 w-80 bg-gray-50 rounded-lg p-4&quot;
+        className="flex-shrink-0 w-80 bg-gray-50 rounded-lg p-4"
       &gt;
 ```
 
@@ -5137,7 +5137,7 @@ Lines added: 19, lines removed: 14
 @@ -33,18 +30,23 @@
         &lt;/div&gt;
   
--       &lt;div className=&quot;space-y-3 min-h-[200px]&quot;&gt;
+-       &lt;div className="space-y-3 min-h-[200px]"&gt;
 -         {columnTasks.map((task) =&gt; (
 -           &lt;TaskCard
 -             key={task.id}
@@ -5146,7 +5146,7 @@ Lines added: 19, lines removed: 14
 -           /&gt;
 -         ))}
 -         {columnTasks.length === 0 &amp;&amp; (
--           &lt;div className=&quot;text-center text-gray-400 text-sm py-8&quot;&gt;
+-           &lt;div className="text-center text-gray-400 text-sm py-8"&gt;
 -             Nincs feladat
 -           &lt;/div&gt;
 -         )}
@@ -5155,7 +5155,7 @@ Lines added: 19, lines removed: 14
 +         items={columnTasks.map((t) =&gt; t.id)}
 +         strategy={verticalListSortingStrategy}
 +       &gt;
-+         &lt;div className=&quot;space-y-3 min-h-[200px]&quot;&gt;
++         &lt;div className="space-y-3 min-h-[200px]"&gt;
 +           {columnTasks.map((task) =&gt; (
 +             &lt;TaskCard
 +               key={task.id}
@@ -5164,7 +5164,7 @@ Lines added: 19, lines removed: 14
 +             /&gt;
 +           ))}
 +           {columnTasks.length === 0 &amp;&amp; (
-+             &lt;div className=&quot;text-center text-gray-400 text-sm py-8&quot;&gt;
++             &lt;div className="text-center text-gray-400 text-sm py-8"&gt;
 +               Nincs feladat
 +             &lt;/div&gt;
 +           )}
@@ -5182,17 +5182,17 @@ Lines added: 19, lines removed: 14
 
 <tool-use data-tool-type="write" data-tool-name="write">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskCard.tsx</summary>
+<details><summary>Tool use: **write** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskCard.tsx</summary>
 
 **Chunk 1**
 Lines added: 2, lines removed: undefined
 
 ```diff
 @@ -3,4 +3,6 @@
-  import { hu } from &#39;date-fns/locale&#39;;
-  import { Calendar, User, Tag } from &#39;lucide-react&#39;;
-+ import { useSortable } from &#39;@dnd-kit/sortable&#39;;
-+ import { CSS } from &#39;@dnd-kit/utilities&#39;;
+  import { hu } from 'date-fns/locale';
+  import { Calendar, User, Tag } from 'lucide-react';
++ import { useSortable } from '@dnd-kit/sortable';
++ import { CSS } from '@dnd-kit/utilities';
   
   interface TaskCardProps {
 ```
@@ -5222,7 +5222,7 @@ Lines added: 17, lines removed: undefined
 +   };
 + 
     const priorityColors = {
-      LOW: &#39;bg-gray-100 text-gray-800&#39;,
+      LOW: 'bg-gray-100 text-gray-800',
 ```
 
 **Chunk 3**
@@ -5230,19 +5230,19 @@ Lines added: 4, lines removed: 9
 
 ```diff
 @@ -16,18 +35,13 @@
-      URGENT: &#39;bg-red-100 text-red-800&#39;,
+      URGENT: 'bg-red-100 text-red-800',
     };
 - 
 -   const statusColors = {
--     TODO: &#39;bg-gray-200&#39;,
--     IN_PROGRESS: &#39;bg-blue-200&#39;,
--     IN_REVIEW: &#39;bg-yellow-200&#39;,
--     DONE: &#39;bg-green-200&#39;,
--     BLOCKED: &#39;bg-red-200&#39;,
--     CANCELLED: &#39;bg-gray-300&#39;,
+-     TODO: 'bg-gray-200',
+-     IN_PROGRESS: 'bg-blue-200',
+-     IN_REVIEW: 'bg-yellow-200',
+-     DONE: 'bg-green-200',
+-     BLOCKED: 'bg-red-200',
+-     CANCELLED: 'bg-gray-300',
 -   };
   
-    const isOverdue = task.hataridoDatum &amp;&amp; new Date(task.hataridoDatum) &lt; new Date() &amp;&amp; task.allapot !== &#39;DONE&#39;;
+    const isOverdue = task.hataridoDatum &amp;&amp; new Date(task.hataridoDatum) &lt; new Date() &amp;&amp; task.allapot !== 'DONE';
   
     return (
       &lt;div
@@ -5273,7 +5273,7 @@ Lines added: undefined, lines removed: 1
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskBoard.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskBoard.tsx</summary>
 
 **Chunk 1**
 Lines added: 3, lines removed: 1
@@ -5283,16 +5283,16 @@ Lines added: 3, lines removed: 1
     useSensor,
     useSensors,
 +   closestCenter,
-  } from &#39;@dnd-kit/core&#39;;
+  } from '@dnd-kit/core';
   import {
     SortableContext,
     horizontalListSortingStrategy,
 +   arrayMove,
-  } from &#39;@dnd-kit/sortable&#39;;
-- import { TaskBoard as TaskBoardType, Task, TaskColumn } from &#39;../../lib/api/team&#39;;
-+ import { TaskBoard as TaskBoardType, Task } from &#39;../../lib/api/team&#39;;
-  import TaskColumn from &#39;./TaskColumn&#39;;
-  import TaskCard from &#39;./TaskCard&#39;;
+  } from '@dnd-kit/sortable';
+- import { TaskBoard as TaskBoardType, Task, TaskColumn } from '../../lib/api/team';
++ import { TaskBoard as TaskBoardType, Task } from '../../lib/api/team';
+  import TaskColumn from './TaskColumn';
+  import TaskCard from './TaskCard';
 ```
 
 </details>
@@ -5303,7 +5303,7 @@ Lines added: 3, lines removed: 1
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskBoard.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskBoard.tsx</summary>
 
 **Chunk 1**
 Lines added: 45, lines removed: 19
@@ -5318,10 +5318,10 @@ Lines added: 45, lines removed: 19
 - 
 -     if (!task || !column) return;
 - 
--     // Don&#39;t move if already in the same column
+-     // Don't move if already in the same column
 -     if (task.allapot === column.allapot) return;
 +     if (column &amp;&amp; task) {
-+       // Don&#39;t move if already in the same column
++       // Don't move if already in the same column
 +       if (task.allapot === column.allapot) return;
   
 -     // Calculate new position (at the end of the column)
@@ -5336,23 +5336,23 @@ Lines added: 45, lines removed: 19
 -         id: task.id,
 -         data: {
 -           boardId: board.id,
--           allapot: column.allapot as Task[&#39;allapot&#39;],
+-           allapot: column.allapot as Task['allapot'],
 -           position: newPosition,
 -         },
 -       });
 -     } catch (error) {
--       console.error(&#39;Failed to move task:&#39;, error);
+-       console.error('Failed to move task:', error);
 +       try {
 +         await moveTask.mutateAsync({
 +           id: task.id,
 +           data: {
 +             boardId: board.id,
-+             allapot: column.allapot as Task[&#39;allapot&#39;],
++             allapot: column.allapot as Task['allapot'],
 +             position: newPosition,
 +           },
 +         });
 +       } catch (error) {
-+         console.error(&#39;Failed to move task:&#39;, error);
++         console.error('Failed to move task:', error);
 +       }
 +       return;
 +     }
@@ -5376,7 +5376,7 @@ Lines added: 45, lines removed: 19
 +             },
 +           });
 +         } catch (error) {
-+           console.error(&#39;Failed to reorder task:&#39;, error);
++           console.error('Failed to reorder task:', error);
 +         }
 +       }
       }
@@ -5391,7 +5391,7 @@ Lines added: 45, lines removed: 19
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskBoard.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskBoard.tsx</summary>
 
 **Chunk 1**
 Lines added: 11, lines removed: 13
@@ -5410,7 +5410,7 @@ Lines added: 11, lines removed: 13
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       &gt;
-        &lt;div className=&quot;flex gap-4 overflow-x-auto pb-4&quot;&gt;
+        &lt;div className="flex gap-4 overflow-x-auto pb-4"&gt;
 -         &lt;SortableContext
 -           items={sortedColumns.map((col) =&gt; col.id)}
 -           strategy={horizontalListSortingStrategy}
@@ -5480,7 +5480,7 @@ Javítom a TaskColumn komponensben a hiányzó style változót és eltávolíto
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskBoard.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskBoard.tsx</summary>
 
 **Chunk 1**
 Lines added: undefined, lines removed: 2
@@ -5491,8 +5491,8 @@ Lines added: undefined, lines removed: 2
     SortableContext,
 -   horizontalListSortingStrategy,
 -   arrayMove,
-  } from &#39;@dnd-kit/sortable&#39;;
-  import { TaskBoard as TaskBoardType, Task } from &#39;../../lib/api/team&#39;;
+  } from '@dnd-kit/sortable';
+  import { TaskBoard as TaskBoardType, Task } from '../../lib/api/team';
 ```
 
 </details>
@@ -5503,7 +5503,7 @@ Lines added: undefined, lines removed: 2
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskBoard.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskBoard.tsx</summary>
 
 **Chunk 1**
 Lines added: undefined, lines removed: 2
@@ -5544,20 +5544,20 @@ Javítom a Team.tsx-ben a useBoard hook hívását:
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Team.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Team.tsx</summary>
 
 **Chunk 1**
 Lines added: 2, lines removed: 2
 
 ```diff
 @@ -1,7 +1,7 @@
-- import { useState } from &#39;react&#39;;
-+ import { useState, useEffect } from &#39;react&#39;;
-  import { useBoards, useBoard, useDashboardStats, Task, TaskBoard } from &#39;../lib/api/team&#39;;
-  import TaskBoardComponent from &#39;../components/team/TaskBoard&#39;;
-  import TaskModal from &#39;../components/team/TaskModal&#39;;
-- import { Plus, BarChart3 } from &#39;lucide-react&#39;;
-+ import { Plus } from &#39;lucide-react&#39;;
+- import { useState } from 'react';
++ import { useState, useEffect } from 'react';
+  import { useBoards, useBoard, useDashboardStats, Task, TaskBoard } from '../lib/api/team';
+  import TaskBoardComponent from '../components/team/TaskBoard';
+  import TaskModal from '../components/team/TaskModal';
+- import { Plus, BarChart3 } from 'lucide-react';
++ import { Plus } from 'lucide-react';
   
   export default function Team() {
 ```
@@ -5569,10 +5569,10 @@ Lines added: 9, lines removed: 3
 @@ -12,7 +12,13 @@
   
     const selectedBoard = boards?.find((b: TaskBoard) =&gt; b.id === selectedBoardId) || boards?.[0];
--   const { data: boardDetails } = useBoard(selectedBoard?.id || &#39;&#39;, {
+-   const { data: boardDetails } = useBoard(selectedBoard?.id || '', {
 -     enabled: !!selectedBoard?.id,
 -   });
-+   const boardIdToLoad = selectedBoard?.id || &#39;&#39;;
++   const boardIdToLoad = selectedBoard?.id || '';
 +   const { data: boardDetails } = useBoard(boardIdToLoad);
 + 
 +   useEffect(() =&gt; {
@@ -5621,14 +5621,14 @@ Javítom a useBoard hook-ot, hogy ne futtasson lekérdezést, ha nincs ID:
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/lib/api/team.ts</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/lib/api/team.ts</summary>
 
 **Chunk 1**
 Lines added: 1, lines removed: undefined
 
 ```diff
 @@ -334,4 +334,5 @@
-      queryKey: [&#39;board&#39;, id],
+      queryKey: ['board', id],
       queryFn: async () =&gt; {
 +       if (!id) return null;
         const response = await axios.get(&#96;/api/team/boards/${id}&#96;);
@@ -5822,7 +5822,7 @@ Futtatom a Prisma migration-t, telepítem a frontend függőségeket, majd felt�
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp/apps/server && npx prisma migrate dev --name add_team_communication_module</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp/apps/server && npx prisma migrate dev --name add_team_communication_module</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp/apps/server && npx prisma migrate dev --name add_team_communication_module
@@ -5830,103 +5830,103 @@ cd /Users/liviuszberger/mbit-erp/apps/server && npx prisma migrate dev --name ad
 
 ```
 Prisma schema loaded from prisma/schema.prisma
-Datasource &quot;db&quot;: SQLite database
+Datasource "db": SQLite database
 
 
 Error: Prisma schema validation - (validate wasm)
 Error code: P1012
-error: Error parsing attribute &quot;@relation&quot;: The relation field &#96;account&#96; on Model &#96;Task&#96; must specify the &#96;fields&#96; argument in the @relation attribute. You can run &#96;prisma format&#96; to fix this automatically.
+error: Error parsing attribute "@relation": The relation field &#96;account&#96; on Model &#96;Task&#96; must specify the &#96;fields&#96; argument in the @relation attribute. You can run &#96;prisma format&#96; to fix this automatically.
   --&gt;  prisma/schema.prisma:650
    | 
 649 |   // Más modulok kapcsolatai
 650 |   account        Account?
 651 |   opportunity    Opportunity?
    | 
-error: Error parsing attribute &quot;@relation&quot;: The relation field &#96;account&#96; on Model &#96;Task&#96; must specify the &#96;references&#96; argument in the @relation attribute.
+error: Error parsing attribute "@relation": The relation field &#96;account&#96; on Model &#96;Task&#96; must specify the &#96;references&#96; argument in the @relation attribute.
   --&gt;  prisma/schema.prisma:650
    | 
 649 |   // Más modulok kapcsolatai
 650 |   account        Account?
 651 |   opportunity    Opportunity?
    | 
-error: Error parsing attribute &quot;@relation&quot;: The relation field &#96;opportunity&#96; on Model &#96;Task&#96; must specify the &#96;fields&#96; argument in the @relation attribute. You can run &#96;prisma format&#96; to fix this automatically.
+error: Error parsing attribute "@relation": The relation field &#96;opportunity&#96; on Model &#96;Task&#96; must specify the &#96;fields&#96; argument in the @relation attribute. You can run &#96;prisma format&#96; to fix this automatically.
   --&gt;  prisma/schema.prisma:651
    | 
 650 |   account        Account?
 651 |   opportunity    Opportunity?
 652 |   lead           Lead?
    | 
-error: Error parsing attribute &quot;@relation&quot;: The relation field &#96;opportunity&#96; on Model &#96;Task&#96; must specify the &#96;references&#96; argument in the @relation attribute.
+error: Error parsing attribute "@relation": The relation field &#96;opportunity&#96; on Model &#96;Task&#96; must specify the &#96;references&#96; argument in the @relation attribute.
   --&gt;  prisma/schema.prisma:651
    | 
 650 |   account        Account?
 651 |   opportunity    Opportunity?
 652 |   lead           Lead?
    | 
-error: Error parsing attribute &quot;@relation&quot;: The relation field &#96;lead&#96; on Model &#96;Task&#96; must specify the &#96;fields&#96; argument in the @relation attribute. You can run &#96;prisma format&#96; to fix this automatically.
+error: Error parsing attribute "@relation": The relation field &#96;lead&#96; on Model &#96;Task&#96; must specify the &#96;fields&#96; argument in the @relation attribute. You can run &#96;prisma format&#96; to fix this automatically.
   --&gt;  prisma/schema.prisma:652
    | 
 651 |   opportunity    Opportunity?
 652 |   lead           Lead?
 653 |   quote          Quote?
    | 
-error: Error parsing attribute &quot;@relation&quot;: The relation field &#96;lead&#96; on Model &#96;Task&#96; must specify the &#96;references&#96; argument in the @relation attribute.
+error: Error parsing attribute "@relation": The relation field &#96;lead&#96; on Model &#96;Task&#96; must specify the &#96;references&#96; argument in the @relation attribute.
   --&gt;  prisma/schema.prisma:652
    | 
 651 |   opportunity    Opportunity?
 652 |   lead           Lead?
 653 |   quote          Quote?
    | 
-error: Error parsing attribute &quot;@relation&quot;: The relation field &#96;quote&#96; on Model &#96;Task&#96; must specify the &#96;fields&#96; argument in the @relation attribute. You can run &#96;prisma format&#96; to fix this automatically.
+error: Error parsing attribute "@relation": The relation field &#96;quote&#96; on Model &#96;Task&#96; must specify the &#96;fields&#96; argument in the @relation attribute. You can run &#96;prisma format&#96; to fix this automatically.
   --&gt;  prisma/schema.prisma:653
    | 
 652 |   lead           Lead?
 653 |   quote          Quote?
 654 |   order          Order?
    | 
-error: Error parsing attribute &quot;@relation&quot;: The relation field &#96;quote&#96; on Model &#96;Task&#96; must specify the &#96;references&#96; argument in the @relation attribute.
+error: Error parsing attribute "@relation": The relation field &#96;quote&#96; on Model &#96;Task&#96; must specify the &#96;references&#96; argument in the @relation attribute.
   --&gt;  prisma/schema.prisma:653
    | 
 652 |   lead           Lead?
 653 |   quote          Quote?
 654 |   order          Order?
    | 
-error: Error parsing attribute &quot;@relation&quot;: The relation field &#96;order&#96; on Model &#96;Task&#96; must specify the &#96;fields&#96; argument in the @relation attribute. You can run &#96;prisma format&#96; to fix this automatically.
+error: Error parsing attribute "@relation": The relation field &#96;order&#96; on Model &#96;Task&#96; must specify the &#96;fields&#96; argument in the @relation attribute. You can run &#96;prisma format&#96; to fix this automatically.
   --&gt;  prisma/schema.prisma:654
    | 
 653 |   quote          Quote?
 654 |   order          Order?
 655 |   ticket         Ticket?
    | 
-error: Error parsing attribute &quot;@relation&quot;: The relation field &#96;order&#96; on Model &#96;Task&#96; must specify the &#96;references&#96; argument in the @relation attribute.
+error: Error parsing attribute "@relation": The relation field &#96;order&#96; on Model &#96;Task&#96; must specify the &#96;references&#96; argument in the @relation attribute.
   --&gt;  prisma/schema.prisma:654
    | 
 653 |   quote          Quote?
 654 |   order          Order?
 655 |   ticket         Ticket?
    | 
-error: Error parsing attribute &quot;@relation&quot;: The relation field &#96;ticket&#96; on Model &#96;Task&#96; must specify the &#96;fields&#96; argument in the @relation attribute. You can run &#96;prisma format&#96; to fix this automatically.
+error: Error parsing attribute "@relation": The relation field &#96;ticket&#96; on Model &#96;Task&#96; must specify the &#96;fields&#96; argument in the @relation attribute. You can run &#96;prisma format&#96; to fix this automatically.
   --&gt;  prisma/schema.prisma:655
    | 
 654 |   order          Order?
 655 |   ticket         Ticket?
 656 |   document       Document?
    | 
-error: Error parsing attribute &quot;@relation&quot;: The relation field &#96;ticket&#96; on Model &#96;Task&#96; must specify the &#96;references&#96; argument in the @relation attribute.
+error: Error parsing attribute "@relation": The relation field &#96;ticket&#96; on Model &#96;Task&#96; must specify the &#96;references&#96; argument in the @relation attribute.
   --&gt;  prisma/schema.prisma:655
    | 
 654 |   order          Order?
 655 |   ticket         Ticket?
 656 |   document       Document?
    | 
-error: Error parsing attribute &quot;@relation&quot;: The relation field &#96;document&#96; on Model &#96;Task&#96; must specify the &#96;fields&#96; argument in the @relation attribute. You can run &#96;prisma format&#96; to fix this automatically.
+error: Error parsing attribute "@relation": The relation field &#96;document&#96; on Model &#96;Task&#96; must specify the &#96;fields&#96; argument in the @relation attribute. You can run &#96;prisma format&#96; to fix this automatically.
   --&gt;  prisma/schema.prisma:656
    | 
 655 |   ticket         Ticket?
 656 |   document       Document?
 657 |   
    | 
-error: Error parsing attribute &quot;@relation&quot;: The relation field &#96;document&#96; on Model &#96;Task&#96; must specify the &#96;references&#96; argument in the @relation attribute.
+error: Error parsing attribute "@relation": The relation field &#96;document&#96; on Model &#96;Task&#96; must specify the &#96;references&#96; argument in the @relation attribute.
   --&gt;  prisma/schema.prisma:656
    | 
 655 |   ticket         Ticket?
@@ -5965,7 +5965,7 @@ Javítom a Prisma sémában a hiányzó @relation attribútumokat:
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/prisma/schema.prisma</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/prisma/schema.prisma</summary>
 
 **Chunk 1**
 Lines added: 7, lines removed: 7
@@ -5999,7 +5999,7 @@ Lines added: 7, lines removed: 7
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp/apps/server && npx prisma migrate dev --name add_team_communication_module</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp/apps/server && npx prisma migrate dev --name add_team_communication_module</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp/apps/server && npx prisma migrate dev --name add_team_communication_module
@@ -6007,15 +6007,15 @@ cd /Users/liviuszberger/mbit-erp/apps/server && npx prisma migrate dev --name ad
 
 ```
 Prisma schema loaded from prisma/schema.prisma
-Datasource &quot;db&quot;: SQLite database
+Datasource "db": SQLite database
 
 Error: Prisma schema validation - (get-config wasm)
 Error code: P1012
 error: Environment variable not found: DATABASE_URL.
   --&gt;  prisma/schema.prisma:7
    | 
- 6 |   provider = &quot;sqlite&quot;
- 7 |   url      = env(&quot;DATABASE_URL&quot;)
+ 6 |   provider = "sqlite"
+ 7 |   url      = env("DATABASE_URL")
    | 
 
 Validation Error Count: 1
@@ -6040,7 +6040,7 @@ Ellenőrzöm a .env fájlokat és a DATABASE_URL beállítását:
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp/apps/server && ls -la | grep -E "\.env|prisma"</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp/apps/server && ls -la | grep -E "\.env|prisma"</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp/apps/server && ls -la | grep -E "\.env|prisma"
@@ -6056,7 +6056,7 @@ drwxr-xr-x   10 liviuszberger  staff     320 Nov  9 12:43 prisma
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp/apps/server && cat prisma/.env 2>/dev/null || echo "No .env in prisma"</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp/apps/server && cat prisma/.env 2>/dev/null || echo "No .env in prisma"</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp/apps/server && cat prisma/.env 2>/dev/null || echo "No .env in prisma"
@@ -6072,7 +6072,7 @@ No .env in prisma
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp/apps/server && export DATABASE_URL="file:./prisma/dev.db" && npx prisma migrate dev --name add_team_communication_module</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp/apps/server && export DATABASE_URL="file:./prisma/dev.db" && npx prisma migrate dev --name add_team_communication_module</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp/apps/server && export DATABASE_URL="file:./prisma/dev.db" && npx prisma migrate dev --name add_team_communication_module
@@ -6080,7 +6080,7 @@ cd /Users/liviuszberger/mbit-erp/apps/server && export DATABASE_URL="file:./pris
 
 ```
 Prisma schema loaded from prisma/schema.prisma
-Datasource &quot;db&quot;: SQLite database &quot;dev.db&quot; at &quot;file:./prisma/dev.db&quot;
+Datasource "db": SQLite database "dev.db" at "file:./prisma/dev.db"
 
 Error: Prisma Migrate has detected that the environment is non-interactive, which is not supported.
 
@@ -6105,7 +6105,7 @@ A `prisma migrate dev` interaktív. Használom a `prisma db push`-t, ami nem int
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp/apps/server && export DATABASE_URL="file:./prisma/dev.db" && npx prisma db push</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp/apps/server && export DATABASE_URL="file:./prisma/dev.db" && npx prisma db push</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp/apps/server && export DATABASE_URL="file:./prisma/dev.db" && npx prisma db push
@@ -6113,7 +6113,7 @@ cd /Users/liviuszberger/mbit-erp/apps/server && export DATABASE_URL="file:./pris
 
 ```
 Prisma schema loaded from prisma/schema.prisma
-Datasource &quot;db&quot;: SQLite database &quot;dev.db&quot; at &quot;file:./prisma/dev.db&quot;
+Datasource "db": SQLite database "dev.db" at "file:./prisma/dev.db"
 
 🚀  Your database is now in sync with your Prisma schema. Done in 41ms
 
@@ -6139,7 +6139,7 @@ Telepítem a frontend függőségeket:
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp/apps/web && npm install</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp/apps/web && npm install</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp/apps/web && npm install
@@ -6179,7 +6179,7 @@ Ellenőrzöm a git státuszt, majd commitolom és pusholom a változásokat:
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git status</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && git status</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp && git status
@@ -6187,12 +6187,12 @@ cd /Users/liviuszberger/mbit-erp && git status
 
 ```
 On branch main
-Your branch is up to date with &#39;origin/main&#39;.
+Your branch is up to date with 'origin/main'.
 
 Changes not staged for commit:
-  (use &quot;git add &lt;file&gt;...&quot; to update what will be committed)
-  (use &quot;git restore &lt;file&gt;...&quot; to discard changes in working directory)
-	modified:   &quot;.specstory/history/2025-11-09_11-17Z-applik\303\241ci\303\263s-hib\303\241k-\303\251s-fejleszt\303\251si-javaslatok.md&quot;
+  (use "git add &lt;file&gt;..." to update what will be committed)
+  (use "git restore &lt;file&gt;..." to discard changes in working directory)
+	modified:   ".specstory/history/2025-11-09_11-17Z-applik\303\241ci\303\263s-hib\303\241k-\303\251s-fejleszt\303\251si-javaslatok.md"
 	modified:   apps/server/prisma/prisma/dev.db
 	modified:   apps/server/prisma/schema.prisma
 	modified:   apps/server/src/app.module.ts
@@ -6202,14 +6202,14 @@ Changes not staged for commit:
 	modified:   package-lock.json
 
 Untracked files:
-  (use &quot;git add &lt;file&gt;...&quot; to include in what will be committed)
-	&quot;.specstory/history/2025-11-16_13-58Z-csapat-kommunik\303\241ci\303\263s-modul-fejleszt\303\251se.md&quot;
+  (use "git add &lt;file&gt;..." to include in what will be committed)
+	".specstory/history/2025-11-16_13-58Z-csapat-kommunik\303\241ci\303\263s-modul-fejleszt\303\251se.md"
 	apps/server/src/team/
 	apps/web/src/components/team/
 	apps/web/src/lib/api/
 	apps/web/src/pages/Team.tsx
 
-no changes added to commit (use &quot;git add&quot; and/or &quot;git commit -a&quot;)
+no changes added to commit (use "git add" and/or "git commit -a")
 
 ```
 </details>
@@ -6218,7 +6218,7 @@ no changes added to commit (use &quot;git add&quot; and/or &quot;git commit -a&q
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git add -A</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && git add -A</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp && git add -A
@@ -6229,7 +6229,7 @@ cd /Users/liviuszberger/mbit-erp && git add -A
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git commit -m "feat: Add Team Communication module with Kanban board functionality
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && git commit -m "feat: Add Team Communication module with Kanban board functionality
 
 - Add Prisma schema extensions: TaskBoard, TaskColumn, TaskBoardMember, TaskComment, TaskActivity, TaskAttachment, TaskWatcher models
 - Extend Task model with board support, position tracking, and cross-module relationships
@@ -6258,7 +6258,7 @@ cd /Users/liviuszberger/mbit-erp && git commit -m "feat: Add Team Communication 
 ```
 [main 6ecd3e9] feat: Add Team Communication module with Kanban board functionality
  32 files changed, 12174 insertions(+), 3 deletions(-)
- create mode 100644 &quot;.specstory/history/2025-11-16_13-58Z-csapat-kommunik\303\241ci\303\263s-modul-fejleszt\303\251se.md&quot;
+ create mode 100644 ".specstory/history/2025-11-16_13-58Z-csapat-kommunik\303\241ci\303\263s-modul-fejleszt\303\251se.md"
  create mode 100644 apps/server/src/team/activity/activity.service.ts
  create mode 100644 apps/server/src/team/board/board.controller.ts
  create mode 100644 apps/server/src/team/board/board.service.ts
@@ -6290,7 +6290,7 @@ cd /Users/liviuszberger/mbit-erp && git commit -m "feat: Add Team Communication 
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git push origin main</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && git push origin main</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp && git push origin main
@@ -6425,7 +6425,7 @@ A `task.board.members` hiányzik a lekérdezésből. Hozzáadom a `members`-t a 
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp/apps/desktop</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp/apps/desktop</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp/apps/desktop
@@ -6481,14 +6481,14 @@ Hozzáadom a `members`-t a board include-hoz:
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/team/task/task.service.ts</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/team/task/task.service.ts</summary>
 
 **Chunk 1**
 Lines added: 1, lines removed: undefined
 
 ```diff
 @@ -191,4 +191,5 @@
-                orderBy: { pozicio: &#39;asc&#39; },
+                orderBy: { pozicio: 'asc' },
               },
 +             members: true,
             },
@@ -6519,7 +6519,7 @@ Lint results
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp/apps/server && npm run build</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp/apps/server && npm run build</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp/apps/server && npm run build
@@ -6548,7 +6548,7 @@ A build sikeres. Commitolom és pusholom a javítást:
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git add apps/server/src/team/task/task.service.ts && git commit -m "fix: Add members to board include in TaskService.findOne for permission check" && git push origin main</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && git add apps/server/src/team/task/task.service.ts && git commit -m "fix: Add members to board include in TaskService.findOne for permission check" && git push origin main</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp && git add apps/server/src/team/task/task.service.ts && git commit -m "fix: Add members to board include in TaskService.findOne for permission check" && git push origin main
@@ -6828,7 +6828,7 @@ Eltávolítom a nem használt importokat és változókat:
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskBoard.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskBoard.tsx</summary>
 
 **Chunk 1**
 Lines added: undefined, lines removed: 3
@@ -6836,12 +6836,12 @@ Lines added: undefined, lines removed: 3
 ```diff
 @@ -10,7 +10,4 @@
     closestCenter,
-  } from &#39;@dnd-kit/core&#39;;
+  } from '@dnd-kit/core';
 - import {
 -   SortableContext,
-- } from &#39;@dnd-kit/sortable&#39;;
-  import { TaskBoard as TaskBoardType, Task } from &#39;../../lib/api/team&#39;;
-  import TaskColumn from &#39;./TaskColumn&#39;;
+- } from '@dnd-kit/sortable';
+  import { TaskBoard as TaskBoardType, Task } from '../../lib/api/team';
+  import TaskColumn from './TaskColumn';
 ```
 
 </details>
@@ -6852,20 +6852,20 @@ Lines added: undefined, lines removed: 3
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskModal.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskModal.tsx</summary>
 
 **Chunk 1**
 Lines added: 2, lines removed: 2
 
 ```diff
 @@ -1,7 +1,7 @@
-  import { useState } from &#39;react&#39;;
-- import { Task, useTask, useUpdateTask, useDeleteTask, useTaskComments, useCreateComment } from &#39;../../lib/api/team&#39;;
-+ import { useTask, useTaskComments, useCreateComment } from &#39;../../lib/api/team&#39;;
-  import { format } from &#39;date-fns&#39;;
-  import { hu } from &#39;date-fns/locale&#39;;
-- import { X, Calendar, User, MessageSquare, Clock } from &#39;lucide-react&#39;;
-+ import { X, Calendar, User } from &#39;lucide-react&#39;;
+  import { useState } from 'react';
+- import { Task, useTask, useUpdateTask, useDeleteTask, useTaskComments, useCreateComment } from '../../lib/api/team';
++ import { useTask, useTaskComments, useCreateComment } from '../../lib/api/team';
+  import { format } from 'date-fns';
+  import { hu } from 'date-fns/locale';
+- import { X, Calendar, User, MessageSquare, Clock } from 'lucide-react';
++ import { X, Calendar, User } from 'lucide-react';
   
   interface TaskModalProps {
 ```
@@ -6880,7 +6880,7 @@ Lines added: undefined, lines removed: 2
 -   const updateTask = useUpdateTask();
 -   const deleteTask = useDeleteTask();
     const createComment = useCreateComment();
-    const [commentText, setCommentText] = useState(&#39;&#39;);
+    const [commentText, setCommentText] = useState('');
 ```
 
 </details>
@@ -6891,7 +6891,7 @@ Lines added: undefined, lines removed: 2
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/lib/api/team.ts</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/lib/api/team.ts</summary>
 
 **Chunk 1**
 Lines added: 1, lines removed: 1
@@ -6913,7 +6913,7 @@ Lines added: 1, lines removed: 1
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp/apps/web && npm run build</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp/apps/web && npm run build</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp/apps/web && npm run build
@@ -6963,7 +6963,7 @@ A frontend build sikeres. Commitolom és pusholom a javításokat:
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git add -A && git commit -m "fix: Remove unused imports and variables to fix TypeScript build errors
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && git add -A && git commit -m "fix: Remove unused imports and variables to fix TypeScript build errors
 
 - Remove unused SortableContext import from TaskBoard.tsx
 - Remove unused Task, MessageSquare, Clock imports from TaskModal.tsx
@@ -7762,22 +7762,22 @@ Implementálom a teljes funkcionalitást a Team.tsx-ben:
 
 <tool-use data-tool-type="write" data-tool-name="write">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Team.tsx</summary>
+<details><summary>Tool use: **write** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Team.tsx</summary>
 
 **Chunk 1**
 Lines added: 38, lines removed: 3
 
 ```diff
 @@ -1,17 +1,52 @@
-  import { useState, useEffect } from &#39;react&#39;;
-- import { useBoards, useBoard, useDashboardStats, Task, TaskBoard } from &#39;../lib/api/team&#39;;
-+ import { useBoards, useBoard, useDashboardStats, useCreateTask, useCreateBoard, Task, TaskBoard, CreateTaskDto } from &#39;../lib/api/team&#39;;
-  import TaskBoardComponent from &#39;../components/team/TaskBoard&#39;;
-  import TaskModal from &#39;../components/team/TaskModal&#39;;
-- import { Plus } from &#39;lucide-react&#39;;
-+ import Modal from &#39;../components/Modal&#39;;
-+ import { Plus, Settings } from &#39;lucide-react&#39;;
-+ import axios from &#39;../lib/axios&#39;;
+  import { useState, useEffect } from 'react';
+- import { useBoards, useBoard, useDashboardStats, Task, TaskBoard } from '../lib/api/team';
++ import { useBoards, useBoard, useDashboardStats, useCreateTask, useCreateBoard, Task, TaskBoard, CreateTaskDto } from '../lib/api/team';
+  import TaskBoardComponent from '../components/team/TaskBoard';
+  import TaskModal from '../components/team/TaskModal';
+- import { Plus } from 'lucide-react';
++ import Modal from '../components/Modal';
++ import { Plus, Settings } from 'lucide-react';
++ import axios from '../lib/axios';
 + 
 + interface User {
 +   id: string;
@@ -7796,31 +7796,31 @@ Lines added: 38, lines removed: 3
 +   const [isCreateBoardModalOpen, setIsCreateBoardModalOpen] = useState(false);
 +   const [users, setUsers] = useState&lt;User[]&gt;([]);
 +   const [loadingUsers, setLoadingUsers] = useState(false);
-+   const [error, setError] = useState(&#39;&#39;);
-+   const [success, setSuccess] = useState(&#39;&#39;);
++   const [error, setError] = useState('');
++   const [success, setSuccess] = useState('');
 + 
 +   const createTask = useCreateTask();
 +   const createBoard = useCreateBoard();
   
     const selectedBoard = boards?.find((b: TaskBoard) =&gt; b.id === selectedBoardId) || boards?.[0];
-    const boardIdToLoad = selectedBoard?.id || &#39;&#39;;
+    const boardIdToLoad = selectedBoard?.id || '';
     const { data: boardDetails } = useBoard(boardIdToLoad);
 + 
 +   const [taskFormData, setTaskFormData] = useState&lt;CreateTaskDto&gt;({
-+     cim: &#39;&#39;,
-+     leiras: &#39;&#39;,
-+     allapot: &#39;TODO&#39;,
-+     prioritas: &#39;MEDIUM&#39;,
-+     hataridoDatum: &#39;&#39;,
-+     assignedToId: &#39;&#39;,
-+     boardId: &#39;&#39;,
-+     tags: &#39;&#39;,
++     cim: '',
++     leiras: '',
++     allapot: 'TODO',
++     prioritas: 'MEDIUM',
++     hataridoDatum: '',
++     assignedToId: '',
++     boardId: '',
++     tags: '',
 +   });
 + 
 +   const [boardFormData, setBoardFormData] = useState({
-+     nev: &#39;&#39;,
-+     leiras: &#39;&#39;,
-+     szin: &#39;#3B82F6&#39;,
++     nev: '',
++     leiras: '',
++     szin: '#3B82F6',
 +   });
   
     useEffect(() =&gt; {
@@ -7841,14 +7841,14 @@ Lines added: 141, lines removed: 2
 +   const loadUsers = async () =&gt; {
 +     setLoadingUsers(true);
 +     try {
-+       const response = await axios.get(&#39;/api/system/users?skip=0&amp;take=100&#39;);
++       const response = await axios.get('/api/system/users?skip=0&amp;take=100');
 +       if (response.data.items) {
 +         setUsers(response.data.items.filter((u: User) =&gt; u.aktiv));
 +       } else if (response.data.data) {
 +         setUsers(response.data.data.filter((u: User) =&gt; u.aktiv));
 +       }
 +     } catch (err) {
-+       console.error(&#39;Failed to load users:&#39;, err);
++       console.error('Failed to load users:', err);
 +     } finally {
 +       setLoadingUsers(false);
 +     }
@@ -7860,38 +7860,38 @@ Lines added: 141, lines removed: 2
 + 
 +   const handleOpenCreateTaskModal = () =&gt; {
 +     setTaskFormData({
-+       cim: &#39;&#39;,
-+       leiras: &#39;&#39;,
-+       allapot: &#39;TODO&#39;,
-+       prioritas: &#39;MEDIUM&#39;,
-+       hataridoDatum: &#39;&#39;,
-+       assignedToId: &#39;&#39;,
-+       boardId: selectedBoardId || &#39;&#39;,
-+       tags: &#39;&#39;,
++       cim: '',
++       leiras: '',
++       allapot: 'TODO',
++       prioritas: 'MEDIUM',
++       hataridoDatum: '',
++       assignedToId: '',
++       boardId: selectedBoardId || '',
++       tags: '',
 +     });
-+     setError(&#39;&#39;);
-+     setSuccess(&#39;&#39;);
++     setError('');
++     setSuccess('');
 +     setIsCreateTaskModalOpen(true);
 +   };
 + 
 +   const handleCloseCreateTaskModal = () =&gt; {
 +     setIsCreateTaskModalOpen(false);
-+     setError(&#39;&#39;);
-+     setSuccess(&#39;&#39;);
++     setError('');
++     setSuccess('');
 +   };
 + 
 +   const handleSubmitTask = async (e: React.FormEvent) =&gt; {
 +     e.preventDefault();
-+     setError(&#39;&#39;);
-+     setSuccess(&#39;&#39;);
++     setError('');
++     setSuccess('');
 + 
 +     if (!taskFormData.cim.trim()) {
-+       setError(&#39;A cím kötelező&#39;);
++       setError('A cím kötelező');
 +       return;
 +     }
 + 
 +     if (!taskFormData.boardId) {
-+       setError(&#39;Válasszon board-ot&#39;);
++       setError('Válasszon board-ot');
 +       return;
 +     }
 + 
@@ -7903,40 +7903,40 @@ Lines added: 141, lines removed: 2
 +         tags: taskFormData.tags || undefined,
 +         leiras: taskFormData.leiras || undefined,
 +       });
-+       setSuccess(&#39;Feladat sikeresen létrehozva&#39;);
++       setSuccess('Feladat sikeresen létrehozva');
 +       setTimeout(() =&gt; {
 +         setIsCreateTaskModalOpen(false);
-+         setSuccess(&#39;&#39;);
++         setSuccess('');
 +       }, 1000);
 +     } catch (err: any) {
-+       setError(err.response?.data?.message || &#39;Hiba a feladat létrehozásakor&#39;);
++       setError(err.response?.data?.message || 'Hiba a feladat létrehozásakor');
 +     }
 +   };
 + 
 +   const handleOpenCreateBoardModal = () =&gt; {
 +     setBoardFormData({
-+       nev: &#39;&#39;,
-+       leiras: &#39;&#39;,
-+       szin: &#39;#3B82F6&#39;,
++       nev: '',
++       leiras: '',
++       szin: '#3B82F6',
 +     });
-+     setError(&#39;&#39;);
-+     setSuccess(&#39;&#39;);
++     setError('');
++     setSuccess('');
 +     setIsCreateBoardModalOpen(true);
 +   };
 + 
 +   const handleCloseCreateBoardModal = () =&gt; {
 +     setIsCreateBoardModalOpen(false);
-+     setError(&#39;&#39;);
-+     setSuccess(&#39;&#39;);
++     setError('');
++     setSuccess('');
 +   };
 + 
 +   const handleSubmitBoard = async (e: React.FormEvent) =&gt; {
 +     e.preventDefault();
-+     setError(&#39;&#39;);
-+     setSuccess(&#39;&#39;);
++     setError('');
++     setSuccess('');
 + 
 +     if (!boardFormData.nev.trim()) {
-+       setError(&#39;A név kötelező&#39;);
++       setError('A név kötelező');
 +       return;
 +     }
 + 
@@ -7946,51 +7946,51 @@ Lines added: 141, lines removed: 2
 +         leiras: boardFormData.leiras || undefined,
 +         szin: boardFormData.szin,
 +       });
-+       setSuccess(&#39;Board sikeresen létrehozva&#39;);
++       setSuccess('Board sikeresen létrehozva');
 +       setTimeout(() =&gt; {
 +         setIsCreateBoardModalOpen(false);
-+         setSuccess(&#39;&#39;);
++         setSuccess('');
 +         if (newBoard?.id) {
 +           setSelectedBoardId(newBoard.id);
 +         }
 +       }, 1000);
 +     } catch (err: any) {
-+       setError(err.response?.data?.message || &#39;Hiba a board létrehozásakor&#39;);
++       setError(err.response?.data?.message || 'Hiba a board létrehozásakor');
 +     }
 +   };
   
     return (
-      &lt;div className=&quot;p-6&quot;&gt;
-        &lt;div className=&quot;mb-6&quot;&gt;
--         &lt;h1 className=&quot;text-3xl font-bold text-gray-900 mb-4&quot;&gt;Csapat kommunikáció&lt;/h1&gt;
-+         &lt;div className=&quot;flex items-center justify-between mb-4&quot;&gt;
-+           &lt;h1 className=&quot;text-3xl font-bold text-gray-900&quot;&gt;Csapat kommunikáció&lt;/h1&gt;
-+           &lt;div className=&quot;flex gap-2&quot;&gt;
+      &lt;div className="p-6"&gt;
+        &lt;div className="mb-6"&gt;
+-         &lt;h1 className="text-3xl font-bold text-gray-900 mb-4"&gt;Csapat kommunikáció&lt;/h1&gt;
++         &lt;div className="flex items-center justify-between mb-4"&gt;
++           &lt;h1 className="text-3xl font-bold text-gray-900"&gt;Csapat kommunikáció&lt;/h1&gt;
++           &lt;div className="flex gap-2"&gt;
 +             &lt;button
 +               onClick={handleOpenCreateBoardModal}
-+               className=&quot;flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700&quot;
++               className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
 +             &gt;
-+               &lt;Settings className=&quot;w-4 h-4&quot; /&gt;
++               &lt;Settings className="w-4 h-4" /&gt;
 +               Új board
 +             &lt;/button&gt;
 +             &lt;button
 +               onClick={handleOpenCreateTaskModal}
-+               className=&quot;flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700&quot;
++               className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
 +             &gt;
-+               &lt;Plus className=&quot;w-4 h-4&quot; /&gt;
++               &lt;Plus className="w-4 h-4" /&gt;
 +               Új feladat
 +             &lt;/button&gt;
 +           &lt;/div&gt;
 +         &lt;/div&gt;
   
           {stats &amp;&amp; (
-            &lt;div className=&quot;grid grid-cols-4 gap-4 mb-6&quot;&gt;
-              &lt;div className=&quot;bg-white rounded-lg shadow p-4&quot;&gt;
-                &lt;div className=&quot;text-sm text-gray-600&quot;&gt;Összes feladat&lt;/div&gt;
--               &lt;div className=&quot;text-2xl font-bold text-gray-900&quot;&gt;{stats.total}&lt;/div&gt;
-+               &lt;div className=&quot;text-2xl font-bold text-gray-900&quot;&gt;{stats.total || 0}&lt;/div&gt;
+            &lt;div className="grid grid-cols-4 gap-4 mb-6"&gt;
+              &lt;div className="bg-white rounded-lg shadow p-4"&gt;
+                &lt;div className="text-sm text-gray-600"&gt;Összes feladat&lt;/div&gt;
+-               &lt;div className="text-2xl font-bold text-gray-900"&gt;{stats.total}&lt;/div&gt;
++               &lt;div className="text-2xl font-bold text-gray-900"&gt;{stats.total || 0}&lt;/div&gt;
               &lt;/div&gt;
-              &lt;div className=&quot;bg-white rounded-lg shadow p-4&quot;&gt;
+              &lt;div className="bg-white rounded-lg shadow p-4"&gt;
 ```
 
 **Chunk 3**
@@ -8000,12 +8000,12 @@ Lines added: 5, lines removed: 3
 @@ -52,7 +226,9 @@
           )}
   
--         &lt;div className=&quot;flex items-center justify-between mb-4&quot;&gt;
--           &lt;div className=&quot;flex gap-2&quot;&gt;
+-         &lt;div className="flex items-center justify-between mb-4"&gt;
+-           &lt;div className="flex gap-2"&gt;
 -             {boards?.map((board: TaskBoard) =&gt; (
-+         &lt;div className=&quot;flex items-center gap-2 mb-4&quot;&gt;
++         &lt;div className="flex items-center gap-2 mb-4"&gt;
 +           {boardsLoading ? (
-+             &lt;div className=&quot;text-gray-500&quot;&gt;Board-ok betöltése...&lt;/div&gt;
++             &lt;div className="text-gray-500"&gt;Board-ok betöltése...&lt;/div&gt;
 +           ) : boards &amp;&amp; boards.length &gt; 0 ? (
 +             boards.map((board: TaskBoard) =&gt; (
                 &lt;button
@@ -8021,13 +8021,13 @@ Lines added: 4, lines removed: 6
                 &lt;/button&gt;
 -             ))}
 -           &lt;/div&gt;
--           &lt;button className=&quot;flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700&quot;&gt;
--             &lt;Plus className=&quot;w-4 h-4&quot; /&gt;
+-           &lt;button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"&gt;
+-             &lt;Plus className="w-4 h-4" /&gt;
 -             Új feladat
 -           &lt;/button&gt;
 +             ))
 +           ) : (
-+             &lt;div className=&quot;text-gray-500&quot;&gt;Nincs board. Hozzon létre egy újat!&lt;/div&gt;
++             &lt;div className="text-gray-500"&gt;Nincs board. Hozzon létre egy újat!&lt;/div&gt;
 +           )}
           &lt;/div&gt;
         &lt;/div&gt;
@@ -8042,8 +8042,8 @@ Lines added: 6, lines removed: undefined
         )}
 + 
 +       {!boardDetails &amp;&amp; !boardsLoading &amp;&amp; (
-+         &lt;div className=&quot;bg-white rounded-lg shadow p-12 text-center&quot;&gt;
-+           &lt;p className=&quot;text-gray-500 text-lg&quot;&gt;Válasszon egy board-ot vagy hozzon létre egy újat&lt;/p&gt;
++         &lt;div className="bg-white rounded-lg shadow p-12 text-center"&gt;
++           &lt;p className="text-gray-500 text-lg"&gt;Válasszon egy board-ot vagy hozzon létre egy újat&lt;/p&gt;
 +         &lt;/div&gt;
 +       )}
   
@@ -8062,97 +8062,97 @@ Lines added: 245, lines removed: 1
 +       &lt;Modal
 +         isOpen={isCreateTaskModalOpen}
 +         onClose={handleCloseCreateTaskModal}
-+         title=&quot;Új feladat&quot;
-+         size=&quot;lg&quot;
++         title="Új feladat"
++         size="lg"
 +       &gt;
 +         &lt;form onSubmit={handleSubmitTask}&gt;
 +           {error &amp;&amp; (
-+             &lt;div className=&quot;bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4&quot;&gt;
++             &lt;div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4"&gt;
 +               {error}
 +             &lt;/div&gt;
 +           )}
 +           {success &amp;&amp; (
-+             &lt;div className=&quot;bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded mb-4&quot;&gt;
++             &lt;div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded mb-4"&gt;
 +               {success}
 +             &lt;/div&gt;
 +           )}
 + 
-+           &lt;div className=&quot;space-y-4&quot;&gt;
++           &lt;div className="space-y-4"&gt;
 +             &lt;div&gt;
-+               &lt;label className=&quot;block text-sm font-medium text-gray-700 mb-1&quot;&gt;
-+                 Cím &lt;span className=&quot;text-red-500&quot;&gt;*&lt;/span&gt;
++               &lt;label className="block text-sm font-medium text-gray-700 mb-1"&gt;
++                 Cím &lt;span className="text-red-500"&gt;*&lt;/span&gt;
 +               &lt;/label&gt;
 +               &lt;input
-+                 type=&quot;text&quot;
++                 type="text"
 +                 value={taskFormData.cim}
 +                 onChange={(e) =&gt; setTaskFormData({ ...taskFormData, cim: e.target.value })}
-+                 className=&quot;w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500&quot;
++                 className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
 +                 required
 +               /&gt;
 +             &lt;/div&gt;
 + 
 +             &lt;div&gt;
-+               &lt;label className=&quot;block text-sm font-medium text-gray-700 mb-1&quot;&gt;
++               &lt;label className="block text-sm font-medium text-gray-700 mb-1"&gt;
 +                 Leírás
 +               &lt;/label&gt;
 +               &lt;textarea
 +                 value={taskFormData.leiras}
 +                 onChange={(e) =&gt; setTaskFormData({ ...taskFormData, leiras: e.target.value })}
 +                 rows={4}
-+                 className=&quot;w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500&quot;
++                 className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
 +               /&gt;
 +             &lt;/div&gt;
 + 
-+             &lt;div className=&quot;grid grid-cols-2 gap-4&quot;&gt;
++             &lt;div className="grid grid-cols-2 gap-4"&gt;
 +               &lt;div&gt;
-+                 &lt;label className=&quot;block text-sm font-medium text-gray-700 mb-1&quot;&gt;
-+                   Állapot &lt;span className=&quot;text-red-500&quot;&gt;*&lt;/span&gt;
++                 &lt;label className="block text-sm font-medium text-gray-700 mb-1"&gt;
++                   Állapot &lt;span className="text-red-500"&gt;*&lt;/span&gt;
 +                 &lt;/label&gt;
 +                 &lt;select
 +                   value={taskFormData.allapot}
-+                   onChange={(e) =&gt; setTaskFormData({ ...taskFormData, allapot: e.target.value as CreateTaskDto[&#39;allapot&#39;] })}
-+                   className=&quot;w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500&quot;
++                   onChange={(e) =&gt; setTaskFormData({ ...taskFormData, allapot: e.target.value as CreateTaskDto['allapot'] })}
++                   className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
 +                   required
 +                 &gt;
-+                   &lt;option value=&quot;TODO&quot;&gt;Teendő&lt;/option&gt;
-+                   &lt;option value=&quot;IN_PROGRESS&quot;&gt;Folyamatban&lt;/option&gt;
-+                   &lt;option value=&quot;IN_REVIEW&quot;&gt;Áttekintés alatt&lt;/option&gt;
-+                   &lt;option value=&quot;DONE&quot;&gt;Kész&lt;/option&gt;
-+                   &lt;option value=&quot;BLOCKED&quot;&gt;Blokkolva&lt;/option&gt;
-+                   &lt;option value=&quot;CANCELLED&quot;&gt;Törölve&lt;/option&gt;
++                   &lt;option value="TODO"&gt;Teendő&lt;/option&gt;
++                   &lt;option value="IN_PROGRESS"&gt;Folyamatban&lt;/option&gt;
++                   &lt;option value="IN_REVIEW"&gt;Áttekintés alatt&lt;/option&gt;
++                   &lt;option value="DONE"&gt;Kész&lt;/option&gt;
++                   &lt;option value="BLOCKED"&gt;Blokkolva&lt;/option&gt;
++                   &lt;option value="CANCELLED"&gt;Törölve&lt;/option&gt;
 +                 &lt;/select&gt;
 +               &lt;/div&gt;
 + 
 +               &lt;div&gt;
-+                 &lt;label className=&quot;block text-sm font-medium text-gray-700 mb-1&quot;&gt;
-+                   Prioritás &lt;span className=&quot;text-red-500&quot;&gt;*&lt;/span&gt;
++                 &lt;label className="block text-sm font-medium text-gray-700 mb-1"&gt;
++                   Prioritás &lt;span className="text-red-500"&gt;*&lt;/span&gt;
 +                 &lt;/label&gt;
 +                 &lt;select
 +                   value={taskFormData.prioritas}
-+                   onChange={(e) =&gt; setTaskFormData({ ...taskFormData, prioritas: e.target.value as CreateTaskDto[&#39;prioritas&#39;] })}
-+                   className=&quot;w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500&quot;
++                   onChange={(e) =&gt; setTaskFormData({ ...taskFormData, prioritas: e.target.value as CreateTaskDto['prioritas'] })}
++                   className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
 +                   required
 +                 &gt;
-+                   &lt;option value=&quot;LOW&quot;&gt;Alacsony&lt;/option&gt;
-+                   &lt;option value=&quot;MEDIUM&quot;&gt;Közepes&lt;/option&gt;
-+                   &lt;option value=&quot;HIGH&quot;&gt;Magas&lt;/option&gt;
-+                   &lt;option value=&quot;URGENT&quot;&gt;Sürgős&lt;/option&gt;
++                   &lt;option value="LOW"&gt;Alacsony&lt;/option&gt;
++                   &lt;option value="MEDIUM"&gt;Közepes&lt;/option&gt;
++                   &lt;option value="HIGH"&gt;Magas&lt;/option&gt;
++                   &lt;option value="URGENT"&gt;Sürgős&lt;/option&gt;
 +                 &lt;/select&gt;
 +               &lt;/div&gt;
 +             &lt;/div&gt;
 + 
-+             &lt;div className=&quot;grid grid-cols-2 gap-4&quot;&gt;
++             &lt;div className="grid grid-cols-2 gap-4"&gt;
 +               &lt;div&gt;
-+                 &lt;label className=&quot;block text-sm font-medium text-gray-700 mb-1&quot;&gt;
-+                   Board &lt;span className=&quot;text-red-500&quot;&gt;*&lt;/span&gt;
++                 &lt;label className="block text-sm font-medium text-gray-700 mb-1"&gt;
++                   Board &lt;span className="text-red-500"&gt;*&lt;/span&gt;
 +                 &lt;/label&gt;
 +                 &lt;select
 +                   value={taskFormData.boardId}
 +                   onChange={(e) =&gt; setTaskFormData({ ...taskFormData, boardId: e.target.value })}
-+                   className=&quot;w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500&quot;
++                   className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
 +                   required
 +                 &gt;
-+                   &lt;option value=&quot;&quot;&gt;-- Válasszon --&lt;/option&gt;
++                   &lt;option value=""&gt;-- Válasszon --&lt;/option&gt;
 +                   {boards?.map((board: TaskBoard) =&gt; (
 +                     &lt;option key={board.id} value={board.id}&gt;
 +                       {board.nev}
@@ -8162,16 +8162,16 @@ Lines added: 245, lines removed: 1
 +               &lt;/div&gt;
 + 
 +               &lt;div&gt;
-+                 &lt;label className=&quot;block text-sm font-medium text-gray-700 mb-1&quot;&gt;
++                 &lt;label className="block text-sm font-medium text-gray-700 mb-1"&gt;
 +                   Hozzárendelve
 +                 &lt;/label&gt;
 +                 &lt;select
 +                   value={taskFormData.assignedToId}
 +                   onChange={(e) =&gt; setTaskFormData({ ...taskFormData, assignedToId: e.target.value })}
-+                   className=&quot;w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500&quot;
++                   className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
 +                   disabled={loadingUsers}
 +                 &gt;
-+                   &lt;option value=&quot;&quot;&gt;-- Senki --&lt;/option&gt;
++                   &lt;option value=""&gt;-- Senki --&lt;/option&gt;
 +                   {users.map((user) =&gt; (
 +                     &lt;option key={user.id} value={user.id}&gt;
 +                       {user.nev} ({user.email})
@@ -8182,45 +8182,45 @@ Lines added: 245, lines removed: 1
 +             &lt;/div&gt;
 + 
 +             &lt;div&gt;
-+               &lt;label className=&quot;block text-sm font-medium text-gray-700 mb-1&quot;&gt;
++               &lt;label className="block text-sm font-medium text-gray-700 mb-1"&gt;
 +                 Határidő
 +               &lt;/label&gt;
 +               &lt;input
-+                 type=&quot;datetime-local&quot;
++                 type="datetime-local"
 +                 value={taskFormData.hataridoDatum}
 +                 onChange={(e) =&gt; setTaskFormData({ ...taskFormData, hataridoDatum: e.target.value })}
-+                 className=&quot;w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500&quot;
++                 className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
 +               /&gt;
 +             &lt;/div&gt;
 + 
 +             &lt;div&gt;
-+               &lt;label className=&quot;block text-sm font-medium text-gray-700 mb-1&quot;&gt;
++               &lt;label className="block text-sm font-medium text-gray-700 mb-1"&gt;
 +                 Címkék (vesszővel elválasztva)
 +               &lt;/label&gt;
 +               &lt;input
-+                 type=&quot;text&quot;
++                 type="text"
 +                 value={taskFormData.tags}
 +                 onChange={(e) =&gt; setTaskFormData({ ...taskFormData, tags: e.target.value })}
-+                 placeholder=&quot;pl: fontos, urgent, bug&quot;
-+                 className=&quot;w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500&quot;
++                 placeholder="pl: fontos, urgent, bug"
++                 className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
 +               /&gt;
 +             &lt;/div&gt;
 +           &lt;/div&gt;
 + 
-+           &lt;div className=&quot;mt-6 flex justify-end gap-3&quot;&gt;
++           &lt;div className="mt-6 flex justify-end gap-3"&gt;
 +             &lt;button
-+               type=&quot;button&quot;
++               type="button"
 +               onClick={handleCloseCreateTaskModal}
-+               className=&quot;px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200&quot;
++               className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
 +             &gt;
 +               Mégse
 +             &lt;/button&gt;
 +             &lt;button
-+               type=&quot;submit&quot;
++               type="submit"
 +               disabled={createTask.isPending}
-+               className=&quot;px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50&quot;
++               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
 +             &gt;
-+               {createTask.isPending ? &#39;Létrehozás...&#39; : &#39;Létrehozás&#39;}
++               {createTask.isPending ? 'Létrehozás...' : 'Létrehozás'}
 +             &lt;/button&gt;
 +           &lt;/div&gt;
 +         &lt;/form&gt;
@@ -8230,74 +8230,74 @@ Lines added: 245, lines removed: 1
 +       &lt;Modal
 +         isOpen={isCreateBoardModalOpen}
 +         onClose={handleCloseCreateBoardModal}
-+         title=&quot;Új board&quot;
-+         size=&quot;md&quot;
++         title="Új board"
++         size="md"
 +       &gt;
 +         &lt;form onSubmit={handleSubmitBoard}&gt;
 +           {error &amp;&amp; (
-+             &lt;div className=&quot;bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4&quot;&gt;
++             &lt;div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4"&gt;
 +               {error}
 +             &lt;/div&gt;
 +           )}
 +           {success &amp;&amp; (
-+             &lt;div className=&quot;bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded mb-4&quot;&gt;
++             &lt;div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded mb-4"&gt;
 +               {success}
 +             &lt;/div&gt;
 +           )}
 + 
-+           &lt;div className=&quot;space-y-4&quot;&gt;
++           &lt;div className="space-y-4"&gt;
 +             &lt;div&gt;
-+               &lt;label className=&quot;block text-sm font-medium text-gray-700 mb-1&quot;&gt;
-+                 Név &lt;span className=&quot;text-red-500&quot;&gt;*&lt;/span&gt;
++               &lt;label className="block text-sm font-medium text-gray-700 mb-1"&gt;
++                 Név &lt;span className="text-red-500"&gt;*&lt;/span&gt;
 +               &lt;/label&gt;
 +               &lt;input
-+                 type=&quot;text&quot;
++                 type="text"
 +                 value={boardFormData.nev}
 +                 onChange={(e) =&gt; setBoardFormData({ ...boardFormData, nev: e.target.value })}
-+                 className=&quot;w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500&quot;
++                 className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
 +                 required
 +               /&gt;
 +             &lt;/div&gt;
 + 
 +             &lt;div&gt;
-+               &lt;label className=&quot;block text-sm font-medium text-gray-700 mb-1&quot;&gt;
++               &lt;label className="block text-sm font-medium text-gray-700 mb-1"&gt;
 +                 Leírás
 +               &lt;/label&gt;
 +               &lt;textarea
 +                 value={boardFormData.leiras}
 +                 onChange={(e) =&gt; setBoardFormData({ ...boardFormData, leiras: e.target.value })}
 +                 rows={3}
-+                 className=&quot;w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500&quot;
++                 className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
 +               /&gt;
 +             &lt;/div&gt;
 + 
 +             &lt;div&gt;
-+               &lt;label className=&quot;block text-sm font-medium text-gray-700 mb-1&quot;&gt;
++               &lt;label className="block text-sm font-medium text-gray-700 mb-1"&gt;
 +                 Szín
 +               &lt;/label&gt;
 +               &lt;input
-+                 type=&quot;color&quot;
++                 type="color"
 +                 value={boardFormData.szin}
 +                 onChange={(e) =&gt; setBoardFormData({ ...boardFormData, szin: e.target.value })}
-+                 className=&quot;w-full h-10 border border-gray-300 rounded cursor-pointer&quot;
++                 className="w-full h-10 border border-gray-300 rounded cursor-pointer"
 +               /&gt;
 +             &lt;/div&gt;
 +           &lt;/div&gt;
 + 
-+           &lt;div className=&quot;mt-6 flex justify-end gap-3&quot;&gt;
++           &lt;div className="mt-6 flex justify-end gap-3"&gt;
 +             &lt;button
-+               type=&quot;button&quot;
++               type="button"
 +               onClick={handleCloseCreateBoardModal}
-+               className=&quot;px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200&quot;
++               className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
 +             &gt;
 +               Mégse
 +             &lt;/button&gt;
 +             &lt;button
-+               type=&quot;submit&quot;
++               type="submit"
 +               disabled={createBoard.isPending}
-+               className=&quot;px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50&quot;
++               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
 +             &gt;
-+               {createBoard.isPending ? &#39;Létrehozás...&#39; : &#39;Létrehozás&#39;}
++               {createBoard.isPending ? 'Létrehozás...' : 'Létrehozás'}
 +             &lt;/button&gt;
 +           &lt;/div&gt;
 +         &lt;/form&gt;
@@ -8369,7 +8369,7 @@ Tesztelés előtt ellenőrzöm, hogy a backend API-k megfelelően működnek-e. 
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git add -A && git commit -m "feat: Implement full Team Communication module functionality
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && git add -A && git commit -m "feat: Implement full Team Communication module functionality
 
 - Add Create Task modal with form (title, description, status, priority, board, assignee, deadline, tags)
 - Add Create Board modal with form (name, description, color)
@@ -8457,7 +8457,7 @@ Hozzáadom az alapértelmezett board és oszlopok seed-jét:
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/seed/seed.service.ts</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/seed/seed.service.ts</summary>
 
 **Chunk 1**
 Lines added: 2, lines removed: 1
@@ -8482,7 +8482,7 @@ Lines added: 2, lines removed: 1
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/seed/seed.service.ts</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/seed/seed.service.ts</summary>
 
 **Chunk 1**
 Lines added: 36, lines removed: undefined
@@ -8493,7 +8493,7 @@ Lines added: 36, lines removed: undefined
     }
 + 
 +   private async seedDefaultBoard(adminUserId: string) {
-+     this.logger.log(&#39;📋 Alapértelmezett board létrehozása...&#39;);
++     this.logger.log('📋 Alapértelmezett board létrehozása...');
 +     
 +     // Check if default board already exists
 +     const existingBoard = await this.prisma.taskBoard.findFirst({
@@ -8501,31 +8501,31 @@ Lines added: 36, lines removed: undefined
 +     });
 + 
 +     if (existingBoard) {
-+       this.logger.log(&#39;✅ Alapértelmezett board már létezik&#39;);
++       this.logger.log('✅ Alapértelmezett board már létezik');
 +       return;
 +     }
 + 
 +     // Create default board
 +     const defaultBoard = await this.prisma.taskBoard.create({
 +       data: {
-+         nev: &#39;Fő board&#39;,
-+         leiras: &#39;Alapértelmezett feladat board&#39;,
-+         szin: &#39;#3B82F6&#39;,
++         nev: 'Fő board',
++         leiras: 'Alapértelmezett feladat board',
++         szin: '#3B82F6',
 +         aktiv: true,
 +         isDefault: true,
 +         createdById: adminUserId,
 +         columns: {
 +           create: [
-+             { nev: &#39;Teendők&#39;, allapot: &#39;TODO&#39;, pozicio: 0, limit: 0 },
-+             { nev: &#39;Folyamatban&#39;, allapot: &#39;IN_PROGRESS&#39;, pozicio: 1, limit: 0 },
-+             { nev: &#39;Áttekintés alatt&#39;, allapot: &#39;IN_REVIEW&#39;, pozicio: 2, limit: 0 },
-+             { nev: &#39;Kész&#39;, allapot: &#39;DONE&#39;, pozicio: 3, limit: 0 },
++             { nev: 'Teendők', allapot: 'TODO', pozicio: 0, limit: 0 },
++             { nev: 'Folyamatban', allapot: 'IN_PROGRESS', pozicio: 1, limit: 0 },
++             { nev: 'Áttekintés alatt', allapot: 'IN_REVIEW', pozicio: 2, limit: 0 },
++             { nev: 'Kész', allapot: 'DONE', pozicio: 3, limit: 0 },
 +           ],
 +         },
 +       },
 +     });
 + 
-+     this.logger.log(&#39;✅ Alapértelmezett board létrehozva&#39;);
++     this.logger.log('✅ Alapértelmezett board létrehozva');
 +   }
   }
   
@@ -8538,7 +8538,7 @@ Lines added: 36, lines removed: undefined
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp/apps/server && npm run build</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp/apps/server && npm run build</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp/apps/server && npm run build
@@ -8567,7 +8567,7 @@ Commitolom és pusholom a seed módosítást:
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git add -A && git commit -m "feat: Add default board seed with columns on database initialization
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && git add -A && git commit -m "feat: Add default board seed with columns on database initialization
 
 - Create default board 'Fő board' with 4 columns (TODO, IN_PROGRESS, IN_REVIEW, DONE)
 - Board is created automatically when database is seeded
@@ -9301,21 +9301,21 @@ Javítom a RbacGuard-ot, hogy Electron módban az admin felhasználó ID-ját ha
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/common/rbac/rbac.guard.ts</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/common/rbac/rbac.guard.ts</summary>
 
 **Chunk 1**
 Lines added: 32, lines removed: 7
 
 ```diff
 @@ -20,12 +20,37 @@
-      const isElectronDesktop = process.env.ELECTRON_RUN_AS_NODE === &#39;1&#39;;
+      const isElectronDesktop = process.env.ELECTRON_RUN_AS_NODE === '1';
       if (isElectronDesktop) {
 -       // Create a mock user object for Electron desktop mode
 +       // Find admin user in database for Electron desktop mode
 +       // This ensures foreign key constraints work correctly
 +       const adminUser = await this.prisma.user.findFirst({
 +         where: {
-+           email: &#39;admin@mbit.hu&#39;,
++           email: 'admin@mbit.hu',
 +           aktiv: true,
 +         },
 +         include: {
@@ -9329,10 +9329,10 @@ Lines added: 32, lines removed: 7
 + 
         const request = context.switchToHttp().getRequest();
 -       request.user = {
--         id: &#39;electron-desktop-user&#39;,
--         userId: &#39;electron-desktop-user&#39;,
--         email: &#39;desktop@mbit.local&#39;,
--         roles: [&#39;Admin&#39;, &#39;User&#39;],
+-         id: 'electron-desktop-user',
+-         userId: 'electron-desktop-user',
+-         email: 'desktop@mbit.local',
+-         roles: ['Admin', 'User'],
 -       };
 +       if (adminUser) {
 +         request.user = {
@@ -9342,12 +9342,12 @@ Lines added: 32, lines removed: 7
 +           roles: adminUser.roles.map(ur =&gt; ur.role.nev),
 +         };
 +       } else {
-+         // Fallback if admin user doesn&#39;t exist yet
++         // Fallback if admin user doesn't exist yet
 +         request.user = {
 +           id: null,
 +           userId: null,
-+           email: &#39;desktop@mbit.local&#39;,
-+           roles: [&#39;Admin&#39;, &#39;User&#39;],
++           email: 'desktop@mbit.local',
++           roles: ['Admin', 'User'],
 +         };
 +       }
         return true;
@@ -9380,7 +9380,7 @@ Frissítem a BoardService-t, hogy kezelje a null userId esetet:
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/team/board/board.service.ts</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/team/board/board.service.ts</summary>
 
 **Chunk 1**
 Lines added: 23, lines removed: 2
@@ -9397,10 +9397,10 @@ Lines added: 23, lines removed: 2
 +         where: { id: userId },
 +       });
 +       if (!userExists) {
-+         // If user doesn&#39;t exist, try to find admin user
++         // If user doesn't exist, try to find admin user
 +         const adminUser = await this.prisma.user.findFirst({
 +           where: {
-+             email: &#39;admin@mbit.hu&#39;,
++             email: 'admin@mbit.hu',
 +             aktiv: true,
 +           },
 +         });
@@ -9483,7 +9483,7 @@ Lint results
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp/apps/server && npm run build</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp/apps/server && npm run build</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp/apps/server && npm run build
@@ -9513,7 +9513,7 @@ Frissítem a BoardController-t, hogy kezelje a null userId esetet:
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/team/board/board.controller.ts</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/team/board/board.controller.ts</summary>
 
 **Chunk 1**
 Lines added: 1, lines removed: 1
@@ -9535,7 +9535,7 @@ Lines added: 1, lines removed: 1
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git add -A && git commit -m "fix: Resolve foreign key constraint violation when creating boards in Electron mode
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && git add -A && git commit -m "fix: Resolve foreign key constraint violation when creating boards in Electron mode
 
 - Update RbacGuard to find admin user from database in Electron mode instead of using mock ID
 - Update BoardService.create to validate userId exists and fallback to admin user if needed
@@ -9593,7 +9593,7 @@ Frissítem a TaskService-t is:
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/team/task/task.service.ts</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/team/task/task.service.ts</summary>
 
 **Chunk 1**
 Lines added: 24, lines removed: 2
@@ -9611,10 +9611,10 @@ Lines added: 24, lines removed: 2
 +         where: { id: userId },
 +       });
 +       if (!userExists) {
-+         // If user doesn&#39;t exist, try to find admin user
++         // If user doesn't exist, try to find admin user
 +         const adminUser = await this.prisma.user.findFirst({
 +           where: {
-+             email: &#39;admin@mbit.hu&#39;,
++             email: 'admin@mbit.hu',
 +             aktiv: true,
 +           },
 +         });
@@ -9643,7 +9643,7 @@ Lines added: 24, lines removed: 2
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/team/task/task.service.ts</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/team/task/task.service.ts</summary>
 
 **Chunk 1**
 Lines added: 10, lines removed: 8
@@ -9670,8 +9670,8 @@ Lines added: 10, lines removed: 8
 +     }
   
       // Audit log
--     await this.auditService.logCreate(&#39;Task&#39;, task.id, task, userId);
-+     await this.auditService.logCreate(&#39;Task&#39;, task.id, task, validUserId);
+-     await this.auditService.logCreate('Task', task.id, task, userId);
++     await this.auditService.logCreate('Task', task.id, task, validUserId);
   
       // Ha van assignedTo, akkor watcher hozzáadása
 ```
@@ -9691,7 +9691,7 @@ Lines added: 10, lines removed: 8
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp/apps/server && npm run build</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp/apps/server && npm run build</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp/apps/server && npm run build
@@ -9746,7 +9746,7 @@ Output mode: content
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/team/task/task.controller.ts</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/server/src/team/task/task.controller.ts</summary>
 
 **Chunk 1**
 Lines added: 1, lines removed: 1
@@ -9768,7 +9768,7 @@ Lines added: 1, lines removed: 1
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git add -A && git commit -m "fix: Also fix foreign key constraint in TaskService.create for Electron mode
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && git add -A && git commit -m "fix: Also fix foreign key constraint in TaskService.create for Electron mode
 
 - Update TaskService.create to validate userId and fallback to admin user
 - Handle null userId case gracefully in task creation
@@ -10683,7 +10683,7 @@ Javítom mindkét problémát:
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/lib/api/team.ts</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/lib/api/team.ts</summary>
 
 **Chunk 1**
 Lines added: 6, lines removed: 1
@@ -10694,13 +10694,13 @@ Lines added: 6, lines removed: 1
       },
 -     onSuccess: () =&gt; {
 +     onSuccess: (_, variables) =&gt; {
-        queryClient.invalidateQueries({ queryKey: [&#39;tasks&#39;] });
-        queryClient.invalidateQueries({ queryKey: [&#39;boards&#39;] });
+        queryClient.invalidateQueries({ queryKey: ['tasks'] });
+        queryClient.invalidateQueries({ queryKey: ['boards'] });
 +       // Invalidate specific board if boardId is provided
 +       if (variables.boardId) {
-+         queryClient.invalidateQueries({ queryKey: [&#39;board&#39;, variables.boardId] });
++         queryClient.invalidateQueries({ queryKey: ['board', variables.boardId] });
 +       }
-+       queryClient.invalidateQueries({ queryKey: [&#39;dashboard&#39;] });
++       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       },
     });
 ```
@@ -10731,14 +10731,14 @@ Javítom mindkét problémát: a task létrehozás után frissül a board, és a
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Team.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Team.tsx</summary>
 
 **Chunk 1**
 Lines added: 24, lines removed: 13
 
 ```diff
 @@ -230,17 +230,28 @@
-              &lt;div className=&quot;text-gray-500&quot;&gt;Board-ok betöltése...&lt;/div&gt;
+              &lt;div className="text-gray-500"&gt;Board-ok betöltése...&lt;/div&gt;
             ) : boards &amp;&amp; boards.length &gt; 0 ? (
 -             boards.map((board: TaskBoard) =&gt; (
 -               &lt;button
@@ -10746,8 +10746,8 @@ Lines added: 24, lines removed: 13
 -                 onClick={() =&gt; setSelectedBoardId(board.id)}
 -                 className={&#96;px-4 py-2 rounded-lg font-medium transition-colors ${
 -                   selectedBoardId === board.id || (!selectedBoardId &amp;&amp; board.isDefault)
--                     ? &#39;bg-blue-600 text-white&#39;
--                     : &#39;bg-gray-100 text-gray-700 hover:bg-gray-200&#39;
+-                     ? 'bg-blue-600 text-white'
+-                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
 -                 }&#96;}
 -               &gt;
 -                 {board.nev}
@@ -10755,7 +10755,7 @@ Lines added: 24, lines removed: 13
 -             ))
 +             boards.map((board: TaskBoard) =&gt; {
 +               const isSelected = selectedBoardId === board.id || (!selectedBoardId &amp;&amp; board.isDefault);
-+               const boardColor = board.szin || &#39;#3B82F6&#39;;
++               const boardColor = board.szin || '#3B82F6';
 +               
 +               return (
 +                 &lt;button
@@ -10763,8 +10763,8 @@ Lines added: 24, lines removed: 13
 +                   onClick={() =&gt; setSelectedBoardId(board.id)}
 +                   className={&#96;px-4 py-2 rounded-lg font-medium transition-all ${
 +                     isSelected
-+                       ? &#39;text-white shadow-md&#39;
-+                       : &#39;bg-gray-100 text-gray-700 hover:bg-gray-200&#39;
++                       ? 'text-white shadow-md'
++                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
 +                   }&#96;}
 +                   style={isSelected ? {
 +                     backgroundColor: boardColor,
@@ -10778,7 +10778,7 @@ Lines added: 24, lines removed: 13
 +               );
 +             })
             ) : (
-              &lt;div className=&quot;text-gray-500&quot;&gt;Nincs board. Hozzon létre egy újat!&lt;/div&gt;
+              &lt;div className="text-gray-500"&gt;Nincs board. Hozzon létre egy újat!&lt;/div&gt;
 ```
 
 </details>
@@ -10823,7 +10823,7 @@ Hozzáadom a board színét a TaskColumn-hoz, és ellenőrzöm, hogy a board ada
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskBoard.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskBoard.tsx</summary>
 
 **Chunk 1**
 Lines added: 1, lines removed: undefined
@@ -10845,7 +10845,7 @@ Lines added: 1, lines removed: undefined
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskColumn.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskColumn.tsx</summary>
 
 **Chunk 1**
 Lines added: 12, lines removed: 3
@@ -10864,25 +10864,25 @@ Lines added: 12, lines removed: 3
     });
   
     const columnTasks = tasks.filter((task) =&gt; task.allapot === column.allapot);
-+   const color = boardColor || &#39;#3B82F6&#39;;
++   const color = boardColor || '#3B82F6';
   
     return (
       &lt;div
         ref={setNodeRef}
--       className=&quot;flex-shrink-0 w-80 bg-gray-50 rounded-lg p-4&quot;
-+       className=&quot;flex-shrink-0 w-80 bg-gray-50 rounded-lg p-4 border-l-4&quot;
+-       className="flex-shrink-0 w-80 bg-gray-50 rounded-lg p-4"
++       className="flex-shrink-0 w-80 bg-gray-50 rounded-lg p-4 border-l-4"
 +       style={{ borderLeftColor: color }}
       &gt;
-        &lt;div className=&quot;flex items-center justify-between mb-4&quot;&gt;
--         &lt;h3 className=&quot;font-semibold text-gray-900&quot;&gt;{column.nev}&lt;/h3&gt;
-+         &lt;h3 className=&quot;font-semibold text-gray-900 flex items-center gap-2&quot;&gt;
+        &lt;div className="flex items-center justify-between mb-4"&gt;
+-         &lt;h3 className="font-semibold text-gray-900"&gt;{column.nev}&lt;/h3&gt;
++         &lt;h3 className="font-semibold text-gray-900 flex items-center gap-2"&gt;
 +           &lt;span 
-+             className=&quot;w-3 h-3 rounded-full&quot;
++             className="w-3 h-3 rounded-full"
 +             style={{ backgroundColor: color }}
 +           /&gt;
 +           {column.nev}
 +         &lt;/h3&gt;
-          &lt;span className=&quot;text-sm text-gray-500&quot;&gt;
+          &lt;span className="text-sm text-gray-500"&gt;
             {columnTasks.length}
 ```
 
@@ -10944,7 +10944,7 @@ Ellenőrzöm, hogy a board adatok frissülnek-e a task létrehozás után:
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git add -A && git commit -m "fix: Fix task not appearing on board and implement board color display
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && git add -A && git commit -m "fix: Fix task not appearing on board and implement board color display
 
 - Add board query invalidation after task creation to refresh board data
 - Implement board color display in board selector buttons with colored border
@@ -11072,7 +11072,7 @@ A backend rendben van. Ellenőrzöm, hogy a frontend frissül-e. Lehet, hogy a `
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Team.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Team.tsx</summary>
 
 **Chunk 1**
 Lines added: 1, lines removed: 1
@@ -11080,7 +11080,7 @@ Lines added: 1, lines removed: 1
 ```diff
 @@ -31,5 +31,5 @@
     const selectedBoard = boards?.find((b: TaskBoard) =&gt; b.id === selectedBoardId) || boards?.[0];
-    const boardIdToLoad = selectedBoard?.id || &#39;&#39;;
+    const boardIdToLoad = selectedBoard?.id || '';
 -   const { data: boardDetails } = useBoard(boardIdToLoad);
 +   const { data: boardDetails, refetch: refetchBoard } = useBoard(boardIdToLoad);
   
@@ -11095,7 +11095,7 @@ Lines added: 1, lines removed: 1
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Team.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Team.tsx</summary>
 
 **Chunk 1**
 Lines added: 4, lines removed: undefined
@@ -11103,7 +11103,7 @@ Lines added: 4, lines removed: undefined
 ```diff
 @@ -127,4 +127,8 @@
         });
-        setSuccess(&#39;Feladat sikeresen létrehozva&#39;);
+        setSuccess('Feladat sikeresen létrehozva');
 +       // Refetch board data to show new task
 +       if (boardIdToLoad) {
 +         refetchBoard();
@@ -11119,7 +11119,7 @@ Lines added: 4, lines removed: undefined
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git add -A && git commit -m "fix: Add explicit board refetch after task creation to ensure tasks appear immediately
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && git add -A && git commit -m "fix: Add explicit board refetch after task creation to ensure tasks appear immediately
 
 - Add refetchBoard call after successful task creation
 - Ensure board data refreshes immediately when new task is created
@@ -11284,19 +11284,19 @@ Javítom a TaskCard-ot, hogy a drag handle ne ütközzön az onClick-tel, és ho
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskCard.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskCard.tsx</summary>
 
 **Chunk 1**
 Lines added: 1, lines removed: 1
 
 ```diff
 @@ -2,5 +2,5 @@
-  import { format } from &#39;date-fns&#39;;
-  import { hu } from &#39;date-fns/locale&#39;;
-- import { Calendar, User, Tag } from &#39;lucide-react&#39;;
-+ import { Calendar, User, Tag, GripVertical } from &#39;lucide-react&#39;;
-  import { useSortable } from &#39;@dnd-kit/sortable&#39;;
-  import { CSS } from &#39;@dnd-kit/utilities&#39;;
+  import { format } from 'date-fns';
+  import { hu } from 'date-fns/locale';
+- import { Calendar, User, Tag } from 'lucide-react';
++ import { Calendar, User, Tag, GripVertical } from 'lucide-react';
+  import { useSortable } from '@dnd-kit/sortable';
+  import { CSS } from '@dnd-kit/utilities';
 ```
 
 **Chunk 2**
@@ -11311,23 +11311,23 @@ Lines added: 13, lines removed: 5
 -       onClick={onClick}
 -       className={&#96;bg-white rounded-lg shadow-sm border border-gray-200 p-4 cursor-pointer hover:shadow-md transition-shadow ${
 +       className={&#96;bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow relative ${
-          isOverdue ? &#39;border-red-300&#39; : &#39;&#39;
+          isOverdue ? 'border-red-300' : ''
 -       }&#96;}
-+       } ${isDragging ? &#39;z-50&#39; : &#39;&#39;}&#96;}
++       } ${isDragging ? 'z-50' : ''}&#96;}
       &gt;
 +       {/* Drag handle */}
 +       &lt;div
 +         {...attributes}
 +         {...listeners}
-+         className=&quot;absolute left-2 top-2 cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600&quot;
++         className="absolute left-2 top-2 cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600"
 +         onClick={(e) =&gt; e.stopPropagation()}
 +       &gt;
-+         &lt;GripVertical className=&quot;w-4 h-4&quot; /&gt;
++         &lt;GripVertical className="w-4 h-4" /&gt;
 +       &lt;/div&gt;
 + 
-+       &lt;div onClick={onClick} className=&quot;cursor-pointer pl-6&quot;&gt;
-        &lt;div className=&quot;flex items-start justify-between mb-2&quot;&gt;
-          &lt;h3 className=&quot;font-semibold text-gray-900 text-sm flex-1&quot;&gt;{task.cim}&lt;/h3&gt;
++       &lt;div onClick={onClick} className="cursor-pointer pl-6"&gt;
+        &lt;div className="flex items-start justify-between mb-2"&gt;
+          &lt;h3 className="font-semibold text-gray-900 text-sm flex-1"&gt;{task.cim}&lt;/h3&gt;
 ```
 
 </details>
@@ -11338,7 +11338,7 @@ Lines added: 13, lines removed: 5
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskCard.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskCard.tsx</summary>
 
 **Chunk 1**
 Lines added: 2, lines removed: 1
@@ -11395,20 +11395,20 @@ Hozzáadom az állapotváltoztatást a TaskModal-ban:
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskModal.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskModal.tsx</summary>
 
 **Chunk 1**
 Lines added: 2, lines removed: 2
 
 ```diff
 @@ -1,7 +1,7 @@
-  import { useState } from &#39;react&#39;;
-- import { useTask, useTaskComments, useCreateComment } from &#39;../../lib/api/team&#39;;
-+ import { useTask, useTaskComments, useCreateComment, useUpdateTask, useBoard, Task } from &#39;../../lib/api/team&#39;;
-  import { format } from &#39;date-fns&#39;;
-  import { hu } from &#39;date-fns/locale&#39;;
-- import { X, Calendar, User } from &#39;lucide-react&#39;;
-+ import { X, Calendar, User, CheckCircle2 } from &#39;lucide-react&#39;;
+  import { useState } from 'react';
+- import { useTask, useTaskComments, useCreateComment } from '../../lib/api/team';
++ import { useTask, useTaskComments, useCreateComment, useUpdateTask, useBoard, Task } from '../../lib/api/team';
+  import { format } from 'date-fns';
+  import { hu } from 'date-fns/locale';
+- import { X, Calendar, User } from 'lucide-react';
++ import { X, Calendar, User, CheckCircle2 } from 'lucide-react';
   
   interface TaskModalProps {
 ```
@@ -11421,10 +11421,10 @@ Lines added: 5, lines removed: undefined
     const { data: comments } = useTaskComments(taskId);
     const createComment = useCreateComment();
 +   const updateTask = useUpdateTask();
-    const [commentText, setCommentText] = useState(&#39;&#39;);
+    const [commentText, setCommentText] = useState('');
 +   
 +   // Load board to get available columns
-+   const boardId = task?.boardId || &#39;&#39;;
++   const boardId = task?.boardId || '';
 +   const { data: board } = useBoard(boardId);
   
     const handleAddComment = async () =&gt; {
@@ -11438,7 +11438,7 @@ Lines added: 5, lines removed: undefined
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskModal.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskModal.tsx</summary>
 
 **Chunk 1**
 Lines added: 27, lines removed: undefined
@@ -11448,7 +11448,7 @@ Lines added: 27, lines removed: undefined
       }
     };
 + 
-+   const handleStatusChange = async (newStatus: Task[&#39;allapot&#39;]) =&gt; {
++   const handleStatusChange = async (newStatus: Task['allapot']) =&gt; {
 +     if (!task || task.allapot === newStatus) return;
 +     
 +     try {
@@ -11459,18 +11459,18 @@ Lines added: 27, lines removed: undefined
 +         },
 +       });
 +     } catch (error) {
-+       console.error(&#39;Failed to update task status:&#39;, error);
++       console.error('Failed to update task status:', error);
 +     }
 +   };
 + 
 +   const getStatusLabel = (status: string) =&gt; {
 +     const labels: Record&lt;string, string&gt; = {
-+       TODO: &#39;Teendő&#39;,
-+       IN_PROGRESS: &#39;Folyamatban&#39;,
-+       IN_REVIEW: &#39;Áttekintés alatt&#39;,
-+       DONE: &#39;Kész&#39;,
-+       BLOCKED: &#39;Blokkolva&#39;,
-+       CANCELLED: &#39;Törölve&#39;,
++       TODO: 'Teendő',
++       IN_PROGRESS: 'Folyamatban',
++       IN_REVIEW: 'Áttekintés alatt',
++       DONE: 'Kész',
++       BLOCKED: 'Blokkolva',
++       CANCELLED: 'Törölve',
 +     };
 +     return labels[status] || status;
 +   };
@@ -11486,19 +11486,19 @@ Lines added: 27, lines removed: undefined
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskModal.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskModal.tsx</summary>
 
 **Chunk 1**
 Lines added: 1, lines removed: 1
 
 ```diff
 @@ -79,5 +79,5 @@
-            &lt;div className=&quot;flex-1&quot;&gt;
-              &lt;h2 className=&quot;text-2xl font-bold text-gray-900 mb-2&quot;&gt;{task.cim}&lt;/h2&gt;
--             &lt;div className=&quot;flex items-center gap-4 text-sm text-gray-600&quot;&gt;
-+             &lt;div className=&quot;flex items-center gap-4 text-sm text-gray-600 flex-wrap&quot;&gt;
+            &lt;div className="flex-1"&gt;
+              &lt;h2 className="text-2xl font-bold text-gray-900 mb-2"&gt;{task.cim}&lt;/h2&gt;
+-             &lt;div className="flex items-center gap-4 text-sm text-gray-600"&gt;
++             &lt;div className="flex items-center gap-4 text-sm text-gray-600 flex-wrap"&gt;
                 {task.assignedTo &amp;&amp; (
-                  &lt;div className=&quot;flex items-center gap-1&quot;&gt;
+                  &lt;div className="flex items-center gap-1"&gt;
 ```
 
 **Chunk 2**
@@ -11508,13 +11508,13 @@ Lines added: 21, lines removed: undefined
 @@ -94,4 +94,25 @@
                   &lt;/div&gt;
                 )}
-+               &lt;div className=&quot;flex items-center gap-2&quot;&gt;
-+                 &lt;span className=&quot;text-gray-500&quot;&gt;Állapot:&lt;/span&gt;
++               &lt;div className="flex items-center gap-2"&gt;
++                 &lt;span className="text-gray-500"&gt;Állapot:&lt;/span&gt;
 +                 {board?.columns &amp;&amp; board.columns.length &gt; 0 ? (
 +                   &lt;select
 +                     value={task.allapot}
-+                     onChange={(e) =&gt; handleStatusChange(e.target.value as Task[&#39;allapot&#39;])}
-+                     className=&quot;px-3 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-medium&quot;
++                     onChange={(e) =&gt; handleStatusChange(e.target.value as Task['allapot'])}
++                     className="px-3 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-medium"
 +                     disabled={updateTask.isPending}
 +                   &gt;
 +                     {board.columns.map((column) =&gt; (
@@ -11524,7 +11524,7 @@ Lines added: 21, lines removed: undefined
 +                     ))}
 +                   &lt;/select&gt;
 +                 ) : (
-+                   &lt;span className=&quot;px-3 py-1 bg-gray-100 rounded-lg text-sm font-medium&quot;&gt;
++                   &lt;span className="px-3 py-1 bg-gray-100 rounded-lg text-sm font-medium"&gt;
 +                     {getStatusLabel(task.allapot)}
 +                   &lt;/span&gt;
 +                 )}
@@ -11574,22 +11574,22 @@ Ellenőrzöm a drag & drop működését, és javítom, ha szükséges. A TaskCo
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/lib/api/team.ts</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/lib/api/team.ts</summary>
 
 **Chunk 1**
 Lines added: 7, lines removed: undefined
 
 ```diff
 @@ -257,4 +257,11 @@
-        queryClient.invalidateQueries({ queryKey: [&#39;task&#39;, variables.id] });
-        queryClient.invalidateQueries({ queryKey: [&#39;boards&#39;] });
+        queryClient.invalidateQueries({ queryKey: ['task', variables.id] });
+        queryClient.invalidateQueries({ queryKey: ['boards'] });
 +       // Invalidate specific board if boardId is in data
 +       if (variables.data.boardId) {
-+         queryClient.invalidateQueries({ queryKey: [&#39;board&#39;, variables.data.boardId] });
++         queryClient.invalidateQueries({ queryKey: ['board', variables.data.boardId] });
 +       }
 +       // Also invalidate board if task has boardId
-+       queryClient.invalidateQueries({ queryKey: [&#39;board&#39;] });
-+       queryClient.invalidateQueries({ queryKey: [&#39;dashboard&#39;] });
++       queryClient.invalidateQueries({ queryKey: ['board'] });
++       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       },
     });
 ```
@@ -11644,7 +11644,7 @@ Frissítem a TaskModal-t, hogy az állapotváltoztatás után frissüljön a boa
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskModal.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskModal.tsx</summary>
 
 **Chunk 1**
 Lines added: 2, lines removed: 1
@@ -11670,7 +11670,7 @@ Lines added: 2, lines removed: 1
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskModal.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskModal.tsx</summary>
 
 **Chunk 1**
 Lines added: 4, lines removed: undefined
@@ -11684,7 +11684,7 @@ Lines added: 4, lines removed: undefined
 +         onTaskUpdate();
 +       }
       } catch (error) {
-        console.error(&#39;Failed to update task status:&#39;, error);
+        console.error('Failed to update task status:', error);
 ```
 
 </details>
@@ -11695,7 +11695,7 @@ Lines added: 4, lines removed: undefined
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Team.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/pages/Team.tsx</summary>
 
 **Chunk 1**
 Lines added: 5, lines removed: undefined
@@ -11782,7 +11782,7 @@ The model provided an ambiguous search string to replace.
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/lib/api/team.ts</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/lib/api/team.ts</summary>
 
 **Chunk 1**
 Lines added: 7, lines removed: 1
@@ -11793,14 +11793,14 @@ Lines added: 7, lines removed: 1
       },
 -     onSuccess: () =&gt; {
 +     onSuccess: (_, variables) =&gt; {
-        queryClient.invalidateQueries({ queryKey: [&#39;tasks&#39;] });
-        queryClient.invalidateQueries({ queryKey: [&#39;boards&#39;] });
+        queryClient.invalidateQueries({ queryKey: ['tasks'] });
+        queryClient.invalidateQueries({ queryKey: ['boards'] });
 +       // Invalidate specific board
 +       if (variables.data.boardId) {
-+         queryClient.invalidateQueries({ queryKey: [&#39;board&#39;, variables.data.boardId] });
++         queryClient.invalidateQueries({ queryKey: ['board', variables.data.boardId] });
 +       }
-+       queryClient.invalidateQueries({ queryKey: [&#39;task&#39;, variables.id] });
-+       queryClient.invalidateQueries({ queryKey: [&#39;dashboard&#39;] });
++       queryClient.invalidateQueries({ queryKey: ['task', variables.id] });
++       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       },
     });
 ```
@@ -11821,7 +11821,7 @@ Lines added: 7, lines removed: 1
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskBoard.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskBoard.tsx</summary>
 
 **Chunk 1**
 Lines added: 1, lines removed: undefined
@@ -11860,7 +11860,7 @@ Output mode: content
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskBoard.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskBoard.tsx</summary>
 
 **Chunk 1**
 Lines added: 1, lines removed: undefined
@@ -11868,10 +11868,10 @@ Lines added: 1, lines removed: undefined
 ```diff
 @@ -10,4 +10,5 @@
     closestCenter,
-  } from &#39;@dnd-kit/core&#39;;
-+ import { useQueryClient } from &#39;@tanstack/react-query&#39;;
-  import { TaskBoard as TaskBoardType, Task } from &#39;../../lib/api/team&#39;;
-  import TaskColumn from &#39;./TaskColumn&#39;;
+  } from '@dnd-kit/core';
++ import { useQueryClient } from '@tanstack/react-query';
+  import { TaskBoard as TaskBoardType, Task } from '../../lib/api/team';
+  import TaskColumn from './TaskColumn';
 ```
 
 </details>
@@ -11882,7 +11882,7 @@ Lines added: 1, lines removed: undefined
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskBoard.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskBoard.tsx</summary>
 
 **Chunk 1**
 Lines added: 2, lines removed: undefined
@@ -11892,9 +11892,9 @@ Lines added: 2, lines removed: undefined
             },
           });
 +         // Refresh board data after move
-+         queryClient.invalidateQueries({ queryKey: [&#39;board&#39;, board.id] });
++         queryClient.invalidateQueries({ queryKey: ['board', board.id] });
         } catch (error) {
-          console.error(&#39;Failed to move task:&#39;, error);
+          console.error('Failed to move task:', error);
 ```
 
 </details>
@@ -11905,7 +11905,7 @@ Lines added: 2, lines removed: undefined
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskBoard.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskBoard.tsx</summary>
 
 **Chunk 1**
 Lines added: 2, lines removed: undefined
@@ -11915,9 +11915,9 @@ Lines added: 2, lines removed: undefined
               },
             });
 +           // Refresh board data after reorder
-+           queryClient.invalidateQueries({ queryKey: [&#39;board&#39;, board.id] });
++           queryClient.invalidateQueries({ queryKey: ['board', board.id] });
           } catch (error) {
-            console.error(&#39;Failed to reorder task:&#39;, error);
+            console.error('Failed to reorder task:', error);
 ```
 
 </details>
@@ -11944,7 +11944,7 @@ Lint results
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp/apps/web && npm run build</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp/apps/web && npm run build</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp/apps/web && npm run build
@@ -11955,8 +11955,8 @@ cd /Users/liviuszberger/mbit-erp/apps/web && npm run build
 &gt; @mbit-erp/web@1.0.0 build
 &gt; tsc &amp;&amp; vite build
 
-src/components/team/TaskModal.tsx(5,29): error TS6133: &#39;CheckCircle2&#39; is declared but its value is never read.
-src/components/team/TaskModal.tsx(110,41): error TS7006: Parameter &#39;column&#39; implicitly has an &#39;any&#39; type.
+src/components/team/TaskModal.tsx(5,29): error TS6133: 'CheckCircle2' is declared but its value is never read.
+src/components/team/TaskModal.tsx(110,41): error TS7006: Parameter 'column' implicitly has an 'any' type.
 npm error Lifecycle script &#96;build&#96; failed with error:
 npm error code 2
 npm error path /Users/liviuszberger/mbit-erp/apps/web
@@ -11982,17 +11982,17 @@ Javítom a TypeScript hibákat:
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskModal.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskModal.tsx</summary>
 
 **Chunk 1**
 Lines added: 1, lines removed: 1
 
 ```diff
 @@ -3,5 +3,5 @@
-  import { format } from &#39;date-fns&#39;;
-  import { hu } from &#39;date-fns/locale&#39;;
-- import { X, Calendar, User, CheckCircle2 } from &#39;lucide-react&#39;;
-+ import { X, Calendar, User } from &#39;lucide-react&#39;;
+  import { format } from 'date-fns';
+  import { hu } from 'date-fns/locale';
+- import { X, Calendar, User, CheckCircle2 } from 'lucide-react';
++ import { X, Calendar, User } from 'lucide-react';
   
   interface TaskModalProps {
 ```
@@ -12005,7 +12005,7 @@ Lines added: 1, lines removed: 1
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskModal.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskModal.tsx</summary>
 
 **Chunk 1**
 Lines added: 1, lines removed: 1
@@ -12040,7 +12040,7 @@ Model supplied an ambiguous edit
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskModal.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskModal.tsx</summary>
 
 **Chunk 1**
 Lines added: 1, lines removed: 1
@@ -12062,7 +12062,7 @@ Lines added: 1, lines removed: 1
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp/apps/web && npm run build</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp/apps/web && npm run build</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp/apps/web && npm run build
@@ -12073,7 +12073,7 @@ cd /Users/liviuszberger/mbit-erp/apps/web && npm run build
 &gt; @mbit-erp/web@1.0.0 build
 &gt; tsc &amp;&amp; vite build
 
-src/components/team/TaskModal.tsx(110,49): error TS2304: Cannot find name &#39;TaskColumn&#39;.
+src/components/team/TaskModal.tsx(110,49): error TS2304: Cannot find name 'TaskColumn'.
 npm error Lifecycle script &#96;build&#96; failed with error:
 npm error code 2
 npm error path /Users/liviuszberger/mbit-erp/apps/web
@@ -12110,18 +12110,18 @@ npm error command sh -c tsc &amp;&amp; vite build
 
 <tool-use data-tool-type="write" data-tool-name="search_replace">
 
-<details><summary>Tool use: **code_edit** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskModal.tsx</summary>
+<details><summary>Tool use: **search_replace** • Edit file: /Users/liviuszberger/mbit-erp/apps/web/src/components/team/TaskModal.tsx</summary>
 
 **Chunk 1**
 Lines added: 1, lines removed: 1
 
 ```diff
 @@ -1,4 +1,4 @@
-  import { useState } from &#39;react&#39;;
-- import { useTask, useTaskComments, useCreateComment, useUpdateTask, useBoard, Task } from &#39;../../lib/api/team&#39;;
-+ import { useTask, useTaskComments, useCreateComment, useUpdateTask, useBoard, Task, TaskColumn } from &#39;../../lib/api/team&#39;;
-  import { format } from &#39;date-fns&#39;;
-  import { hu } from &#39;date-fns/locale&#39;;
+  import { useState } from 'react';
+- import { useTask, useTaskComments, useCreateComment, useUpdateTask, useBoard, Task } from '../../lib/api/team';
++ import { useTask, useTaskComments, useCreateComment, useUpdateTask, useBoard, Task, TaskColumn } from '../../lib/api/team';
+  import { format } from 'date-fns';
+  import { hu } from 'date-fns/locale';
 ```
 
 </details>
@@ -12131,7 +12131,7 @@ Lines added: 1, lines removed: 1
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp/apps/web && npm run build</summary>
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp/apps/web && npm run build</summary>
 
 ```bash
 cd /Users/liviuszberger/mbit-erp/apps/web && npm run build
@@ -12180,7 +12180,7 @@ A build sikeres. Összefoglaló és commit:
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
-<details><summary>Tool use: **command** • Run command: cd /Users/liviuszberger/mbit-erp && git add -A && git commit -m "feat: Add drag & drop and status change functionality for tasks
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && git add -A && git commit -m "feat: Add drag & drop and status change functionality for tasks
 
 - Add drag handle (GripVertical icon) to TaskCard for better UX
 - Separate drag handle from click area to prevent conflicts

@@ -8,14 +8,22 @@ interface TaskColumnProps {
   tasks: Task[];
   onTaskClick: (task: Task) => void;
   boardColor?: string;
+  currentUserId?: string;
+  showOnlyMyTasks?: boolean;
 }
 
-export default function TaskColumn({ column, tasks, onTaskClick, boardColor }: TaskColumnProps) {
+export default function TaskColumn({ column, tasks, onTaskClick, boardColor, currentUserId, showOnlyMyTasks }: TaskColumnProps) {
   const { setNodeRef } = useDroppable({
     id: column.id,
   });
 
-  const columnTasks = tasks.filter((task) => task.allapot === column.allapot);
+  let columnTasks = tasks.filter((task) => task.allapot === column.allapot);
+  
+  // Filter to show only tasks assigned to current user if showOnlyMyTasks is true
+  if (showOnlyMyTasks && currentUserId) {
+    columnTasks = columnTasks.filter((task) => task.assignedToId === currentUserId);
+  }
+  
   const color = boardColor || '#3B82F6';
 
   return (

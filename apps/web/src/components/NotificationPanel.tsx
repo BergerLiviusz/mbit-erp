@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getExpiringProducts, getLowStockItems, getUpcomingTaskDeadlines, ExpiringProduct, LowStockItem, UpcomingTask } from '../lib/api/notifications';
+import { getExpiringProducts, getLowStockItems, getUpcomingTaskDeadlines, getExpiringDocuments, ExpiringProduct, LowStockItem, UpcomingTask, ExpiringDocument } from '../lib/api/notifications';
 
 const isElectron = !!(window as any).electron || (navigator.userAgent.includes('Electron'));
 
@@ -8,6 +8,7 @@ export function NotificationPanel() {
   const [expiringProducts, setExpiringProducts] = useState<ExpiringProduct[]>([]);
   const [lowStockItems, setLowStockItems] = useState<LowStockItem[]>([]);
   const [upcomingTasks, setUpcomingTasks] = useState<UpcomingTask[]>([]);
+  const [expiringDocuments, setExpiringDocuments] = useState<ExpiringDocument[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -18,15 +19,30 @@ export function NotificationPanel() {
     setError(null);
     
     try {
-      const [products, stock, tasks] = await Promise.all([
+      const [products, stock, tasks, documents] = await Promise.all([
         getExpiringProducts(30).catch(() => []),
         getLowStockItems().catch(() => []),
         getUpcomingTaskDeadlines(7).catch(() => []),
+        getExpiringDocuments().catch(() => []),
       ]);
       
       setExpiringProducts(products);
       setLowStockItems(stock);
       setUpcomingTasks(tasks);
+      setExpiringDocuments(documents);
+
+      // Show Windows notifications for urgent items
+      if (isElectron && (window as any).electron?.showNotification) {
+        const urgentDocs = documents.filter(d => d.napokHatra <= 3);
+        if (urgentDocs.length > 0) {
+          const doc = urgentDocs[0];
+          (window as any).electron.showNotification(
+            'Lejáró dokumentum',
+            `${doc.documentNev} ${doc.napokHatra} nap múlva lejár${urgentDocs.length > 1 ? ` (+${urgentDocs.length - 1} további)` : ''}`,
+            { urgency: 'critical' }
+          );
+        }
+      }
     } catch (err: any) {
       setError(err.message || 'Hiba az értesítések betöltésekor');
     } finally {
@@ -47,9 +63,10 @@ export function NotificationPanel() {
 
   if (!isElectron) return null;
 
-  const totalNotifications = expiringProducts.length + lowStockItems.length + upcomingTasks.length;
+  const totalNotifications = expiringProducts.length + lowStockItems.length + upcomingTasks.length + expiringDocuments.length;
   const urgentCount = expiringProducts.filter(p => p.daysUntilExpiration <= 7).length +
-                     upcomingTasks.filter(t => t.daysUntilDeadline !== null && t.daysUntilDeadline <= 3).length;
+                     upcomingTasks.filter(t => t.daysUntilDeadline !== null && t.daysUntilDeadline <= 3).length +
+                     expiringDocuments.filter(d => d.napokHatra <= 3).length;
 
   return (
     <>
@@ -191,6 +208,42 @@ export function NotificationPanel() {
                       {upcomingTasks.length > 5 && (
                         <div className="text-xs text-gray-500 text-center">
                           +{upcomingTasks.length - 5} további...
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Expiring Documents */}
+                {expiringDocuments.length > 0 && (
+                  <div>
+                    <h4 className="font-semibold text-sm text-gray-700 mb-2 flex items-center gap-2">
+                      <span className="text-purple-500">📄</span>
+                      Lejáró dokumentumok ({expiringDocuments.length})
+                    </h4>
+                    <div className="space-y-2">
+                      {expiringDocuments.slice(0, 5).map((doc, idx) => (
+                        <div
+                          key={idx}
+                          className={`p-2 rounded text-xs border-l-4 ${
+                            doc.napokHatra <= 3
+                              ? 'bg-red-50 border-red-500'
+                              : doc.napokHatra <= 7
+                              ? 'bg-orange-50 border-orange-500'
+                              : 'bg-yellow-50 border-yellow-500'
+                          }`}
+                        >
+                          <div className="font-semibold">{doc.documentNev}</div>
+                          <div className="text-gray-600">
+                            {doc.iktatoSzam && `${doc.iktatoSzam} • `}
+                            {doc.napokHatra} nap múlva lejár
+                            {doc.createdBy && ` • ${doc.createdBy.nev}`}
+                          </div>
+                        </div>
+                      ))}
+                      {expiringDocuments.length > 5 && (
+                        <div className="text-xs text-gray-500 text-center">
+                          +{expiringDocuments.length - 5} további...
                         </div>
                       )}
                     </div>

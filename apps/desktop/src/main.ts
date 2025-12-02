@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, dialog, shell } from 'electron';
+import { app, BrowserWindow, ipcMain, dialog, shell, Notification } from 'electron';
 import * as path from 'path';
 import * as url from 'url';
 import { fork, ChildProcess } from 'child_process';
@@ -687,6 +687,37 @@ ipcMain.handle('open-email-client', async (event, to: string, subject: string, b
   } catch (error: any) {
     console.error('[IPC] Error opening email client:', error);
     writeLog(`[IPC] Error opening email client: ${error.message}`);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('show-notification', async (event, title: string, body: string, options?: { urgency?: 'normal' | 'critical' | 'low' }) => {
+  try {
+    // Check if notifications are supported
+    if (!Notification.isSupported()) {
+      console.warn('[IPC] Notifications are not supported on this platform');
+      return { success: false, error: 'Notifications are not supported' };
+    }
+
+    const notification = new Notification({
+      title,
+      body,
+      urgency: options?.urgency || 'normal',
+    });
+
+    notification.show();
+    
+    // Handle click to focus window
+    notification.on('click', () => {
+      if (mainWindow) {
+        mainWindow.focus();
+      }
+    });
+
+    return { success: true };
+  } catch (error: any) {
+    console.error('[IPC] Error showing notification:', error);
+    writeLog(`[IPC] Error showing notification: ${error.message}`);
     return { success: false, error: error.message };
   }
 });

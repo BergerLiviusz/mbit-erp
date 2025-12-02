@@ -670,34 +670,58 @@ export default function Warehouses() {
                       <th className="text-left p-4 font-medium text-gray-700">Termék</th>
                       <th className="text-left p-4 font-medium text-gray-700">Azonosító</th>
                       <th className="text-right p-4 font-medium text-gray-700">Mennyiség</th>
+                      <th className="text-left p-4 font-medium text-gray-700">Sarzs/Gyártásiszám</th>
                       <th className="text-right p-4 font-medium text-gray-700">Min. készlet</th>
                       <th className="text-right p-4 font-medium text-gray-700">Max. készlet</th>
                       <th className="text-left p-4 font-medium text-gray-700">Hely</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
-                    {warehouseStock.map((stock: any) => (
-                      <tr key={stock.id} className="hover:bg-gray-50">
-                        <td className="p-4 text-sm font-medium text-gray-900">
-                          {stock.item?.nev || '-'}
-                        </td>
-                        <td className="p-4 text-sm text-gray-600">
-                          {stock.item?.azonosito || '-'}
-                        </td>
-                        <td className="p-4 text-right text-sm text-gray-900">
-                          {stock.mennyiseg?.toLocaleString('hu-HU') || '0'} {stock.item?.egyseg || ''}
-                        </td>
-                        <td className="p-4 text-right text-sm text-gray-600">
-                          {stock.minimum !== null && stock.minimum !== undefined ? stock.minimum.toLocaleString('hu-HU') : '-'}
-                        </td>
-                        <td className="p-4 text-right text-sm text-gray-600">
-                          {stock.maximum !== null && stock.maximum !== undefined ? stock.maximum.toLocaleString('hu-HU') : '-'}
-                        </td>
-                        <td className="p-4 text-sm text-gray-600">
-                          {stock.location?.nev || '-'}
-                        </td>
-                      </tr>
-                    ))}
+                    {warehouseStock.map((stock: any) => {
+                      const stockLots = stock.item?.stockLots || [];
+                      const uniqueBatchNumbers = [...new Set(stockLots.map((lot: any) => lot.sarzsGyartasiSzam).filter(Boolean))];
+                      
+                      return (
+                        <tr key={stock.id} className="hover:bg-gray-50">
+                          <td className="p-4 text-sm font-medium text-gray-900">
+                            {stock.item?.nev || '-'}
+                          </td>
+                          <td className="p-4 text-sm text-gray-600">
+                            {stock.item?.azonosito || '-'}
+                          </td>
+                          <td className="p-4 text-right text-sm text-gray-900">
+                            {stock.mennyiseg?.toLocaleString('hu-HU') || '0'} {stock.item?.egyseg || ''}
+                          </td>
+                          <td className="p-4 text-sm">
+                            {uniqueBatchNumbers.length > 0 ? (
+                              <div className="flex flex-wrap gap-1">
+                                {uniqueBatchNumbers.slice(0, 2).map((batchNum: string, idx: number) => (
+                                  <span key={idx} className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
+                                    {batchNum}
+                                  </span>
+                                ))}
+                                {uniqueBatchNumbers.length > 2 && (
+                                  <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs">
+                                    +{uniqueBatchNumbers.length - 2}
+                                  </span>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="text-gray-400 text-xs">-</span>
+                            )}
+                          </td>
+                          <td className="p-4 text-right text-sm text-gray-600">
+                            {stock.minimum !== null && stock.minimum !== undefined ? stock.minimum.toLocaleString('hu-HU') : '-'}
+                          </td>
+                          <td className="p-4 text-right text-sm text-gray-600">
+                            {stock.maximum !== null && stock.maximum !== undefined ? stock.maximum.toLocaleString('hu-HU') : '-'}
+                          </td>
+                          <td className="p-4 text-sm text-gray-600">
+                            {stock.location?.nev || '-'}
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>

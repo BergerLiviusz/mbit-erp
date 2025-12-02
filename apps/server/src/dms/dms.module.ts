@@ -8,6 +8,9 @@ import { DocumentService } from './document.service';
 import { DocumentCategoryController } from './document-category.controller';
 import { DocumentCategoryService } from './document-category.service';
 import { OcrService } from './ocr.service';
+import { DocumentNotificationController } from './document-notification.controller';
+import { DocumentNotificationService } from './document-notification.service';
+import { TagController } from './tag.controller';
 
 @Module({
   imports: [
@@ -19,11 +22,14 @@ import { OcrService } from './ocr.service';
   controllers: [
     DocumentController,
     DocumentCategoryController,
+    DocumentNotificationController,
+    TagController,
   ],
   providers: [
     DocumentService,
     DocumentCategoryService,
     OcrService,
+    DocumentNotificationService,
   ],
   exports: [
     DocumentService,

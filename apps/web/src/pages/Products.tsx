@@ -33,6 +33,19 @@ interface Product {
       azonosito: string;
     };
   }>;
+  stockLots?: Array<{
+    id: string;
+    sarzsGyartasiSzam?: string | null;
+    mennyiseg: number;
+    beszerzesiAr: number;
+    lejarat?: string | null;
+    warehouse?: {
+      id: string;
+      nev: string;
+      azonosito: string;
+    };
+    createdAt: string;
+  }>;
   createdAt: string;
 }
 
@@ -43,7 +56,9 @@ export default function Products() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSuppliersModalOpen, setIsSuppliersModalOpen] = useState(false);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string>('');
@@ -474,6 +489,24 @@ export default function Products() {
                       </td>
                       <td className="p-4 text-right text-sm font-medium">
                         <button
+                          onClick={async () => {
+                            try {
+                              const response = await apiFetch(`/logistics/items/${product.id}`);
+                              if (response.ok) {
+                                const productData = await response.json();
+                                setSelectedProduct(productData);
+                                setIsDetailModalOpen(true);
+                              }
+                            } catch (error) {
+                              console.error('Hiba a termék részleteinek betöltésekor:', error);
+                            }
+                          }}
+                          className="text-gray-600 hover:text-gray-900 mr-3"
+                          title="Részletek"
+                        >
+                          Részletek
+                        </button>
+                        <button
                           onClick={() => handleOpenModal(product)}
                           className="text-mbit-blue hover:text-blue-600 mr-3"
                         >
@@ -779,6 +812,92 @@ export default function Products() {
           <ProductSuppliers itemId={selectedProductId} showHeader={false} />
         </Modal>
       )}
+
+      {/* Részletek modal */}
+      <Modal
+        isOpen={isDetailModalOpen}
+        onClose={() => {
+          setIsDetailModalOpen(false);
+          setSelectedProduct(null);
+        }}
+        title={selectedProduct ? `Termék részletei: ${selectedProduct.nev}` : 'Részletek'}
+        size="xl"
+      >
+        {selectedProduct && (
+          <div className="space-y-6">
+            {/* Alapadatok */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <div className="text-sm text-gray-600">Azonosító</div>
+                <div className="font-medium">{selectedProduct.azonosito}</div>
+              </div>
+              <div>
+                <div className="text-sm text-gray-600">Egység</div>
+                <div className="font-medium">{selectedProduct.egyseg}</div>
+              </div>
+              <div>
+                <div className="text-sm text-gray-600">Beszerzési ár</div>
+                <div className="font-medium">{selectedProduct.beszerzesiAr.toLocaleString('hu-HU')} Ft</div>
+              </div>
+              <div>
+                <div className="text-sm text-gray-600">Eladási ár</div>
+                <div className="font-medium">{selectedProduct.eladasiAr.toLocaleString('hu-HU')} Ft</div>
+              </div>
+              {selectedProduct.leiras && (
+                <div className="col-span-2">
+                  <div className="text-sm text-gray-600">Leírás</div>
+                  <div className="text-sm">{selectedProduct.leiras}</div>
+                </div>
+              )}
+            </div>
+
+            {/* Sarzs/Gyártásiszám információk */}
+            {selectedProduct.stockLots && selectedProduct.stockLots.length > 0 && (
+              <div>
+                <h3 className="font-medium mb-3">Sarzs/Gyártásiszám információk</h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="text-left p-2 font-medium text-gray-700">Raktár</th>
+                        <th className="text-left p-2 font-medium text-gray-700">Sarzs/Gyártásiszám</th>
+                        <th className="text-right p-2 font-medium text-gray-700">Mennyiség</th>
+                        <th className="text-right p-2 font-medium text-gray-700">Beszerzési ár</th>
+                        <th className="text-left p-2 font-medium text-gray-700">Lejárat</th>
+                        <th className="text-left p-2 font-medium text-gray-700">Létrehozva</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      {selectedProduct.stockLots.map((lot) => (
+                        <tr key={lot.id} className="hover:bg-gray-50">
+                          <td className="p-2">{lot.warehouse?.nev || '-'}</td>
+                          <td className="p-2">
+                            {lot.sarzsGyartasiSzam ? (
+                              <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
+                                {lot.sarzsGyartasiSzam}
+                              </span>
+                            ) : (
+                              <span className="text-gray-400 text-xs">-</span>
+                            )}
+                          </td>
+                          <td className="p-2 text-right">{lot.mennyiseg.toLocaleString('hu-HU')} {selectedProduct.egyseg}</td>
+                          <td className="p-2 text-right">{lot.beszerzesiAr.toLocaleString('hu-HU')} Ft</td>
+                          <td className="p-2 text-sm">
+                            {lot.lejarat ? new Date(lot.lejarat).toLocaleDateString('hu-HU') : '-'}
+                          </td>
+                          <td className="p-2 text-sm text-gray-600">
+                            {new Date(lot.createdAt).toLocaleDateString('hu-HU')}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }

@@ -66,3 +66,21 @@ export class ItemController {
     return this.supplierService.setPrimarySupplier(itemId, supplierId);
   }
 }
+
+@Controller('logistics/item-groups')
+@UseGuards(RbacGuard)
+export class ItemGroupController {
+  constructor(private itemService: ItemService) {}
+
+  @Get()
+  @Permissions(Permission.PRODUCT_VIEW)
+  findAll(
+    @Query('skip') skip?: string,
+    @Query('take') take?: string,
+  ) {
+    return this.itemService.findAllItemGroups(
+      skip ? parseInt(skip) : 0,
+      take ? parseInt(take) : 100,
+    );
+  }
+}

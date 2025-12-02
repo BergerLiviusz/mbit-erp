@@ -41,6 +41,7 @@ model User {
   adHocQueries           AdHocQuery[]    @relation("AdHocQueryCreatedBy")
   chatMessages           ChatMessage[]   @relation("ChatMessages")
   chatParticipants       ChatParticipant[] @relation("ChatParticipants")
+  createdWorkflows       Workflow[]      @relation("CreatedWorkflows")
 
   @@map("felhasznalok")
 }
@@ -54,6 +55,7 @@ model Role {
   updatedAt   DateTime         @updatedAt
   users       UserRole[]
   rolePermissions RolePermission[]
+  workflowSteps WorkflowStep[]
 
   @@map("szerepkorok")
 }
@@ -620,20 +622,22 @@ model StockLot {
 }
 
 model StockMove {
-  id            String    @id @default(uuid())
-  itemId        String
-  warehouseId   String
-  tipus         String
-  mennyiseg     Float
-  referenciaId  String?
-  megjegyzesek  String?
-  createdAt     DateTime  @default(now())
-  item          Item      @relation(fields: [itemId], references: [id])
-  warehouse     Warehouse @relation(fields: [warehouseId], references: [id])
+  id                String    @id @default(uuid())
+  itemId            String
+  warehouseId       String
+  tipus             String
+  mennyiseg         Float
+  sarzsGyartasiSzam String?
+  referenciaId      String?
+  megjegyzesek      String?
+  createdAt         DateTime  @default(now())
+  item              Item      @relation(fields: [itemId], references: [id])
+  warehouse         Warehouse @relation(fields: [warehouseId], references: [id])
 
   @@index([itemId])
   @@index([warehouseId])
   @@index([createdAt])
+  @@index([sarzsGyartasiSzam])
   @@map("keszlet_mozgasok")
 }
 
@@ -928,6 +932,7 @@ model Document {
   iktatoSzam        String?             @unique
   nev               String
   tipus             String
+  irany             String?              // "bejovo" vagy "kimeno"
   fajlNev           String
   fajlMeret         Int
   fajlUtvonal       String
@@ -961,6 +966,7 @@ model Document {
   @@index([iktatoSzam])
   @@index([tipus])
   @@index([allapot])
+  @@index([irany])
   @@map("dokumentumok")
 }
 
@@ -1803,4 +1809,40 @@ model DataLoadJob {
   @@index([dataSourceId])
   @@index([allapot])
   @@map("adatbetoltes_feladatok")
+}
+
+model Workflow {
+  id          String          @id @default(uuid())
+  nev         String
+  leiras      String?
+  aktiv       Boolean         @default(true)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  createdById String?
+  createdBy   User?           @relation("CreatedWorkflows", fields: [createdById], references: [id], onDelete: SetNull)
+  steps       WorkflowStep[]
+
+  @@index([aktiv])
+  @@index([createdById])
+  @@map("workflowok")
+}
+
+model WorkflowStep {
+  id          String    @id @default(uuid())
+  workflowId  String
+  nev         String
+  leiras      String?
+  sorrend     Int
+  szerepkorId String?
+  szerepkor   Role?     @relation(fields: [szerepkorId], references: [id], onDelete: SetNull)
+  jogosultsag String    @default("READ") // READ, WRITE, APPROVE
+  kotelezo    Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  workflow    Workflow  @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+
+  @@unique([workflowId, sorrend])
+  @@index([workflowId])
+  @@index([szerepkorId])
+  @@map("workflow_lepesek")
 }

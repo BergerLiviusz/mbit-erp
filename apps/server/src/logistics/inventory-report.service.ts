@@ -8,6 +8,7 @@ import { Response } from 'express';
 export interface InventoryReportFilters {
   warehouseId?: string;
   itemId?: string;
+  itemGroupId?: string;
   date?: string;
   lowStockOnly?: boolean;
 }
@@ -38,6 +39,11 @@ export class InventoryReportService {
 
     let data = stockLevels.data;
 
+    // Filter by item group if provided
+    if (filters?.itemGroupId) {
+      data = data.filter((item) => item.item?.itemGroupId === filters.itemGroupId);
+    }
+
     // Filter low stock if requested
     if (filters?.lowStockOnly) {
       data = data.filter((item) => item.lowStockFlag);
@@ -55,6 +61,43 @@ export class InventoryReportService {
     return data;
   }
 
+  async getReportDataByItemGroup(filters?: InventoryReportFilters) {
+    const stockLevels = await this.getReportData(filters);
+
+    // Group by item group
+    const groupedData: Record<string, any[]> = {};
+    
+    stockLevels.forEach((level: any) => {
+      const groupId = level.item?.itemGroupId || 'Nincs csoport';
+      const groupName = level.item?.itemGroup?.nev || 'Nincs csoport';
+      const key = `${groupId}|${groupName}`;
+      
+      if (!groupedData[key]) {
+        groupedData[key] = [];
+      }
+      groupedData[key].push(level);
+    });
+
+    // Calculate totals for each group
+    const result = Object.entries(groupedData).map(([key, items]) => {
+      const [groupId, groupName] = key.split('|');
+      const totalQuantity = items.reduce((sum, item) => sum + (item.mennyiseg || 0), 0);
+      const totalValue = items.reduce((sum, item) => sum + ((item.mennyiseg || 0) * (item.item?.beszerzesiAr || 0)), 0);
+      const itemCount = items.length;
+
+      return {
+        groupId: groupId === 'Nincs csoport' ? null : groupId,
+        groupName,
+        itemCount,
+        totalQuantity,
+        totalValue,
+        items,
+      };
+    });
+
+    return result;
+  }
+
   async generatePDF(filters?: InventoryReportFilters, res?: Response): Promise<Buffer> {
     const data = await this.getReportData(filters);
 
@@ -63,6 +106,14 @@ export class InventoryReportService {
     if (filters?.warehouseId) {
       warehouse = await this.prisma.warehouse.findUnique({
         where: { id: filters.warehouseId },
+      });
+    }
+
+    // Get item group info if needed
+    let itemGroup = null;
+    if (filters?.itemGroupId) {
+      itemGroup = await this.prisma.itemGroup.findUnique({
+        where: { id: filters.itemGroupId },
       });
     }
 
@@ -84,6 +135,9 @@ export class InventoryReportService {
         doc.text(`Raktár: ${warehouse.nev} (${warehouse.azonosito})`, { align: 'left' });
       } else {
         doc.text('Raktár: Összes raktár', { align: 'left' });
+      }
+      if (itemGroup) {
+        doc.text(`Cikkcsoport: ${itemGroup.nev}`, { align: 'left' });
       }
       doc.moveDown();
 

@@ -9,7 +9,9 @@ import {
   Query,
   UseGuards,
   Request,
+  Res,
 } from '@nestjs/common';
+import { Response } from 'express';
 import {
   InventorySheetService,
   CreateInventorySheetDto,
@@ -224,6 +226,12 @@ export class InventorySheetController {
     );
 
     return { message: 'Leltárív törölve' };
+  }
+
+  @Get(':id/pdf')
+  @Permissions(Permission.STOCK_VIEW)
+  async generatePdf(@Param('id') id: string, @Res() res: Response) {
+    await this.inventorySheetService.generatePdf(id, res);
   }
 }
 

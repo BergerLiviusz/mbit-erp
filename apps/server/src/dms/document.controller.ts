@@ -29,32 +29,50 @@ export class DocumentController {
     @Query('categoryId') categoryId?: string,
     @Query('allapot') allapot?: string,
     @Query('accountId') accountId?: string,
+    @Query('irany') irany?: string,
     @Query('search') search?: string,
+    @Query('tagId') tagId?: string,
+    @Request() req?: any,
   ) {
     const filters: DocumentFilters = {
       categoryId,
       allapot,
       accountId,
+      irany,
       search,
+      tagId,
     };
+
+    const userId = req?.user?.id;
+    const isAdmin = req?.user?.roles?.includes('Admin') || false;
 
     return this.documentService.findAll(
       skip ? parseInt(skip) : 0,
       take ? parseInt(take) : 50,
       filters,
+      userId,
+      isAdmin,
     );
   }
 
   @Get(':id')
   @Permissions(Permission.DOCUMENT_VIEW)
-  findOne(@Param('id') id: string) {
-    return this.documentService.findOne(id);
+  async findOne(@Param('id') id: string, @Request() req?: any) {
+    const userId = req?.user?.id;
+    const isAdmin = req?.user?.roles?.includes('Admin') || false;
+    
+    const document = await this.documentService.findOne(id, userId, isAdmin);
+    if (!document) {
+      throw new BadRequestException('Dokumentum nem található vagy nincs hozzáférése');
+    }
+    return document;
   }
 
   @Post()
   @Permissions(Permission.DOCUMENT_CREATE)
   async create(@Body() dto: CreateDocumentDto, @Request() req: any) {
-    const document = await this.documentService.create(dto);
+    const userId = req?.user?.id;
+    const document = await this.documentService.create(dto, userId);
 
     await this.auditService.logCreate(
       'Document',
@@ -254,7 +272,9 @@ export class DocumentController {
   @Post(':id/ocr')
   @Permissions(Permission.DOCUMENT_VIEW)
   async triggerOcr(@Param('id') id: string, @Request() req: any) {
-    const document = await this.documentService.findOne(id);
+    const userId = req?.user?.id;
+    const isAdmin = req?.user?.roles?.includes('Admin') || false;
+    const document = await this.documentService.findOne(id, userId, isAdmin);
     
     if (!document) {
       throw new BadRequestException('Dokumentum nem található');
@@ -277,5 +297,100 @@ export class DocumentController {
       message: 'OCR feldolgozás elindítva',
       jobId: job.id,
     };
+  }
+
+  @Post(':id/access')
+  @Permissions(Permission.DOCUMENT_EDIT)
+  async addAccess(
+    @Param('id') id: string,
+    @Body() body: { userId: string; jogosultsag: string },
+    @Request() req: any,
+  ) {
+    const userId = req?.user?.id;
+    const isAdmin = req?.user?.roles?.includes('Admin') || false;
+    
+    // Check if user has permission to manage access (admin or creator)
+    const document = await this.documentService.findOne(id, userId, isAdmin);
+    if (!document) {
+      throw new BadRequestException('Dokumentum nem található vagy nincs hozzáférése');
+    }
+
+    if (!isAdmin && document.createdById !== userId) {
+      throw new BadRequestException('Nincs jogosultsága a dokumentum hozzáférésének kezeléséhez');
+    }
+
+    const access = await this.prisma.documentAccess.upsert({
+      where: {
+        documentId_userId: {
+          documentId: id,
+          userId: body.userId,
+        },
+      },
+      update: {
+        jogosultsag: body.jogosultsag,
+      },
+      create: {
+        documentId: id,
+        userId: body.userId,
+        jogosultsag: body.jogosultsag,
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            nev: true,
+            email: true,
+          },
+        },
+      },
+    });
+
+    await this.auditService.log({
+      userId,
+      esemeny: 'add_access',
+      entitas: 'Document',
+      entitasId: id,
+    });
+
+    return access;
+  }
+
+  @Delete(':id/access/:userId')
+  @Permissions(Permission.DOCUMENT_EDIT)
+  async removeAccess(
+    @Param('id') id: string,
+    @Param('userId') targetUserId: string,
+    @Request() req: any,
+  ) {
+    const userId = req?.user?.id;
+    const isAdmin = req?.user?.roles?.includes('Admin') || false;
+    
+    // Check if user has permission to manage access (admin or creator)
+    const document = await this.documentService.findOne(id, userId, isAdmin);
+    if (!document) {
+      throw new BadRequestException('Dokumentum nem található vagy nincs hozzáférése');
+    }
+
+    if (!isAdmin && document.createdById !== userId) {
+      throw new BadRequestException('Nincs jogosultsága a dokumentum hozzáférésének kezeléséhez');
+    }
+
+    await this.prisma.documentAccess.delete({
+      where: {
+        documentId_userId: {
+          documentId: id,
+          userId: targetUserId,
+        },
+      },
+    });
+
+    await this.auditService.log({
+      userId,
+      esemeny: 'remove_access',
+      entitas: 'Document',
+      entitasId: id,
+    });
+
+    return { success: true };
   }
 }

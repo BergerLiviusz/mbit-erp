@@ -42,6 +42,21 @@ export interface UpcomingTask {
   } | null;
 }
 
+export interface ExpiringDocument {
+  id: string;
+  documentId: string;
+  documentNev: string;
+  iktatoSzam?: string | null;
+  lejaratDatum: string;
+  napokHatra: number;
+  felelos?: string | null;
+  createdBy?: {
+    id: string;
+    nev: string;
+    email: string;
+  } | null;
+}
+
 export async function getExpiringProducts(days: number = 30): Promise<ExpiringProduct[]> {
   const response = await apiFetch(`/logistics/notifications/products?days=${days}`);
   if (!response.ok) {
@@ -62,6 +77,14 @@ export async function getUpcomingTaskDeadlines(days: number = 7): Promise<Upcomi
   const response = await apiFetch(`/team/tasks/upcoming-deadlines?days=${days}`);
   if (!response.ok) {
     throw new Error('Failed to fetch upcoming task deadlines');
+  }
+  return response.json();
+}
+
+export async function getExpiringDocuments(): Promise<ExpiringDocument[]> {
+  const response = await apiFetch('/dms/document-notifications/expiring');
+  if (!response.ok) {
+    throw new Error('Failed to fetch expiring documents');
   }
   return response.json();
 }

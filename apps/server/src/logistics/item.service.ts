@@ -130,4 +130,17 @@ export class ItemService {
       where: { id },
     });
   }
+
+  async findAllItemGroups(skip = 0, take = 100) {
+    const [total, data] = await Promise.all([
+      this.prisma.itemGroup.count(),
+      this.prisma.itemGroup.findMany({
+        skip,
+        take,
+        orderBy: { nev: 'asc' },
+      }),
+    ]);
+
+    return { total, data };
+  }
 }

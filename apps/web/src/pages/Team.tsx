@@ -24,6 +24,10 @@ export default function Team() {
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [showOnlyMyTasks, setShowOnlyMyTasks] = useState(false);
+  
+  // Get current user ID from localStorage
+  const currentUserId = JSON.parse(localStorage.getItem('user') || '{}')?.id;
 
   const createTask = useCreateTask();
   const createBoard = useCreateBoard();
@@ -192,6 +196,16 @@ export default function Team() {
           <h1 className="text-3xl font-bold text-gray-900">Csapat kommunikáció</h1>
           <div className="flex gap-2">
             <button
+              onClick={() => setShowOnlyMyTasks(!showOnlyMyTasks)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
+                showOnlyMyTasks
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+            >
+              {showOnlyMyTasks ? '✓ ' : ''}Csak az én feladataim
+            </button>
+            <button
               onClick={handleOpenCreateBoardModal}
               className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
             >
@@ -268,6 +282,8 @@ export default function Team() {
           <TaskBoardComponent
             board={boardDetails}
             onTaskClick={handleTaskClick}
+            currentUserId={currentUserId}
+            showOnlyMyTasks={showOnlyMyTasks}
           />
         </div>
       )}
