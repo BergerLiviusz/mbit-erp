@@ -3,7 +3,7 @@ import { useWorkflows, useCreateWorkflow, useDeleteWorkflow, Workflow, CreateWor
 import WorkflowDiagram from '../components/team/WorkflowDiagram';
 import Modal from '../components/Modal';
 import axios from '../lib/axios';
-import { Plus, Trash2, Eye, Edit } from 'lucide-react';
+import { Plus, Trash2, Eye } from 'lucide-react';
 
 interface Role {
   id: string;
@@ -19,7 +19,6 @@ export default function Workflows() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [roles, setRoles] = useState<Role[]>([]);
-  const [loadingRoles, setLoadingRoles] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
@@ -31,14 +30,11 @@ export default function Workflows() {
   });
 
   const loadRoles = async () => {
-    setLoadingRoles(true);
     try {
       const response = await axios.get('/api/system/users/roles');
       setRoles(response.data || []);
     } catch (err: any) {
       console.error('Failed to load roles:', err);
-    } finally {
-      setLoadingRoles(false);
     }
   };
 

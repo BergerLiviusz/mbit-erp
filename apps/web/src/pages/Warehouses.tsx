@@ -679,7 +679,8 @@ export default function Warehouses() {
                   <tbody className="divide-y">
                     {warehouseStock.map((stock: any) => {
                       const stockLots = stock.item?.stockLots || [];
-                      const uniqueBatchNumbers = [...new Set(stockLots.map((lot: any) => lot.sarzsGyartasiSzam).filter(Boolean))];
+                      const batchNumbers = stockLots.map((lot: any) => lot.sarzsGyartasiSzam).filter((x: any) => Boolean(x)) as string[];
+                      const uniqueBatchNumbers: string[] = [...new Set(batchNumbers)];
                       
                       return (
                         <tr key={stock.id} className="hover:bg-gray-50">
@@ -695,7 +696,7 @@ export default function Warehouses() {
                           <td className="p-4 text-sm">
                             {uniqueBatchNumbers.length > 0 ? (
                               <div className="flex flex-wrap gap-1">
-                                {uniqueBatchNumbers.slice(0, 2).map((batchNum: string, idx: number) => (
+                                {uniqueBatchNumbers.slice(0, 2).map((batchNum, idx) => (
                                   <span key={idx} className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
                                     {batchNum}
                                   </span>
