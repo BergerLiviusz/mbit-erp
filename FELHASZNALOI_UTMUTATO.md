@@ -92,6 +92,8 @@ A képernyő tetején 4 információs kártya található:
 - **Aktív raktárak** - Működő raktárak száma
 - **Dokumentumok száma** - Feltöltött dokumentumok mennyisége
 
+⚠️ **Megjegyzés:** Az összefoglaló kártyák automatikusan frissülnek, amikor új adatokat ad hozzá (pl. új partner vagy termék létrehozásakor). Az adatok frissítése azonnali, és az ablak fókuszálásakor is automatikusan frissülnek.
+
 ### 🧭 Navigációs menü
 
 A képernyő tetején található menüsorban érheti el a fő funkciókat:
@@ -105,7 +107,9 @@ A képernyő tetején található menüsorban érheti el a fő funkciókat:
   - Számlák - Számlák létrehozása és kezelése
   - Chat - Ügyfél kommunikáció chat rendszerrel
 - **Dokumentumok** - Dokumentumok feltöltése és kezelése (OCR támogatással)
-- **Csapat kommunikáció** - Feladatkezelés és csapatmunka
+- **Csapat kommunikáció** ⏷
+  - Feladatok - Feladatkezelés és csapatmunka
+  - Folyamatleltár - Munkafolyamatok definiálása és kezelése
 - **Logisztika** ⏷
   - Raktárak - Raktárak kezelése
   - Termékek - Termékkatalógus kezelése
@@ -374,6 +378,51 @@ Az OCR funkció automatikusan aktív új telepítéseknél.
 3. Válasszon színt
 4. Kattintson a **"Létrehozás"** gombra
 
+#### Folyamatleltár (Workflow)
+
+A folyamatleltár funkció lehetővé teszi munkafolyamatok definiálását és kezelését, amelyek segítségével szemléltetheti a munkatársaknak a különböző üzleti folyamatokat.
+
+**Új workflow létrehozása:**
+
+1. Kattintson a **"Csapat kommunikáció"** → **"Folyamatleltár"** menüre
+2. Kattintson a **"+ Új Workflow"** gombra
+3. Töltse ki az alapadatokat:
+   - **Név** (kötelező) - Workflow neve (pl. "Számla jóváhagyási folyamat")
+   - **Leírás** (opcionális) - Részletes leírás a workflow-ról
+   - **Aktív** - Jelölje be, ha a workflow aktív
+4. Adjon hozzá lépéseket (minimum 5 lépés szükséges):
+   - Kattintson a **"+ Lépés hozzáadása"** gombra
+   - Minden lépéshez töltse ki:
+     - **Lépés neve** (kötelező) - Pl. "Első ellenőrzés", "Jóváhagyás", "Archiválás"
+     - **Leírás** (opcionális) - Részletes leírás a lépésről
+     - **Lépés típusa** (opcionális) - Szabadon beírható típus (pl. "Ellenőrzés", "Jóváhagyás", "Archiválás")
+     - **Szín** - Válasszon színt a lépéshez (alapértelmezett: kék)
+     - **Kötelező lépés** - Jelölje be, ha a lépés kötelező
+5. A lépések sorrendje automatikusan beállítódik
+6. Kattintson a **"Létrehozás"** gombra
+
+**Workflow megtekintése:**
+
+1. Keresse meg a workflow-t a listában
+2. Kattintson a **"Megtekintés"** gombra (szem ikon)
+3. A workflow diagram megjelenik, amely mutatja:
+   - A lépések sorrendjét
+   - Minden lépés nevét és leírását
+   - A lépés típusát és színét
+   - Kötelező lépések jelölését
+
+**Workflow törlése:**
+
+1. Keresse meg a workflow-t a listában
+2. Kattintson a **"Törlés"** gombra (kuka ikon)
+3. Erősítse meg a törlést
+
+**Tippek:**
+
+- A workflow-k segítségével könnyen dokumentálhatja és megoszthatja a munkafolyamatokat a csapattal
+- Használjon egyedi színeket a különböző lépés típusokhoz a jobb áttekinthetőség érdekében
+- A lépés típus mezőben bármilyen szöveget megadhat, amely segít kategorizálni a lépéseket
+
 ### 🏭 Logisztika modul
 
 #### Raktárak kezelése
@@ -413,9 +462,9 @@ Az OCR funkció automatikusan aktív új telepítéseknél.
 **Leltárív nyomtatása:**
 
 1. Nyissa meg a raktár részleteit
-2. Kattintson a **"Leltárív nyomtatása"** gombra
-3. Válassza ki a formátumot (PDF vagy Excel)
-4. A leltárív tartalmazza: terméknév, azonosító, készlet, hely és egyéb adatokat
+2. Kattintson a **"📄 Leltárív PDF letöltése"** vagy **"📊 Leltárív Excel letöltése"** gombra
+3. A leltárív automatikusan letöltődik a kiválasztott formátumban
+4. A leltárív tartalmazza: terméknév, azonosító, könyv szerinti készlet, tényleges készlet, különbözet, raktári hely, megjegyzések és egyéb adatokat
 
 #### Termékek kezelése
 
@@ -445,6 +494,20 @@ Az OCR funkció automatikusan aktív új telepítéseknél.
 2. Kattintson a **"Szerkesztés"** gombra
 3. Módosítsa a szükséges adatokat (név, ár, szavatossági idő, készlet szintek)
 4. Kattintson a **"Mentés"** gombra
+
+**Szállító hozzáadása termékhez:**
+
+1. Nyissa meg a termék részleteit
+2. Kattintson a **"Szállítók"** fülre
+3. Kattintson a **"+ Szállító hozzáadása"** gombra
+4. A szállító hozzáadása modal megnyílik:
+   - **Meglévő szállító kiválasztása**: Válassza ki a szállítót a listából
+   - **Új szállító létrehozása**: Ha a szállító még nincs a rendszerben, kattintson a **"+ Új szállító létrehozása"** gombra
+     - Töltse ki az új szállító adatait (név, email, telefon, cím, stb.)
+     - Kattintson a **"Létrehozás"** gombra
+     - Az új szállító automatikusan hozzáadódik a termékhez
+   - Adja meg a **szállítói árat**
+5. Kattintson a **"Mentés"** gombra
 
 **Szavatossági idő és készlet szintek:**
 
@@ -605,13 +668,21 @@ A jelentés tartalmazza:
 
 **Várható beérkezés létrehozása:**
 
-1. Válassza a **"Várható beérkezések"** fület
-2. Kattintson a **"+ Új várható beérkezés"** gombra
-3. Töltse ki az adatokat:
+1. Kattintson a **"Logisztika"** → **"Foglaltság és konszignáció"** menüre
+2. Válassza a **"Várható beérkezések"** fület
+3. Kattintson a **"+ Új várható beérkezés"** gombra
+4. Töltse ki az adatokat:
    - **Szállító**
    - **Várható beérkezés dátuma**
    - **Tételek** - Termékek és mennyiségek
-4. Kattintson a **"Létrehozás"** gombra
+5. Kattintson a **"Létrehozás"** gombra
+
+**Várható beérkezések megtekintése:**
+
+1. Kattintson a **"Logisztika"** → **"Foglaltság és konszignáció"** menüre
+2. Válassza a **"Várható beérkezések"** fület
+3. A lista automatikusan betöltődik és megjeleníti az összes várható beérkezést
+4. Szűrhet raktár alapján a felső szűrőmezővel
 
 **Beérkezés rögzítése:**
 
@@ -1107,6 +1178,28 @@ A hibabejelentés a **Beállítások** menüben található, a **Hibabejelentés
 
 A kijelentkezés gomb a **Beállítások** → **Hibabejelentés** fül alján található. Kattintson a **"Kijelentkezés"** gombra.
 
+### Mi a folyamatleltár (workflow) és hogyan használom?
+
+A folyamatleltár egy olyan funkció, amely lehetővé teszi munkafolyamatok definiálását és dokumentálását. Hasznos lehet, amikor egy adott üzleti folyamatot szeretne szemléltetni a munkatársaknak.
+
+**Használati példák:**
+
+- Számla jóváhagyási folyamat
+- Rendelés feldolgozási folyamat
+- Dokumentum archiválási folyamat
+- Beszerzési folyamat
+
+**Létrehozás lépései:**
+
+1. **Csapat kommunikáció** → **Folyamatleltár** menü
+2. Kattintson a **"+ Új Workflow"** gombra
+3. Adjon meg egy nevet és leírást
+4. Adjon hozzá legalább 5 lépést
+5. Minden lépéshez adjon meg nevet, leírást, típust és színt
+6. Kattintson a **"Létrehozás"** gombra
+
+A workflow-k diagram formában jelennek meg, amelyek segítenek vizuálisan megérteni a folyamatokat.
+
 ---
 
 ## Hibaelhárítás
@@ -1205,6 +1298,6 @@ Ha további segítségre van szüksége vagy hibát talált:
 
 ---
 
-**Verzió:** 1.0.0  
-**Utolsó frissítés:** 2025. november 23.  
+**Verzió:** 1.1.0  
+**Utolsó frissítés:** 2025. január 20.  
 **MB-IT Kft.** - Minden jog fenntartva

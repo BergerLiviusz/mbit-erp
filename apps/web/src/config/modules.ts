@@ -140,6 +140,16 @@ export const PACKAGE_CONFIGS: Record<string, PackageConfig> = {
       logistics: true
     }
   },
+  'package-5': {
+    name: 'Csomag 5',
+    modules: {
+      documents: true,
+      team: false,
+      controlling: false,
+      crm: false,
+      logistics: false
+    }
+  },
   'full': {
     name: 'Teljes verzió',
     modules: {

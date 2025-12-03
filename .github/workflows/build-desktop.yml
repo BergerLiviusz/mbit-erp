@@ -9,6 +9,7 @@ on:
       - package-2
       - package-3
       - package-4
+      - package-5
     tags:
       - 'v*'
   pull_request:
@@ -27,6 +28,7 @@ on:
           - package-2
           - package-3
           - package-4
+          - package-5
         default: 'full'
 
 permissions:
@@ -75,6 +77,9 @@ jobs:
           } elseif ("${{ github.ref }}" -eq "refs/heads/package-4") {
             $package = "package-4"
             Write-Host "Detected package-4 branch"
+          } elseif ("${{ github.ref }}" -eq "refs/heads/package-5") {
+            $package = "package-5"
+            Write-Host "Detected package-5 branch"
           } elseif ("${{ github.ref }}" -eq "refs/heads/main" -or "${{ github.ref }}" -eq "refs/heads/master") {
             $package = "full"
             Write-Host "Detected main/master branch, using full package"
