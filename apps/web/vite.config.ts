@@ -19,7 +19,7 @@ function getActivePackage(): string {
     console.log('[Vite Config] Git branch:', gitBranch);
     
     // Branch nevek -> package nevek mapping
-    if (gitBranch === 'package-1' || gitBranch === 'package-2' || gitBranch === 'package-3' || gitBranch === 'package-4') {
+    if (gitBranch === 'package-1' || gitBranch === 'package-2' || gitBranch === 'package-3' || gitBranch === 'package-4' || gitBranch === 'package-5') {
       return gitBranch;
     }
     if (gitBranch === 'main' || gitBranch === 'master') {
