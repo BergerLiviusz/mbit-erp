@@ -35,7 +35,7 @@ import { LoadingScreen } from './components/LoadingScreen';
 import { ModuleRouteGuard } from './components/ModuleRouteGuard';
 import MbitLogo from './assets/logo.svg';
 import axios from './lib/axios';
-import { isModuleEnabled, getModuleMenuItems } from './config/modules';
+import { isModuleEnabled, getModuleMenuItems, isHrModuleEnabled } from './config/modules';
 
 function DropdownMenu({ title, items }: { title: string; items: Array<{ to: string; label: string }> }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -235,16 +235,18 @@ function App() {
                     items={getModuleMenuItems('logistics')}
                   />
                 )}
-                {/* HR - mindig látható (nem szerepel a modul konfigurációban) */}
-                <DropdownMenu 
-                  title="HR"
-                  items={[
-                    { to: '/hr/job-positions', label: 'Munkakörök' },
-                    { to: '/hr/employees', label: 'Dolgozók' },
-                    { to: '/hr/contracts', label: 'Munkaszerződések' },
-                    { to: '/hr/reports', label: 'Riportok' }
-                  ]}
-                />
+                {/* HR - csak ha engedélyezve (nem package-5-ben) */}
+                {isHrModuleEnabled() && (
+                  <DropdownMenu 
+                    title="HR"
+                    items={[
+                      { to: '/hr/job-positions', label: 'Munkakörök' },
+                      { to: '/hr/employees', label: 'Dolgozók' },
+                      { to: '/hr/contracts', label: 'Munkaszerződések' },
+                      { to: '/hr/reports', label: 'Riportok' }
+                    ]}
+                  />
+                )}
                 {/* Kontrolling - csak ha Controlling modul engedélyezve */}
                 {isModuleEnabled('controlling') && (
                   <DropdownMenu 
@@ -315,11 +317,15 @@ function App() {
             </>
           ) : null}
           
-          {/* HR routes - mindig elérhető (nem szerepel a modul konfigurációban) */}
-          <Route path="/hr/job-positions" element={<JobPositions />} />
-          <Route path="/hr/employees" element={<Employees />} />
-          <Route path="/hr/contracts" element={<Contracts />} />
-          <Route path="/hr/reports" element={<HrReports />} />
+          {/* HR routes - csak ha engedélyezve (nem package-5-ben) */}
+          {isHrModuleEnabled() ? (
+            <>
+              <Route path="/hr/job-positions" element={<JobPositions />} />
+              <Route path="/hr/employees" element={<Employees />} />
+              <Route path="/hr/contracts" element={<Contracts />} />
+              <Route path="/hr/reports" element={<HrReports />} />
+            </>
+          ) : null}
           
           {/* Controlling routes - csak ha engedélyezve */}
           {isModuleEnabled('controlling') ? (

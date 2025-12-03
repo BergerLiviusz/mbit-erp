@@ -235,3 +235,10 @@ export function getModuleMenuItems(module: 'documents' | 'team' | 'crm' | 'logis
   }
 }
 
+// Helper függvény: HR modul elérhetőségének ellenőrzése
+// Az HR modul minden package-ben elérhető, kivéve package-5-ben
+export function isHrModuleEnabled(): boolean {
+  const activePackage = getActivePackage();
+  return activePackage !== 'package-5';
+}
+
