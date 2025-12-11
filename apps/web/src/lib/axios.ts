@@ -25,7 +25,7 @@ axiosInstance.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Add response interceptor to log errors for debugging
+// Add response interceptor to log errors for debugging and handle 401 (unauthorized)
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -39,6 +39,20 @@ axiosInstance.interceptors.response.use(
         code: error.code,
       });
     }
+    
+    // Handle 401 Unauthorized - token expired or invalid
+    if (error.response?.status === 401) {
+      // Clear authentication data
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      
+      // Redirect to login by reloading the page
+      // This will trigger the App.tsx to show the login screen
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/';
+      }
+    }
+    
     return Promise.reject(error);
   }
 );

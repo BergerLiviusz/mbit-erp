@@ -1,5 +1,5 @@
 import { Routes, Route, Link, useLocation } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Dashboard from './pages/Dashboard';
 import CRM from './pages/CRM';
 import Documents from './pages/Documents';
@@ -35,7 +35,7 @@ import { LoadingScreen } from './components/LoadingScreen';
 import { ModuleRouteGuard } from './components/ModuleRouteGuard';
 import MbitLogo from './assets/logo.svg';
 import axios from './lib/axios';
-import { isModuleEnabled, getModuleMenuItems } from './config/modules';
+import { isModuleEnabled, getModuleMenuItems, isHrModuleEnabled, getActivePackage } from './config/modules';
 
 function DropdownMenu({ title, items }: { title: string; items: Array<{ to: string; label: string }> }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -101,6 +101,23 @@ function App() {
       return !!localStorage.getItem('token');
     }
   );
+
+  // Logout function
+  const handleLogout = useCallback(() => {
+    // Clear authentication data
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    
+    // Update authentication state
+    setIsAuthenticated(false);
+    
+    // Log logout action
+    if (isElectron) {
+      import('./components/DebugPanel').then(module => {
+        module.addLog('info', 'User logged out', {});
+      }).catch(() => {});
+    }
+  }, [isElectron]);
   
   const [isBackendReady, setIsBackendReady] = useState(false);
   const [isCheckingBackend, setIsCheckingBackend] = useState(true);
@@ -143,6 +160,38 @@ function App() {
     };
   }, []);
 
+  // Validate token when backend is ready and user is authenticated
+  useEffect(() => {
+    if (!isBackendReady || !isAuthenticated) {
+      return;
+    }
+
+    const validateToken = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        handleLogout();
+        return;
+      }
+
+      try {
+        // Try to validate token by making an authenticated request
+        // Use a simple endpoint that requires authentication
+        const response = await axios.get('/system/settings?skip=0&take=1');
+        if (response.status !== 200) {
+          // Token invalid, logout
+          handleLogout();
+        }
+      } catch (err: any) {
+        // Token invalid or expired, logout
+        if (err.response?.status === 401) {
+          handleLogout();
+        }
+      }
+    };
+
+    validateToken();
+  }, [isBackendReady, isAuthenticated, handleLogout]);
+
   // Show loading screen while checking backend or if backend is not ready
   if (isCheckingBackend || !isBackendReady) {
     return <LoadingScreen />;
@@ -158,11 +207,12 @@ function App() {
       <nav className="bg-mbit-dark text-white shadow-lg">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-8">
-              <Link to="/" className="flex items-center">
-                <img src={MbitLogo} alt="Mbit Logo" className="h-10 w-auto" />
-              </Link>
-              <div className="flex space-x-4">
+            <div className="flex items-center justify-between w-full">
+              <div className="flex items-center space-x-8">
+                <Link to="/" className="flex items-center">
+                  <img src={MbitLogo} alt="Mbit Logo" className="h-10 w-auto" />
+                </Link>
+                <div className="flex space-x-4">
                 <Link 
                   to="/" 
                   className="hover:bg-gray-800 px-3 py-2 rounded"
@@ -235,16 +285,18 @@ function App() {
                     items={getModuleMenuItems('logistics')}
                   />
                 )}
-                {/* HR - mindig látható (nem szerepel a modul konfigurációban) */}
-                <DropdownMenu 
-                  title="HR"
-                  items={[
-                    { to: '/hr/job-positions', label: 'Munkakörök' },
-                    { to: '/hr/employees', label: 'Dolgozók' },
-                    { to: '/hr/contracts', label: 'Munkaszerződések' },
-                    { to: '/hr/reports', label: 'Riportok' }
-                  ]}
-                />
+                {/* HR - csak ha engedélyezve (nem package-5-ben) */}
+                {isHrModuleEnabled() && (
+                  <DropdownMenu 
+                    title="HR"
+                    items={[
+                      { to: '/hr/job-positions', label: 'Munkakörök' },
+                      { to: '/hr/employees', label: 'Dolgozók' },
+                      { to: '/hr/contracts', label: 'Munkaszerződések' },
+                      { to: '/hr/reports', label: 'Riportok' }
+                    ]}
+                  />
+                )}
                 {/* Kontrolling - csak ha Controlling modul engedélyezve */}
                 {isModuleEnabled('controlling') && (
                   <DropdownMenu 
@@ -265,6 +317,19 @@ function App() {
                 >
                   Beállítások
                 </Link>
+                </div>
+              </div>
+              <div className="flex items-center">
+                <button
+                  onClick={handleLogout}
+                  className="hover:bg-gray-800 px-3 py-2 rounded flex items-center gap-2"
+                  title="Kijelentkezés"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
+                  <span>Kijelentkezés</span>
+                </button>
               </div>
             </div>
           </div>
@@ -281,11 +346,16 @@ function App() {
           {isModuleEnabled('crm') ? (
             <>
               <Route path="/crm" element={<ModuleRouteGuard module="crm"><CRM /></ModuleRouteGuard>} />
-              <Route path="/opportunities" element={<ModuleRouteGuard module="crm"><Opportunities /></ModuleRouteGuard>} />
-              <Route path="/quotes" element={<ModuleRouteGuard module="crm"><Quotes /></ModuleRouteGuard>} />
-              <Route path="/orders" element={<ModuleRouteGuard module="crm"><Orders /></ModuleRouteGuard>} />
-              <Route path="/crm/invoices" element={<ModuleRouteGuard module="crm"><Invoices /></ModuleRouteGuard>} />
-              <Route path="/crm/chat" element={<ModuleRouteGuard module="crm"><Chat /></ModuleRouteGuard>} />
+              {/* Package-5-ben csak a Partnerek elérhető, a többi CRM route elrejtve */}
+              {getActivePackage() !== 'package-5' && (
+                <>
+                  <Route path="/opportunities" element={<ModuleRouteGuard module="crm"><Opportunities /></ModuleRouteGuard>} />
+                  <Route path="/quotes" element={<ModuleRouteGuard module="crm"><Quotes /></ModuleRouteGuard>} />
+                  <Route path="/orders" element={<ModuleRouteGuard module="crm"><Orders /></ModuleRouteGuard>} />
+                  <Route path="/crm/invoices" element={<ModuleRouteGuard module="crm"><Invoices /></ModuleRouteGuard>} />
+                  <Route path="/crm/chat" element={<ModuleRouteGuard module="crm"><Chat /></ModuleRouteGuard>} />
+                </>
+              )}
             </>
           ) : null}
           
@@ -315,11 +385,15 @@ function App() {
             </>
           ) : null}
           
-          {/* HR routes - mindig elérhető (nem szerepel a modul konfigurációban) */}
-          <Route path="/hr/job-positions" element={<JobPositions />} />
-          <Route path="/hr/employees" element={<Employees />} />
-          <Route path="/hr/contracts" element={<Contracts />} />
-          <Route path="/hr/reports" element={<HrReports />} />
+          {/* HR routes - csak ha engedélyezve (nem package-5-ben) */}
+          {isHrModuleEnabled() ? (
+            <>
+              <Route path="/hr/job-positions" element={<JobPositions />} />
+              <Route path="/hr/employees" element={<Employees />} />
+              <Route path="/hr/contracts" element={<Contracts />} />
+              <Route path="/hr/reports" element={<HrReports />} />
+            </>
+          ) : null}
           
           {/* Controlling routes - csak ha engedélyezve */}
           {isModuleEnabled('controlling') ? (
