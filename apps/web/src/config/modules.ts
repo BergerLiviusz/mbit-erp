@@ -146,7 +146,7 @@ export const PACKAGE_CONFIGS: Record<string, PackageConfig> = {
       documents: true,
       team: false,
       controlling: false,
-      crm: false,
+      crm: true, // Engedélyezve, hogy a Partnerek elérhető legyen a dokumentumokhoz
       logistics: false
     }
   },
@@ -219,12 +219,18 @@ export function getModuleRoutes(module: 'documents' | 'team' | 'crm' | 'logistic
 
 // Modul menu items lekérése
 export function getModuleMenuItems(module: 'documents' | 'team' | 'crm' | 'logistics' | 'controlling'): MenuItem[] {
+  const activePackage = getActivePackage();
+  
   switch (module) {
     case 'documents':
       return MODULE_DOCUMENTS.menuItems;
     case 'team':
       return MODULE_TEAM.menuItems;
     case 'crm':
+      // Package-5-ben csak a Partnerek menüpontot mutatjuk meg
+      if (activePackage === 'package-5') {
+        return [{ to: '/crm', label: 'Partnerek', parentMenu: 'Ügyfélkezelés' }];
+      }
       return MODULE_CRM.menuItems;
     case 'logistics':
       return MODULE_LOGISTICS.menuItems;

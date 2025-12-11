@@ -35,7 +35,7 @@ import { LoadingScreen } from './components/LoadingScreen';
 import { ModuleRouteGuard } from './components/ModuleRouteGuard';
 import MbitLogo from './assets/logo.svg';
 import axios from './lib/axios';
-import { isModuleEnabled, getModuleMenuItems, isHrModuleEnabled } from './config/modules';
+import { isModuleEnabled, getModuleMenuItems, isHrModuleEnabled, getActivePackage } from './config/modules';
 
 function DropdownMenu({ title, items }: { title: string; items: Array<{ to: string; label: string }> }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -283,11 +283,16 @@ function App() {
           {isModuleEnabled('crm') ? (
             <>
               <Route path="/crm" element={<ModuleRouteGuard module="crm"><CRM /></ModuleRouteGuard>} />
-              <Route path="/opportunities" element={<ModuleRouteGuard module="crm"><Opportunities /></ModuleRouteGuard>} />
-              <Route path="/quotes" element={<ModuleRouteGuard module="crm"><Quotes /></ModuleRouteGuard>} />
-              <Route path="/orders" element={<ModuleRouteGuard module="crm"><Orders /></ModuleRouteGuard>} />
-              <Route path="/crm/invoices" element={<ModuleRouteGuard module="crm"><Invoices /></ModuleRouteGuard>} />
-              <Route path="/crm/chat" element={<ModuleRouteGuard module="crm"><Chat /></ModuleRouteGuard>} />
+              {/* Package-5-ben csak a Partnerek elérhető, a többi CRM route elrejtve */}
+              {getActivePackage() !== 'package-5' && (
+                <>
+                  <Route path="/opportunities" element={<ModuleRouteGuard module="crm"><Opportunities /></ModuleRouteGuard>} />
+                  <Route path="/quotes" element={<ModuleRouteGuard module="crm"><Quotes /></ModuleRouteGuard>} />
+                  <Route path="/orders" element={<ModuleRouteGuard module="crm"><Orders /></ModuleRouteGuard>} />
+                  <Route path="/crm/invoices" element={<ModuleRouteGuard module="crm"><Invoices /></ModuleRouteGuard>} />
+                  <Route path="/crm/chat" element={<ModuleRouteGuard module="crm"><Chat /></ModuleRouteGuard>} />
+                </>
+              )}
             </>
           ) : null}
           
