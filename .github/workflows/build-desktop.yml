@@ -56,7 +56,30 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
+        shell: pwsh
+        run: |
+          $maxRetries = 3
+          $retryCount = 0
+          $success = $false
+          
+          while ($retryCount -lt $maxRetries -and -not $success) {
+            try {
+              Write-Host "Attempting to install dependencies (attempt $($retryCount + 1)/$maxRetries)..."
+              npm ci
+              $success = $true
+              Write-Host "✅ Dependencies installed successfully"
+            } catch {
+              $retryCount++
+              if ($retryCount -lt $maxRetries) {
+                $waitTime = $retryCount * 10
+                Write-Host "⚠️ Installation failed, retrying in $waitTime seconds..."
+                Start-Sleep -Seconds $waitTime
+              } else {
+                Write-Host "❌ Failed to install dependencies after $maxRetries attempts"
+                throw
+              }
+            }
+          }
 
       - name: Determine package from branch
         id: package
