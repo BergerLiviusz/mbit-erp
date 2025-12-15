@@ -19,8 +19,8 @@ export class WorkflowInstanceController {
   @Get()
   @Permissions(Permission.CRM_VIEW)
   async findAll(
-    @Query('workflowId') workflowId?: string,
     @Request() req: any,
+    @Query('workflowId') workflowId?: string,
   ) {
     const userId = req?.user?.id;
     const isAdmin = req?.user?.roles?.includes('Admin') || false;

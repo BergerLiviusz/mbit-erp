@@ -6,6 +6,7 @@ import { StockService } from './stock.service';
 
 export interface ReturnFilters {
   orderId?: string;
+  purchaseOrderId?: string;
   itemId?: string;
   warehouseId?: string;
   allapot?: string;

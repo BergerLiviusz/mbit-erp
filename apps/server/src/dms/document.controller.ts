@@ -34,7 +34,6 @@ export class DocumentController {
     @Query('tagId') tagId?: string,
     @Query('opportunityId') opportunityId?: string,
     @Query('quoteId') quoteId?: string,
-    @Query('orderId') orderId?: string,
     @Request() req?: any,
   ) {
     const filters: DocumentFilters = {
@@ -46,7 +45,6 @@ export class DocumentController {
       tagId,
       opportunityId,
       quoteId,
-      orderId,
     };
 
     const userId = req?.user?.id;

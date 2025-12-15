@@ -37,7 +37,6 @@ export class PriceListService {
             select: {
               id: true,
               nev: true,
-              azonosito: true,
             },
           },
           _count: {
@@ -248,7 +247,7 @@ export class PriceListService {
     const errors: string[] = [];
     let success = 0;
 
-    await workbook.xlsx.load(file.buffer);
+    await workbook.xlsx.load(file.buffer as any);
 
     const worksheet = workbook.getWorksheet(1);
     if (!worksheet) {
@@ -417,7 +416,8 @@ export class PriceListService {
       column.width = maxLength < 10 ? 10 : maxLength + 2;
     });
 
-    return (await workbook.xlsx.writeBuffer()) as Buffer;
+    const buffer = await workbook.xlsx.writeBuffer();
+    return Buffer.from(buffer);
   }
 }
 

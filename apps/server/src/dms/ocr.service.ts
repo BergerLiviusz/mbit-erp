@@ -198,7 +198,7 @@ export class OcrService {
       
       // Set optimized OCR parameters
       await this.worker.setParameters({
-        tessedit_pageseg_mode: '6', // Assume uniform block of text
+        tessedit_pageseg_mode: '6' as any, // Assume uniform block of text
         tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzÁÉÍÓÖŐÚÜŰáéíóöőúüű.,;:!?()[]{}\'"-+*/=<>@#$%&_|\\/~`', // Hungarian characters
         tessedit_ocr_engine_mode: '1', // Neural nets LSTM engine only
       });

@@ -515,6 +515,7 @@ export class InventorySheetService {
 
     return new Promise((resolve, reject) => {
       const doc = new PDFDocument({ margin: 50, size: 'A4' });
+      let pageNumber = 1;
       
       // Set response headers
       res.setHeader('Content-Type', 'application/pdf');
@@ -524,6 +525,11 @@ export class InventorySheetService {
       );
 
       doc.pipe(res);
+      
+      // Track page numbers
+      doc.on('pageAdded', () => {
+        pageNumber++;
+      });
 
       // Header with better formatting
       doc.fontSize(24).font('Helvetica-Bold').text('Leltárív', { align: 'center' });
@@ -559,6 +565,10 @@ export class InventorySheetService {
         }
       }
 
+      // Calculate page width early
+      const pageWidth = doc.page.width - 100;
+      const tableLeft = 50;
+
       let infoYRight = doc.y + 15;
       if (sheet.createdBy) {
         doc.fontSize(9).font('Helvetica');
@@ -582,8 +592,6 @@ export class InventorySheetService {
 
       // Table header
       const tableTop = doc.y;
-      const tableLeft = 50;
-      const pageWidth = doc.page.width - 100;
       const colWidths = {
         azonosito: pageWidth * 0.15,
         nev: pageWidth * 0.25,
@@ -704,23 +712,24 @@ export class InventorySheetService {
       doc.text(`Összes különbözet: ${totalKulonbseg.toLocaleString('hu-HU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, tableLeft + 5, y);
 
       // Footer on each page
-      const addFooter = (pageDoc: typeof doc) => {
-        pageDoc.fontSize(7).font('Helvetica');
-        pageDoc.text(
-          `Generálva: ${new Date().toLocaleString('hu-HU')} | Oldal ${pageDoc.page.number}`,
+      const addFooter = () => {
+        const currentPage = doc.bufferedPageRange().start;
+        doc.fontSize(7).font('Helvetica');
+        doc.text(
+          `Generálva: ${new Date().toLocaleString('hu-HU')} | Oldal ${currentPage + 1}`,
           tableLeft,
-          pageDoc.page.height - 20,
+          doc.page.height - 20,
           { align: 'left' }
         );
       };
 
       // Add footer to all pages
       doc.on('pageAdded', () => {
-        addFooter(doc);
+        addFooter();
       });
       
       // Add footer to first page
-      addFooter(doc);
+      addFooter();
 
       doc.end();
       

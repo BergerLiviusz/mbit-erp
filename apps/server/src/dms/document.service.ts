@@ -10,7 +10,6 @@ export interface CreateDocumentDto {
   accountId?: string;
   opportunityId?: string;
   quoteId?: string;
-  orderId?: string;
   allapot: string;
   fajlNev: string;
   fajlMeret: number;
@@ -31,7 +30,6 @@ export interface UpdateDocumentDto {
   accountId?: string;
   opportunityId?: string;
   quoteId?: string;
-  orderId?: string;
   allapot?: string;
   megjegyzesek?: string;
   ervenyessegKezdet?: string;
@@ -49,7 +47,6 @@ export interface DocumentFilters {
   tagId?: string; // Címszó alapú szűrés
   opportunityId?: string;
   quoteId?: string;
-  orderId?: string;
 }
 
 @Injectable()
@@ -96,10 +93,6 @@ export class DocumentService {
 
     if (filters?.quoteId) {
       where.quoteId = filters.quoteId;
-    }
-
-    if (filters?.orderId) {
-      where.orderId = filters.orderId;
     }
 
     // Permission-based filtering: non-admin users only see documents they created or have access to
@@ -179,12 +172,6 @@ export class DocumentService {
               azonosito: true,
             },
           },
-          order: {
-            select: {
-              id: true,
-              azonosito: true,
-            },
-          },
           createdBy: {
             select: {
               id: true,
@@ -245,12 +232,6 @@ export class DocumentService {
           },
         },
         quote: {
-          select: {
-            id: true,
-            azonosito: true,
-          },
-        },
-        order: {
           select: {
             id: true,
             azonosito: true,
@@ -317,7 +298,6 @@ export class DocumentService {
         accountId: dto.accountId,
         opportunityId: dto.opportunityId,
         quoteId: dto.quoteId,
-        orderId: dto.orderId,
         allapot: dto.allapot,
         fajlNev: dto.fajlNev,
         fajlMeret: dto.fajlMeret,
