@@ -106,11 +106,8 @@ export default function Documents() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
-  const [users] = useState<Array<{id: string; nev: string; email: string}>>([]);
-  const [documentAccess] = useState<Array<{id: string; userId: string; jogosultsag: string; user: {id: string; nev: string; email: string}}>>([]);
-  const [opportunities, setOpportunities] = useState<Array<{id: string; nev: string}>>([]);
-  const [quotes, setQuotes] = useState<Array<{id: string; azonosito: string}>>([]);
-  const [orders, setOrders] = useState<Array<{id: string; azonosito: string}>>([]);
+  const [users, setUsers] = useState<Array<{id: string; nev: string; email: string}>>([]);
+  const [documentAccess, setDocumentAccess] = useState<Array<{id: string; userId: string; jogosultsag: string; user: {id: string; nev: string; email: string}}>>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
@@ -133,7 +130,6 @@ export default function Documents() {
     accountId: '',
     opportunityId: '',
     quoteId: '',
-    orderId: '',
     allapot: 'aktiv',
     ervenyessegKezdet: '',
     ervenyessegVeg: '',
@@ -166,9 +162,6 @@ export default function Documents() {
     if (isModalOpen) {
       loadCategories();
       loadAccounts();
-      loadOpportunities();
-      loadQuotes();
-      loadOrders();
     }
   }, [isModalOpen]);
 
@@ -377,41 +370,6 @@ export default function Documents() {
     }
   };
 
-  const loadOpportunities = async () => {
-    try {
-      const response = await apiFetch(`/crm/opportunities?skip=0&take=100`);
-      if (response.ok) {
-        const data = await response.json();
-        setOpportunities(data.data || []);
-      }
-    } catch (error) {
-      console.error('Hiba a lehetőségek betöltésekor:', error);
-    }
-  };
-
-  const loadQuotes = async () => {
-    try {
-      const response = await apiFetch(`/crm/quotes?skip=0&take=100`);
-      if (response.ok) {
-        const data = await response.json();
-        setQuotes(data.data || []);
-      }
-    } catch (error) {
-      console.error('Hiba az árajánlatok betöltésekor:', error);
-    }
-  };
-
-  const loadOrders = async () => {
-    try {
-      const response = await apiFetch(`/crm/orders?skip=0&take=100`);
-      if (response.ok) {
-        const data = await response.json();
-        setOrders(data.data || []);
-      }
-    } catch (error) {
-      console.error('Hiba a rendelések betöltésekor:', error);
-    }
-  };
 
   const handleOpenModal = async (doc?: Document) => {
     if (doc) {
@@ -429,7 +387,6 @@ export default function Documents() {
             accountId: fullDoc.accountId || '',
             opportunityId: fullDoc.opportunityId || '',
             quoteId: fullDoc.quoteId || '',
-            orderId: fullDoc.orderId || '',
             allapot: fullDoc.allapot,
             ervenyessegKezdet: fullDoc.ervenyessegKezdet ? new Date(fullDoc.ervenyessegKezdet).toISOString().split('T')[0] : '',
             ervenyessegVeg: fullDoc.ervenyessegVeg ? new Date(fullDoc.ervenyessegVeg).toISOString().split('T')[0] : '',
@@ -447,7 +404,6 @@ export default function Documents() {
             accountId: doc.account?.id || '',
             opportunityId: (doc as any).opportunity?.id || '',
             quoteId: (doc as any).quote?.id || '',
-            orderId: (doc as any).order?.id || '',
             allapot: doc.allapot,
             ervenyessegKezdet: doc.ervenyessegKezdet ? doc.ervenyessegKezdet.split('T')[0] : '',
             ervenyessegVeg: doc.ervenyessegVeg ? doc.ervenyessegVeg.split('T')[0] : '',
@@ -466,7 +422,6 @@ export default function Documents() {
           accountId: doc.account?.id || '',
           opportunityId: (doc as any).opportunity?.id || '',
           quoteId: (doc as any).quote?.id || '',
-          orderId: (doc as any).order?.id || '',
           allapot: doc.allapot,
           ervenyessegKezdet: doc.ervenyessegKezdet ? doc.ervenyessegKezdet.split('T')[0] : '',
           ervenyessegVeg: doc.ervenyessegVeg ? doc.ervenyessegVeg.split('T')[0] : '',
@@ -484,7 +439,6 @@ export default function Documents() {
         accountId: '',
         opportunityId: '',
         quoteId: '',
-        orderId: '',
         allapot: 'aktiv',
         ervenyessegKezdet: '',
         ervenyessegVeg: '',
@@ -509,7 +463,6 @@ export default function Documents() {
         accountId: '',
         opportunityId: '',
         quoteId: '',
-        orderId: '',
         allapot: 'aktiv',
       ervenyessegKezdet: '',
       ervenyessegVeg: '',
@@ -554,7 +507,6 @@ export default function Documents() {
           accountId: formData.accountId || undefined,
           opportunityId: formData.opportunityId || undefined,
           quoteId: formData.quoteId || undefined,
-          orderId: formData.orderId || undefined,
           allapot: formData.allapot,
           ervenyessegKezdet: formData.ervenyessegKezdet || undefined,
           ervenyessegVeg: formData.ervenyessegVeg || undefined,
@@ -598,7 +550,6 @@ export default function Documents() {
         accountId: formData.accountId || undefined,
         opportunityId: formData.opportunityId || undefined,
         quoteId: formData.quoteId || undefined,
-        orderId: formData.orderId || undefined,
         allapot: formData.allapot,
         fajlNev: selectedFile!.name,
         fajlMeret: selectedFile!.size,
@@ -788,17 +739,92 @@ export default function Documents() {
     }
   };
 
+  const loadUsers = async () => {
+    try {
+      const response = await apiFetch(`/system/users`);
+      if (response.ok) {
+        const data = await response.json();
+        setUsers(data || []);
+      }
+    } catch (error) {
+      console.error('Hiba a felhasználók betöltésekor:', error);
+    }
+  };
+
   const handleViewDetails = async (documentId: string) => {
     try {
       const response = await apiFetch(`/dms/documents/${documentId}`);
       if (response.ok) {
         const doc = await response.json();
         setDetailDocument(doc);
+        setDocumentAccess(doc.access || []);
         setIsDetailModalOpen(true);
+        await loadUsers();
       }
     } catch (error) {
       console.error('Hiba a dokumentum részleteinek betöltésekor:', error);
       setError('Nem sikerült betölteni a dokumentum részleteit');
+    }
+  };
+
+  const handleAddAccess = async (documentId: string, userId: string, jogosultsag: string) => {
+    try {
+      const response = await apiFetch(`/dms/documents/${documentId}/access`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId, jogosultsag }),
+      });
+
+      if (response.ok) {
+        const newAccess = await response.json();
+        setDocumentAccess([...documentAccess, newAccess]);
+        setSuccess('Jogosultság sikeresen hozzáadva!');
+        setTimeout(() => setSuccess(''), 3000);
+        
+        // Refresh document details
+        const docResponse = await apiFetch(`/dms/documents/${documentId}`);
+        if (docResponse.ok) {
+          const doc = await docResponse.json();
+          setDetailDocument(doc);
+          setDocumentAccess(doc.access || []);
+        }
+      } else {
+        const errorData = await response.json();
+        setError(errorData.message || 'Hiba a jogosultság hozzáadásakor');
+      }
+    } catch (error) {
+      console.error('Hiba a jogosultság hozzáadásakor:', error);
+      setError('Hiba történt a jogosultság hozzáadása során');
+    }
+  };
+
+  const handleRemoveAccess = async (documentId: string, userId: string) => {
+    try {
+      const response = await apiFetch(`/dms/documents/${documentId}/access/${userId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        setDocumentAccess(documentAccess.filter(acc => acc.userId !== userId));
+        setSuccess('Jogosultság sikeresen eltávolítva!');
+        setTimeout(() => setSuccess(''), 3000);
+        
+        // Refresh document details
+        const docResponse = await apiFetch(`/dms/documents/${documentId}`);
+        if (docResponse.ok) {
+          const doc = await docResponse.json();
+          setDetailDocument(doc);
+          setDocumentAccess(doc.access || []);
+        }
+      } else {
+        const errorData = await response.json();
+        setError(errorData.message || 'Hiba a jogosultság eltávolításakor');
+      }
+    } catch (error) {
+      console.error('Hiba a jogosultság eltávolításakor:', error);
+      setError('Hiba történt a jogosultság eltávolítása során');
     }
   };
 
