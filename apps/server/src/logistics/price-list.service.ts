@@ -87,8 +87,14 @@ export class PriceListService {
   }
 
   async create(dto: CreatePriceListDto) {
+    // Debug logging
+    console.log('PriceListService.create - received dto:', JSON.stringify(dto, null, 2));
+    console.log('PriceListService.create - dto.supplierId:', dto.supplierId);
+    console.log('PriceListService.create - typeof dto.supplierId:', typeof dto.supplierId);
+    
     // Validate supplierId - check for undefined, null, or empty string
     if (!dto.supplierId || (typeof dto.supplierId === 'string' && dto.supplierId.trim() === '')) {
+      console.log('PriceListService.create - validation failed, supplierId is empty');
       throw new BadRequestException('Szállító megadása kötelező');
     }
 
