@@ -141,7 +141,20 @@ export default function PriceLists() {
         });
         setSuccess('Árlista sikeresen frissítve!');
       } else {
-        await createPriceList.mutateAsync(formData);
+        // Ensure supplierId is not empty string before sending
+        const trimmedSupplierId = formData.supplierId.trim();
+        
+        if (!trimmedSupplierId) {
+          setError('Kérem válasszon szállítót!');
+          return;
+        }
+        
+        const submitData: CreatePriceListDto = {
+          ...formData,
+          supplierId: trimmedSupplierId,
+        };
+        
+        await createPriceList.mutateAsync(submitData);
         setSuccess('Árlista sikeresen létrehozva!');
       }
 
