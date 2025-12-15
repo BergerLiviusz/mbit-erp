@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { writeLog } from './logger';
 
 const isElectron = !!(window as any).electron || (navigator.userAgent.includes('Electron'));
 
@@ -22,10 +23,10 @@ axiosInstance.interceptors.request.use(
     
     // Debug logging for price list creation
     if (config.url?.includes('price-lists') && config.method === 'post') {
-      console.log('[Axios Request] URL:', config.url);
-      console.log('[Axios Request] Method:', config.method);
-      console.log('[Axios Request] Data:', JSON.stringify(config.data, null, 2));
-      console.log('[Axios Request] Data type:', typeof config.data);
+      writeLog(`[Axios Request] URL: ${config.url}`);
+      writeLog(`[Axios Request] Method: ${config.method}`);
+      writeLog(`[Axios Request] Data: ${JSON.stringify(config.data, null, 2)}`);
+      writeLog(`[Axios Request] Data type: ${typeof config.data}`);
     }
     
     return config;

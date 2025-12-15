@@ -659,6 +659,17 @@ ipcMain.handle('get-user-data-path', () => {
   return getUserDataPath();
 });
 
+ipcMain.handle('write-log', (event, message: string, level: 'info' | 'warn' | 'error' = 'info') => {
+  try {
+    const prefix = level === 'error' ? '[Frontend Error]' : level === 'warn' ? '[Frontend Warn]' : '[Frontend]';
+    writeLog(`${prefix} ${message}`);
+    return { success: true };
+  } catch (error: any) {
+    console.error('[IPC] Error writing log:', error);
+    return { success: false, error: error.message };
+  }
+});
+
 ipcMain.handle('get-backend-url', () => {
   return `http://localhost:${BACKEND_PORT}`;
 });

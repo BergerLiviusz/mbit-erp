@@ -20,6 +20,7 @@ import {
 import { useSuppliers } from '../lib/api/logistics';
 import { useQuery } from '@tanstack/react-query';
 import axios from '../lib/axios';
+import { writeLog } from '../lib/logger';
 
 export default function PriceLists() {
   const [filters, setFilters] = useState<{
@@ -124,10 +125,10 @@ export default function PriceLists() {
 
     // Validate required fields - check supplierId first
     const supplierIdValue = formData.supplierId;
-    console.log('[handleSubmit] Initial supplierId:', supplierIdValue, 'Type:', typeof supplierIdValue);
+    writeLog(`[PriceLists.handleSubmit] Initial supplierId: ${supplierIdValue}, Type: ${typeof supplierIdValue}`);
     
     if (!supplierIdValue || (typeof supplierIdValue === 'string' && supplierIdValue.trim() === '')) {
-      console.log('[handleSubmit] Validation failed: supplierId is empty');
+      writeLog('[PriceLists.handleSubmit] Validation failed: supplierId is empty', 'error');
       setError('Kérem válasszon szállítót!');
       return;
     }
@@ -148,11 +149,11 @@ export default function PriceLists() {
         // Ensure supplierId is not empty string before sending
         const trimmedSupplierId = typeof supplierIdValue === 'string' ? supplierIdValue.trim() : supplierIdValue;
         
-        console.log('[handleSubmit] formData:', JSON.stringify(formData, null, 2));
-        console.log('[handleSubmit] trimmedSupplierId:', trimmedSupplierId);
+        writeLog(`[PriceLists.handleSubmit] formData: ${JSON.stringify(formData, null, 2)}`);
+        writeLog(`[PriceLists.handleSubmit] trimmedSupplierId: ${trimmedSupplierId}`);
         
         if (!trimmedSupplierId || (typeof trimmedSupplierId === 'string' && trimmedSupplierId === '')) {
-          console.log('[handleSubmit] Validation failed: trimmedSupplierId is empty');
+          writeLog('[PriceLists.handleSubmit] Validation failed: trimmedSupplierId is empty', 'error');
           setError('Kérem válasszon szállítót!');
           return;
         }
@@ -165,8 +166,8 @@ export default function PriceLists() {
           aktiv: formData.aktiv ?? true,
         };
         
-        console.log('[handleSubmit] submitData:', JSON.stringify(submitData, null, 2));
-        console.log('[handleSubmit] About to call createPriceList.mutateAsync');
+        writeLog(`[PriceLists.handleSubmit] submitData: ${JSON.stringify(submitData, null, 2)}`);
+        writeLog('[PriceLists.handleSubmit] About to call createPriceList.mutateAsync');
         
         await createPriceList.mutateAsync(submitData);
         setSuccess('Árlista sikeresen létrehozva!');
@@ -531,10 +532,10 @@ export default function PriceLists() {
               value={formData.supplierId || ''}
               onChange={(e) => {
                 const newValue = e.target.value;
-                console.log('Select onChange - new value:', newValue);
+                writeLog(`[PriceLists.Select.onChange] new value: ${newValue}`);
                 setFormData((prev) => {
                   const updated = { ...prev, supplierId: newValue };
-                  console.log('Select onChange - updated formData:', updated);
+                  writeLog(`[PriceLists.Select.onChange] updated formData: ${JSON.stringify(updated, null, 2)}`);
                   return updated;
                 });
               }}
