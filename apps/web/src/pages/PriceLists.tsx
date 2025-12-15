@@ -122,8 +122,12 @@ export default function PriceLists() {
     setError('');
     setSuccess('');
 
-    // Validate required fields
-    if (!formData.supplierId || formData.supplierId.trim() === '') {
+    // Validate required fields - check supplierId first
+    const supplierIdValue = formData.supplierId;
+    console.log('[handleSubmit] Initial supplierId:', supplierIdValue, 'Type:', typeof supplierIdValue);
+    
+    if (!supplierIdValue || (typeof supplierIdValue === 'string' && supplierIdValue.trim() === '')) {
+      console.log('[handleSubmit] Validation failed: supplierId is empty');
       setError('Kérem válasszon szállítót!');
       return;
     }
@@ -142,25 +146,27 @@ export default function PriceLists() {
         setSuccess('Árlista sikeresen frissítve!');
       } else {
         // Ensure supplierId is not empty string before sending
-        const trimmedSupplierId = formData.supplierId?.trim() || '';
+        const trimmedSupplierId = typeof supplierIdValue === 'string' ? supplierIdValue.trim() : supplierIdValue;
         
-        console.log('Form submit - formData:', formData);
-        console.log('Form submit - trimmedSupplierId:', trimmedSupplierId);
+        console.log('[handleSubmit] formData:', JSON.stringify(formData, null, 2));
+        console.log('[handleSubmit] trimmedSupplierId:', trimmedSupplierId);
         
-        if (!trimmedSupplierId) {
+        if (!trimmedSupplierId || (typeof trimmedSupplierId === 'string' && trimmedSupplierId === '')) {
+          console.log('[handleSubmit] Validation failed: trimmedSupplierId is empty');
           setError('Kérem válasszon szállítót!');
           return;
         }
         
         const submitData: CreatePriceListDto = {
-          supplierId: trimmedSupplierId,
+          supplierId: trimmedSupplierId as string,
           nev: formData.nev.trim(),
           ervenyessegKezdet: formData.ervenyessegKezdet,
           ervenyessegVeg: formData.ervenyessegVeg || undefined,
           aktiv: formData.aktiv ?? true,
         };
         
-        console.log('Form submit - submitData:', submitData);
+        console.log('[handleSubmit] submitData:', JSON.stringify(submitData, null, 2));
+        console.log('[handleSubmit] About to call createPriceList.mutateAsync');
         
         await createPriceList.mutateAsync(submitData);
         setSuccess('Árlista sikeresen létrehozva!');

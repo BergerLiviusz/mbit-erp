@@ -574,6 +574,14 @@ export function useCreatePriceList() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (data: CreatePriceListDto) => {
+      console.log('[useCreatePriceList] mutationFn called with data:', JSON.stringify(data, null, 2));
+      console.log('[useCreatePriceList] data.supplierId:', data.supplierId, 'Type:', typeof data.supplierId);
+      
+      if (!data.supplierId || (typeof data.supplierId === 'string' && data.supplierId.trim() === '')) {
+        console.error('[useCreatePriceList] ERROR: supplierId is empty!');
+        throw new Error('Szállító megadása kötelező');
+      }
+      
       const response = await axios.post('/api/logistics/price-lists', data);
       return response.data;
     },
