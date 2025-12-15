@@ -16,6 +16,7 @@ declare global {
       getBackendUrl: () => Promise<string>;
       openFolder: (path: string) => Promise<{ success: boolean; error?: string }>;
       openEmailClient: (to: string, subject: string, body?: string) => Promise<{ success: boolean; error?: string }>;
+      writeLog: (message: string, level?: 'info' | 'warn' | 'error') => Promise<{ success: boolean; error?: string }>;
       platform: string;
       versions: {
         node: string;

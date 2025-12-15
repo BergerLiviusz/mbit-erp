@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from '../axios';
+import { writeLog } from '../logger';
 
 // Types
 export interface Return {
@@ -572,13 +573,14 @@ export function usePriceList(id: string) {
 
 export function useCreatePriceList() {
   const queryClient = useQueryClient();
+  
   return useMutation({
     mutationFn: async (data: CreatePriceListDto) => {
-      console.log('[useCreatePriceList] mutationFn called with data:', JSON.stringify(data, null, 2));
-      console.log('[useCreatePriceList] data.supplierId:', data.supplierId, 'Type:', typeof data.supplierId);
+      writeLog(`[useCreatePriceList] mutationFn called with data: ${JSON.stringify(data, null, 2)}`);
+      writeLog(`[useCreatePriceList] data.supplierId: ${data.supplierId}, Type: ${typeof data.supplierId}`);
       
       if (!data.supplierId || (typeof data.supplierId === 'string' && data.supplierId.trim() === '')) {
-        console.error('[useCreatePriceList] ERROR: supplierId is empty!');
+        writeLog('[useCreatePriceList] ERROR: supplierId is empty!', 'error');
         throw new Error('Szállító megadása kötelező');
       }
       

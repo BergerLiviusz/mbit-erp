@@ -6,6 +6,7 @@ contextBridge.exposeInMainWorld('electron', {
   openFolder: (path: string) => ipcRenderer.invoke('open-folder-in-explorer', path),
   openEmailClient: (to: string, subject: string, body?: string) => ipcRenderer.invoke('open-email-client', to, subject, body),
   showNotification: (title: string, body: string, options?: { urgency?: 'normal' | 'critical' | 'low' }) => ipcRenderer.invoke('show-notification', title, body, options),
+  writeLog: (message: string, level?: 'info' | 'warn' | 'error') => ipcRenderer.invoke('write-log', message, level),
   platform: process.platform,
   versions: {
     node: process.versions.node,
