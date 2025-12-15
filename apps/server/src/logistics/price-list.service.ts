@@ -87,6 +87,10 @@ export class PriceListService {
   }
 
   async create(dto: CreatePriceListDto) {
+    if (!dto.supplierId || dto.supplierId.trim() === '') {
+      throw new BadRequestException('Szállító megadása kötelező');
+    }
+
     const supplier = await this.prisma.supplier.findUnique({
       where: { id: dto.supplierId },
     });
