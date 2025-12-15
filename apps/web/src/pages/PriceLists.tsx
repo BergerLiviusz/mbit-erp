@@ -522,8 +522,16 @@ export default function PriceLists() {
               Szállító <span className="text-red-500">*</span>
             </label>
             <select
-              value={formData.supplierId}
-              onChange={(e) => setFormData({ ...formData, supplierId: e.target.value })}
+              value={formData.supplierId || ''}
+              onChange={(e) => {
+                const newValue = e.target.value;
+                console.log('Select onChange - new value:', newValue);
+                setFormData((prev) => {
+                  const updated = { ...prev, supplierId: newValue };
+                  console.log('Select onChange - updated formData:', updated);
+                  return updated;
+                });
+              }}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg"
               required
               disabled={!!editingPriceListId}
