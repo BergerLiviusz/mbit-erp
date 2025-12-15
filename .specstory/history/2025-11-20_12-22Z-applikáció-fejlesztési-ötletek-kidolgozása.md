@@ -10698,7 +10698,6 @@ _**Agent (model composer-1, mode Agent)**_
 
 ---
 
-
 A hiba szerint az árlista létrehozásakor a `supplierId` `undefined`. Ellenőrzöm az árlista létrehozás kódját:
 
 
@@ -10731,7 +10730,6 @@ A hiba szerint az árlista létrehozásakor a `supplierId` `undefined`. Ellenőr
 
 
 ---
-
 
 Ellenőrzöm a DTO-t és a frontend adatküldést:
 
@@ -10768,8 +10766,6 @@ Ellenőrzöm a DTO-t és a frontend adatküldést:
 
 
 
-
-
 ---
 
 <tool-use data-tool-type="read" data-tool-name="read_file">
@@ -10791,7 +10787,6 @@ Ellenőrzöm a DTO-t és a frontend adatküldést:
 
 
 ---
-
 
 Az üres `supplierId` (`''`) a backendre `undefined`-ként érkezik, és a Prisma `findUnique` hibát dob. Validálást adunk hozzá a backend-en és a frontend-en:
 
@@ -10834,7 +10829,6 @@ Lines added: 4, lines removed: undefined
 
 
 ---
-
 
 Hozzáadom a frontend validációt is:
 
@@ -10895,8 +10889,6 @@ cd /Users/liviuszberger/mbit-erp && npm run build --workspace=@mbit-erp/server 2
 
 
 ---
-
-
 
 
 
@@ -11058,8 +11050,6 @@ To https://github.com/BergerLiviusz/mbit-erp.git
 
 
 
-
-
 ---
 
 <tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
@@ -11082,7 +11072,6 @@ Switched to branch 'main'
 
 
 ---
-
 
 Az árlista létrehozás hibája javítva. Összefoglalás:
 
@@ -13217,6 +13206,1259 @@ BadRequestException: Szállító megadása kötelező
 [2025-12-15T17:37:46.780Z] [App] Stopping backend process gracefully...
 [2025-12-15T17:37:46.780Z] [App] Backend process PID: 6220
 [2025-12-15T17:37:46.781Z] [App] before-quit event fired
+
+
+---
+
+_**Agent (model composer-1, mode Agent)**_
+
+
+
+---
+
+
+
+---
+
+
+A backend még mindig üres `supplierId`-t kap. Ellenőrzöm, mit küld a frontend. Hozzáadok debug logokat és ellenőrzöm a formData kezelését:
+
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: apps/web/src/pages/PriceLists.tsx</summary>
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: apps/web/src/pages/PriceLists.tsx</summary>
+
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+Ellenőrzöm a `formData` inicializálását és a select onChange kezelését. Hozzáadok debug logokat, hogy lássuk, mit küldünk:
+
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: apps/web/src/pages/PriceLists.tsx</summary>
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="search" data-tool-name="codebase_search">
+<details>
+                <summary>Tool use: **codebase_search** • Searched codebase "How is formData state initialized in PriceLists component?" • **10** results</summary>
+            
+| File | Lines |
+|------|-------|
+| `apps/web/src/pages/PriceLists.tsx` | L20-899 |
+| `apps/web/src/pages/PriceLists.tsx` | L899 |
+| `apps/web/src/pages/Products.tsx` | L21-1198 |
+| `apps/web/src/pages/CRM/Invoices.tsx` | L135-1298 |
+| `apps/web/src/pages/Quotes.tsx` | L57-791 |
+| `apps/web/src/pages/Products.tsx` | L60-1198 |
+| `apps/web/src/pages/Intrastat.tsx` | L58-920 |
+| `apps/web/src/pages/Controlling/Queries.tsx` | L17-797 |
+| `apps/web/src/pages/Orders.tsx` | L45-993 |
+| `apps/web/src/pages/CRM.tsx` | L1060 |
+
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+A kód rendben van. A backend még mindig üres `supplierId`-t kap. Hozzáadok debug logokat, és ellenőrzöm, hogy a frontend tényleg elküldi-e az adatokat:
+
+
+---
+
+<tool-use data-tool-type="write" data-tool-name="search_replace">
+
+<details><summary>Tool use: **search_replace** • Edit file: apps/web/src/pages/PriceLists.tsx</summary>
+
+**Chunk 1**
+Lines added: 4, lines removed: 1
+
+```diff
+@@ -143,5 +143,8 @@
+        } else {
+          // Ensure supplierId is not empty string before sending
+-         const trimmedSupplierId = formData.supplierId.trim();
++         const trimmedSupplierId = formData.supplierId?.trim() || '';
++         
++         console.log('Form submit - formData:', formData);
++         console.log('Form submit - trimmedSupplierId:', trimmedSupplierId);
+          
+          if (!trimmedSupplierId) {
+```
+
+**Chunk 2**
+Lines added: 6, lines removed: 1
+
+```diff
+@@ -151,7 +154,12 @@
+          
+          const submitData: CreatePriceListDto = {
+-           ...formData,
+            supplierId: trimmedSupplierId,
++           nev: formData.nev.trim(),
++           ervenyessegKezdet: formData.ervenyessegKezdet,
++           ervenyessegVeg: formData.ervenyessegVeg || undefined,
++           aktiv: formData.aktiv ?? true,
+          };
++         
++         console.log('Form submit - submitData:', submitData);
+          
+          await createPriceList.mutateAsync(submitData);
+```
+
+</details>
+
+</tool-use>
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: apps/server/src/logistics/price-list.controller.ts</summary>
+
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+Ellenőrzöm a controller-t, hogyan kapja a DTO-t:
+
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: apps/server/src/logistics/price-list.controller.ts</summary>
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="search" data-tool-name="grep">
+<details>
+<summary>Tool use: **grep** • Grep for "CreatePriceListDto" in "apps/server/src/logistics" • 6 matches</summary>
+
+Output mode: content
+
+
+| File | Content | Line |
+|------|------|------|
+| `apps/server/src/logistics/price-list.service.ts` | `import \{ CreatePriceListDto \} from './dto/create-price-list.dto';` | L3 |
+| `apps/server/src/logistics/price-list.service.ts` | `export \{ CreatePriceListDto, UpdatePriceListDto, AddPriceListItemDto, UpdatePriceListItemDto \};` | L9 |
+| `apps/server/src/logistics/price-list.service.ts` | `async create(dto: CreatePriceListDto) \{` | L89 |
+| `apps/server/src/logistics/price-list.controller.ts` | `CreatePriceListDto,` | L20 |
+| `apps/server/src/logistics/price-list.controller.ts` | `async create(@Body() dto: CreatePriceListDto, @Request() req: any) \{` | L64 |
+| `apps/server/src/logistics/dto/create-price-list.dto.ts` | `export class CreatePriceListDto \{` | L1 |
+
+
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+Ellenőrzöm a DTO definíciót:
+
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: apps/server/src/logistics/dto/create-price-list.dto.ts</summary>
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: apps/server/src/logistics/price-list.service.ts</summary>
+
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+Hozzáadok debug logot a backend service-hez is, hogy lássuk, mit kap:
+
+
+---
+
+<tool-use data-tool-type="write" data-tool-name="search_replace">
+
+<details><summary>Tool use: **search_replace** • Edit file: apps/server/src/logistics/price-list.service.ts</summary>
+
+**Chunk 1**
+Lines added: 6, lines removed: undefined
+
+```diff
+@@ -88,6 +88,12 @@
+  
+    async create(dto: CreatePriceListDto) {
++     // Debug logging
++     console.log('PriceListService.create - received dto:', JSON.stringify(dto, null, 2));
++     console.log('PriceListService.create - dto.supplierId:', dto.supplierId);
++     console.log('PriceListService.create - typeof dto.supplierId:', typeof dto.supplierId);
++     
+      // Validate supplierId - check for undefined, null, or empty string
+      if (!dto.supplierId || (typeof dto.supplierId === 'string' &amp;&amp; dto.supplierId.trim() === '')) {
++       console.log('PriceListService.create - validation failed, supplierId is empty');
+        throw new BadRequestException('Szállító megadása kötelező');
+      }
+```
+
+</details>
+
+</tool-use>
+
+---
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && npm run build --workspace=@mbit-erp/server 2>&1 | tail -5</summary>
+
+```bash
+cd /Users/liviuszberger/mbit-erp && npm run build --workspace=@mbit-erp/server 2>&1 | tail -5
+```
+
+```
+
+&gt; @mbit-erp/server@1.0.0 build
+&gt; nest build
+
+
+```
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && npm run build --workspace=@mbit-erp/web 2>&1 | tail -5</summary>
+
+```bash
+cd /Users/liviuszberger/mbit-erp && npm run build --workspace=@mbit-erp/web 2>&1 | tail -5
+```
+
+```
+mode      generateSW
+precache  6 entries (932.73 KiB)
+files generated
+  dist/sw.js
+  dist/workbox-1be04862.js
+
+```
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+A build sikeres. Commitolom és pusholom a változtatásokat, hogy a debug logokkal lássuk, mi történik:
+
+
+---
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && git add -A && git commit -m "Add debug logging for price list creation to identify supplierId issue"</summary>
+
+```bash
+cd /Users/liviuszberger/mbit-erp && git add -A && git commit -m "Add debug logging for price list creation to identify supplierId issue"
+```
+
+```
+[main 05de858] Add debug logging for price list creation to identify supplierId issue
+ 3 files changed, 7696 insertions(+), 50950 deletions(-)
+
+```
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && git push origin main</summary>
+
+```bash
+cd /Users/liviuszberger/mbit-erp && git push origin main
+```
+
+```
+To https://github.com/BergerLiviusz/mbit-erp.git
+   6690977..05de858  main -&gt; main
+
+```
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && git checkout package-4 && git merge main -m "Merge main: add debug logging" && git push origin package-4 && git checkout main</summary>
+
+```bash
+cd /Users/liviuszberger/mbit-erp && git checkout package-4 && git merge main -m "Merge main: add debug logging" && git push origin package-4 && git checkout main
+```
+
+```
+Your branch is up to date with 'origin/package-4'.
+Merge made by the 'ort' strategy.
+Switched to branch 'package-4'
+ ...303\251si-\303\266tletek-kidolgoz\303\241sa.md" | 58628 +++----------------
+ apps/server/src/logistics/price-list.service.ts    |     6 +
+ apps/web/src/pages/PriceLists.tsx                  |    12 +-
+ 3 files changed, 7696 insertions(+), 50950 deletions(-)
+To https://github.com/BergerLiviusz/mbit-erp.git
+   a2f933c..f5e6439  package-4 -&gt; package-4
+Your branch is up to date with 'origin/main'.
+Switched to branch 'main'
+
+```
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+Hozzáadtam debug logokat. Ellenőrzöm, hogy a select onChange helyesen frissíti-e a state-et. Lehet, hogy a probléma a React state kezelésében van. Javítom a select onChange kezelését:
+
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: apps/web/src/pages/PriceLists.tsx</summary>
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="write" data-tool-name="search_replace">
+
+<details><summary>Tool use: **search_replace** • Edit file: apps/web/src/pages/PriceLists.tsx</summary>
+
+**Chunk 1**
+Lines added: 10, lines removed: 2
+
+```diff
+@@ -523,6 +523,14 @@
+              &lt;/label&gt;
+              &lt;select
+-               value={formData.supplierId}
+-               onChange={(e) =&gt; setFormData({ ...formData, supplierId: e.target.value })}
++               value={formData.supplierId || ''}
++               onChange={(e) =&gt; {
++                 const newValue = e.target.value;
++                 console.log('Select onChange - new value:', newValue);
++                 setFormData((prev) =&gt; {
++                   const updated = { ...prev, supplierId: newValue };
++                   console.log('Select onChange - updated formData:', updated);
++                   return updated;
++                 });
++               }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                required
+```
+
+</details>
+
+</tool-use>
+
+---
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && npm run build --workspace=@mbit-erp/web 2>&1 | tail -5</summary>
+
+```bash
+cd /Users/liviuszberger/mbit-erp && npm run build --workspace=@mbit-erp/web 2>&1 | tail -5
+```
+
+```
+mode      generateSW
+precache  6 entries (932.87 KiB)
+files generated
+  dist/sw.js
+  dist/workbox-1be04862.js
+
+```
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+Hozzáadtam debug logokat és javítottam a select onChange kezelését. Commitolom és pusholom:
+
+
+---
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && git add -A && git commit -m "Fix select onChange handler and add more debug logging for price list creation"</summary>
+
+```bash
+cd /Users/liviuszberger/mbit-erp && git add -A && git commit -m "Fix select onChange handler and add more debug logging for price list creation"
+```
+
+```
+[main a5870e5] Fix select onChange handler and add more debug logging for price list creation
+ 1 file changed, 10 insertions(+), 2 deletions(-)
+
+```
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && git push origin main && git checkout package-4 && git merge main -m "Merge main: fix select onChange" && git push origin package-4 && git checkout main</summary>
+
+```bash
+cd /Users/liviuszberger/mbit-erp && git push origin main && git checkout package-4 && git merge main -m "Merge main: fix select onChange" && git push origin package-4 && git checkout main
+```
+
+```
+To https://github.com/BergerLiviusz/mbit-erp.git
+   05de858..a5870e5  main -&gt; main
+Your branch is up to date with 'origin/package-4'.
+Merge made by the 'ort' strategy.
+ apps/web/src/pages/PriceLists.tsx | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
+Switched to branch 'package-4'
+To https://github.com/BergerLiviusz/mbit-erp.git
+   f5e6439..254a6ce  package-4 -&gt; package-4
+Your branch is up to date with 'origin/main'.
+Switched to branch 'main'
+
+```
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+Hozzáadtam debug logokat és javítottam a select onChange kezelését. A változtatások:
+
+## Változtatások
+
+### Frontend (`PriceLists.tsx`)
+1. Debug logok a form submit-nél:
+   - Kiírja a `formData` teljes tartalmát
+   - Kiírja a `trimmedSupplierId` értékét
+   - Kiírja a végleges `submitData`-t, amit elküldünk
+
+2. Javított select onChange handler:
+   - Funkcionális formában frissíti a state-et (`prev => ...`)
+   - Debug logok az onChange-nél
+   - Biztosítja, hogy a `value` mindig string legyen (`|| ''`)
+
+3. Javított form submit logika:
+   - Explicit DTO összeállítás csak a szükséges mezőkkel
+   - `supplierId` biztosítása (`?.trim() || ''`)
+
+### Backend (`price-list.service.ts`)
+1. Debug logok a service-ben:
+   - Kiírja a kapott DTO-t
+   - Kiírja a `supplierId` értékét és típusát
+   - Log a validáció sikertelenségekor
+
+## Következő lépések
+
+1. Buildeld újra az alkalmazást (ha még nem történt).
+2. Futtasd az alkalmazást és próbáld meg létrehozni az árlistát.
+3. Nézd meg a console logokat (böngésző DevTools és backend logok).
+4. Küldd el a logokat, hogy lássuk, mit kap a backend és mit küld a frontend.
+
+A debug logok segíteni fognak azonosítani, hogy:
+- A frontend helyesen küldi-e az adatokat
+- A backend mit kap
+- Hol veszítődik el a `supplierId` értéke
+
+Próbáld ki újra, és küldd el a console logokat.
+
+---
+
+_**User (2025-12-15 17:38Z)**_
+
+itt a log:
+
+[2025-12-15T17:51:18.632Z] [Cleanup] Checking for legacy nested node_modules directories...
+[2025-12-15T17:51:18.942Z] [Cleanup] ✓ No legacy nested node_modules found
+[2025-12-15T17:51:18.944Z] [App] Creating window immediately...
+[2025-12-15T17:51:18.947Z] [Window] Found icon at: C:\Users\liviuszberger\Desktop\Mbit\resources\icon.ico
+[2025-12-15T17:51:18.947Z] [Window] Creating BrowserWindow...
+[2025-12-15T17:51:19.958Z] [Window] BrowserWindow created, showing...
+[2025-12-15T17:51:19.960Z] [Window] Loading frontend from: C:\Users\liviuszberger\Desktop\Mbit\resources\frontend\index.html
+[2025-12-15T17:51:19.965Z] [Window] Loading from URL: file:///C:/Users/liviuszberger/Desktop/Mbit/resources/frontend/index.html
+[2025-12-15T17:51:20.089Z] [Window] Window setup complete
+[2025-12-15T17:51:20.118Z] [App] Starting backend server in background...
+[2025-12-15T17:51:20.125Z] [Backend] Environment: PORT=3000, DATA_DIR=C:\Users\liviuszberger\AppData\Roaming\@mbit-erp\desktop\data, DATABASE_URL=file:***mbit-erp.db
+[2025-12-15T17:51:20.126Z] [Backend] Backend path: C:\Users\liviuszberger\Desktop\Mbit\resources\backend\main.js
+[2025-12-15T17:51:20.127Z] [Backend] Backend directory: C:\Users\liviuszberger\Desktop\Mbit\resources\backend
+[2025-12-15T17:51:20.127Z] [Backend] Node modules path: C:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules
+[2025-12-15T17:51:20.127Z] [Backend] Resources path: C:\Users\liviuszberger\Desktop\Mbit\resources
+[2025-12-15T17:51:20.127Z] [Backend] Using Electron bundled Node.js runtime via fork()
+[2025-12-15T17:51:20.128Z] [Backend] NODE_PATH set to: C:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules
+[2025-12-15T17:51:20.151Z] [Backend] Waiting for backend to be ready (max 120s)...
+[2025-12-15T17:51:21.389Z] [Backend] 🔧 Electron mode detected - skipping .env file loading (using Electron-provided environment variables)
+
+[2025-12-15T17:51:21.524Z] [Window] Window finished loading
+[2025-12-15T17:51:21.531Z] [Window] Window ready-to-show event fired
+[2025-12-15T17:51:28.436Z] [Backend] Still waiting... (attempt 5/60, 10s elapsed)
+[2025-12-15T17:51:30.154Z] [Backend] Health check: PID 4028 is alive
+[2025-12-15T17:51:38.508Z] [Backend] Still waiting... (attempt 10/60, 20s elapsed)
+[2025-12-15T17:51:40.167Z] [Backend] Health check: PID 4028 is alive
+[2025-12-15T17:51:48.556Z] [Backend] Still waiting... (attempt 15/60, 30s elapsed)
+[2025-12-15T17:51:49.608Z] [Backend] 🔍 Environment check:
+
+[2025-12-15T17:51:49.611Z] [Backend]   - ELECTRON_RUN_AS_NODE: 1
+  - DATABASE_URL: ***SET***
+  - PORT: 3000
+  - NODE_ENV: production
+
+[2025-12-15T17:51:49.616Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:49 PM [32m    LOG[39m [38;5;3m[NestFactory] [39m[32mStarting Nest application...[39m
+
+[2025-12-15T17:51:49.791Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:49 PM [32m    LOG[39m [38;5;3m[StorageService] [39m[32mData directory: C:\Users\liviuszberger\mbit-data[39m
+
+[2025-12-15T17:51:49.997Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:49 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPrismaModule dependencies initialized[39m[38;5;3m +205ms[39m
+
+[2025-12-15T17:51:49.999Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:49 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mStorageModule dependencies initialized[39m[38;5;3m +3ms[39m
+
+[2025-12-15T17:51:50.011Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:49 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPassportModule dependencies initialized[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.116Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mJwtModule dependencies initialized[39m[38;5;3m +112ms[39m
+
+[2025-12-15T17:51:50.144Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAppModule dependencies initialized[39m[38;5;3m +33ms[39m
+
+[2025-12-15T17:51:50.156Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mSeedModule dependencies initialized[39m[38;5;3m +10ms[39m
+
+[2025-12-15T17:51:50.160Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAuditModule dependencies initialized[39m[38;5;3m +1ms[39m
+
+[2025-12-15T17:51:50.168Z] [Backend] Health check: PID 4028 is alive
+[2025-12-15T17:51:50.171Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAuditModule dependencies initialized[39m[38;5;3m +11ms[39m
+
+[2025-12-15T17:51:50.178Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mBackupModule dependencies initialized[39m[38;5;3m +9ms[39m
+
+[2025-12-15T17:51:50.181Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mRbacModule dependencies initialized[39m[38;5;3m +7ms[39m
+
+[2025-12-15T17:51:50.185Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAuthModule dependencies initialized[39m[38;5;3m +2ms[39m
+
+[2025-12-15T17:51:50.194Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mSystemModule dependencies initialized[39m[38;5;3m +9ms[39m
+
+[2025-12-15T17:51:50.194Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mHrModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mControllingModule dependencies initialized[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.201Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mTeamModule dependencies initialized[39m[38;5;3m +7ms[39m
+
+[2025-12-15T17:51:50.203Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mDmsModule dependencies initialized[39m[38;5;3m +2ms[39m
+
+[2025-12-15T17:51:50.203Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mCrmModule dependencies initialized[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.205Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mLogisticsModule dependencies initialized[39m[38;5;3m +2ms[39m
+
+[2025-12-15T17:51:50.222Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAppController {/}:[39m[38;5;3m +17ms[39m
+
+[2025-12-15T17:51:50.229Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/, GET} route[39m[38;5;3m +7ms[39m
+
+[2025-12-15T17:51:50.231Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/health, GET} route[39m[38;5;3m +1ms[39m
+
+[2025-12-15T17:51:50.235Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAuthController {/auth}:[39m[38;5;3m +5ms[39m
+
+[2025-12-15T17:51:50.242Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/auth/login, POST} route[39m[38;5;3m +7ms[39m
+
+[2025-12-15T17:51:50.244Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/auth/register, POST} route[39m[38;5;3m +2ms[39m
+
+[2025-12-15T17:51:50.251Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAccountController {/crm/accounts}:[39m[38;5;3m +6ms[39m
+
+[2025-12-15T17:51:50.259Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/accounts, GET} route[39m[38;5;3m +9ms[39m
+
+[2025-12-15T17:51:50.271Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/accounts/:id, GET} route[39m[38;5;3m +11ms[39m
+
+[2025-12-15T17:51:50.272Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/accounts, POST} route[39m[38;5;3m +3ms[39m
+
+[2025-12-15T17:51:50.277Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/accounts/:id, PUT} route[39m[38;5;3m +4ms[39m
+
+[2025-12-15T17:51:50.284Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/accounts/:id, DELETE} route[39m[38;5;3m +7ms[39m
+
+[2025-12-15T17:51:50.285Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mCampaignController {/crm/campaigns}:[39m[38;5;3m +1ms[39m
+
+[2025-12-15T17:51:50.308Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/campaigns, GET} route[39m[38;5;3m +22ms[39m
+
+[2025-12-15T17:51:50.320Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/campaigns/export/:format, GET} route[39m[38;5;3m +13ms[39m
+
+[2025-12-15T17:51:50.324Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/campaigns/:id, GET} route[39m[38;5;3m +4ms[39m
+
+[2025-12-15T17:51:50.324Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/campaigns, POST} route[39m[38;5;3m +1ms[39m
+
+[2025-12-15T17:51:50.325Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/campaigns/:id, PUT} route[39m[38;5;3m +1ms[39m
+
+[2025-12-15T17:51:50.325Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/campaigns/:id, DELETE} route[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.325Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mTicketController {/crm/tickets}:[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.326Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/tickets, GET} route[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.326Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/tickets/:id, GET} route[39m[38;5;3m +1ms[39m
+
+[2025-12-15T17:51:50.327Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/tickets, POST} route[39m[38;5;3m +1ms[39m
+
+[2025-12-15T17:51:50.328Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/tickets/:id, PUT} route[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.330Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/tickets/:id, DELETE} route[39m[38;5;3m +2ms[39m
+
+[2025-12-15T17:51:50.330Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mOpportunityController {/crm/opportunities}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/opportunities, GET} route[39m[38;5;3m +1ms[39m
+
+[2025-12-15T17:51:50.332Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/opportunities/stats, GET} route[39m[38;5;3m +1ms[39m
+
+[2025-12-15T17:51:50.333Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/opportunities/:id, GET} route[39m[38;5;3m +2ms[39m
+
+[2025-12-15T17:51:50.334Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/opportunities, POST} route[39m[38;5;3m +1ms[39m
+
+[2025-12-15T17:51:50.335Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/opportunities/:id, PUT} route[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.335Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/opportunities/:id, DELETE} route[39m[38;5;3m +1ms[39m
+
+[2025-12-15T17:51:50.337Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mQuoteController {/crm/quotes}:[39m[38;5;3m +1ms[39m
+
+[2025-12-15T17:51:50.337Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/quotes, GET} route[39m[38;5;3m +1ms[39m
+
+[2025-12-15T17:51:50.338Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/quotes/:id, GET} route[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.338Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/quotes, POST} route[39m[38;5;3m +1ms[39m
+
+[2025-12-15T17:51:50.339Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/quotes/:id, PUT} route[39m[38;5;3m +1ms[39m
+
+[2025-12-15T17:51:50.340Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/quotes/:id/approve, POST} route[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.341Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/quotes/:id/reject, POST} route[39m[38;5;3m +1ms[39m
+
+[2025-12-15T17:51:50.341Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/quotes/:id, DELETE} route[39m[38;5;3m +1ms[39m
+
+[2025-12-15T17:51:50.343Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mOrderController {/crm/orders}:[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.344Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/orders, POST} route[39m[38;5;3m +3ms[39m
+
+[2025-12-15T17:51:50.344Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/orders, GET} route[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.346Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/orders/:id, GET} route[39m[38;5;3m +1ms[39m
+
+[2025-12-15T17:51:50.347Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/orders/:id, PUT} route[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.348Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/orders/:id/status, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/orders/:id/cancel, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/orders/:id, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mInvoiceController {/crm/invoices}:[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.348Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/invoices, GET} route[39m[38;5;3m +1ms[39m
+
+[2025-12-15T17:51:50.349Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/invoices/:id, GET} route[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.349Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/invoices, POST} route[39m[38;5;3m +1ms[39m
+
+[2025-12-15T17:51:50.351Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/invoices/from-order/:orderId, POST} route[39m[38;5;3m +1ms[39m
+
+[2025-12-15T17:51:50.352Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/invoices/from-purchase-order/:purchaseOrderId, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/invoices/from-delivery-note/:deliveryNoteId, POST} route[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.352Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/invoices/:id, PUT} route[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.352Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/invoices/:id/mark-issued, POST} route[39m[38;5;3m +1ms[39m
+
+[2025-12-15T17:51:50.354Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/invoices/:id/mark-sent, POST} route[39m[38;5;3m +1ms[39m
+
+[2025-12-15T17:51:50.354Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/invoices/:id/payments, POST} route[39m[38;5;3m +1ms[39m
+
+[2025-12-15T17:51:50.356Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/invoices/:id/storno, POST} route[39m[38;5;3m +1ms[39m
+
+[2025-12-15T17:51:50.358Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/invoices/:id, DELETE} route[39m[38;5;3m +2ms[39m
+
+[2025-12-15T17:51:50.358Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mChatController {/crm/chat}:[39m[38;5;3m +1ms[39m
+
+[2025-12-15T17:51:50.360Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/chat/rooms, GET} route[39m[38;5;3m +1ms[39m
+
+[2025-12-15T17:51:50.360Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/chat/rooms/:id, GET} route[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.361Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/chat/rooms, POST} route[39m[38;5;3m +1ms[39m
+
+[2025-12-15T17:51:50.361Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/chat/rooms/:id, PUT} route[39m[38;5;3m +1ms[39m
+
+[2025-12-15T17:51:50.361Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/chat/rooms/:id/participants, POST} route[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.362Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/chat/rooms/:id/participants, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/chat/rooms/:id/messages, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/chat/rooms/:id/messages, POST} route[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.362Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/chat/rooms/:id/mark-read, POST} route[39m[38;5;3m +1ms[39m
+
+[2025-12-15T17:51:50.363Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/chat/rooms/:id/unread-count, GET} route[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.364Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/chat/rooms/:id/close, POST} route[39m[38;5;3m +2ms[39m
+
+[2025-12-15T17:51:50.366Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/crm/chat/rooms/:id, DELETE} route[39m[38;5;3m +1ms[39m
+
+[2025-12-15T17:51:50.367Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mSystemSettingsController {/system/settings}:[39m[38;5;3m +1ms[39m
+
+[2025-12-15T17:51:50.368Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/settings, GET} route[39m[38;5;3m +2ms[39m
+
+[2025-12-15T17:51:50.369Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/settings/category/:category, GET} route[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.369Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/settings/:key, GET} route[39m[38;5;3m +1ms[39m
+
+[2025-12-15T17:51:50.369Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/settings, POST} route[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.370Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/settings/:key, PUT} route[39m[38;5;3m +1ms[39m
+
+[2025-12-15T17:51:50.373Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/settings/bulk, POST} route[39m[38;5;3m +2ms[39m
+
+[2025-12-15T17:51:50.375Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/settings/:key, DELETE} route[39m[38;5;3m +2ms[39m
+
+[2025-12-15T17:51:50.380Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/settings/initialize, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mHealthController {/health}:[39m[38;5;3m +1ms[39m
+
+[2025-12-15T17:51:50.384Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/health, GET} route[39m[38;5;3m +7ms[39m
+
+[2025-12-15T17:51:50.387Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/health/detailed, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mDiagnosticsController {/system/diagnostics}:[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.388Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/diagnostics/logs/download, GET} route[39m[38;5;3m +4ms[39m
+
+[2025-12-15T17:51:50.389Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/diagnostics/stats, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/diagnostics/backup/now, POST} route[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.390Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/diagnostics/backup/list, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/diagnostics/permissions/check-admin, GET} route[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.393Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/diagnostics/permissions/fix-admin, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mUserController {/system/users}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/users, GET} route[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.395Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/users/:id, GET} route[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.397Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/users, POST} route[39m[38;5;3m +5ms[39m
+
+[2025-12-15T17:51:50.397Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/users/:id, PUT} route[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.404Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/users/:id/password, PUT} route[39m[38;5;3m +6ms[39m
+
+[2025-12-15T17:51:50.424Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/users/:id/admin-password, PUT} route[39m[38;5;3m +20ms[39m
+
+[2025-12-15T17:51:50.433Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/users/:id, DELETE} route[39m[38;5;3m +9ms[39m
+
+[2025-12-15T17:51:50.436Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mRoleController {/system/roles}:[39m[38;5;3m +4ms[39m
+
+[2025-12-15T17:51:50.438Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/roles, GET} route[39m[38;5;3m +2ms[39m
+
+[2025-12-15T17:51:50.439Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/roles/:id, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mBugReportController {/system/bug-reports}:[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.442Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/bug-reports, GET} route[39m[38;5;3m +1ms[39m
+
+[2025-12-15T17:51:50.444Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/bug-reports/stats, GET} route[39m[38;5;3m +3ms[39m
+
+[2025-12-15T17:51:50.445Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/bug-reports/:id, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/bug-reports, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/bug-reports/:id, PUT} route[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.452Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/system/bug-reports/:id/comments, POST} route[39m[38;5;3m +6ms[39m
+
+[2025-12-15T17:51:50.455Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mDocumentController {/dms/documents}:[39m[38;5;3m +1ms[39m
+
+[2025-12-15T17:51:50.459Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/documents, GET} route[39m[38;5;3m +6ms[39m
+
+[2025-12-15T17:51:50.462Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/documents/:id, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/documents, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/documents/:id, PUT} route[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.465Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/documents/:id/upload, POST} route[39m[38;5;3m +5ms[39m
+
+[2025-12-15T17:51:50.466Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/documents/:id, DELETE} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/documents/:id/folder-path, GET} route[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.470Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/documents/:id/ocr/download, GET} route[39m[38;5;3m +2ms[39m
+
+[2025-12-15T17:51:50.470Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/documents/:id/ocr, POST} route[39m[38;5;3m +3ms[39m
+
+[2025-12-15T17:51:50.471Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/documents/:id/access, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/documents/:id/access/:userId, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mDocumentCategoryController {/dms/categories}:[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.472Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/categories, GET} route[39m[38;5;3m +1ms[39m
+
+[2025-12-15T17:51:50.472Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/categories/:id, GET} route[39m[38;5;3m +1ms[39m
+
+[2025-12-15T17:51:50.474Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/categories, POST} route[39m[38;5;3m +1ms[39m
+
+[2025-12-15T17:51:50.476Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/categories/:id, PUT} route[39m[38;5;3m +2ms[39m
+
+[2025-12-15T17:51:50.476Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/categories/:id, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mDocumentNotificationController {/dms/document-notifications}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/document-notifications/expiring, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/document-notifications/check, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mTagController {/dms/tags}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/tags, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/tags, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/tags/:id, PUT} route[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.477Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/dms/tags/:id, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mItemController {/logistics/items}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/items, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/items/:id, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/items, POST} route[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.477Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/items/:id, PUT} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/items/:id, DELETE} route[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.477Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/items/:id/suppliers, GET} route[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.478Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/items/:id/suppliers/:supplierId/link, POST} route[39m[38;5;3m +1ms[39m
+
+[2025-12-15T17:51:50.478Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/items/:id/suppliers/:supplierId/unlink, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/items/:id/suppliers/:supplierId/primary, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mItemGroupController {/logistics/item-groups}:[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.479Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/item-groups, GET} route[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.480Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/item-groups/:id, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/item-groups, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/item-groups/:id, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/item-groups/:id, DELETE} route[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.480Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mWarehouseController {/logistics/warehouses}:[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.482Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/warehouses, GET} route[39m[38;5;3m +2ms[39m
+
+[2025-12-15T17:51:50.483Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/warehouses/:id, GET} route[39m[38;5;3m +1ms[39m
+
+[2025-12-15T17:51:50.483Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/warehouses, POST} route[39m[38;5;3m +1ms[39m
+
+[2025-12-15T17:51:50.484Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/warehouses/:id, PUT} route[39m[38;5;3m +1ms[39m
+
+[2025-12-15T17:51:50.484Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/warehouses/:id, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mStockController {/logistics/stock}:[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.489Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/stock, GET} route[39m[38;5;3m +4ms[39m
+
+[2025-12-15T17:51:50.490Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/stock/low-stock, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/stock/move, POST} route[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.490Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/stock/movements, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mInventoryController {/logistics/inventory}:[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.490Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/inventory, GET} route[39m[38;5;3m +1ms[39m
+
+[2025-12-15T17:51:50.491Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/inventory/warehouse/:warehouseId, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/inventory/alerts, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/inventory/stock-levels, POST} route[39m[38;5;3m +1ms[39m
+
+[2025-12-15T17:51:50.492Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/inventory/stock-levels/:id, PUT} route[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.492Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/inventory/stock-levels/:id, DELETE} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/inventory/warehouse/:warehouseId/inventory-sheet/pdf, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/inventory/warehouse/:warehouseId/inventory-sheet/excel, GET} route[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.493Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mPurchaseOrderController {/logistics/purchase-orders}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/purchase-orders, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/purchase-orders/:id, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/purchase-orders, POST} route[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.494Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/purchase-orders/:id, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/purchase-orders/:id/receive, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mReturnController {/logistics/returns}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/returns, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/returns/:id, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/returns, POST} route[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.495Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/returns/:id, PUT} route[39m[38;5;3m +1ms[39m
+
+[2025-12-15T17:51:50.496Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/returns/:id/approve, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/returns/:id/reject, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/returns/:id/complete, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mSupplierController {/logistics/suppliers}:[39m[38;5;3m +1ms[39m
+
+[2025-12-15T17:51:50.497Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/suppliers, GET} route[39m[38;5;3m +1ms[39m
+
+[2025-12-15T17:51:50.497Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/suppliers/:id, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/suppliers, POST} route[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.498Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/suppliers/:id, PUT} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/suppliers/:id, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/suppliers/:id/items/:itemId/link, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/suppliers/:id/items/:itemId/unlink, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/suppliers/:id/items, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mInventoryReportController {/logistics/inventory/reports}:[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.498Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/inventory/reports/print, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/inventory/reports/by-item-group, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mNotificationController {/logistics/notifications}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/notifications/products, GET} route[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.499Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/notifications/stock, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mInventorySheetController {/logistics/inventory-sheets}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/inventory-sheets, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/inventory-sheets/:id, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/inventory-sheets, POST} route[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.500Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/inventory-sheets/:id, PUT} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/inventory-sheets/:id/status, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/inventory-sheets/:id/approve, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/inventory-sheets/:id/close, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/inventory-sheets/:id/revert-approval, POST} route[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.501Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/inventory-sheets/:id/items, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/inventory-sheets/:id/items/:itemId, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/inventory-sheets/:id, DELETE} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/inventory-sheets/:id/pdf, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/inventory-sheets/:id/excel, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mIntrastatController {/logistics/intrastat}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/intrastat, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/intrastat/ev/:ev/honap/:honap, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/intrastat/:id, GET} route[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.501Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/intrastat/:id/export/nav, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/intrastat/:id/export/xml, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/intrastat, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/intrastat/:id/items, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/intrastat/:id/items/:itemId, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/intrastat/:id/mark-ready, POST} route[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.502Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/intrastat/:id/mark-sent, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/intrastat/:id/items/:itemId, DELETE} route[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.506Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/intrastat/:id, DELETE} route[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.507Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mStockValuationController {/logistics/stock-valuation}:[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.508Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/stock-valuation/calculate/:itemId/:warehouseId, GET} route[39m[38;5;3m +6ms[39m
+
+[2025-12-15T17:51:50.510Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/stock-valuation/calculate-sale, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/stock-valuation/report, GET} route[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.512Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/stock-valuation/warehouse/:warehouseId/method, PUT} route[39m[38;5;3m +3ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mStockReservationController {/logistics/stock-reservations}:[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.513Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/stock-reservations, GET} route[39m[38;5;3m +1ms[39m
+
+[2025-12-15T17:51:50.514Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/stock-reservations/available/:itemId/:warehouseId, GET} route[39m[38;5;3m +1ms[39m
+
+[2025-12-15T17:51:50.516Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/stock-reservations/expected-receipts, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/stock-reservations/expected-receipts/:id, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/stock-reservations/expected-receipts, POST} route[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.518Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/stock-reservations/expected-receipts/:id/mark-received, POST} route[39m[38;5;3m +2ms[39m
+
+[2025-12-15T17:51:50.519Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/stock-reservations/expected-receipts/:id, DELETE} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/stock-reservations/:id, GET} route[39m[38;5;3m +1ms[39m
+
+[2025-12-15T17:51:50.521Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/stock-reservations, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/stock-reservations/:id, PUT} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/stock-reservations/:id, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mPriceListController {/logistics/price-lists}:[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.524Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/price-lists, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/price-lists/:id, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/price-lists, POST} route[39m[38;5;3m +1ms[39m
+
+[2025-12-15T17:51:50.526Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/price-lists/:id, PUT} route[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.528Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/price-lists/:id, DELETE} route[39m[38;5;3m +5ms[39m
+
+[2025-12-15T17:51:50.530Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/price-lists/:id/items, POST} route[39m[38;5;3m +1ms[39m
+
+[2025-12-15T17:51:50.532Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/price-lists/:id/items/:itemId, PUT} route[39m[38;5;3m +1ms[39m
+
+[2025-12-15T17:51:50.535Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/price-lists/:id/items/:itemId, DELETE} route[39m[38;5;3m +4ms[39m
+
+[2025-12-15T17:51:50.537Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/price-lists/:id/import, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/logistics/price-lists/:id/export, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mTaskController {/team/tasks}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/tasks, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/tasks/my, GET} route[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.539Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/tasks/assigned-to/:userId, GET} route[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.540Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/tasks/upcoming-deadlines, GET} route[39m[38;5;3m +3ms[39m
+
+[2025-12-15T17:51:50.542Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/tasks/:id, GET} route[39m[38;5;3m +1ms[39m
+
+[2025-12-15T17:51:50.545Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/tasks, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/tasks/:id, PUT} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/tasks/:id, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/tasks/:id/status, PATCH} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/tasks/:id/assign, PATCH} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/tasks/:id/move, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/tasks/:id/notify, GET} route[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.548Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mDashboardController {/team/dashboard}:[39m[38;5;3m +3ms[39m
+
+[2025-12-15T17:51:50.555Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/dashboard/stats, GET} route[39m[38;5;3m +8ms[39m
+
+[2025-12-15T17:51:50.587Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/dashboard/my-tasks, GET} route[39m[38;5;3m +3ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mBoardController {/team/boards}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/boards, GET} route[39m[38;5;3m +4ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/boards/:id, GET} route[39m[38;5;3m +2ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/boards, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/boards/:id, PUT} route[39m[38;5;3m +2ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/boards/:id, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/boards/:id/members, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/boards/:id/members/:userId, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/boards/:id/columns, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/boards/:id/columns, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/boards/:id/columns/:columnId, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/boards/:id/columns/:columnId, DELETE} route[39m[38;5;3m +3ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mCommentController {/team/tasks}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/tasks/:taskId/comments, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/tasks/:taskId/comments, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/tasks/comments/:id, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/tasks/comments/:id, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mWorkflowController {/team/workflows}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/workflows, GET} route[39m[38;5;3m +2ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/workflows/:id, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/workflows, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/workflows/:id, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/workflows/:id, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/workflows/:id/steps, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/workflows/:id/steps/:stepId, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/workflows/:id/steps/:stepId, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mWorkflowInstanceController {/team/workflow-instances}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/workflow-instances, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/workflow-instances, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/workflow-instances/:id, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/workflow-instances/:instanceId/step-logs/:stepLogId, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/workflow-instances/:id/cancel, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/team/workflow-instances/:instanceId/steps/:stepId/delegate, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mJobPositionController {/hr/job-positions}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/hr/job-positions, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/hr/job-positions/:id, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/hr/job-positions, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/hr/job-positions/:id, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/hr/job-positions/:id, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mEmployeeController {/hr/employees}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/hr/employees, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/hr/employees/:id, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/hr/employees, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/hr/employees/:id, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/hr/employees/:id, DELETE} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mContractController {/hr/contracts}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/hr/contracts, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/hr/contracts/expiring, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/hr/contracts/:id, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/hr/contracts, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/hr/contracts/:id, PUT} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/hr/contracts/:id/amendments, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/hr/contracts/:id, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mHrReportController {/hr/reports}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/hr/reports/nav/payroll, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/hr/reports/nav/tax, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/hr/reports/ksh/employment, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/hr/reports/ksh/wage, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/hr/reports/ksh/contract, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mDatabaseConnectionController {/controlling/database-connections}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/database-connections, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/database-connections/:id, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/database-connections/:id/test, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/database-connections, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/database-connections/:id, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/database-connections/:id, DELETE} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mKpiController {/controlling/kpi}:[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.592Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/kpi, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/kpi/:id, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/kpi/:id/calculate, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/kpi, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/kpi/:id, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/kpi/:id, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mQueryController {/controlling/queries}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/queries/templates, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/queries/templates/:id, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/queries/templates, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/queries/templates/:id, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/queries/templates/:id, DELETE} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/queries/ad-hoc, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/queries/ad-hoc/:id, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/queries/ad-hoc, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/queries/execute, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/queries/ad-hoc/:id, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mReportExportController {/controlling/reports/export}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/reports/export/excel, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/reports/export/csv, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/reports/export/txt, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/reports/export/xml, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mModelAnalysisController {/controlling/models}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/models/cost, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/models/cost/:id, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/models/cost, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/models/cost/:id, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/models/cost/:id/run, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/models/cost/:id, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/models/quantity, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/models/quantity/:id, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/models/quantity, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/models/quantity/:id, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/models/quantity/:id/run, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/models/quantity/:id, DELETE} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mDataSourceController {/controlling/data-sources}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/data-sources, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/data-sources/:id, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/data-sources, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/data-sources/:id, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/data-sources/:id, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/data-sources/:id/jobs, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/data-sources/jobs/:jobId, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/data-sources/:id/jobs, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/data-sources/jobs/:jobId, PUT} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/controlling/data-sources/jobs/:jobId, DELETE} route[39m[38;5;3m +0ms[39m
+
+[2025-12-15T17:51:50.695Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[PrismaService] [39m[32m✅ Adatbázis kapcsolat létrejött[39m
+
+[2025-12-15T17:51:50.750Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[PrismaService] [39m[32m🌱 New database detected - initializing schema...[39m
+
+[2025-12-15T17:51:50.751Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[PrismaService] [39m[32mRunning prisma db push to create tables...[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[PrismaService] [39m[32mSchema path:[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[PrismaService] [39m[32mC:\Users\liviuszberger\Desktop\Mbit\resources\backend\prisma\schema.prisma[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[PrismaService] [39m[32mWorking directory:[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[PrismaService] [39m[32mC:\Users\liviuszberger\Desktop\Mbit\resources\backend\prisma[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[PrismaService] [39m[32mPrisma CLI:[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[PrismaService] [39m[32mC:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules\prisma\build\index.js[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[PrismaService] [39m[32mNode executable:[39m
+
+[2025-12-15T17:51:50.752Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[PrismaService] [39m[32mC:\Users\liviuszberger\Desktop\Mbit\Mbit ERP.exe[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[PrismaService] [39m[32mExecuting command:[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:50 PM [32m    LOG[39m [38;5;3m[PrismaService] [39m[32m"C:\Users\liviuszberger\Desktop\Mbit\Mbit ERP.exe" "C:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules\prisma\build\index.js" db push --skip-generate --accept-data-loss[39m
+
+[2025-12-15T17:51:56.194Z] [Backend] Prisma schema loaded from schema.prisma
+
+[2025-12-15T17:51:56.413Z] [Backend] Datasource "db": SQLite database "mbit-erp.db" at "file:C:/Users/liviuszberger/AppData/Roaming/@mbit-erp/desktop/data/mbit-erp.db"
+
+[2025-12-15T17:51:57.510Z] [Backend] 
+Your database is now in sync with your Prisma schema. Done in 871ms
+
+[2025-12-15T17:51:57.511Z] [Backend] 
+
+[2025-12-15T17:51:57.866Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:57 PM [32m    LOG[39m [38;5;3m[PrismaService] [39m[32m✅ Database schema created successfully[39m
+
+[2025-12-15T17:51:57.934Z] [Backend] [95m[Nest] 4028  - [39m12/15/2025, 6:51:57 PM [95m  DEBUG[39m [38;5;3m[PrismaService] [39m[95mTask board table exists[39m
+
+[2025-12-15T17:51:58.019Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:58 PM [32m    LOG[39m [38;5;3m[SeedService] [39m[32m🌱 Üres adatbázis észlelve, seed indítása...[39m
+
+[2025-12-15T17:51:58.020Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:58 PM [32m    LOG[39m [38;5;3m[SeedService] [39m[32m🔑 Jogosultságok létrehozása...[39m
+
+[2025-12-15T17:51:58.640Z] [Backend] Still waiting... (attempt 20/60, 40s elapsed)
+[2025-12-15T17:51:58.752Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:58 PM [32m    LOG[39m [38;5;3m[SeedService] [39m[32m✅ 136 jogosultság létrehozva[39m
+
+[2025-12-15T17:51:58.760Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:58 PM [32m    LOG[39m [38;5;3m[SeedService] [39m[32m👥 Szerepkörök létrehozása...[39m
+
+[2025-12-15T17:51:59.500Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:59 PM [32m    LOG[39m [38;5;3m[SeedService] [39m[32m✅ Szerepkörök létrehozva[39m
+
+[2025-12-15T17:51:59.501Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:59 PM [32m    LOG[39m [38;5;3m[SeedService] [39m[32m👤 Admin felhasználó létrehozása...[39m
+
+[2025-12-15T17:51:59.626Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:59 PM [32m    LOG[39m [38;5;3m[SeedService] [39m[32m⚙️ Rendszerbeállítások inicializálása...[39m
+
+[2025-12-15T17:51:59.797Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:59 PM [32m    LOG[39m [38;5;3m[SeedService] [39m[32m✅ 24 rendszerbeállítás inicializálva[39m
+
+[2025-12-15T17:51:59.799Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:59 PM [32m    LOG[39m [38;5;3m[SeedService] [39m[32m📋 Alapértelmezett board létrehozása...[39m
+
+[2025-12-15T17:51:59.877Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:59 PM [32m    LOG[39m [38;5;3m[SeedService] [39m[32m✅ Alapértelmezett board létrehozva[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:59 PM [32m    LOG[39m [38;5;3m[SeedService] [39m[32m✅ Admin felhasználó létrehozva: admin / 1234[39m
+[32m[Nest] 4028  - [39m12/15/2025, 6:51:59 PM [32m    LOG[39m [38;5;3m[SeedService] [39m[32m🎉 Adatbázis seed sikeres![39m
+
+[2025-12-15T17:51:59.900Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:59 PM [32m    LOG[39m [38;5;3m[DocumentNotificationService] [39m[32mDocument deadline notification scheduler initialized[39m
+
+[2025-12-15T17:51:59.909Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:51:59 PM [32m    LOG[39m [38;5;3m[NestApplication] [39m[32mNest application successfully started[39m[38;5;3m +9ms[39m
+
+[2025-12-15T17:51:59.925Z] [Backend] 🚀 Mbit ERP szerver fut: http://127.0.0.1:3000
+
+[2025-12-15T17:52:00.173Z] [Backend] Health check: PID 4028 is alive
+[2025-12-15T17:52:00.704Z] [Health Check] Backend is ready on 127.0.0.1
+[2025-12-15T17:52:00.706Z] [Backend] ✓ Ready after 21 attempt(s) (~42s)
+[2025-12-15T17:52:00.707Z] [Backend] Started successfully - health check passed
+[2025-12-15T17:52:00.708Z] [App] Backend started successfully
+[2025-12-15T17:52:00.709Z] [App] Reloading window now that backend is ready...
+[2025-12-15T17:52:01.049Z] [Window] Window finished loading
+[2025-12-15T17:52:10.176Z] [Backend] Health check: PID 4028 is alive
+[2025-12-15T17:52:20.181Z] [Backend] Health check: PID 4028 is alive
+[2025-12-15T17:52:25.670Z] [Backend] [32m[Nest] 4028  - [39m12/15/2025, 6:52:25 PM [32m    LOG[39m [38;5;3m[AuditService] [39m[32mAudit: create Supplier b977c9c1-203e-489d-9b30-9b4749d2b4c0[39m
+
+[2025-12-15T17:52:30.186Z] [Backend] Health check: PID 4028 is alive
+[2025-12-15T17:52:40.186Z] [Backend] Health check: PID 4028 is alive
+[2025-12-15T17:52:41.082Z] [Backend] PriceListService.create - received dto: {}
+
+[2025-12-15T17:52:41.085Z] [Backend] PriceListService.create - dto.supplierId: undefined
+PriceListService.create - typeof dto.supplierId: undefined
+PriceListService.create - validation failed, supplierId is empty
+
+[2025-12-15T17:52:41.085Z] [Backend Error] [31m[Nest] 4028  - [39m12/15/2025, 6:52:41 PM [31m  ERROR[39m [38;5;3m[AllExceptionsFilter] [39m[31mHTTP 400 Error: POST /logistics/price-lists[39m
+BadRequestException: Szállító megadása kötelező
+    at PriceListService.create (C:\Users\liviuszberger\Desktop\Mbit\resources\backend\logistics\price-list.service.js:100:19)
+    at PriceListController.create (C:\Users\liviuszberger\Desktop\Mbit\resources\backend\logistics\price-list.controller.js:38:55)
+    at C:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules\@nestjs\core\router\router-execution-context.js:38:29
+    at async C:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules\@nestjs\core\router\router-execution-context.js:46:28
+    at async C:\Users\liviuszberger\Desktop\Mbit\resources\backend\node_modules\@nestjs\core\router\router-proxy.js:9:17
+=== EXCEPTION DETAILS ===
+{
+  "statusCode": 400,
+  "timestamp": "2025-12-15T17:52:41.084Z",
+  "path": "/logistics/price-lists",
+  "method": "POST",
+  "message": "Szállító megadása kötelező",
+  "error": "BadRequestException: Szállító megadása kötelező\n    at PriceListService.create (C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\logistics\\price-list.service.js:100:19)\n    at PriceListController.create (C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\logistics\\price-list.controller.js:38:55)\n    at C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\node_modules\\@nestjs\\core\\router\\router-execution-context.js:38:29\n    at async C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\node_modules\\@nestjs\\core\\router\\router-execution-context.js:46:28\n    at async C:\\Users\\liviuszberger\\Desktop\\Mbit\\resources\\backend\\node_modules\\@nestjs\\core\\router\\router-proxy.js:9:17"
+}
+========================
+
+[2025-12-15T17:52:50.190Z] [Backend] Health check: PID 4028 is alive
+[2025-12-15T17:53:00.205Z] [Backend] Health check: PID 4028 is alive
 
 
 ---
