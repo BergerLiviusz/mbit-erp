@@ -142,7 +142,10 @@ export default function PriceLists() {
         setSuccess('Árlista sikeresen frissítve!');
       } else {
         // Ensure supplierId is not empty string before sending
-        const trimmedSupplierId = formData.supplierId.trim();
+        const trimmedSupplierId = formData.supplierId?.trim() || '';
+        
+        console.log('Form submit - formData:', formData);
+        console.log('Form submit - trimmedSupplierId:', trimmedSupplierId);
         
         if (!trimmedSupplierId) {
           setError('Kérem válasszon szállítót!');
@@ -150,9 +153,14 @@ export default function PriceLists() {
         }
         
         const submitData: CreatePriceListDto = {
-          ...formData,
           supplierId: trimmedSupplierId,
+          nev: formData.nev.trim(),
+          ervenyessegKezdet: formData.ervenyessegKezdet,
+          ervenyessegVeg: formData.ervenyessegVeg || undefined,
+          aktiv: formData.aktiv ?? true,
         };
+        
+        console.log('Form submit - submitData:', submitData);
         
         await createPriceList.mutateAsync(submitData);
         setSuccess('Árlista sikeresen létrehozva!');
