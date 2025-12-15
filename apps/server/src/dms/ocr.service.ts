@@ -4,6 +4,8 @@ import { StorageService } from '../common/storage/storage.service';
 import { createWorker, Worker } from 'tesseract.js';
 import * as pdfParse from 'pdf-parse';
 import * as path from 'path';
+import * as fs from 'fs/promises';
+import sharp from 'sharp';
 
 @Injectable()
 export class OcrService {
@@ -97,8 +99,18 @@ export class OcrService {
           extractedText = await this.extractTextWithTesseract(filePath);
         }
       } else {
-        // Kép fájlokhoz Tesseract.js-t használunk
-        extractedText = await this.extractTextWithTesseract(filePath);
+        // Kép fájlokhoz először előfeldolgozzuk, majd Tesseract.js-t használunk
+        const preprocessedPath = await this.preprocessImage(filePath, job.document.mimeType);
+        try {
+          extractedText = await this.extractTextWithTesseract(preprocessedPath);
+        } finally {
+          // Töröljük az előfeldolgozott képet
+          try {
+            await fs.unlink(preprocessedPath);
+          } catch (error) {
+            this.logger.warn(`Failed to delete preprocessed image: ${error}`);
+          }
+        }
       }
 
       // Generáljuk a .txt fájlt
@@ -138,15 +150,76 @@ export class OcrService {
     }
   }
 
+  /**
+   * Preprocess image to improve OCR accuracy
+   */
+  private async preprocessImage(filePath: string, mimeType: string): Promise<string> {
+    const isImage = mimeType.startsWith('image/');
+    if (!isImage) {
+      return filePath; // Return original path for non-image files
+    }
+
+    try {
+      const outputPath = `${filePath}.preprocessed.png`;
+      
+      // Read image buffer
+      const imageBuffer = await fs.readFile(filePath);
+      
+      // Preprocess with sharp for better OCR accuracy
+      await sharp(imageBuffer)
+        .greyscale() // Convert to grayscale for better OCR
+        .normalize() // Normalize brightness and contrast
+        .sharpen({ sigma: 1, m1: 1, m2: 2, x1: 2, y2: 10, y3: 20 }) // Sharpen image
+        .linear(1.2, -(128 * 0.2)) // Increase contrast
+        .png({ quality: 100, compressionLevel: 9 })
+        .toFile(outputPath);
+
+      this.logger.debug(`Image preprocessed: ${filePath} -> ${outputPath}`);
+      return outputPath;
+    } catch (error) {
+      this.logger.warn(`Image preprocessing failed, using original: ${error}`);
+      return filePath; // Fallback to original if preprocessing fails
+    }
+  }
+
+  /**
+   * Extract text using Tesseract.js with optimized configuration
+   */
   private async extractTextWithTesseract(filePath: string): Promise<string> {
     if (!this.worker) {
       this.worker = await createWorker('hun', undefined, {
-        logger: (m) => this.logger.debug(m),
+        logger: (m) => {
+          // Only log important messages
+          if (m.status === 'recognizing text' && m.progress === 1) {
+            this.logger.debug('OCR recognition completed');
+          }
+        },
+      });
+      
+      // Set optimized OCR parameters
+      await this.worker.setParameters({
+        tessedit_pageseg_mode: '6', // Assume uniform block of text
+        tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzÁÉÍÓÖŐÚÜŰáéíóöőúüű.,;:!?()[]{}\'"-+*/=<>@#$%&_|\\/~`', // Hungarian characters
+        tessedit_ocr_engine_mode: '1', // Neural nets LSTM engine only
       });
     }
 
-    const { data: { text } } = await this.worker.recognize(filePath);
-    return text.trim();
+    try {
+      const { data: { text, confidence } } = await this.worker.recognize(filePath);
+      
+      this.logger.debug(`OCR completed with confidence: ${confidence}%`);
+      
+      // Clean up text: remove excessive whitespace
+      const cleanedText = text
+        .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+        .replace(/\n\s*\n/g, '\n') // Replace multiple newlines with single newline
+        .trim();
+      
+      return cleanedText;
+    } catch (error) {
+      this.logger.error(`Tesseract recognition failed: ${error}`);
+      throw error;
+    }
   }
 
   async onModuleDestroy() {

@@ -143,6 +143,8 @@ export class InventoryService {
     mennyiseg?: number;
     minimum?: number | null;
     maximum?: number | null;
+    sarzsGyartasiSzam?: string | null;
+    beszerzesiAr?: number | null;
   }) {
     // Normalize locationId: use null if undefined or null
     const locationId = data.locationId === undefined || data.locationId === null ? null : data.locationId;
@@ -192,7 +194,7 @@ export class InventoryService {
     }
 
     // Create new stock level
-    return await this.prisma.stockLevel.create({
+    const stockLevel = await this.prisma.stockLevel.create({
       data: {
         itemId: data.itemId,
         warehouseId: data.warehouseId,
@@ -207,6 +209,30 @@ export class InventoryService {
         location: true,
       },
     });
+
+    // If sarzsGyartasiSzam is provided, create a StockLot
+    if (data.sarzsGyartasiSzam && data.sarzsGyartasiSzam.trim()) {
+      const mennyiseg = data.mennyiseg || 0;
+      const beszerzesiAr = data.beszerzesiAr || null;
+      
+      // Get item's default purchase price if beszerzesiAr is not provided
+      let finalBeszerzesiAr = beszerzesiAr;
+      if (!finalBeszerzesiAr && stockLevel.item) {
+        finalBeszerzesiAr = stockLevel.item.beszerzesiAr || 0;
+      }
+
+      await this.prisma.stockLot.create({
+        data: {
+          itemId: data.itemId,
+          warehouseId: data.warehouseId,
+          sarzsGyartasiSzam: data.sarzsGyartasiSzam.trim(),
+          mennyiseg: mennyiseg,
+          beszerzesiAr: finalBeszerzesiAr || 0,
+        },
+      });
+    }
+
+    return stockLevel;
   }
 
   async updateStockLevel(

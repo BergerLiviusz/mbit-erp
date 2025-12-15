@@ -162,4 +162,96 @@ export class PurchaseOrderService {
       },
     });
   }
+
+  async receive(id: string, warehouseId: string, receivedItems: Array<{ itemId: string; mennyiseg: number; sarzsGyartasiSzam?: string; beszerzesiAr?: number }>) {
+    const purchaseOrder = await this.findOne(id);
+
+    if (!purchaseOrder) {
+      throw new Error('Beszerzési rendelés nem található');
+    }
+
+    if (purchaseOrder.allapot === 'BEEERKEZETT' || purchaseOrder.allapot === 'LEZARVA') {
+      throw new Error('A beszerzési rendelés már beérkezett vagy lezárva');
+    }
+
+    // Update stock levels for each received item
+    for (const receivedItem of receivedItems) {
+      const orderItem = purchaseOrder.items.find(item => item.itemId === receivedItem.itemId);
+      if (!orderItem) {
+        throw new BadRequestException(`Termék nem található a rendelésben: ${receivedItem.itemId}`);
+      }
+
+      // Find or create stock level
+      const stockLevel = await this.prisma.stockLevel.findFirst({
+        where: {
+          itemId: receivedItem.itemId,
+          warehouseId: warehouseId,
+          locationId: null,
+        },
+      });
+
+      if (stockLevel) {
+        // Update existing stock level
+        await this.prisma.stockLevel.update({
+          where: { id: stockLevel.id },
+          data: {
+            mennyiseg: {
+              increment: receivedItem.mennyiseg,
+            },
+          },
+        });
+      } else {
+        // Create new stock level
+        await this.prisma.stockLevel.create({
+          data: {
+            itemId: receivedItem.itemId,
+            warehouseId: warehouseId,
+            mennyiseg: receivedItem.mennyiseg,
+          },
+        });
+      }
+
+      // Create stock lot if batch/serial number or purchase price is provided
+      if (receivedItem.sarzsGyartasiSzam || receivedItem.beszerzesiAr) {
+        await this.prisma.stockLot.create({
+          data: {
+            itemId: receivedItem.itemId,
+            warehouseId: warehouseId,
+            sarzsGyartasiSzam: receivedItem.sarzsGyartasiSzam || null,
+            mennyiseg: receivedItem.mennyiseg,
+            beszerzesiAr: receivedItem.beszerzesiAr || orderItem.egysegAr,
+          },
+        });
+      }
+
+      // Create stock move for audit trail
+      await this.prisma.stockMove.create({
+        data: {
+          itemId: receivedItem.itemId,
+          warehouseId: warehouseId,
+          tipus: 'BESZERZES',
+          mennyiseg: receivedItem.mennyiseg,
+          sarzsGyartasiSzam: receivedItem.sarzsGyartasiSzam || null,
+          referenciaId: purchaseOrder.id,
+          megjegyzesek: `Beszerzési rendelés: ${purchaseOrder.azonosito}`,
+        },
+      });
+    }
+
+    // Update purchase order status
+    return this.prisma.purchaseOrder.update({
+      where: { id },
+      data: {
+        allapot: 'BEEERKEZETT',
+      },
+      include: {
+        supplier: true,
+        items: {
+          include: {
+            item: true,
+          },
+        },
+      },
+    });
+  }
 }

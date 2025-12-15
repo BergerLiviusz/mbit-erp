@@ -233,5 +233,11 @@ export class InventorySheetController {
   async generatePdf(@Param('id') id: string, @Res() res: Response) {
     await this.inventorySheetService.generatePdf(id, res);
   }
+
+  @Get(':id/excel')
+  @Permissions(Permission.STOCK_VIEW)
+  async generateExcel(@Param('id') id: string, @Res() res: Response) {
+    await this.inventorySheetService.generateExcel(id, res);
+  }
 }
 

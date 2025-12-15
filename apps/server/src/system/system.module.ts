@@ -5,6 +5,8 @@ import { HealthController } from './health.controller';
 import { DiagnosticsController } from './diagnostics.controller';
 import { UserController } from './user.controller';
 import { UserService } from './user.service';
+import { RoleController } from './role.controller';
+import { RoleService } from './role.service';
 import { BugReportController } from './bug-report.controller';
 import { BugReportService } from './bug-report.service';
 import { PrismaModule } from '../prisma/prisma.module';
@@ -15,8 +17,8 @@ import { RbacModule } from '../common/rbac/rbac.module';
 
 @Module({
   imports: [PrismaModule, BackupModule, AuditModule, StorageModule, RbacModule],
-  controllers: [SystemSettingsController, HealthController, DiagnosticsController, UserController, BugReportController],
-  providers: [SystemSettingsService, UserService, BugReportService],
-  exports: [SystemSettingsService, UserService, BugReportService],
+  controllers: [SystemSettingsController, HealthController, DiagnosticsController, UserController, RoleController, BugReportController],
+  providers: [SystemSettingsService, UserService, RoleService, BugReportService],
+  exports: [SystemSettingsService, UserService, RoleService, BugReportService],
 })
 export class SystemModule {}

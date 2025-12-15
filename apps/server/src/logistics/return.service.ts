@@ -25,6 +25,10 @@ export class ReturnService {
       where.orderId = filters.orderId;
     }
 
+    if (filters?.purchaseOrderId) {
+      where.purchaseOrderId = filters.purchaseOrderId;
+    }
+
     if (filters?.itemId) {
       where.itemId = filters.itemId;
     }
@@ -45,6 +49,12 @@ export class ReturnService {
         take,
         include: {
           order: {
+            select: {
+              id: true,
+              azonosito: true,
+            },
+          },
+          purchaseOrder: {
             select: {
               id: true,
               azonosito: true,
@@ -91,6 +101,7 @@ export class ReturnService {
       where: { id },
       include: {
         order: true,
+        purchaseOrder: true,
         item: true,
         warehouse: true,
         createdBy: {
@@ -147,9 +158,26 @@ export class ReturnService {
       }
     }
 
+    // Validate purchase order if provided
+    if (dto.purchaseOrderId) {
+      const purchaseOrder = await this.prisma.purchaseOrder.findUnique({
+        where: { id: dto.purchaseOrderId },
+      });
+
+      if (!purchaseOrder) {
+        throw new NotFoundException('Beszerzési rendelés nem található');
+      }
+    }
+
+    // Ensure only one of orderId or purchaseOrderId is provided
+    if (dto.orderId && dto.purchaseOrderId) {
+      throw new BadRequestException('Csak egy rendelés (order vagy purchaseOrder) adható meg');
+    }
+
     return this.prisma.return.create({
       data: {
         orderId: dto.orderId || null,
+        purchaseOrderId: dto.purchaseOrderId || null,
         itemId: dto.itemId,
         warehouseId: dto.warehouseId,
         mennyiseg: dto.mennyiseg,
@@ -161,6 +189,7 @@ export class ReturnService {
       },
       include: {
         order: true,
+        purchaseOrder: true,
         item: true,
         warehouse: true,
         createdBy: {
@@ -220,11 +249,25 @@ export class ReturnService {
       updateData.megjegyzesek = dto.megjegyzesek;
     }
 
+    // Validate purchase order if provided
+    if (dto.purchaseOrderId !== undefined) {
+      if (dto.purchaseOrderId) {
+        const purchaseOrder = await this.prisma.purchaseOrder.findUnique({
+          where: { id: dto.purchaseOrderId },
+        });
+        if (!purchaseOrder) {
+          throw new NotFoundException('Beszerzési rendelés nem található');
+        }
+      }
+      updateData.purchaseOrderId = dto.purchaseOrderId || null;
+    }
+
     return this.prisma.return.update({
       where: { id },
       data: updateData,
       include: {
         order: true,
+        purchaseOrder: true,
         item: true,
         warehouse: true,
         createdBy: {
@@ -255,6 +298,7 @@ export class ReturnService {
       },
       include: {
         order: true,
+        purchaseOrder: true,
         item: true,
         warehouse: true,
         approvedBy: {
@@ -296,6 +340,7 @@ export class ReturnService {
       },
       include: {
         order: true,
+        purchaseOrder: true,
         item: true,
         warehouse: true,
         approvedBy: {
@@ -316,7 +361,7 @@ export class ReturnService {
       throw new BadRequestException('Csak APPROVED állapotú visszárú feldolgozható');
     }
 
-    // Update stock level - add the returned quantity back to stock
+    // Find stock level
     const stockLevel = await this.prisma.stockLevel.findFirst({
       where: {
         itemId: returnItem.itemId,
@@ -324,22 +369,71 @@ export class ReturnService {
       },
     });
 
-    if (stockLevel) {
-      await this.prisma.stockLevel.update({
-        where: { id: stockLevel.id },
-        data: {
-          mennyiseg: {
-            increment: returnItem.mennyiseg,
+    // Different logic for Order vs PurchaseOrder returns
+    if (returnItem.purchaseOrderId) {
+      // Purchase return: decrease stock (returning goods to supplier)
+      if (stockLevel) {
+        const availableStock = stockLevel.mennyiseg - (stockLevel.foglaltMennyiseg || 0);
+        if (availableStock < returnItem.mennyiseg) {
+          throw new BadRequestException(
+            `Nincs elég készlet a visszárúhoz. Elérhető: ${availableStock}, Kért: ${returnItem.mennyiseg}`
+          );
+        }
+
+        await this.prisma.stockLevel.update({
+          where: { id: stockLevel.id },
+          data: {
+            mennyiseg: {
+              decrement: returnItem.mennyiseg,
+            },
           },
-        },
-      });
-    } else {
-      // Create new stock level if it doesn't exist
-      await this.prisma.stockLevel.create({
+        });
+      } else {
+        throw new BadRequestException('Nincs készlet a visszárúhoz');
+      }
+
+      // Create stock move for audit trail
+      await this.prisma.stockMove.create({
         data: {
           itemId: returnItem.itemId,
           warehouseId: returnItem.warehouseId,
+          tipus: 'BESZERZES_VISSZARU',
+          mennyiseg: -returnItem.mennyiseg,
+          referenciaId: returnItem.purchaseOrderId,
+          megjegyzesek: `Beszerzési visszárú: ${returnItem.purchaseOrder?.azonosito || returnItem.purchaseOrderId}`,
+        },
+      });
+    } else {
+      // Order return: increase stock (customer returning goods)
+      if (stockLevel) {
+        await this.prisma.stockLevel.update({
+          where: { id: stockLevel.id },
+          data: {
+            mennyiseg: {
+              increment: returnItem.mennyiseg,
+            },
+          },
+        });
+      } else {
+        // Create new stock level if it doesn't exist
+        await this.prisma.stockLevel.create({
+          data: {
+            itemId: returnItem.itemId,
+            warehouseId: returnItem.warehouseId,
+            mennyiseg: returnItem.mennyiseg,
+          },
+        });
+      }
+
+      // Create stock move for audit trail
+      await this.prisma.stockMove.create({
+        data: {
+          itemId: returnItem.itemId,
+          warehouseId: returnItem.warehouseId,
+          tipus: 'ELADAS_VISSZARU',
           mennyiseg: returnItem.mennyiseg,
+          referenciaId: returnItem.orderId || id,
+          megjegyzesek: `Eladási visszárú: ${returnItem.order?.azonosito || returnItem.orderId || id}`,
         },
       });
     }
@@ -352,6 +446,7 @@ export class ReturnService {
       },
       include: {
         order: true,
+        purchaseOrder: true,
         item: true,
         warehouse: true,
         createdBy: {
@@ -376,6 +471,33 @@ export class ReturnService {
     return this.prisma.return.findMany({
       where: { orderId },
       include: {
+        purchaseOrder: true,
+        item: true,
+        warehouse: true,
+        createdBy: {
+          select: {
+            id: true,
+            nev: true,
+            email: true,
+          },
+        },
+        approvedBy: {
+          select: {
+            id: true,
+            nev: true,
+            email: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async getByPurchaseOrder(purchaseOrderId: string) {
+    return this.prisma.return.findMany({
+      where: { purchaseOrderId },
+      include: {
+        order: true,
         item: true,
         warehouse: true,
         createdBy: {

@@ -138,9 +138,73 @@ export class ItemService {
         skip,
         take,
         orderBy: { nev: 'asc' },
+        include: {
+          _count: {
+            select: { items: true },
+          },
+        },
       }),
     ]);
 
     return { total, data };
+  }
+
+  async findOneItemGroup(id: string) {
+    return this.prisma.itemGroup.findUnique({
+      where: { id },
+      include: {
+        _count: {
+          select: { items: true },
+        },
+      },
+    });
+  }
+
+  async createItemGroup(data: { nev: string; leiras?: string }) {
+    // Check if name already exists
+    const existing = await this.prisma.itemGroup.findUnique({
+      where: { nev: data.nev },
+    });
+
+    if (existing) {
+      throw new Error(`Már létezik cikkcsoport ezzel a névvel: ${data.nev}`);
+    }
+
+    return this.prisma.itemGroup.create({
+      data,
+    });
+  }
+
+  async updateItemGroup(id: string, data: { nev?: string; leiras?: string }) {
+    // If name is being updated, check if it already exists
+    if (data.nev) {
+      const existing = await this.prisma.itemGroup.findUnique({
+        where: { nev: data.nev },
+      });
+
+      if (existing && existing.id !== id) {
+        throw new Error(`Már létezik cikkcsoport ezzel a névvel: ${data.nev}`);
+      }
+    }
+
+    return this.prisma.itemGroup.update({
+      where: { id },
+      data,
+    });
+  }
+
+  async deleteItemGroup(id: string) {
+    // Check if there are items in this group
+    const itemCount = await this.prisma.item.count({
+      where: { itemGroupId: id },
+    });
+
+    if (itemCount > 0) {
+      throw new Error(`Nem lehet törölni a cikkcsoportot, mert ${itemCount} termék tartozik hozzá`);
+    }
+
+    return this.prisma.itemGroup.delete({
+      where: { id },
+    });
   }
 }

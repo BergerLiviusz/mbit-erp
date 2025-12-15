@@ -255,22 +255,34 @@ export class StockValuationService {
   async getStockValuationReport(
     warehouseId?: string,
     ertekelesMod?: string,
+    itemGroupId?: string,
   ): Promise<StockValuationResult[]> {
     const where: any = {};
     if (warehouseId) {
       where.warehouseId = warehouseId;
     }
 
-    // Get all items with stock
-    const stockLots = await this.prisma.stockLot.findMany({
+    // Build item filter for itemGroupId
+    const itemWhere: any = {};
+    if (itemGroupId) {
+      itemWhere.itemGroupId = itemGroupId;
+    }
+
+    // Get all items with stock - use StockLevel instead of StockLot to catch all items
+    const stockLevels = await this.prisma.stockLevel.findMany({
       where: {
         ...where,
         mennyiseg: {
           gt: 0,
         },
+        item: itemWhere,
       },
       include: {
-        item: true,
+        item: {
+          include: {
+            itemGroup: true,
+          },
+        },
         warehouse: true,
       },
       distinct: ['itemId', 'warehouseId'],
@@ -278,13 +290,67 @@ export class StockValuationService {
 
     const results: StockValuationResult[] = [];
 
-    for (const lot of stockLots) {
-      const valuation = await this.calculateStockValue(
-        lot.itemId,
-        lot.warehouseId,
-        ertekelesMod,
-      );
-      results.push(valuation);
+    for (const stockLevel of stockLevels) {
+      // Check if there are stock lots for this item/warehouse
+      const stockLots = await this.prisma.stockLot.findMany({
+        where: {
+          itemId: stockLevel.itemId,
+          warehouseId: stockLevel.warehouseId,
+          mennyiseg: {
+            gt: 0,
+          },
+        },
+      });
+
+      // If there are stock lots, use the existing calculation
+      if (stockLots.length > 0) {
+        const valuation = await this.calculateStockValue(
+          stockLevel.itemId,
+          stockLevel.warehouseId,
+          ertekelesMod,
+        );
+        results.push(valuation);
+      } else {
+        // If no stock lots but there is stock level, calculate based on stock level
+        // Use average purchase price from item or default to 0
+        const item = stockLevel.item;
+        const warehouse = stockLevel.warehouse;
+        
+        // Try to get average purchase price from recent stock lots (any warehouse)
+        const recentLots = await this.prisma.stockLot.findMany({
+          where: {
+            itemId: stockLevel.itemId,
+            mennyiseg: {
+              gt: 0,
+            },
+          },
+          orderBy: {
+            createdAt: 'desc',
+          },
+          take: 10,
+        });
+
+        let avgPrice = 0;
+        if (recentLots.length > 0) {
+          const totalValue = recentLots.reduce((sum, lot) => sum + (lot.mennyiseg * lot.beszerzesiAr), 0);
+          const totalQty = recentLots.reduce((sum, lot) => sum + lot.mennyiseg, 0);
+          avgPrice = totalQty > 0 ? totalValue / totalQty : 0;
+        }
+
+        const készletérték = stockLevel.mennyiseg * avgPrice;
+
+        results.push({
+          itemId: stockLevel.itemId,
+          itemNev: item.nev,
+          warehouseId: stockLevel.warehouseId,
+          warehouseNev: warehouse.nev,
+          mennyiseg: stockLevel.mennyiseg,
+          ertekelesMod: ertekelesMod || warehouse.ertekelesMod || 'FIFO',
+          készletérték: készletérték,
+          atlagBeszerzesiAr: avgPrice,
+          lotDetails: [],
+        });
+      }
     }
 
     return results;

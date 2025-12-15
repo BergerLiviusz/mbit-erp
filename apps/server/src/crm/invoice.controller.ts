@@ -95,6 +95,44 @@ export class InvoiceController {
     return invoice;
   }
 
+  @Post('from-purchase-order/:purchaseOrderId')
+  @Permissions(Permission.CRM_CREATE)
+  async createFromPurchaseOrder(
+    @Param('purchaseOrderId') purchaseOrderId: string,
+    @Request() req: any,
+    @Body() dto?: Partial<CreateInvoiceDto>,
+  ) {
+    const invoice = await this.invoiceService.createFromPurchaseOrder(purchaseOrderId, dto);
+    
+    await this.auditService.logCreate(
+      'Invoice',
+      invoice.id,
+      { ...invoice, source: 'purchaseOrder', purchaseOrderId },
+      req.user?.id,
+    );
+
+    return invoice;
+  }
+
+  @Post('from-delivery-note/:deliveryNoteId')
+  @Permissions(Permission.CRM_CREATE)
+  async createFromDeliveryNote(
+    @Param('deliveryNoteId') deliveryNoteId: string,
+    @Request() req: any,
+    @Body() dto?: Partial<CreateInvoiceDto>,
+  ) {
+    const invoice = await this.invoiceService.createFromDeliveryNote(deliveryNoteId, dto);
+    
+    await this.auditService.logCreate(
+      'Invoice',
+      invoice.id,
+      { ...invoice, source: 'deliveryNote', deliveryNoteId },
+      req.user?.id,
+    );
+
+    return invoice;
+  }
+
   @Put(':id')
   @Permissions(Permission.CRM_EDIT)
   async update(

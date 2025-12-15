@@ -69,4 +69,16 @@ export class PurchaseOrderController {
     await this.auditService.logUpdate('purchase_order', id, old, updated);
     return updated;
   }
+
+  @Post(':id/receive')
+  @Permissions(Permission.PURCHASE_ORDER_RECEIVE)
+  async receive(
+    @Param('id') id: string,
+    @Body() body: { warehouseId: string; receivedItems: Array<{ itemId: string; mennyiseg: number; sarzsGyartasiSzam?: string; beszerzesiAr?: number }> },
+  ) {
+    const old = await this.purchaseOrderService.findOne(id);
+    const received = await this.purchaseOrderService.receive(id, body.warehouseId, body.receivedItems);
+    await this.auditService.logUpdate('purchase_order', id, old, received);
+    return received;
+  }
 }

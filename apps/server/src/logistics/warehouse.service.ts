@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 export interface CreateWarehouseDto {
@@ -93,6 +93,69 @@ export class WarehouseService {
     return this.prisma.warehouse.update({
       where: { id },
       data: dto,
+    });
+  }
+
+  async delete(id: string) {
+    // Check if warehouse has stock levels
+    const stockLevelsCount = await this.prisma.stockLevel.count({
+      where: { warehouseId: id },
+    });
+
+    if (stockLevelsCount > 0) {
+      throw new Error(`Nem lehet törölni a raktárat, mert ${stockLevelsCount} készletszint tartozik hozzá`);
+    }
+
+    // Check if warehouse has stock lots
+    const stockLotsCount = await this.prisma.stockLot.count({
+      where: { warehouseId: id },
+    });
+
+    if (stockLotsCount > 0) {
+      throw new Error(`Nem lehet törölni a raktárat, mert ${stockLotsCount} sarzs tartozik hozzá`);
+    }
+
+    // Check if warehouse has stock moves
+    const stockMovesCount = await this.prisma.stockMove.count({
+      where: { warehouseId: id },
+    });
+
+    if (stockMovesCount > 0) {
+      throw new Error(`Nem lehet törölni a raktárat, mert ${stockMovesCount} készletmozgás tartozik hozzá`);
+    }
+
+    // Check if warehouse has stock reservations
+    const stockReservationsCount = await this.prisma.stockReservation.count({
+      where: { warehouseId: id },
+    });
+
+    if (stockReservationsCount > 0) {
+      throw new Error(`Nem lehet törölni a raktárat, mert ${stockReservationsCount} készletfoglaltság tartozik hozzá`);
+    }
+
+    // Check if warehouse has inventory sheets
+    const inventorySheetsCount = await this.prisma.inventorySheet.count({
+      where: { warehouseId: id },
+    });
+
+    if (inventorySheetsCount > 0) {
+      throw new Error(`Nem lehet törölni a raktárat, mert ${inventorySheetsCount} leltárív tartozik hozzá`);
+    }
+
+    // Check if warehouse has locations
+    const locationsCount = await this.prisma.warehouseLocation.count({
+      where: { warehouseId: id },
+    });
+
+    if (locationsCount > 0) {
+      // Delete locations first (they have onDelete: Cascade)
+      await this.prisma.warehouseLocation.deleteMany({
+        where: { warehouseId: id },
+      });
+    }
+
+    return this.prisma.warehouse.delete({
+      where: { id },
     });
   }
 }

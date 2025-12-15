@@ -14,6 +14,8 @@ import Orders from './pages/Orders';
 import OrdersLogistics from './pages/OrdersLogistics';
 import Team from './pages/Team';
 import Workflows from './pages/Workflows';
+import WorkflowTasks from './pages/WorkflowTasks';
+import WorkflowInstances from './pages/WorkflowInstances';
 import Login from './pages/Login';
 import BugReport from './pages/BugReport';
 import InventorySheets from './pages/InventorySheets';
@@ -29,6 +31,7 @@ import Invoices from './pages/CRM/Invoices';
 import Chat from './pages/CRM/Chat';
 import StockValuation from './pages/Logistics/StockValuation';
 import StockReservations from './pages/Logistics/StockReservations';
+import PriceLists from './pages/PriceLists';
 import { BackendStatus } from './components/BackendStatus';
 import { NotificationPanel } from './components/NotificationPanel';
 import { LoadingScreen } from './components/LoadingScreen';
@@ -276,6 +279,19 @@ function App() {
                     >
                       Folyamatleltár
                     </Link>
+                    <Link 
+                      to="/workflow-tasks" 
+                      className="hover:bg-gray-800 px-3 py-2 rounded"
+                      onClick={() => {
+                        if (isElectron) {
+                          import('./components/DebugPanel').then(module => {
+                            module.addLog('info', 'Navigation: Clicked Feladatlista', { to: '/workflow-tasks' });
+                          }).catch(() => {});
+                        }
+                      }}
+                    >
+                      Feladatlista
+                    </Link>
                   </>
                 )}
                 {/* Logisztika - csak ha Logistics modul engedélyezve */}
@@ -367,6 +383,8 @@ function App() {
             <>
               <Route path="/team" element={<ModuleRouteGuard module="team"><Team /></ModuleRouteGuard>} />
               <Route path="/workflows" element={<ModuleRouteGuard module="team"><Workflows /></ModuleRouteGuard>} />
+              <Route path="/workflow-tasks" element={<ModuleRouteGuard module="team"><WorkflowTasks /></ModuleRouteGuard>} />
+              <Route path="/workflow-instances" element={<ModuleRouteGuard module="team"><WorkflowInstances /></ModuleRouteGuard>} />
             </>
           ) : null}
           
@@ -377,6 +395,7 @@ function App() {
               <Route path="/products" element={<ModuleRouteGuard module="logistics"><Products /></ModuleRouteGuard>} />
               <Route path="/returns" element={<ModuleRouteGuard module="logistics"><Returns /></ModuleRouteGuard>} />
               <Route path="/suppliers" element={<ModuleRouteGuard module="logistics"><Suppliers /></ModuleRouteGuard>} />
+              <Route path="/price-lists" element={<ModuleRouteGuard module="logistics"><PriceLists /></ModuleRouteGuard>} />
               <Route path="/orders-logistics" element={<ModuleRouteGuard module="logistics"><OrdersLogistics /></ModuleRouteGuard>} />
               <Route path="/inventory-sheets" element={<ModuleRouteGuard module="logistics"><InventorySheets /></ModuleRouteGuard>} />
               <Route path="/intrastat" element={<ModuleRouteGuard module="logistics"><Intrastat /></ModuleRouteGuard>} />

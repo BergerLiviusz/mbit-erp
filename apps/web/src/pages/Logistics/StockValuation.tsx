@@ -28,6 +28,12 @@ interface Warehouse {
   ertekelesMod: string;
 }
 
+interface ItemGroup {
+  id: string;
+  nev: string;
+  leiras?: string | null;
+}
+
 const ERTEKELESI_MODOK = [
   { kod: 'FIFO', nev: 'FIFO (First In First Out)' },
   { kod: 'LIFO', nev: 'LIFO (Last In First Out)' },
@@ -37,6 +43,7 @@ const ERTEKELESI_MODOK = [
 export default function StockValuation() {
   const [valuations, setValuations] = useState<StockValuationResult[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
+  const [itemGroups, setItemGroups] = useState<ItemGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -47,10 +54,12 @@ export default function StockValuation() {
   const [filters, setFilters] = useState({
     warehouseId: '',
     ertekelesMod: '',
+    itemGroupId: '',
   });
 
   useEffect(() => {
     loadWarehouses();
+    loadItemGroups();
     loadValuations();
   }, [filters]);
 
@@ -66,6 +75,18 @@ export default function StockValuation() {
     }
   };
 
+  const loadItemGroups = async () => {
+    try {
+      const response = await apiFetch('/logistics/item-groups?skip=0&take=100');
+      if (response.ok) {
+        const data = await response.json();
+        setItemGroups(data.data || []);
+      }
+    } catch (err) {
+      console.error('Hiba a cikkcsoportok betöltésekor:', err);
+    }
+  };
+
   const loadValuations = async () => {
     setLoading(true);
     setError('');
@@ -73,6 +94,7 @@ export default function StockValuation() {
       const queryParams = new URLSearchParams();
       if (filters.warehouseId) queryParams.append('warehouseId', filters.warehouseId);
       if (filters.ertekelesMod) queryParams.append('ertekelesMod', filters.ertekelesMod);
+      if (filters.itemGroupId) queryParams.append('itemGroupId', filters.itemGroupId);
 
       const response = await apiFetch(`/logistics/stock-valuation/report?${queryParams.toString()}`);
       if (response.ok) {
@@ -146,7 +168,7 @@ export default function StockValuation() {
 
       {/* Szűrők */}
       <div className="bg-white rounded-lg shadow p-4 mb-6">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-3 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Raktár</label>
             <select
@@ -158,6 +180,21 @@ export default function StockValuation() {
               {warehouses.map(w => (
                 <option key={w.id} value={w.id}>
                   {w.nev} ({w.azonosito})
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Cikkcsoport</label>
+            <select
+              value={filters.itemGroupId}
+              onChange={(e) => setFilters({ ...filters, itemGroupId: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded"
+            >
+              <option value="">Összes cikkcsoport</option>
+              {itemGroups.map(g => (
+                <option key={g.id} value={g.id}>
+                  {g.nev}
                 </option>
               ))}
             </select>

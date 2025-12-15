@@ -5,6 +5,7 @@ import axios from '../axios';
 export interface Return {
   id: string;
   orderId?: string;
+  purchaseOrderId?: string;
   itemId: string;
   warehouseId: string;
   mennyiseg: number;
@@ -17,6 +18,10 @@ export interface Return {
   createdAt: string;
   updatedAt: string;
   order?: {
+    id: string;
+    azonosito: string;
+  };
+  purchaseOrder?: {
     id: string;
     azonosito: string;
   };
@@ -84,6 +89,7 @@ export interface ItemSupplier {
 
 export interface CreateReturnDto {
   orderId?: string;
+  purchaseOrderId?: string;
   itemId: string;
   warehouseId: string;
   mennyiseg: number;
@@ -326,17 +332,31 @@ export function useLinkItemSupplier() {
       supplierId: string;
       data: LinkItemSupplierDto;
     }) => {
-      const response = await axios.post(
-        `/api/logistics/suppliers/${supplierId}/items/${itemId}/link`,
-        data,
-      );
-      return response.data;
+      // Try item-based endpoint first, fallback to supplier-based endpoint
+      try {
+        const response = await axios.post(
+          `/api/logistics/items/${itemId}/suppliers/${supplierId}/link`,
+          data,
+        );
+        return response.data;
+      } catch (error: any) {
+        // Fallback to supplier-based endpoint if item-based doesn't exist
+        if (error.response?.status === 404) {
+          const response = await axios.post(
+            `/api/logistics/suppliers/${supplierId}/items/${itemId}/link`,
+            data,
+          );
+          return response.data;
+        }
+        throw error;
+      }
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['suppliers'] });
       queryClient.invalidateQueries({ queryKey: ['supplier', variables.supplierId] });
       queryClient.invalidateQueries({ queryKey: ['items'] });
       queryClient.invalidateQueries({ queryKey: ['item', variables.itemId] });
+      queryClient.invalidateQueries({ queryKey: ['itemSuppliers', variables.itemId] });
     },
   });
 }
@@ -345,16 +365,29 @@ export function useUnlinkItemSupplier() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ itemId, supplierId }: { itemId: string; supplierId: string }) => {
-      const response = await axios.delete(
-        `/api/logistics/suppliers/${supplierId}/items/${itemId}/unlink`,
-      );
-      return response.data;
+      // Try item-based endpoint first, fallback to supplier-based endpoint
+      try {
+        const response = await axios.delete(
+          `/api/logistics/items/${itemId}/suppliers/${supplierId}/unlink`,
+        );
+        return response.data;
+      } catch (error: any) {
+        // Fallback to supplier-based endpoint if item-based doesn't exist
+        if (error.response?.status === 404) {
+          const response = await axios.delete(
+            `/api/logistics/suppliers/${supplierId}/items/${itemId}/unlink`,
+          );
+          return response.data;
+        }
+        throw error;
+      }
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['suppliers'] });
       queryClient.invalidateQueries({ queryKey: ['supplier', variables.supplierId] });
       queryClient.invalidateQueries({ queryKey: ['items'] });
       queryClient.invalidateQueries({ queryKey: ['item', variables.itemId] });
+      queryClient.invalidateQueries({ queryKey: ['itemSuppliers', variables.itemId] });
     },
   });
 }
@@ -441,5 +474,225 @@ export async function downloadInventoryReport(filters: InventoryReportFilters) {
     console.error('Hiba a riport letöltése során:', error);
     throw error;
   }
+}
+
+// Price List types and hooks
+export interface PriceList {
+  id: string;
+  supplierId: string;
+  nev: string;
+  ervenyessegKezdet: string;
+  ervenyessegVeg?: string | null;
+  aktiv: boolean;
+  createdAt: string;
+  updatedAt: string;
+  supplier?: {
+    id: string;
+    nev: string;
+    azonosito?: string;
+  };
+  items?: PriceListItem[];
+  _count?: {
+    items: number;
+  };
+}
+
+export interface PriceListItem {
+  id: string;
+  priceListId: string;
+  itemId: string;
+  ar: number;
+  valuta: string;
+  createdAt: string;
+  item?: {
+    id: string;
+    azonosito: string;
+    nev: string;
+    egyseg: string;
+  };
+}
+
+export interface CreatePriceListDto {
+  supplierId: string;
+  nev: string;
+  ervenyessegKezdet: string;
+  ervenyessegVeg?: string;
+  aktiv?: boolean;
+}
+
+export interface UpdatePriceListDto {
+  nev?: string;
+  ervenyessegKezdet?: string;
+  ervenyessegVeg?: string;
+  aktiv?: boolean;
+}
+
+export interface AddPriceListItemDto {
+  itemId: string;
+  ar: number;
+  valuta?: string;
+}
+
+export interface UpdatePriceListItemDto {
+  ar?: number;
+  valuta?: string;
+}
+
+export function usePriceLists(filters?: {
+  supplierId?: string;
+  aktiv?: boolean;
+  skip?: number;
+  take?: number;
+}) {
+  return useQuery({
+    queryKey: ['price-lists', filters],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (filters?.supplierId) params.append('supplierId', filters.supplierId);
+      if (filters?.aktiv !== undefined) params.append('aktiv', String(filters.aktiv));
+      if (filters?.skip) params.append('skip', String(filters.skip));
+      if (filters?.take) params.append('take', String(filters.take));
+
+      const response = await axios.get(`/api/logistics/price-lists?${params.toString()}`);
+      return response.data;
+    },
+  });
+}
+
+export function usePriceList(id: string) {
+  return useQuery({
+    queryKey: ['price-list', id],
+    queryFn: async () => {
+      const response = await axios.get(`/api/logistics/price-lists/${id}`);
+      return response.data;
+    },
+    enabled: !!id,
+  });
+}
+
+export function useCreatePriceList() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: CreatePriceListDto) => {
+      const response = await axios.post('/api/logistics/price-lists', data);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['price-lists'] });
+    },
+  });
+}
+
+export function useUpdatePriceList() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: UpdatePriceListDto }) => {
+      const response = await axios.put(`/api/logistics/price-lists/${id}`, data);
+      return response.data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['price-lists'] });
+      queryClient.invalidateQueries({ queryKey: ['price-list', variables.id] });
+    },
+  });
+}
+
+export function useDeletePriceList() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const response = await axios.delete(`/api/logistics/price-lists/${id}`);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['price-lists'] });
+    },
+  });
+}
+
+export function useAddPriceListItem() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ priceListId, data }: { priceListId: string; data: AddPriceListItemDto }) => {
+      const response = await axios.post(`/api/logistics/price-lists/${priceListId}/items`, data);
+      return response.data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['price-list', variables.priceListId] });
+      queryClient.invalidateQueries({ queryKey: ['price-lists'] });
+    },
+  });
+}
+
+export function useUpdatePriceListItem() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ priceListId, itemId, data }: { priceListId: string; itemId: string; data: UpdatePriceListItemDto }) => {
+      const response = await axios.put(`/api/logistics/price-lists/${priceListId}/items/${itemId}`, data);
+      return response.data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['price-list', variables.priceListId] });
+      queryClient.invalidateQueries({ queryKey: ['price-lists'] });
+    },
+  });
+}
+
+export function useRemovePriceListItem() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ priceListId, itemId }: { priceListId: string; itemId: string }) => {
+      const response = await axios.delete(`/api/logistics/price-lists/${priceListId}/items/${itemId}`);
+      return response.data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['price-list', variables.priceListId] });
+      queryClient.invalidateQueries({ queryKey: ['price-lists'] });
+    },
+  });
+}
+
+export async function importPriceListFromExcel(priceListId: string, file: File): Promise<{ success: number; errors: string[] }> {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const response = await axios.post(`/api/logistics/price-lists/${priceListId}/import`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+
+  return response.data;
+}
+
+export async function exportPriceListToExcel(priceListId: string): Promise<void> {
+  const response = await axios.get(`/api/logistics/price-lists/${priceListId}/export`, {
+    responseType: 'blob',
+  });
+
+  // Get filename from Content-Disposition header
+  const contentDisposition = response.headers['content-disposition'];
+  let filename = `arlista_${priceListId}_${new Date().toISOString().split('T')[0]}.xlsx`;
+  if (contentDisposition) {
+    const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+    if (filenameMatch) {
+      filename = filenameMatch[1];
+    }
+  }
+
+  // Create blob URL
+  const blob = new Blob([response.data]);
+  const blobUrl = window.URL.createObjectURL(blob);
+  
+  // Create a temporary link and trigger download
+  const link = document.createElement('a');
+  link.href = blobUrl;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  
+  // Clean up blob URL
+  window.URL.revokeObjectURL(blobUrl);
 }
 

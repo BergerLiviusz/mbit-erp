@@ -18,6 +18,7 @@ import { apiFetch } from '../lib/api';
 export default function Returns() {
   const [filters, setFilters] = useState<{
     orderId?: string;
+    purchaseOrderId?: string;
     itemId?: string;
     warehouseId?: string;
     allapot?: string;
@@ -59,6 +60,14 @@ export default function Returns() {
     },
   });
 
+  const { data: purchaseOrdersData } = useQuery({
+    queryKey: ['purchaseOrders'],
+    queryFn: async () => {
+      const response = await apiFetch('/logistics/purchase-orders?skip=0&take=1000');
+      return response.json();
+    },
+  });
+
   const createReturn = useCreateReturn();
   const updateReturn = useUpdateReturn();
   const approveReturn = useApproveReturn();
@@ -67,6 +76,7 @@ export default function Returns() {
 
   const [formData, setFormData] = useState<CreateReturnDto>({
     orderId: '',
+    purchaseOrderId: '',
     itemId: '',
     warehouseId: '',
     mennyiseg: 0,
@@ -80,6 +90,7 @@ export default function Returns() {
       setEditingReturnId(returnItem.id);
       setFormData({
         orderId: returnItem.orderId || '',
+        purchaseOrderId: returnItem.purchaseOrderId || '',
         itemId: returnItem.itemId,
         warehouseId: returnItem.warehouseId,
         mennyiseg: returnItem.mennyiseg,
@@ -91,6 +102,7 @@ export default function Returns() {
       setEditingReturnId(null);
       setFormData({
         orderId: '',
+        purchaseOrderId: '',
         itemId: '',
         warehouseId: '',
         mennyiseg: 0,
@@ -122,6 +134,7 @@ export default function Returns() {
       const submitData = {
         ...formData,
         orderId: formData.orderId || undefined,
+        purchaseOrderId: formData.purchaseOrderId || undefined,
         megjegyzesek: formData.megjegyzesek || undefined,
       };
 
@@ -296,9 +309,9 @@ export default function Returns() {
       {/* Filters */}
       <div className="bg-white rounded-lg shadow p-4 mb-6">
         <h2 className="text-lg font-semibold mb-4">Szűrők</h2>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Rendelés</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Eladási rendelés</label>
             <select
               value={filters.orderId || ''}
               onChange={(e) => setFilters({ ...filters, orderId: e.target.value || undefined })}
@@ -308,6 +321,22 @@ export default function Returns() {
               {ordersData?.items?.map((order: any) => (
                 <option key={order.id} value={order.id}>
                   {order.azonosito}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Beszerzési rendelés</label>
+            <select
+              value={filters.purchaseOrderId || ''}
+              onChange={(e) => setFilters({ ...filters, purchaseOrderId: e.target.value || undefined })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+            >
+              <option value="">Összes</option>
+              {purchaseOrdersData?.data?.map((po: any) => (
+                <option key={po.id} value={po.id}>
+                  {po.azonosito}
                 </option>
               ))}
             </select>
@@ -376,7 +405,10 @@ export default function Returns() {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  Rendelés
+                  Eladási rendelés
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  Beszerzési rendelés
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                   Áru
@@ -405,7 +437,28 @@ export default function Returns() {
               {returnsData?.items?.map((returnItem: Return) => (
                 <tr key={returnItem.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {returnItem.order?.azonosito || '-'}
+                    {returnItem.order ? (
+                      <Link
+                        to={`/crm/orders/${returnItem.order.id}`}
+                        className="text-mbit-blue hover:underline"
+                      >
+                        {returnItem.order.azonosito}
+                      </Link>
+                    ) : (
+                      '-'
+                    )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {returnItem.purchaseOrder ? (
+                      <Link
+                        to={`/logistics/purchase-orders/${returnItem.purchaseOrder.id}`}
+                        className="text-mbit-blue hover:underline"
+                      >
+                        {returnItem.purchaseOrder.azonosito}
+                      </Link>
+                    ) : (
+                      '-'
+                    )}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-900">
                     {returnItem.item?.azonosito} - {returnItem.item?.nev}
@@ -497,12 +550,15 @@ export default function Returns() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Rendelés (opcionális)
+              Eladási rendelés <span className="text-gray-500">(opcionális)</span>
             </label>
             <select
               value={formData.orderId}
-              onChange={(e) => setFormData({ ...formData, orderId: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+              onChange={(e) => {
+                const newOrderId = e.target.value;
+                setFormData({ ...formData, orderId: newOrderId, purchaseOrderId: newOrderId ? '' : formData.purchaseOrderId });
+              }}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">Nincs rendelés</option>
               {ordersData?.items?.map((order: any) => (
@@ -511,6 +567,30 @@ export default function Returns() {
                 </option>
               ))}
             </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Beszerzési rendelés <span className="text-gray-500">(opcionális)</span>
+            </label>
+            <select
+              value={formData.purchaseOrderId}
+              onChange={(e) => {
+                const newPurchaseOrderId = e.target.value;
+                setFormData({ ...formData, purchaseOrderId: newPurchaseOrderId, orderId: newPurchaseOrderId ? '' : formData.orderId });
+              }}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Nincs rendelés</option>
+              {purchaseOrdersData?.data?.map((po: any) => (
+                <option key={po.id} value={po.id}>
+                  {po.azonosito}
+                </option>
+              ))}
+            </select>
+            <p className="mt-1 text-xs text-gray-500">
+              Csak egy rendelés (eladási vagy beszerzési) adható meg
+            </p>
           </div>
 
           <div>
@@ -637,14 +717,29 @@ export default function Returns() {
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Rendelés</label>
+                <label className="block text-sm font-medium text-gray-700">Eladási rendelés</label>
                 <p className="text-sm text-gray-900">
                   {selectedReturn.order?.azonosito ? (
                     <Link
-                      to={`/orders-logistics?orderId=${selectedReturn.orderId}`}
+                      to={`/crm/orders/${selectedReturn.orderId}`}
                       className="text-blue-600 hover:text-blue-900"
                     >
                       {selectedReturn.order.azonosito} →
+                    </Link>
+                  ) : (
+                    '-'
+                  )}
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Beszerzési rendelés</label>
+                <p className="text-sm text-gray-900">
+                  {selectedReturn.purchaseOrder?.azonosito ? (
+                    <Link
+                      to={`/logistics/purchase-orders/${selectedReturn.purchaseOrderId}`}
+                      className="text-blue-600 hover:text-blue-900"
+                    >
+                      {selectedReturn.purchaseOrder.azonosito} →
                     </Link>
                   ) : (
                     '-'

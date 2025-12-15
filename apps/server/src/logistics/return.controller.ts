@@ -32,11 +32,12 @@ export class ReturnController {
     @Query('skip') skip?: string,
     @Query('take') take?: string,
     @Query('orderId') orderId?: string,
+    @Query('purchaseOrderId') purchaseOrderId?: string,
     @Query('itemId') itemId?: string,
     @Query('warehouseId') warehouseId?: string,
     @Query('allapot') allapot?: string,
   ) {
-    const filters = { orderId, itemId, warehouseId, allapot };
+    const filters = { orderId, purchaseOrderId, itemId, warehouseId, allapot };
     return this.returnService.findAll(
       skip ? parseInt(skip) : 0,
       take ? parseInt(take) : 50,

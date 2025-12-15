@@ -70,4 +70,16 @@ export class DocumentCategoryService {
       data: dto,
     });
   }
+
+  async delete(id: string) {
+    return this.prisma.documentCategory.delete({
+      where: { id },
+    });
+  }
+
+  async countDocuments(id: string): Promise<number> {
+    return this.prisma.document.count({
+      where: { categoryId: id },
+    });
+  }
 }

@@ -8,6 +8,9 @@ export interface CreateDocumentDto {
   irany?: string; // "bejovo" vagy "kimeno"
   categoryId?: string;
   accountId?: string;
+  opportunityId?: string;
+  quoteId?: string;
+  orderId?: string;
   allapot: string;
   fajlNev: string;
   fajlMeret: number;
@@ -17,6 +20,7 @@ export interface CreateDocumentDto {
   ervenyessegKezdet?: string;
   ervenyessegVeg?: string;
   lejarat?: string;
+  jelenlegiHely?: string;
 }
 
 export interface UpdateDocumentDto {
@@ -25,11 +29,15 @@ export interface UpdateDocumentDto {
   irany?: string; // "bejovo" vagy "kimeno"
   categoryId?: string;
   accountId?: string;
+  opportunityId?: string;
+  quoteId?: string;
+  orderId?: string;
   allapot?: string;
   megjegyzesek?: string;
   ervenyessegKezdet?: string;
   ervenyessegVeg?: string;
   lejarat?: string;
+  jelenlegiHely?: string;
 }
 
 export interface DocumentFilters {
@@ -39,6 +47,9 @@ export interface DocumentFilters {
   irany?: string; // "bejovo" vagy "kimeno"
   search?: string;
   tagId?: string; // Címszó alapú szűrés
+  opportunityId?: string;
+  quoteId?: string;
+  orderId?: string;
 }
 
 @Injectable()
@@ -64,7 +75,11 @@ export class DocumentService {
     }
 
     if (filters?.irany) {
-      where.irany = filters.irany;
+      if (filters.irany === 'null' || filters.irany === '') {
+        where.irany = null;
+      } else {
+        where.irany = filters.irany;
+      }
     }
 
     if (filters?.tagId) {
@@ -73,6 +88,18 @@ export class DocumentService {
           tagId: filters.tagId,
         },
       };
+    }
+
+    if (filters?.opportunityId) {
+      where.opportunityId = filters.opportunityId;
+    }
+
+    if (filters?.quoteId) {
+      where.quoteId = filters.quoteId;
+    }
+
+    if (filters?.orderId) {
+      where.orderId = filters.orderId;
     }
 
     // Permission-based filtering: non-admin users only see documents they created or have access to
@@ -140,6 +167,24 @@ export class DocumentService {
               nev: true,
             },
           },
+          opportunity: {
+            select: {
+              id: true,
+              nev: true,
+            },
+          },
+          quote: {
+            select: {
+              id: true,
+              azonosito: true,
+            },
+          },
+          order: {
+            select: {
+              id: true,
+              azonosito: true,
+            },
+          },
           createdBy: {
             select: {
               id: true,
@@ -193,6 +238,24 @@ export class DocumentService {
       include: {
         category: true,
         account: true,
+        opportunity: {
+          select: {
+            id: true,
+            nev: true,
+          },
+        },
+        quote: {
+          select: {
+            id: true,
+            azonosito: true,
+          },
+        },
+        order: {
+          select: {
+            id: true,
+            azonosito: true,
+          },
+        },
         createdBy: {
           select: {
             id: true,
@@ -252,6 +315,9 @@ export class DocumentService {
         irany: dto.irany || null,
         categoryId: dto.categoryId,
         accountId: dto.accountId,
+        opportunityId: dto.opportunityId,
+        quoteId: dto.quoteId,
+        orderId: dto.orderId,
         allapot: dto.allapot,
         fajlNev: dto.fajlNev,
         fajlMeret: dto.fajlMeret,
@@ -261,6 +327,7 @@ export class DocumentService {
         ervenyessegKezdet: dto.ervenyessegKezdet ? new Date(dto.ervenyessegKezdet) : null,
         ervenyessegVeg: dto.ervenyessegVeg ? new Date(dto.ervenyessegVeg) : null,
         lejarat: dto.lejarat ? new Date(dto.lejarat) : null,
+        jelenlegiHely: dto.jelenlegiHely || null,
         iktatoSzam,
         createdById: userId,
         access: userId ? {

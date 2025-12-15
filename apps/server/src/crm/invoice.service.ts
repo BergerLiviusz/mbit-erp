@@ -4,6 +4,8 @@ import { PrismaService } from '../prisma/prisma.service';
 export interface CreateInvoiceDto {
   accountId: string;
   orderId?: string;
+  purchaseOrderId?: string; // Beszerzési rendelés ID
+  deliveryNoteId?: string; // Szállítólevél ID
   kiallitasDatum?: string;
   teljesitesDatum: string;
   fizetesiHataridoDatum: string;
@@ -127,6 +129,24 @@ export class InvoiceService {
               azonosito: true,
             },
           },
+          purchaseOrder: {
+            select: {
+              id: true,
+              azonosito: true,
+              supplier: {
+                select: {
+                  id: true,
+                  nev: true,
+                },
+              },
+            },
+          },
+          deliveryNote: {
+            select: {
+              id: true,
+              azonosito: true,
+            },
+          },
           items: true,
           _count: {
             select: {
@@ -151,9 +171,40 @@ export class InvoiceService {
         account: true,
         order: {
           include: {
+            account: true,
             items: {
               include: {
                 item: true,
+              },
+            },
+            shipments: {
+              include: {
+                deliveryNotes: true,
+              },
+            },
+          },
+        },
+        purchaseOrder: {
+          include: {
+            supplier: true,
+            items: {
+              include: {
+                item: true,
+              },
+            },
+            deliveryNotes: true,
+          },
+        },
+        deliveryNote: {
+          include: {
+            purchaseOrder: {
+              include: {
+                supplier: true,
+              },
+            },
+            shipment: {
+              include: {
+                order: true,
               },
             },
           },
@@ -211,6 +262,114 @@ export class InvoiceService {
       }
     }
 
+    // Validate purchase order if provided
+    if (dto.purchaseOrderId) {
+      const purchaseOrder = await this.prisma.purchaseOrder.findUnique({
+        where: { id: dto.purchaseOrderId },
+        include: {
+          supplier: true,
+        },
+      });
+
+      if (!purchaseOrder) {
+        throw new NotFoundException('Beszerzési rendelés nem található');
+      }
+
+      // Check if purchase order already has an invoice
+      const existingInvoice = await this.prisma.invoice.findFirst({
+        where: { purchaseOrderId: dto.purchaseOrderId },
+      });
+
+      if (existingInvoice) {
+        throw new BadRequestException('A beszerzési rendeléshez már létezik számla');
+      }
+
+      // Use supplier's account for purchase invoices
+      if (!dto.accountId) {
+        // Try to find supplier's account or create a stub
+        const supplierAccount = await this.prisma.account.findFirst({
+          where: {
+            OR: [
+              { nev: { contains: purchaseOrder.supplier.nev } },
+              { email: purchaseOrder.supplier.email || undefined },
+            ],
+          },
+        });
+
+        if (!supplierAccount) {
+          throw new BadRequestException('A szállítóhoz nincs kapcsolódó ügyfél fiók. Kérjük, hozza létre az ügyfél fiókot.');
+        }
+
+        dto.accountId = supplierAccount.id;
+      }
+    }
+
+    // Validate delivery note if provided
+    if (dto.deliveryNoteId) {
+      const deliveryNote = await this.prisma.deliveryNote.findUnique({
+        where: { id: dto.deliveryNoteId },
+        include: {
+          purchaseOrder: {
+            include: {
+              supplier: true,
+            },
+          },
+          shipment: {
+            include: {
+              order: {
+                include: {
+                  account: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      if (!deliveryNote) {
+        throw new NotFoundException('Szállítólevél nem található');
+      }
+
+      // Check if delivery note already has an invoice
+      const existingInvoice = await this.prisma.invoice.findFirst({
+        where: { deliveryNoteId: dto.deliveryNoteId },
+      });
+
+      if (existingInvoice) {
+        throw new BadRequestException('A szállítólevélhez már létezik számla');
+      }
+
+      // Auto-fill purchaseOrderId if delivery note has one
+      if (deliveryNote.purchaseOrderId && !dto.purchaseOrderId) {
+        dto.purchaseOrderId = deliveryNote.purchaseOrderId;
+      }
+
+      // Auto-fill accountId based on delivery note type
+      if (!dto.accountId) {
+        if (deliveryNote.purchaseOrder?.supplier) {
+          // Purchase delivery note - use supplier's account
+          const supplierAccount = await this.prisma.account.findFirst({
+            where: {
+              OR: [
+                { nev: { contains: deliveryNote.purchaseOrder.supplier.nev } },
+                { email: deliveryNote.purchaseOrder.supplier.email || undefined },
+              ],
+            },
+          });
+
+          if (supplierAccount) {
+            dto.accountId = supplierAccount.id;
+          }
+        } else if (deliveryNote.shipment?.order?.account) {
+          // Sales delivery note - use order's account
+          dto.accountId = deliveryNote.shipment.order.account.id;
+          if (!dto.orderId) {
+            dto.orderId = deliveryNote.shipment.order.id;
+          }
+        }
+      }
+    }
+
     if (!dto.items || dto.items.length === 0) {
       throw new BadRequestException('A számlának legalább egy tételre van szüksége');
     }
@@ -236,6 +395,8 @@ export class InvoiceService {
       data: {
         accountId: dto.accountId,
         orderId: dto.orderId,
+        purchaseOrderId: dto.purchaseOrderId,
+        deliveryNoteId: dto.deliveryNoteId,
         szamlaSzam,
         kiallitasDatum: dto.kiallitasDatum ? new Date(dto.kiallitasDatum) : new Date(),
         teljesitesDatum: new Date(dto.teljesitesDatum),
@@ -273,6 +434,13 @@ export class InvoiceService {
       },
       include: {
         account: true,
+        order: true,
+        purchaseOrder: {
+          include: {
+            supplier: true,
+          },
+        },
+        deliveryNote: true,
         items: true,
       },
     });
@@ -334,6 +502,139 @@ export class InvoiceService {
       megjegyzesek: dto?.megjegyzesek,
       items,
     });
+  }
+
+  async createFromPurchaseOrder(purchaseOrderId: string, dto?: Partial<CreateInvoiceDto>) {
+    const purchaseOrder = await this.prisma.purchaseOrder.findUnique({
+      where: { id: purchaseOrderId },
+      include: {
+        supplier: true,
+        items: {
+          include: {
+            item: true,
+          },
+        },
+      },
+    });
+
+    if (!purchaseOrder) {
+      throw new NotFoundException('Beszerzési rendelés nem található');
+    }
+
+    // Check if invoice already exists
+    const existingInvoice = await this.prisma.invoice.findFirst({
+      where: { purchaseOrderId },
+    });
+
+    if (existingInvoice) {
+      throw new BadRequestException('A beszerzési rendeléshez már létezik számla');
+    }
+
+    // Find supplier's account
+    const supplierAccount = await this.prisma.account.findFirst({
+      where: {
+        OR: [
+          { nev: { contains: purchaseOrder.supplier.nev } },
+          { email: purchaseOrder.supplier.email || undefined },
+        ],
+      },
+    });
+
+    if (!supplierAccount) {
+      throw new BadRequestException('A szállítóhoz nincs kapcsolódó ügyfél fiók. Kérjük, hozza létre az ügyfél fiókot.');
+    }
+
+    // Convert purchase order items to invoice items
+    const items: CreateInvoiceItemDto[] = purchaseOrder.items.map(poItem => ({
+      itemId: poItem.itemId,
+      nev: poItem.item.nev,
+      azonosito: poItem.item.azonosito,
+      mennyiseg: poItem.mennyiseg,
+      egyseg: poItem.item.egyseg,
+      egysegAr: poItem.egysegAr,
+      kedvezmeny: 0,
+      afaKulcs: poItem.item.afaKulcs || 27, // Default VAT if not set
+    }));
+
+    // Calculate payment due date (default: 30 days from today)
+    const fizetesiHataridoDatum = dto?.fizetesiHataridoDatum
+      ? new Date(dto.fizetesiHataridoDatum)
+      : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+
+    return this.create({
+      accountId: supplierAccount.id,
+      purchaseOrderId: purchaseOrder.id,
+      kiallitasDatum: dto?.kiallitasDatum,
+      teljesitesDatum: dto?.teljesitesDatum || purchaseOrder.szallitasiDatum?.toISOString() || new Date().toISOString(),
+      fizetesiHataridoDatum: fizetesiHataridoDatum.toISOString(),
+      tipus: dto?.tipus || 'NORMAL',
+      fizetesiMod: dto?.fizetesiMod,
+      megjegyzesek: dto?.megjegyzesek || purchaseOrder.megjegyzesek,
+      items,
+    });
+  }
+
+  async createFromDeliveryNote(deliveryNoteId: string, dto?: Partial<CreateInvoiceDto>) {
+    const deliveryNote = await this.prisma.deliveryNote.findUnique({
+      where: { id: deliveryNoteId },
+      include: {
+        purchaseOrder: {
+          include: {
+            supplier: true,
+            items: {
+              include: {
+                item: true,
+              },
+            },
+          },
+        },
+        shipment: {
+          include: {
+            order: {
+              include: {
+                account: true,
+                items: {
+                  include: {
+                    item: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!deliveryNote) {
+      throw new NotFoundException('Szállítólevél nem található');
+    }
+
+    // Check if invoice already exists
+    const existingInvoice = await this.prisma.invoice.findFirst({
+      where: { deliveryNoteId },
+    });
+
+    if (existingInvoice) {
+      throw new BadRequestException('A szállítólevélhez már létezik számla');
+    }
+
+    // Handle purchase delivery note
+    if (deliveryNote.purchaseOrder) {
+      return this.createFromPurchaseOrder(deliveryNote.purchaseOrder.id, {
+        ...dto,
+        deliveryNoteId: deliveryNote.id,
+      });
+    }
+
+    // Handle sales delivery note
+    if (deliveryNote.shipment?.order) {
+      return this.createFromOrder(deliveryNote.shipment.order.id, {
+        ...dto,
+        deliveryNoteId: deliveryNote.id,
+      });
+    }
+
+    throw new BadRequestException('A szállítólevélhez nincs kapcsolódó rendelés vagy beszerzési rendelés');
   }
 
   async update(id: string, dto: UpdateInvoiceDto) {

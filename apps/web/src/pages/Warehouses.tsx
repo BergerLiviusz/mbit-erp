@@ -536,6 +536,34 @@ export default function Warehouses() {
                             Részletek
                           </button>
                           <button
+                            onClick={async () => {
+                              if (!confirm(`Biztosan törölni szeretné a raktárt: ${warehouse.nev}?`)) {
+                                return;
+                              }
+                              try {
+                                const response = await apiFetch(`/logistics/warehouses/${warehouse.id}`, {
+                                  method: 'DELETE',
+                                });
+                                if (response.ok) {
+                                  setSuccess('Raktár sikeresen törölve!');
+                                  await loadWarehouses();
+                                  setTimeout(() => setSuccess(''), 3000);
+                                } else {
+                                  const errorData = await response.json();
+                                  setError(errorData.message || 'Hiba a raktár törlésekor');
+                                  setTimeout(() => setError(''), 5000);
+                                }
+                              } catch (err: any) {
+                                setError(err.message || 'Hiba történt a törlés során');
+                                setTimeout(() => setError(''), 5000);
+                              }
+                            }}
+                            className="px-3 py-1 rounded text-sm bg-red-600 text-white hover:bg-red-700"
+                            title="Raktár törlése"
+                          >
+                            Törlés
+                          </button>
+                          <button
                             onClick={() => handleDownloadInventorySheetPdf(warehouse.id)}
                             className="px-2 py-1 rounded text-sm bg-red-600 text-white hover:bg-red-700"
                             title="Leltár ív PDF letöltése"
