@@ -122,6 +122,17 @@ export default function PriceLists() {
     setError('');
     setSuccess('');
 
+    // Validate required fields
+    if (!formData.supplierId || formData.supplierId.trim() === '') {
+      setError('Kérem válasszon szállítót!');
+      return;
+    }
+
+    if (!formData.nev || formData.nev.trim() === '') {
+      setError('Kérem adja meg az árlista nevét!');
+      return;
+    }
+
     try {
       if (editingPriceListId) {
         await updatePriceList.mutateAsync({
