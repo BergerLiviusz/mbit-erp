@@ -8,5 +8,9 @@ export class OrderStatusDto {
   @IsOptional()
   @IsString()
   megjegyzesek?: string;
+
+  @IsOptional()
+  @IsString()
+  warehouseId?: string;
 }
 

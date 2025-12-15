@@ -15,6 +15,8 @@ interface Document {
   tartalom?: string | null;
   ervenyessegKezdet?: string | null;
   ervenyessegVeg?: string | null;
+  lejarat?: string | null;
+  jelenlegiHely?: string | null;
   category?: {
     id: string;
     nev: string;
@@ -104,13 +106,21 @@ export default function Documents() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
+  const [users] = useState<Array<{id: string; nev: string; email: string}>>([]);
+  const [documentAccess] = useState<Array<{id: string; userId: string; jogosultsag: string; user: {id: string; nev: string; email: string}}>>([]);
+  const [opportunities, setOpportunities] = useState<Array<{id: string; nev: string}>>([]);
+  const [quotes, setQuotes] = useState<Array<{id: string; azonosito: string}>>([]);
+  const [orders, setOrders] = useState<Array<{id: string; azonosito: string}>>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
   const [ocrLoading, setOcrLoading] = useState<Record<string, boolean>>({});
   const [expandedDoc, setExpandedDoc] = useState<string | null>(null);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [isCategoryEditModalOpen, setIsCategoryEditModalOpen] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
+  const [editingCategoryName, setEditingCategoryName] = useState('');
   const [editingDocumentId, setEditingDocumentId] = useState<string | null>(null);
   const [detailDocument, setDetailDocument] = useState<Document | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -121,17 +131,32 @@ export default function Documents() {
     irany: '',
     categoryId: '',
     accountId: '',
+    opportunityId: '',
+    quoteId: '',
+    orderId: '',
     allapot: 'aktiv',
     ervenyessegKezdet: '',
     ervenyessegVeg: '',
     lejarat: '',
+    jelenlegiHely: '',
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
 
+  // Debounced search term
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
   useEffect(() => {
     loadDocuments();
-  }, [selectedAllapot, selectedIrany, selectedTagId, searchTerm]);
+  }, [selectedAllapot, selectedIrany, selectedTagId, debouncedSearchTerm]);
 
   useEffect(() => {
     loadTags();
@@ -141,6 +166,9 @@ export default function Documents() {
     if (isModalOpen) {
       loadCategories();
       loadAccounts();
+      loadOpportunities();
+      loadQuotes();
+      loadOrders();
     }
   }, [isModalOpen]);
 
@@ -163,8 +191,8 @@ export default function Documents() {
         params.append('tagId', selectedTagId);
       }
       
-      if (searchTerm) {
-        params.append('search', searchTerm);
+      if (debouncedSearchTerm) {
+        params.append('search', debouncedSearchTerm);
       }
 
       const response = await apiFetch(`/dms/documents?${params.toString()}`);
@@ -238,6 +266,90 @@ export default function Documents() {
     }
   };
 
+  const handleEditCategory = (category: Category) => {
+    setEditingCategoryId(category.id);
+    setEditingCategoryName(category.nev);
+    setIsCategoryEditModalOpen(true);
+  };
+
+  const handleUpdateCategory = async () => {
+    if (!editingCategoryName.trim() || !editingCategoryId) {
+      setError('Kérem adja meg a kategória nevét!');
+      return;
+    }
+
+    setSaving(true);
+    setError('');
+    try {
+      const response = await apiFetch(`/dms/categories/${editingCategoryId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          nev: editingCategoryName.trim(),
+        }),
+      });
+
+      if (response.ok) {
+        setSuccess('Kategória sikeresen frissítve!');
+        setIsCategoryEditModalOpen(false);
+        setEditingCategoryId(null);
+        setEditingCategoryName('');
+        await loadCategories();
+        setTimeout(() => setSuccess(''), 3000);
+      } else if (response.status === 401) {
+        setError('Nincs hitelesítve. Kérem jelentkezzen be újra.');
+      } else if (response.status === 403) {
+        setError('Nincs jogosultsága a kategória szerkesztéséhez.');
+      } else {
+        const errorData = await response.json();
+        setError(errorData.message || 'Hiba a kategória frissítésekor.');
+      }
+    } catch (error) {
+      setError('Hiba történt a kategória frissítésekor.');
+      console.error(error);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteCategory = async (categoryId: string, categoryName: string) => {
+    if (!confirm(`Biztosan törölni szeretné a kategóriát: ${categoryName}?`)) {
+      return;
+    }
+
+    setSaving(true);
+    setError('');
+    try {
+      const response = await apiFetch(`/dms/categories/${categoryId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        setSuccess('Kategória sikeresen törölve!');
+        await loadCategories();
+        // If deleted category was selected, clear it
+        if (formData.categoryId === categoryId) {
+          setFormData({ ...formData, categoryId: '' });
+        }
+        setTimeout(() => setSuccess(''), 3000);
+      } else if (response.status === 401) {
+        setError('Nincs hitelesítve. Kérem jelentkezzen be újra.');
+      } else if (response.status === 403) {
+        setError('Nincs jogosultsága a kategória törléséhez.');
+      } else {
+        const errorData = await response.json();
+        setError(errorData.message || 'Hiba a kategória törlésekor.');
+      }
+    } catch (error) {
+      setError('Hiba történt a kategória törlésekor.');
+      console.error(error);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const loadTags = async () => {
     try {
       const response = await apiFetch('/dms/tags');
@@ -265,20 +377,103 @@ export default function Documents() {
     }
   };
 
-  const handleOpenModal = (doc?: Document) => {
+  const loadOpportunities = async () => {
+    try {
+      const response = await apiFetch(`/crm/opportunities?skip=0&take=100`);
+      if (response.ok) {
+        const data = await response.json();
+        setOpportunities(data.data || []);
+      }
+    } catch (error) {
+      console.error('Hiba a lehetőségek betöltésekor:', error);
+    }
+  };
+
+  const loadQuotes = async () => {
+    try {
+      const response = await apiFetch(`/crm/quotes?skip=0&take=100`);
+      if (response.ok) {
+        const data = await response.json();
+        setQuotes(data.data || []);
+      }
+    } catch (error) {
+      console.error('Hiba az árajánlatok betöltésekor:', error);
+    }
+  };
+
+  const loadOrders = async () => {
+    try {
+      const response = await apiFetch(`/crm/orders?skip=0&take=100`);
+      if (response.ok) {
+        const data = await response.json();
+        setOrders(data.data || []);
+      }
+    } catch (error) {
+      console.error('Hiba a rendelések betöltésekor:', error);
+    }
+  };
+
+  const handleOpenModal = async (doc?: Document) => {
     if (doc) {
-      setEditingDocumentId(doc.id);
-      setFormData({
-        nev: doc.nev,
-        tipus: doc.tipus,
-        irany: doc.irany || '',
-        categoryId: doc.category?.id || '',
-        accountId: doc.account?.id || '',
-        allapot: doc.allapot,
-        ervenyessegKezdet: doc.ervenyessegKezdet ? doc.ervenyessegKezdet.split('T')[0] : '',
-        ervenyessegVeg: doc.ervenyessegVeg ? doc.ervenyessegVeg.split('T')[0] : '',
-        lejarat: '',
-      });
+      // Load full document details to get lejarat
+      try {
+        const response = await apiFetch(`/dms/documents/${doc.id}`);
+        if (response.ok) {
+          const fullDoc = await response.json();
+          setEditingDocumentId(doc.id);
+          setFormData({
+            nev: fullDoc.nev,
+            tipus: fullDoc.tipus,
+            irany: fullDoc.irany || '',
+            categoryId: fullDoc.categoryId || '',
+            accountId: fullDoc.accountId || '',
+            opportunityId: fullDoc.opportunityId || '',
+            quoteId: fullDoc.quoteId || '',
+            orderId: fullDoc.orderId || '',
+            allapot: fullDoc.allapot,
+            ervenyessegKezdet: fullDoc.ervenyessegKezdet ? new Date(fullDoc.ervenyessegKezdet).toISOString().split('T')[0] : '',
+            ervenyessegVeg: fullDoc.ervenyessegVeg ? new Date(fullDoc.ervenyessegVeg).toISOString().split('T')[0] : '',
+            lejarat: fullDoc.lejarat ? new Date(fullDoc.lejarat).toISOString().split('T')[0] : '',
+            jelenlegiHely: fullDoc.jelenlegiHely || '',
+          });
+        } else {
+          // Fallback to basic doc data
+          setEditingDocumentId(doc.id);
+          setFormData({
+            nev: doc.nev,
+            tipus: doc.tipus,
+            irany: doc.irany || '',
+            categoryId: doc.category?.id || '',
+            accountId: doc.account?.id || '',
+            opportunityId: (doc as any).opportunity?.id || '',
+            quoteId: (doc as any).quote?.id || '',
+            orderId: (doc as any).order?.id || '',
+            allapot: doc.allapot,
+            ervenyessegKezdet: doc.ervenyessegKezdet ? doc.ervenyessegKezdet.split('T')[0] : '',
+            ervenyessegVeg: doc.ervenyessegVeg ? doc.ervenyessegVeg.split('T')[0] : '',
+            lejarat: doc.lejarat ? doc.lejarat.split('T')[0] : '',
+            jelenlegiHely: doc.jelenlegiHely || '',
+          });
+        }
+      } catch (error) {
+        console.error('Error loading document details:', error);
+        setEditingDocumentId(doc.id);
+        setFormData({
+          nev: doc.nev,
+          tipus: doc.tipus,
+          irany: doc.irany || '',
+          categoryId: doc.category?.id || '',
+          accountId: doc.account?.id || '',
+          opportunityId: (doc as any).opportunity?.id || '',
+          quoteId: (doc as any).quote?.id || '',
+          orderId: (doc as any).order?.id || '',
+          allapot: doc.allapot,
+          ervenyessegKezdet: doc.ervenyessegKezdet ? doc.ervenyessegKezdet.split('T')[0] : '',
+          ervenyessegVeg: doc.ervenyessegVeg ? doc.ervenyessegVeg.split('T')[0] : '',
+          lejarat: doc.lejarat ? doc.lejarat.split('T')[0] : '',
+          jelenlegiHely: doc.jelenlegiHely || '',
+        });
+      }
     } else {
       setEditingDocumentId(null);
       setFormData({
@@ -287,10 +482,14 @@ export default function Documents() {
         irany: '',
         categoryId: '',
         accountId: '',
+        opportunityId: '',
+        quoteId: '',
+        orderId: '',
         allapot: 'aktiv',
         ervenyessegKezdet: '',
         ervenyessegVeg: '',
         lejarat: '',
+        jelenlegiHely: '',
       });
     }
     setSelectedFile(null);
@@ -306,12 +505,16 @@ export default function Documents() {
       nev: '',
       tipus: 'szerzodes',
       irany: '',
-      categoryId: '',
-      accountId: '',
-      allapot: 'aktiv',
+        categoryId: '',
+        accountId: '',
+        opportunityId: '',
+        quoteId: '',
+        orderId: '',
+        allapot: 'aktiv',
       ervenyessegKezdet: '',
       ervenyessegVeg: '',
       lejarat: '',
+      jelenlegiHely: '',
     });
     setSelectedFile(null);
     setError('');
@@ -349,10 +552,14 @@ export default function Documents() {
           irany: formData.irany || undefined,
           categoryId: formData.categoryId || undefined,
           accountId: formData.accountId || undefined,
+          opportunityId: formData.opportunityId || undefined,
+          quoteId: formData.quoteId || undefined,
+          orderId: formData.orderId || undefined,
           allapot: formData.allapot,
           ervenyessegKezdet: formData.ervenyessegKezdet || undefined,
           ervenyessegVeg: formData.ervenyessegVeg || undefined,
           lejarat: formData.lejarat || undefined,
+          jelenlegiHely: formData.jelenlegiHely || undefined,
         };
 
         const updateResponse = await apiFetch(`/dms/documents/${editingDocumentId}`, {
@@ -389,12 +596,16 @@ export default function Documents() {
         irany: formData.irany || undefined,
         categoryId: formData.categoryId || undefined,
         accountId: formData.accountId || undefined,
+        opportunityId: formData.opportunityId || undefined,
+        quoteId: formData.quoteId || undefined,
+        orderId: formData.orderId || undefined,
         allapot: formData.allapot,
         fajlNev: selectedFile!.name,
         fajlMeret: selectedFile!.size,
         mimeType: selectedFile!.type,
         ervenyessegKezdet: formData.ervenyessegKezdet || undefined,
         ervenyessegVeg: formData.ervenyessegVeg || undefined,
+        lejarat: formData.lejarat || undefined,
       };
 
       const createResponse = await apiFetch(`/dms/documents`, {
@@ -832,6 +1043,7 @@ export default function Documents() {
                   <th className="text-left p-4 font-medium text-gray-700">Típus</th>
                   <th className="text-left p-4 font-medium text-gray-700">Irány</th>
                   <th className="text-left p-4 font-medium text-gray-700">Kategória</th>
+                  <th className="text-left p-4 font-medium text-gray-700">Irat helye</th>
                   <th className="text-left p-4 font-medium text-gray-700">Ügyfél</th>
                   <th className="text-left p-4 font-medium text-gray-700">Állapot</th>
                   <th className="text-left p-4 font-medium text-gray-700">Érvényesség</th>
@@ -883,6 +1095,15 @@ export default function Documents() {
                       </td>
                       <td className="p-4 text-sm">
                         {doc.category ? doc.category.nev : '-'}
+                      </td>
+                      <td className="p-4 text-sm">
+                        {doc.jelenlegiHely ? (
+                          <span className="px-2 py-1 rounded text-xs font-medium bg-purple-100 text-purple-800">
+                            {doc.jelenlegiHely}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400 text-xs">-</span>
+                        )}
                       </td>
                       <td className="p-4 text-sm">
                         {doc.account ? doc.account.nev : '-'}
@@ -1088,6 +1309,31 @@ export default function Documents() {
                   <option key={c.id} value={c.id}>{c.nev}</option>
                 ))}
               </select>
+              {categories.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {categories.map(c => (
+                    <div key={c.id} className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded text-sm">
+                      <span>{c.nev}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleEditCategory(c)}
+                        className="text-blue-600 hover:text-blue-800"
+                        title="Szerkesztés"
+                      >
+                        ✏️
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteCategory(c.id, c.nev)}
+                        className="text-red-600 hover:text-red-800"
+                        title="Törlés"
+                      >
+                        🗑️
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div>
@@ -1146,53 +1392,37 @@ export default function Documents() {
               </div>
             </div>
 
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Lejárat
+              </label>
+              <input
+                type="date"
+                value={formData.lejarat}
+                onChange={(e) => setFormData({ ...formData, lejarat: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Irat helye
+              </label>
+              <input
+                type="text"
+                value={formData.jelenlegiHely}
+                onChange={(e) => setFormData({ ...formData, jelenlegiHely: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="pl. Irodaszekrény A, Polc 3, stb."
+              />
+            </div>
+
             {!editingDocumentId && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Fájl <span className="text-red-500">*</span>
                 </label>
                 <FileUpload onFileSelect={handleFileSelect} />
-              </div>
-            )}
-            
-            {editingDocumentId && (
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Érvényesség kezdete
-                  </label>
-                  <input
-                    type="date"
-                    value={formData.ervenyessegKezdet}
-                    onChange={(e) => setFormData({ ...formData, ervenyessegKezdet: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Érvényesség vége
-                  </label>
-                  <input
-                    type="date"
-                    value={formData.ervenyessegVeg}
-                    onChange={(e) => setFormData({ ...formData, ervenyessegVeg: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-              </div>
-            )}
-            
-            {editingDocumentId && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Lejárat
-                </label>
-                <input
-                  type="date"
-                  value={formData.lejarat}
-                  onChange={(e) => setFormData({ ...formData, lejarat: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
               </div>
             )}
           </div>
@@ -1271,6 +1501,72 @@ export default function Documents() {
         </div>
       </Modal>
 
+      {/* Category Edit Modal */}
+      <Modal
+        isOpen={isCategoryEditModalOpen}
+        onClose={() => {
+          setIsCategoryEditModalOpen(false);
+          setEditingCategoryId(null);
+          setEditingCategoryName('');
+        }}
+        title="Kategória szerkesztése"
+        zIndex={200}
+      >
+        <div className="space-y-4">
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+              {error}
+            </div>
+          )}
+          {success && (
+            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded">
+              {success}
+            </div>
+          )}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Kategória neve <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={editingCategoryName}
+              onChange={(e) => setEditingCategoryName(e.target.value)}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  handleUpdateCategory();
+                }
+              }}
+              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="pl. Számlák, Szerződések, stb."
+              autoFocus
+            />
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4">
+            <button
+              type="button"
+              onClick={() => {
+                setIsCategoryEditModalOpen(false);
+                setEditingCategoryId(null);
+                setEditingCategoryName('');
+              }}
+              className="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50"
+              disabled={saving}
+            >
+              Mégse
+            </button>
+            <button
+              type="button"
+              onClick={handleUpdateCategory}
+              className="px-4 py-2 bg-mbit-blue text-white rounded hover:bg-blue-600 disabled:opacity-50"
+              disabled={saving || !editingCategoryName.trim()}
+            >
+              {saving ? 'Mentés...' : 'Mentés'}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
       {/* Részletes nézet modal */}
       <Modal 
         isOpen={isDetailModalOpen} 
@@ -1321,6 +1617,18 @@ export default function Documents() {
               <div>
                 <div className="text-sm text-gray-600">Ügyfél</div>
                 <div>{detailDocument.account?.nev || '-'}</div>
+              </div>
+              <div>
+                <div className="text-sm text-gray-600">Irat helye</div>
+                <div>
+                  {detailDocument.jelenlegiHely ? (
+                    <span className="px-2 py-1 rounded text-xs font-medium bg-purple-100 text-purple-800">
+                      {detailDocument.jelenlegiHely}
+                    </span>
+                  ) : (
+                    <span className="text-gray-400">-</span>
+                  )}
+                </div>
               </div>
               <div>
                 <div className="text-sm text-gray-600">Állapot</div>
@@ -1406,6 +1714,181 @@ export default function Documents() {
                 </div>
               </div>
             )}
+
+            {/* Jogosultságok */}
+            <div className="border-t pt-4">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-semibold">Jogosultságok</h3>
+              </div>
+              <div className="space-y-2 mb-4">
+                {documentAccess.length > 0 ? (
+                  documentAccess.map((acc) => (
+                    <div key={acc.id} className="flex items-center justify-between bg-gray-50 p-3 rounded">
+                      <div>
+                        <div className="font-medium">{acc.user.nev}</div>
+                        <div className="text-sm text-gray-600">{acc.user.email}</div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className={`px-2 py-1 rounded text-xs font-medium ${
+                          acc.jogosultsag === 'FULL_ACCESS' 
+                            ? 'bg-green-100 text-green-800'
+                            : acc.jogosultsag === 'EDIT' 
+                            ? 'bg-blue-100 text-blue-800'
+                            : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {acc.jogosultsag === 'FULL_ACCESS' ? 'Teljes hozzáférés' : 
+                           acc.jogosultsag === 'EDIT' ? 'Szerkesztés' : 'Olvasás'}
+                        </span>
+                        {detailDocument && (
+                          <button
+                            onClick={() => handleRemoveAccess(detailDocument.id, acc.userId)}
+                            className="text-red-600 hover:text-red-800 text-sm"
+                            title="Jogosultság eltávolítása"
+                          >
+                            🗑️
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-gray-500 text-sm italic">Nincs hozzárendelt jogosultság</div>
+                )}
+              </div>
+              {detailDocument && (
+                <div className="border-t pt-4">
+                  <h4 className="text-sm font-medium mb-2">Jogosultság hozzáadása</h4>
+                  <div className="flex gap-2">
+                    <select
+                      id="access-user-select"
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">-- Válasszon felhasználót --</option>
+                      {users.filter(u => !documentAccess.some(acc => acc.userId === u.id)).map(u => (
+                        <option key={u.id} value={u.id}>{u.nev} ({u.email})</option>
+                      ))}
+                    </select>
+                    <select
+                      id="access-permission-select"
+                      className="px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="READ">Olvasás</option>
+                      <option value="EDIT">Szerkesztés</option>
+                      <option value="FULL_ACCESS">Teljes hozzáférés</option>
+                    </select>
+                    <button
+                      onClick={() => {
+                        const userSelect = document.getElementById('access-user-select') as HTMLSelectElement;
+                        const permissionSelect = document.getElementById('access-permission-select') as HTMLSelectElement;
+                        if (userSelect.value && detailDocument) {
+                          handleAddAccess(detailDocument.id, userSelect.value, permissionSelect.value);
+                          userSelect.value = '';
+                        }
+                      }}
+                      className="px-4 py-2 bg-mbit-blue text-white rounded hover:bg-blue-600 text-sm"
+                    >
+                      Hozzáadás
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Életciklus idővonal */}
+            <div className="border-t pt-4">
+              <h3 className="font-semibold mb-4">Dokumentum életciklus</h3>
+              <div className="relative">
+                {/* Timeline line */}
+                <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-300"></div>
+                
+                <div className="space-y-4">
+                  {/* Létrehozás */}
+                  <div className="relative flex items-start gap-4">
+                    <div className="relative z-10 flex items-center justify-center w-8 h-8 rounded-full bg-green-500 text-white text-xs font-bold">
+                      ✓
+                    </div>
+                    <div className="flex-1 bg-white border border-gray-200 rounded-lg p-3 shadow-sm">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="font-medium text-green-700">Dokumentum létrehozva</div>
+                          <div className="text-sm text-gray-600 mt-1">
+                            {detailDocument.createdBy?.nev || 'Ismeretlen'} által
+                          </div>
+                          <div className="text-xs text-gray-500 mt-1">{formatDate(detailDocument.createdAt)}</div>
+                        </div>
+                        <div className="text-xs text-gray-400">{getAllapotBadge('aktiv')}</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Verziók időrendben */}
+                  {detailDocument.versions && detailDocument.versions.length > 0 && detailDocument.versions.map((version) => (
+                    <div key={version.id} className="relative flex items-start gap-4">
+                      <div className="relative z-10 flex items-center justify-center w-8 h-8 rounded-full bg-blue-500 text-white text-xs font-bold">
+                        {version.verzioSzam}
+                      </div>
+                      <div className="flex-1 bg-white border border-gray-200 rounded-lg p-3 shadow-sm">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="font-medium text-blue-700">Verzió {version.verzioSzam} létrehozva</div>
+                            {version.valtoztatasLeiras && (
+                              <div className="text-sm text-gray-600 mt-1">{version.valtoztatasLeiras}</div>
+                            )}
+                            <div className="text-sm text-gray-600 mt-1">
+                              {version.createdBy?.nev || 'Ismeretlen'} által
+                            </div>
+                            <div className="text-xs text-gray-500 mt-1">{formatDate(version.createdAt)}</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* Állapot változások időrendben */}
+                  {detailDocument.workflowLogs && detailDocument.workflowLogs.length > 0 && detailDocument.workflowLogs.map((log) => (
+                    <div key={log.id} className="relative flex items-start gap-4">
+                      <div className="relative z-10 flex items-center justify-center w-8 h-8 rounded-full bg-yellow-500 text-white text-xs font-bold">
+                        ↻
+                      </div>
+                      <div className="flex-1 bg-white border border-gray-200 rounded-lg p-3 shadow-sm">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="font-medium text-yellow-700">Állapot változás</div>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-sm">{getAllapotNev(log.regiAllapot)}</span>
+                              <span className="text-gray-400">→</span>
+                              <span className="text-sm font-medium">{getAllapotNev(log.ujAllapot)}</span>
+                            </div>
+                            {log.megjegyzes && (
+                              <div className="text-sm text-gray-600 mt-1">{log.megjegyzes}</div>
+                            )}
+                            <div className="text-xs text-gray-500 mt-1">{formatDate(log.createdAt)}</div>
+                          </div>
+                          <div className="text-xs">{getAllapotBadge(log.ujAllapot)}</div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* Módosítás */}
+                  {detailDocument.updatedAt && detailDocument.updatedAt !== detailDocument.createdAt && (
+                    <div className="relative flex items-start gap-4">
+                      <div className="relative z-10 flex items-center justify-center w-8 h-8 rounded-full bg-purple-500 text-white text-xs font-bold">
+                        ✎
+                      </div>
+                      <div className="flex-1 bg-white border border-gray-200 rounded-lg p-3 shadow-sm">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="font-medium text-purple-700">Dokumentum módosítva</div>
+                            <div className="text-xs text-gray-500 mt-1">{formatDate(detailDocument.updatedAt)}</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </Modal>

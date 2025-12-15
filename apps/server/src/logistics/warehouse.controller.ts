@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Put,
+  Delete,
   Body,
   Param,
   Query,
@@ -52,5 +53,14 @@ export class WarehouseController {
     const updated = await this.warehouseService.update(id, dto);
     await this.auditService.logUpdate('warehouse', id, old, updated);
     return updated;
+  }
+
+  @Delete(':id')
+  @Permissions(Permission.WAREHOUSE_DELETE)
+  async delete(@Param('id') id: string) {
+    const old = await this.warehouseService.findOne(id);
+    const deleted = await this.warehouseService.delete(id);
+    await this.auditService.logDelete('Warehouse', id, old);
+    return deleted;
   }
 }

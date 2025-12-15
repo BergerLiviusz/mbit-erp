@@ -97,7 +97,20 @@ export default function InventorySheets() {
     warehouseId: '',
     leltarDatum: new Date().toISOString().split('T')[0],
     megjegyzesek: '',
+    itemIds: [] as string[], // Részhalmaz leltárív: kiválasztott cikkek
   });
+  
+  const [availableItems, setAvailableItems] = useState<Array<{
+    id: string;
+    azonosito: string;
+    nev: string;
+    item: {
+      id: string;
+      azonosito: string;
+      nev: string;
+    };
+  }>>([]);
+  const [loadingItems, setLoadingItems] = useState(false);
 
   const [filters, setFilters] = useState({
     warehouseId: '',
@@ -124,6 +137,38 @@ export default function InventorySheets() {
     } catch (err) {
       console.error('Hiba a raktárak betöltésekor:', err);
       setError('Hiba történt a raktárak betöltésekor');
+    }
+  };
+
+  const loadItemsForWarehouse = async (warehouseId: string) => {
+    if (!warehouseId) {
+      setAvailableItems([]);
+      return;
+    }
+
+    setLoadingItems(true);
+    try {
+      const response = await apiFetch(`/logistics/inventory?warehouseId=${warehouseId}&skip=0&take=1000`);
+      if (response.ok) {
+        const data = await response.json();
+        const items = (data.data || []).map((stockLevel: any) => ({
+          id: stockLevel.itemId,
+          azonosito: stockLevel.item?.azonosito || '',
+          nev: stockLevel.item?.nev || '',
+          item: stockLevel.item,
+        }));
+        // Remove duplicates by itemId
+        const uniqueItems = Array.from(
+          new Map(items.map((item: any) => [item.id, item])).values()
+        ) as Array<{ id: string; azonosito: string; nev: string; item: { id: string; azonosito: string; nev: string; }; }>;
+        setAvailableItems(uniqueItems);
+      } else {
+        console.error('Hiba a cikkek betöltésekor');
+      }
+    } catch (err) {
+      console.error('Hiba a cikkek betöltésekor:', err);
+    } finally {
+      setLoadingItems(false);
     }
   };
 
@@ -182,6 +227,7 @@ export default function InventorySheets() {
           warehouseId: formData.warehouseId,
           leltarDatum: formData.leltarDatum || undefined,
           megjegyzesek: formData.megjegyzesek || undefined,
+          itemIds: formData.itemIds.length > 0 ? formData.itemIds : undefined, // Részhalmaz leltárív
         }),
       });
 
@@ -197,7 +243,9 @@ export default function InventorySheets() {
           warehouseId: '',
           leltarDatum: new Date().toISOString().split('T')[0],
           megjegyzesek: '',
+          itemIds: [],
         });
+        setAvailableItems([]);
         loadInventorySheets();
       }, 1500);
     } catch (err: any) {
@@ -507,7 +555,11 @@ export default function InventorySheets() {
               </label>
               <select
                 value={formData.warehouseId}
-                onChange={(e) => setFormData({ ...formData, warehouseId: e.target.value })}
+                onChange={(e) => {
+                  const warehouseId = e.target.value;
+                  setFormData({ ...formData, warehouseId, itemIds: [] });
+                  loadItemsForWarehouse(warehouseId);
+                }}
                 className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
               >
@@ -517,6 +569,50 @@ export default function InventorySheets() {
                 ))}
               </select>
             </div>
+
+            {formData.warehouseId && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Cikkek kiválasztása <span className="text-gray-500">(opcionális - üresen hagyva minden cikk)</span>
+                </label>
+                {loadingItems ? (
+                  <div className="text-sm text-gray-500">Cikkek betöltése...</div>
+                ) : (
+                  <div className="border border-gray-300 rounded max-h-60 overflow-y-auto p-2">
+                    {availableItems.length === 0 ? (
+                      <div className="text-sm text-gray-500">Nincsenek cikkek ebben a raktárban</div>
+                    ) : (
+                      <div className="space-y-2">
+                        {availableItems.map((item) => (
+                          <label key={item.id} className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-1 rounded">
+                            <input
+                              type="checkbox"
+                              checked={formData.itemIds.includes(item.id)}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setFormData({ ...formData, itemIds: [...formData.itemIds, item.id] });
+                                } else {
+                                  setFormData({ ...formData, itemIds: formData.itemIds.filter(id => id !== item.id) });
+                                }
+                              }}
+                              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                            />
+                            <span className="text-sm">
+                              {item.azonosito} - {item.nev}
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+                {formData.itemIds.length > 0 && (
+                  <p className="mt-1 text-xs text-gray-500">
+                    {formData.itemIds.length} cikk kiválasztva (részhalmaz leltárív)
+                  </p>
+                )}
+              </div>
+            )}
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -607,7 +703,7 @@ export default function InventorySheets() {
             <div className="flex justify-end gap-2 mb-4">
               <button
                 onClick={() => {
-                  const url = `/logistics/inventory-sheets/${selectedSheet.id}/pdf`;
+                  const url = `/api/logistics/inventory-sheets/${selectedSheet.id}/pdf`;
                   window.open(url, '_blank');
                 }}
                 className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 flex items-center gap-2"
@@ -616,6 +712,18 @@ export default function InventorySheets() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                 </svg>
                 PDF letöltés
+              </button>
+              <button
+                onClick={() => {
+                  const url = `/api/logistics/inventory-sheets/${selectedSheet.id}/excel`;
+                  window.open(url, '_blank');
+                }}
+                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 flex items-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Excel letöltés
               </button>
             </div>
 

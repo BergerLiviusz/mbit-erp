@@ -101,6 +101,20 @@ export enum Permission {
   PURCHASE_ORDER_APPROVE = 'purchase_order:approve',
   PURCHASE_ORDER_RECEIVE = 'purchase_order:receive',
   
+  // Supplier specific
+  SUPPLIER_VIEW = 'supplier:view',
+  SUPPLIER_CREATE = 'supplier:create',
+  SUPPLIER_EDIT = 'supplier:edit',
+  SUPPLIER_DELETE = 'supplier:delete',
+  
+  // Price List specific
+  PRICE_LIST_VIEW = 'price_list:view',
+  PRICE_LIST_CREATE = 'price_list:create',
+  PRICE_LIST_EDIT = 'price_list:edit',
+  PRICE_LIST_DELETE = 'price_list:delete',
+  PRICE_LIST_IMPORT = 'price_list:import',
+  PRICE_LIST_EXPORT = 'price_list:export',
+  
   // Shipment specific
   SHIPMENT_VIEW = 'shipment:view',
   SHIPMENT_CREATE = 'shipment:create',
@@ -170,12 +184,6 @@ export enum Permission {
   RETURN_EDIT = 'return:edit',
   RETURN_APPROVE = 'return:approve',
   RETURN_COMPLETE = 'return:complete',
-  
-  // Supplier specific
-  SUPPLIER_VIEW = 'supplier:view',
-  SUPPLIER_CREATE = 'supplier:create',
-  SUPPLIER_EDIT = 'supplier:edit',
-  SUPPLIER_DELETE = 'supplier:delete',
   
   // Inventory Report specific
   INVENTORY_REPORT_PRINT = 'inventory:report_print',
@@ -337,6 +345,13 @@ export const PermissionDescriptions: Record<Permission, { nev: string; modulo: s
   [Permission.SUPPLIER_CREATE]: { nev: 'Szállító létrehozás', modulo: 'Logisztika', leiras: 'Új szállítók rögzítése' },
   [Permission.SUPPLIER_EDIT]: { nev: 'Szállító szerkesztés', modulo: 'Logisztika', leiras: 'Szállítók módosítása' },
   [Permission.SUPPLIER_DELETE]: { nev: 'Szállító törlés', modulo: 'Logisztika', leiras: 'Szállítók törlése' },
+  
+  [Permission.PRICE_LIST_VIEW]: { nev: 'Árlisták megtekintése', modulo: 'Logisztika', leiras: 'Árlisták böngészése' },
+  [Permission.PRICE_LIST_CREATE]: { nev: 'Árlista létrehozás', modulo: 'Logisztika', leiras: 'Új árlisták rögzítése' },
+  [Permission.PRICE_LIST_EDIT]: { nev: 'Árlista szerkesztés', modulo: 'Logisztika', leiras: 'Árlisták módosítása' },
+  [Permission.PRICE_LIST_DELETE]: { nev: 'Árlista törlés', modulo: 'Logisztika', leiras: 'Árlisták törlése' },
+  [Permission.PRICE_LIST_IMPORT]: { nev: 'Árlista importálás', modulo: 'Logisztika', leiras: 'Árlisták Excel-ből importálása' },
+  [Permission.PRICE_LIST_EXPORT]: { nev: 'Árlista exportálás', modulo: 'Logisztika', leiras: 'Árlisták Excel-be exportálása' },
   
   [Permission.INVENTORY_REPORT_PRINT]: { nev: 'Leltárív nyomtatás', modulo: 'Logisztika', leiras: 'Leltárív generálása és nyomtatása' },
   

@@ -62,6 +62,16 @@ export default function WorkflowDiagram({ workflow }: WorkflowDiagramProps) {
                           {step.lepesTipus}
                         </span>
                       )}
+                      {step.assignedTo && (
+                        <span className="px-2 py-1 text-xs rounded bg-purple-100 text-purple-800 font-medium">
+                          👤 {step.assignedTo.nev}
+                        </span>
+                      )}
+                      {step.Role && (
+                        <span className="px-2 py-1 text-xs rounded bg-indigo-100 text-indigo-800 font-medium">
+                          🎭 {step.Role.nev}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Body, Param, Query, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards, Request, BadRequestException } from '@nestjs/common';
 import { DocumentCategoryService, CreateDocumentCategoryDto, UpdateDocumentCategoryDto } from './document-category.service';
 import { AuditService } from '../common/audit/audit.service';
 import { Permissions } from '../common/rbac/rbac.decorator';
@@ -65,5 +65,32 @@ export class DocumentCategoryController {
     );
 
     return updatedCategory;
+  }
+
+  @Delete(':id')
+  @Permissions(Permission.DOCUMENT_DELETE)
+  async delete(@Param('id') id: string, @Request() req: any) {
+    const category = await this.categoryService.findOne(id);
+    
+    if (!category) {
+      throw new BadRequestException('Kategória nem található');
+    }
+
+    // Check if category has documents
+    const documentCount = await this.categoryService.countDocuments(id);
+    if (documentCount > 0) {
+      throw new BadRequestException(`A kategória nem törölhető, mert ${documentCount} dokumentumhoz van hozzárendelve`);
+    }
+
+    await this.categoryService.delete(id);
+    
+    await this.auditService.logDelete(
+      'DocumentCategory',
+      id,
+      category,
+      req.user?.id,
+    );
+
+    return { message: 'Kategória sikeresen törölve' };
   }
 }

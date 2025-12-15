@@ -4,6 +4,10 @@ import { ReturnOk } from './create-return.dto';
 export class UpdateReturnDto {
   @IsOptional()
   @IsString()
+  purchaseOrderId?: string;
+
+  @IsOptional()
+  @IsString()
   itemId?: string;
 
   @IsOptional()

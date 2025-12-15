@@ -12,6 +12,10 @@ export class CreateReturnDto {
   @IsString()
   orderId?: string;
 
+  @IsOptional()
+  @IsString()
+  purchaseOrderId?: string;
+
   @IsString()
   itemId: string;
 

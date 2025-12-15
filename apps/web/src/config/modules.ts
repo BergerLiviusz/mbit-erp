@@ -35,10 +35,12 @@ export const MODULE_DOCUMENTS: ModuleConfig = {
 export const MODULE_TEAM: ModuleConfig = {
   enabled: false,
   name: 'Csapatmunka',
-  routes: ['/team', '/workflows'],
+  routes: ['/team', '/workflows', '/workflow-tasks', '/workflow-instances'],
   menuItems: [
     { to: '/team', label: 'Csapat kommunikáció' },
-    { to: '/workflows', label: 'Folyamatleltár' }
+    { to: '/workflows', label: 'Folyamatleltár' },
+    { to: '/workflow-tasks', label: 'Feladatlista' },
+    { to: '/workflow-instances', label: 'Workflow példányok' }
   ]
 };
 
@@ -68,13 +70,15 @@ export const MODULE_LOGISTICS: ModuleConfig = {
     '/inventory-sheets',
     '/intrastat',
     '/logistics/stock-valuation',
-    '/logistics/stock-reservations'
+    '/logistics/stock-reservations',
+    '/price-lists'
   ],
   menuItems: [
     { to: '/warehouses', label: 'Raktárak', parentMenu: 'Logisztika' },
     { to: '/products', label: 'Termékek', parentMenu: 'Logisztika' },
     { to: '/returns', label: 'Visszárúk', parentMenu: 'Logisztika' },
     { to: '/suppliers', label: 'Szállítók', parentMenu: 'Logisztika' },
+    { to: '/price-lists', label: 'Árlisták', parentMenu: 'Logisztika' },
     { to: '/orders-logistics', label: 'Rendelések', parentMenu: 'Logisztika' },
     { to: '/inventory-sheets', label: 'Leltárívek', parentMenu: 'Logisztika' },
     { to: '/intrastat', label: 'INTRASTAT', parentMenu: 'Logisztika' },

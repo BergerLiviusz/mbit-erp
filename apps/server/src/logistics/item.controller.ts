@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards } from '@nestjs/common';
 import { ItemService } from './item.service';
 import { SupplierService } from './supplier.service';
+import { LinkItemSupplierDto } from './dto/link-item-supplier.dto';
 import { Permissions } from '../common/rbac/rbac.decorator';
 import { Permission } from '../common/rbac/permission.enum';
 import { RbacGuard } from '../common/rbac/rbac.guard';
@@ -57,6 +58,25 @@ export class ItemController {
     return this.supplierService.getItemSuppliers(itemId);
   }
 
+  @Post(':id/suppliers/:supplierId/link')
+  @Permissions(Permission.PRODUCT_EDIT)
+  linkSupplier(
+    @Param('id') itemId: string,
+    @Param('supplierId') supplierId: string,
+    @Body() dto: LinkItemSupplierDto,
+  ) {
+    return this.supplierService.linkItemToSupplier(itemId, supplierId, dto);
+  }
+
+  @Delete(':id/suppliers/:supplierId/unlink')
+  @Permissions(Permission.PRODUCT_EDIT)
+  unlinkSupplier(
+    @Param('id') itemId: string,
+    @Param('supplierId') supplierId: string,
+  ) {
+    return this.supplierService.unlinkItemFromSupplier(itemId, supplierId);
+  }
+
   @Put(':id/suppliers/:supplierId/primary')
   @Permissions(Permission.PRODUCT_EDIT)
   setPrimarySupplier(
@@ -82,5 +102,29 @@ export class ItemGroupController {
       skip ? parseInt(skip) : 0,
       take ? parseInt(take) : 100,
     );
+  }
+
+  @Get(':id')
+  @Permissions(Permission.PRODUCT_VIEW)
+  findOne(@Param('id') id: string) {
+    return this.itemService.findOneItemGroup(id);
+  }
+
+  @Post()
+  @Permissions(Permission.PRODUCT_CREATE)
+  create(@Body() data: { nev: string; leiras?: string }) {
+    return this.itemService.createItemGroup(data);
+  }
+
+  @Put(':id')
+  @Permissions(Permission.PRODUCT_EDIT)
+  update(@Param('id') id: string, @Body() data: { nev?: string; leiras?: string }) {
+    return this.itemService.updateItemGroup(id, data);
+  }
+
+  @Delete(':id')
+  @Permissions(Permission.PRODUCT_DELETE)
+  delete(@Param('id') id: string) {
+    return this.itemService.deleteItemGroup(id);
   }
 }

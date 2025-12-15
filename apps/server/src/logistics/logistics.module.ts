@@ -30,6 +30,8 @@ import { StockValuationController } from './stock-valuation.controller';
 import { StockValuationService } from './stock-valuation.service';
 import { StockReservationController } from './stock-reservation.controller';
 import { StockReservationService } from './stock-reservation.service';
+import { PriceListController } from './price-list.controller';
+import { PriceListService } from './price-list.service';
 
 @Module({
   imports: [PrismaModule, AuditModule, StorageModule, SystemModule],
@@ -48,6 +50,7 @@ import { StockReservationService } from './stock-reservation.service';
     IntrastatController,
     StockValuationController,
     StockReservationController,
+    PriceListController,
   ],
   providers: [
     ItemService,
@@ -63,6 +66,7 @@ import { StockReservationService } from './stock-reservation.service';
     IntrastatService,
     StockValuationService,
     StockReservationService,
+    PriceListService,
   ],
   exports: [WarehouseService, InventoryService, PurchaseOrderService, StockValuationService, StockReservationService],
 })

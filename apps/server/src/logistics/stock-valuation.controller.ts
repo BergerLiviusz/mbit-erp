@@ -60,10 +60,12 @@ export class StockValuationController {
   getStockValuationReport(
     @Query('warehouseId') warehouseId?: string,
     @Query('ertekelesMod') ertekelesMod?: string,
+    @Query('itemGroupId') itemGroupId?: string,
   ) {
     return this.stockValuationService.getStockValuationReport(
       warehouseId,
       ertekelesMod,
+      itemGroupId,
     );
   }
 

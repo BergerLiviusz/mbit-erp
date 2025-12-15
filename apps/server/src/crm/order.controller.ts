@@ -81,6 +81,7 @@ export class OrderController {
       id,
       dto.allapot,
       dto.megjegyzesek,
+      dto.warehouseId,
     );
     await this.auditService.logUpdate(
       'order',

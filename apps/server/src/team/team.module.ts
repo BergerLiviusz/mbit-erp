@@ -11,6 +11,8 @@ import { CommentService } from './comment/comment.service';
 import { ActivityService } from './activity/activity.service';
 import { WorkflowController } from './workflow/workflow.controller';
 import { WorkflowService } from './workflow/workflow.service';
+import { WorkflowInstanceController } from './workflow/workflow-instance.controller';
+import { WorkflowInstanceService } from './workflow/workflow-instance.service';
 
 @Module({
   imports: [PrismaModule, SystemModule],
@@ -20,6 +22,7 @@ import { WorkflowService } from './workflow/workflow.service';
     BoardController,
     CommentController,
     WorkflowController,
+    WorkflowInstanceController,
   ],
   providers: [
     TaskService,
@@ -28,6 +31,7 @@ import { WorkflowService } from './workflow/workflow.service';
     CommentService,
     ActivityService,
     WorkflowService,
+    WorkflowInstanceService,
   ],
   exports: [TaskService, BoardService, CommentService, ActivityService],
 })

@@ -584,12 +584,66 @@ export default function Orders() {
                         </>
                       )}
                       {order.allapot === 'SHIPPED' && (
+                        <>
+                          <button
+                            onClick={() => handleStatusChange(order.id, 'COMPLETED')}
+                            className="text-green-600 hover:text-green-900"
+                            title="Teljesítve"
+                          >
+                            ✓
+                          </button>
+                          <button
+                            onClick={async () => {
+                              try {
+                                const response = await apiFetch(`/crm/invoices/from-order/${order.id}`, {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                });
+                                if (response.ok) {
+                                  setSuccess('Számla sikeresen létrehozva!');
+                                  setTimeout(() => setSuccess(''), 3000);
+                                } else {
+                                  const error = await response.json();
+                                  setError(error.message || 'Hiba a számla létrehozásakor');
+                                  setTimeout(() => setError(''), 5000);
+                                }
+                              } catch (err: any) {
+                                setError(err.message || 'Hiba a számla létrehozásakor');
+                                setTimeout(() => setError(''), 5000);
+                              }
+                            }}
+                            className="text-blue-600 hover:text-blue-900"
+                            title="Számla létrehozása"
+                          >
+                            📄
+                          </button>
+                        </>
+                      )}
+                      {(order.allapot === 'COMPLETED') && (
                         <button
-                          onClick={() => handleStatusChange(order.id, 'COMPLETED')}
-                          className="text-green-600 hover:text-green-900"
-                          title="Teljesítve"
+                          onClick={async () => {
+                            try {
+                              const response = await apiFetch(`/crm/invoices/from-order/${order.id}`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                              });
+                              if (response.ok) {
+                                setSuccess('Számla sikeresen létrehozva!');
+                                setTimeout(() => setSuccess(''), 3000);
+                              } else {
+                                const error = await response.json();
+                                setError(error.message || 'Hiba a számla létrehozásakor');
+                                setTimeout(() => setError(''), 5000);
+                              }
+                            } catch (err: any) {
+                              setError(err.message || 'Hiba a számla létrehozásakor');
+                              setTimeout(() => setError(''), 5000);
+                            }
+                          }}
+                          className="text-blue-600 hover:text-blue-900"
+                          title="Számla létrehozása"
                         >
-                          ✓
+                          📄
                         </button>
                       )}
                     </div>

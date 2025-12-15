@@ -6,6 +6,8 @@ interface Invoice {
   id: string;
   accountId: string;
   orderId?: string | null;
+  purchaseOrderId?: string | null;
+  deliveryNoteId?: string | null;
   szamlaSzam: string;
   kiallitasDatum: string;
   teljesitesDatum: string;
@@ -30,6 +32,33 @@ interface Invoice {
   order?: {
     id: string;
     azonosito: string;
+  };
+  purchaseOrder?: {
+    id: string;
+    azonosito: string;
+    supplier?: {
+      id: string;
+      nev: string;
+    };
+  };
+  deliveryNote?: {
+    id: string;
+    azonosito: string;
+    purchaseOrder?: {
+      id: string;
+      azonosito: string;
+      supplier?: {
+        id: string;
+        nev: string;
+      };
+    };
+    shipment?: {
+      id: string;
+      order?: {
+        id: string;
+        azonosito: string;
+      };
+    };
   };
   items?: InvoiceItem[];
   payments?: InvoicePayment[];
@@ -1106,6 +1135,23 @@ export default function Invoices() {
                 </div>
               </div>
               <div>
+                <div className="text-sm text-gray-600">Beszerzési rendelés</div>
+                <div className="font-medium">
+                  {selectedInvoice.purchaseOrder?.azonosito || '-'}
+                  {selectedInvoice.purchaseOrder?.supplier && (
+                    <span className="text-gray-500 ml-2">
+                      ({selectedInvoice.purchaseOrder.supplier.nev})
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div>
+                <div className="text-sm text-gray-600">Szállítólevél</div>
+                <div className="font-medium">
+                  {selectedInvoice.deliveryNote?.azonosito || '-'}
+                </div>
+              </div>
+              <div>
                 <div className="text-sm text-gray-600">Kiállítás dátuma</div>
                 <div className="font-medium">
                   {new Date(selectedInvoice.kiallitasDatum).toLocaleDateString('hu-HU')}
@@ -1118,6 +1164,52 @@ export default function Invoices() {
                 </div>
               </div>
             </div>
+
+            {/* Bizonylat lánc */}
+            {(selectedInvoice.purchaseOrder || selectedInvoice.deliveryNote || selectedInvoice.order) && (
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h3 className="font-medium mb-3">Bizonylat lánc</h3>
+                <div className="space-y-2 text-sm">
+                  {selectedInvoice.purchaseOrder && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-gray-600">Beszerzési rendelés:</span>
+                      <span className="font-medium">{selectedInvoice.purchaseOrder.azonosito}</span>
+                      {selectedInvoice.purchaseOrder.supplier && (
+                        <span className="text-gray-500">({selectedInvoice.purchaseOrder.supplier.nev})</span>
+                      )}
+                      <span className="text-gray-400">→</span>
+                    </div>
+                  )}
+                  {selectedInvoice.deliveryNote && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-gray-600">Szállítólevél:</span>
+                      <span className="font-medium">{selectedInvoice.deliveryNote.azonosito}</span>
+                      <span className="text-gray-400">→</span>
+                    </div>
+                  )}
+                  {selectedInvoice.order && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-gray-600">Eladási rendelés:</span>
+                      <span className="font-medium">{selectedInvoice.order.azonosito}</span>
+                      {selectedInvoice.deliveryNote?.shipment && (
+                        <>
+                          <span className="text-gray-400">→</span>
+                          <span className="text-gray-600">Szállítás</span>
+                          <span className="text-gray-400">→</span>
+                          <span className="text-gray-600">Szállítólevél:</span>
+                          <span className="font-medium">{selectedInvoice.deliveryNote.azonosito}</span>
+                        </>
+                      )}
+                      <span className="text-gray-400">→</span>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-600">Számla:</span>
+                    <span className="font-medium text-blue-600">{selectedInvoice.szamlaSzam}</span>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Tételek */}
             {selectedInvoice.items && selectedInvoice.items.length > 0 && (

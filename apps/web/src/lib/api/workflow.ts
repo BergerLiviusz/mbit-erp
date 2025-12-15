@@ -10,6 +10,18 @@ export interface WorkflowStep {
   lepesTipus?: string | null;
   szin?: string | null;
   kotelezo: boolean;
+  assignedToId?: string | null;
+  roleId?: string | null;
+  assignedTo?: {
+    id: string;
+    nev: string;
+    email: string;
+  } | null;
+  Role?: {
+    id: string;
+    nev: string;
+    leiras?: string | null;
+  } | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -44,12 +56,25 @@ export interface CreateWorkflowStepDto {
   lepesTipus?: string;
   szin?: string;
   kotelezo?: boolean;
+  assignedToId?: string;
+  roleId?: string;
 }
 
 export interface UpdateWorkflowDto {
   nev?: string;
   leiras?: string;
   aktiv?: boolean;
+  steps?: Array<{
+    id?: string;
+    nev?: string;
+    leiras?: string;
+    sorrend?: number;
+    lepesTipus?: string;
+    szin?: string;
+    kotelezo?: boolean;
+    assignedToId?: string;
+    roleId?: string;
+  }>;
 }
 
 export interface UpdateWorkflowStepDto {
@@ -59,6 +84,8 @@ export interface UpdateWorkflowStepDto {
   lepesTipus?: string;
   szin?: string;
   kotelezo?: boolean;
+  assignedToId?: string;
+  roleId?: string;
 }
 
 export function useWorkflows() {
@@ -160,6 +187,166 @@ export function useDeleteWorkflowStep() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['workflows'] });
       queryClient.invalidateQueries({ queryKey: ['workflow', variables.workflowId] });
+    },
+  });
+}
+
+// Workflow Instance interfaces and hooks
+export interface WorkflowStepLog {
+  id: string;
+  instanceId: string;
+  stepId: string;
+  allapot: 'várakozik' | 'folyamatban' | 'befejezve' | 'kihagyva';
+  megjegyzes?: string | null;
+  completedById?: string | null;
+  completedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  step: WorkflowStep;
+  completedBy?: {
+    id: string;
+    nev: string;
+    email: string;
+  } | null;
+}
+
+export interface WorkflowInstance {
+  id: string;
+  workflowId: string;
+  nev?: string | null;
+  allapot: 'aktív' | 'befejezett' | 'megszakított';
+  aktualisLepesId?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  completedAt?: string | null;
+  createdById?: string | null;
+  workflow: {
+    id: string;
+    nev: string;
+    leiras?: string | null;
+    steps: WorkflowStep[];
+  };
+  aktualisLepes?: WorkflowStep | null;
+  createdBy?: {
+    id: string;
+    nev: string;
+    email: string;
+  } | null;
+  stepLogs: WorkflowStepLog[];
+}
+
+export interface CreateWorkflowInstanceDto {
+  workflowId: string;
+  nev?: string;
+}
+
+export interface UpdateWorkflowStepLogDto {
+  allapot: 'várakozik' | 'folyamatban' | 'befejezve' | 'kihagyva';
+  megjegyzes?: string;
+}
+
+export function useWorkflowInstances(workflowId?: string) {
+  return useQuery({
+    queryKey: ['workflow-instances', workflowId],
+    queryFn: async () => {
+      const url = workflowId 
+        ? `/api/team/workflow-instances?workflowId=${workflowId}`
+        : '/api/team/workflow-instances';
+      const response = await axios.get(url);
+      return response.data as WorkflowInstance[];
+    },
+  });
+}
+
+export function useWorkflowInstance(id: string) {
+  return useQuery({
+    queryKey: ['workflow-instance', id],
+    queryFn: async () => {
+      const response = await axios.get(`/api/team/workflow-instances/${id}`);
+      return response.data as WorkflowInstance;
+    },
+    enabled: !!id,
+  });
+}
+
+export function useCreateWorkflowInstance() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: CreateWorkflowInstanceDto) => {
+      const response = await axios.post('/api/team/workflow-instances', data);
+      return response.data as WorkflowInstance;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['workflow-instances'] });
+    },
+  });
+}
+
+export function useUpdateWorkflowStepLog() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ 
+      instanceId, 
+      stepLogId, 
+      data 
+    }: { 
+      instanceId: string; 
+      stepLogId: string; 
+      data: UpdateWorkflowStepLogDto 
+    }) => {
+      const response = await axios.put(
+        `/api/team/workflow-instances/${instanceId}/step-logs/${stepLogId}`,
+        data
+      );
+      return response.data as WorkflowStepLog;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['workflow-instances'] });
+      queryClient.invalidateQueries({ queryKey: ['workflow-instance', variables.instanceId] });
+    },
+  });
+}
+
+export function useCancelWorkflowInstance() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const response = await axios.put(`/api/team/workflow-instances/${id}/cancel`);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['workflow-instances'] });
+    },
+  });
+}
+
+export interface DelegateWorkflowStepDto {
+  newAssignedToId: string;
+  megjegyzes?: string;
+}
+
+export function useDelegateWorkflowStep() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ 
+      instanceId, 
+      stepId, 
+      data 
+    }: { 
+      instanceId: string; 
+      stepId: string; 
+      data: DelegateWorkflowStepDto 
+    }) => {
+      const response = await axios.put(
+        `/api/team/workflow-instances/${instanceId}/steps/${stepId}/delegate`,
+        data
+      );
+      return response.data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['workflow-instances'] });
+      queryClient.invalidateQueries({ queryKey: ['workflow-instance', variables.instanceId] });
+      queryClient.invalidateQueries({ queryKey: ['workflows'] });
     },
   });
 }

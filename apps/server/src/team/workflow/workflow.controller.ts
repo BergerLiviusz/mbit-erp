@@ -34,8 +34,10 @@ export class WorkflowController {
 
   @Put(':id')
   @Permissions(Permission.CRM_EDIT)
-  async update(@Param('id') id: string, @Body() dto: UpdateWorkflowDto) {
-    return await this.workflowService.update(id, dto);
+  async update(@Param('id') id: string, @Body() dto: UpdateWorkflowDto, @Request() req: any) {
+    const userId = req?.user?.id;
+    const isAdmin = req?.user?.roles?.includes('Admin') || false;
+    return await this.workflowService.update(id, dto, userId, isAdmin);
   }
 
   @Delete(':id')

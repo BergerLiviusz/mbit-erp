@@ -253,8 +253,8 @@ export default function ProductSuppliers({ itemId, showHeader = true }: ProductS
         isOpen={isLinkModalOpen}
         onClose={handleCloseLinkModal}
         title="Szállító hozzáadása"
-        size="lg"
-        zIndex={100}
+        size="xl"
+        zIndex={200}
       >
         <form onSubmit={handleLinkSubmit} onClick={(e) => e.stopPropagation()} className="space-y-4">
           {error && (
@@ -421,8 +421,8 @@ export default function ProductSuppliers({ itemId, showHeader = true }: ProductS
           setError('');
         }}
         title="Új szállító létrehozása"
-        size="lg"
-        zIndex={110}
+        size="xl"
+        zIndex={210}
       >
         <form
           onSubmit={async (e) => {

@@ -1,12 +1,14 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import PDFDocument from 'pdfkit';
+import ExcelJS from 'exceljs';
 import { Response } from 'express';
 
 export interface CreateInventorySheetDto {
   warehouseId: string;
   leltarDatum?: string;
   megjegyzesek?: string;
+  itemIds?: string[]; // Opcionális: csak ezeket a cikkeket tartalmazza a leltárív
 }
 
 export interface UpdateInventorySheetDto {
@@ -151,8 +153,15 @@ export class InventorySheetService {
     const azonosito = await this.generateSheetNumber();
 
     // Get current stock levels for the warehouse
+    const whereClause: any = { warehouseId: dto.warehouseId };
+    
+    // If itemIds are provided, filter by them (partial inventory)
+    if (dto.itemIds && dto.itemIds.length > 0) {
+      whereClause.itemId = { in: dto.itemIds };
+    }
+
     const stockLevels = await this.prisma.stockLevel.findMany({
-      where: { warehouseId: dto.warehouseId },
+      where: whereClause,
       include: {
         item: true,
         location: true,
@@ -506,6 +515,7 @@ export class InventorySheetService {
 
     return new Promise((resolve, reject) => {
       const doc = new PDFDocument({ margin: 50, size: 'A4' });
+      let pageNumber = 1;
       
       // Set response headers
       res.setHeader('Content-Type', 'application/pdf');
@@ -515,44 +525,73 @@ export class InventorySheetService {
       );
 
       doc.pipe(res);
-
-      // Header
-      doc.fontSize(20).font('Helvetica-Bold').text('Leltárív', { align: 'center' });
-      doc.moveDown(0.5);
-
-      // Sheet information
-      doc.fontSize(12).font('Helvetica');
-      doc.text(`Azonosító: ${sheet.azonosito}`, { align: 'left' });
-      doc.text(`Dátum: ${new Date(sheet.leltarDatum).toLocaleDateString('hu-HU')}`, { align: 'left' });
       
+      // Track page numbers
+      doc.on('pageAdded', () => {
+        pageNumber++;
+      });
+
+      // Header with better formatting
+      doc.fontSize(24).font('Helvetica-Bold').text('Leltárív', { align: 'center' });
+      doc.moveDown(1);
+
+      // Sheet information in two columns
+      const infoLeft = 50;
+      const infoRight = doc.page.width / 2 + 25;
+      let infoY = doc.y;
+
+      doc.fontSize(10).font('Helvetica-Bold');
+      doc.text('Leltárív adatok', infoLeft, infoY);
+      infoY += 15;
+
+      doc.fontSize(9).font('Helvetica');
+      doc.text(`Azonosító: ${sheet.azonosito}`, infoLeft, infoY);
+      infoY += 12;
+      doc.text(`Dátum: ${new Date(sheet.leltarDatum).toLocaleDateString('hu-HU')}`, infoLeft, infoY);
+      infoY += 12;
+      doc.text(`Állapot: ${sheet.allapot}`, infoLeft, infoY);
+      infoY += 15;
+
       if (sheet.warehouse) {
-        doc.text(`Raktár: ${sheet.warehouse.nev} (${sheet.warehouse.azonosito})`, { align: 'left' });
+        doc.fontSize(10).font('Helvetica-Bold');
+        doc.text('Raktár adatok', infoLeft, infoY);
+        infoY += 15;
+        doc.fontSize(9).font('Helvetica');
+        doc.text(`${sheet.warehouse.nev} (${sheet.warehouse.azonosito})`, infoLeft, infoY);
+        infoY += 12;
         if (sheet.warehouse.cim) {
-          doc.text(`Raktár címe: ${sheet.warehouse.cim}`, { align: 'left' });
+          doc.text(`Cím: ${sheet.warehouse.cim}`, infoLeft, infoY);
+          infoY += 12;
         }
       }
-      
+
+      // Calculate page width early
+      const pageWidth = doc.page.width - 100;
+      const tableLeft = 50;
+
+      let infoYRight = doc.y + 15;
       if (sheet.createdBy) {
-        doc.text(`Létrehozta: ${sheet.createdBy.nev}`, { align: 'left' });
+        doc.fontSize(9).font('Helvetica');
+        doc.text(`Létrehozta: ${sheet.createdBy.nev}`, infoRight, infoYRight);
+        infoYRight += 12;
       }
       
       if (sheet.approvedBy) {
-        doc.text(`Jóváhagyta: ${sheet.approvedBy.nev}`, { align: 'left' });
+        doc.text(`Jóváhagyta: ${sheet.approvedBy.nev}`, infoRight, infoYRight);
+        infoYRight += 12;
       }
-      
-      doc.text(`Állapot: ${sheet.allapot}`, { align: 'left' });
       
       if (sheet.megjegyzesek) {
+        doc.moveDown(1);
+        doc.fontSize(9).font('Helvetica');
+        doc.text(`Megjegyzések: ${sheet.megjegyzesek}`, infoLeft, doc.y, { width: pageWidth });
         doc.moveDown(0.5);
-        doc.text(`Megjegyzések: ${sheet.megjegyzesek}`, { align: 'left' });
       }
 
-      doc.moveDown();
+      doc.moveDown(1);
 
       // Table header
       const tableTop = doc.y;
-      const tableLeft = 50;
-      const pageWidth = doc.page.width - 100;
       const colWidths = {
         azonosito: pageWidth * 0.15,
         nev: pageWidth * 0.25,
@@ -634,7 +673,12 @@ export class InventorySheetService {
         doc.text(tenylegesKeszlet, tableLeft + colWidths.azonosito + colWidths.nev + colWidths.konyvKeszlet + 5, y + 5, { width: colWidths.tenylegesKeszlet - 10, align: 'right' });
         doc.text(kulonbseg, tableLeft + colWidths.azonosito + colWidths.nev + colWidths.konyvKeszlet + colWidths.tenylegesKeszlet + 5, y + 5, { width: colWidths.kulonbseg - 10, align: 'right' });
         doc.text(hely, tableLeft + colWidths.azonosito + colWidths.nev + colWidths.konyvKeszlet + colWidths.tenylegesKeszlet + colWidths.kulonbseg + 5, y + 5, { width: colWidths.hely - 10 });
-        doc.text(megjegyzes.substring(0, 30), tableLeft + colWidths.azonosito + colWidths.nev + colWidths.konyvKeszlet + colWidths.tenylegesKeszlet + colWidths.kulonbseg + colWidths.hely + 5, y + 5, { width: colWidths.megjegyzesek - 10 });
+        // Truncate or wrap long text
+        const maxMegjegyzesLength = 40;
+        const megjegyzesText = megjegyzes.length > maxMegjegyzesLength 
+          ? megjegyzes.substring(0, maxMegjegyzesLength) + '...' 
+          : megjegyzes;
+        doc.text(megjegyzesText, tableLeft + colWidths.azonosito + colWidths.nev + colWidths.konyvKeszlet + colWidths.tenylegesKeszlet + colWidths.kulonbseg + colWidths.hely + 5, y + 5, { width: colWidths.megjegyzesek - 10 });
 
         doc.fillColor('black');
 
@@ -647,32 +691,218 @@ export class InventorySheetService {
       });
 
       // Summary
-      doc.moveDown();
-      y += 10;
+      doc.moveDown(1);
+      y = doc.y;
       
+      // Draw summary box
+      const summaryBoxHeight = 40;
+      doc.rect(tableLeft, y, pageWidth, summaryBoxHeight).stroke();
+      doc.fillColor('lightgray');
+      doc.rect(tableLeft, y, pageWidth, summaryBoxHeight).fill();
+      doc.fillColor('black');
+      
+      y += 10;
       doc.fontSize(10).font('Helvetica-Bold');
-      doc.text('Összesítő:', tableLeft, y);
+      doc.text('Összesítő:', tableLeft + 5, y);
       y += 15;
       
       doc.fontSize(9).font('Helvetica');
-      doc.text(`Összes tétel száma: ${itemCount}`, tableLeft, y);
+      doc.text(`Összes tétel száma: ${itemCount}`, tableLeft + 5, y);
       y += 12;
-      doc.text(`Összes különbözet: ${totalKulonbseg.toLocaleString('hu-HU')}`, tableLeft, y);
+      doc.text(`Összes különbözet: ${totalKulonbseg.toLocaleString('hu-HU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, tableLeft + 5, y);
 
-      // Footer
-      doc.fontSize(8).font('Helvetica');
-      doc.text(
-        `Generálva: ${new Date().toLocaleString('hu-HU')}`,
-        tableLeft,
-        doc.page.height - 30,
-        { align: 'left' }
-      );
+      // Footer on each page
+      const addFooter = () => {
+        const currentPage = doc.bufferedPageRange().start;
+        doc.fontSize(7).font('Helvetica');
+        doc.text(
+          `Generálva: ${new Date().toLocaleString('hu-HU')} | Oldal ${currentPage + 1}`,
+          tableLeft,
+          doc.page.height - 20,
+          { align: 'left' }
+        );
+      };
+
+      // Add footer to all pages
+      doc.on('pageAdded', () => {
+        addFooter();
+      });
+      
+      // Add footer to first page
+      addFooter();
 
       doc.end();
       
       doc.on('end', () => resolve());
       doc.on('error', (err) => reject(err));
     });
+  }
+
+  async generateExcel(id: string, res: Response): Promise<void> {
+    const sheet = await this.findOne(id);
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Leltárív');
+
+    // Header
+    worksheet.mergeCells('A1:H1');
+    worksheet.getCell('A1').value = 'Leltárív';
+    worksheet.getCell('A1').font = { size: 16, bold: true };
+    worksheet.getCell('A1').alignment = { horizontal: 'center', vertical: 'middle' };
+
+    // Sheet information
+    let infoRow = 3;
+    worksheet.getCell(`A${infoRow}`).value = 'Azonosító:';
+    worksheet.getCell(`B${infoRow}`).value = sheet.azonosito;
+    infoRow++;
+
+    worksheet.getCell(`A${infoRow}`).value = 'Dátum:';
+    worksheet.getCell(`B${infoRow}`).value = new Date(sheet.leltarDatum).toLocaleDateString('hu-HU');
+    infoRow++;
+
+    if (sheet.warehouse) {
+      worksheet.getCell(`A${infoRow}`).value = 'Raktár:';
+      worksheet.getCell(`B${infoRow}`).value = `${sheet.warehouse.nev} (${sheet.warehouse.azonosito})`;
+      infoRow++;
+      
+      if (sheet.warehouse.cim) {
+        worksheet.getCell(`A${infoRow}`).value = 'Raktár címe:';
+        worksheet.getCell(`B${infoRow}`).value = sheet.warehouse.cim;
+        infoRow++;
+      }
+    }
+
+    if (sheet.createdBy) {
+      worksheet.getCell(`A${infoRow}`).value = 'Létrehozta:';
+      worksheet.getCell(`B${infoRow}`).value = sheet.createdBy.nev;
+      infoRow++;
+    }
+
+    if (sheet.approvedBy) {
+      worksheet.getCell(`A${infoRow}`).value = 'Jóváhagyta:';
+      worksheet.getCell(`B${infoRow}`).value = sheet.approvedBy.nev;
+      infoRow++;
+    }
+
+    worksheet.getCell(`A${infoRow}`).value = 'Állapot:';
+    worksheet.getCell(`B${infoRow}`).value = sheet.allapot;
+    infoRow++;
+
+    if (sheet.megjegyzesek) {
+      worksheet.getCell(`A${infoRow}`).value = 'Megjegyzések:';
+      worksheet.getCell(`B${infoRow}`).value = sheet.megjegyzesek;
+      infoRow++;
+    }
+
+    // Table header
+    const headerRow = infoRow + 1;
+    worksheet.getCell(`A${headerRow}`).value = 'Cikk azonosító';
+    worksheet.getCell(`B${headerRow}`).value = 'Cikk név';
+    worksheet.getCell(`C${headerRow}`).value = 'Könyv szerinti készlet';
+    worksheet.getCell(`D${headerRow}`).value = 'Tényleges készlet';
+    worksheet.getCell(`E${headerRow}`).value = 'Különbözet';
+    worksheet.getCell(`F${headerRow}`).value = 'Raktári hely';
+    worksheet.getCell(`G${headerRow}`).value = 'Megjegyzés';
+
+    // Style header
+    worksheet.getRow(headerRow).font = { bold: true };
+    worksheet.getRow(headerRow).fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FFE0E0E0' },
+    };
+    worksheet.getRow(headerRow).eachCell((cell) => {
+      cell.border = {
+        top: { style: 'thin' },
+        left: { style: 'thin' },
+        bottom: { style: 'thin' },
+        right: { style: 'thin' },
+      };
+    });
+
+    // Data rows
+    let totalKulonbseg = 0;
+    sheet.items.forEach((item, index) => {
+      const row = headerRow + 1 + index;
+      worksheet.getCell(`A${row}`).value = item.item?.azonosito || '-';
+      worksheet.getCell(`B${row}`).value = item.item?.nev || 'Ismeretlen';
+      worksheet.getCell(`C${row}`).value = item.konyvKeszlet;
+      worksheet.getCell(`C${row}`).numFmt = '#,##0.00';
+      worksheet.getCell(`D${row}`).value = item.tenylegesKeszlet !== null ? item.tenylegesKeszlet : '-';
+      if (item.tenylegesKeszlet !== null) {
+        worksheet.getCell(`D${row}`).numFmt = '#,##0.00';
+      }
+      worksheet.getCell(`E${row}`).value = item.kulonbseg !== null ? item.kulonbseg : '-';
+      if (item.kulonbseg !== null) {
+        worksheet.getCell(`E${row}`).numFmt = '#,##0.00';
+        // Color coding for difference
+        if (item.kulonbseg > 0) {
+          worksheet.getCell(`E${row}`).fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FF90EE90' }, // Light green
+          };
+        } else if (item.kulonbseg < 0) {
+          worksheet.getCell(`E${row}`).fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FFFFB6C1' }, // Light red
+          };
+        }
+        totalKulonbseg += item.kulonbseg;
+      }
+      worksheet.getCell(`F${row}`).value = item.location?.nev || item.location?.azonosito || '-';
+      worksheet.getCell(`G${row}`).value = item.megjegyzesek || '';
+
+      // Add borders to data rows
+      worksheet.getRow(row).eachCell((cell) => {
+        cell.border = {
+          top: { style: 'thin' },
+          left: { style: 'thin' },
+          bottom: { style: 'thin' },
+          right: { style: 'thin' },
+        };
+      });
+    });
+
+    // Summary row
+    const summaryRow = headerRow + sheet.items.length + 2;
+    worksheet.getCell(`A${summaryRow}`).value = 'Összesítő:';
+    worksheet.getCell(`A${summaryRow}`).font = { bold: true };
+    
+    worksheet.getCell(`B${summaryRow}`).value = 'Összes tétel száma:';
+    worksheet.getCell(`C${summaryRow}`).value = sheet.items.length;
+    worksheet.getCell(`C${summaryRow}`).font = { bold: true };
+    
+    worksheet.getCell(`D${summaryRow}`).value = 'Összes különbözet:';
+    worksheet.getCell(`E${summaryRow}`).value = totalKulonbseg;
+    worksheet.getCell(`E${summaryRow}`).numFmt = '#,##0.00';
+    worksheet.getCell(`E${summaryRow}`).font = { bold: true };
+
+    // Auto-fit columns
+    worksheet.columns.forEach((column) => {
+      let maxLength = 0;
+      column.eachCell!({ includeEmpty: true }, (cell) => {
+        const columnLength = cell.value ? cell.value.toString().length : 0;
+        if (columnLength > maxLength) {
+          maxLength = columnLength;
+        }
+      });
+      column.width = maxLength < 10 ? 10 : maxLength + 2;
+    });
+
+    // Set response headers
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    );
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="leltariv_${sheet.azonosito}_${new Date().toISOString().split('T')[0]}.xlsx"`,
+    );
+
+    await workbook.xlsx.write(res);
+    res.end();
   }
 }
 

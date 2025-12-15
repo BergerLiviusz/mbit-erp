@@ -304,7 +304,7 @@ export class OrderService {
     });
   }
 
-  async changeStatus(id: string, newStatus: OrderStatus, megjegyzesek?: string) {
+  async changeStatus(id: string, newStatus: OrderStatus, megjegyzesek?: string, warehouseId?: string) {
     const order = await this.findOne(id);
 
     // Validate status transitions
@@ -321,6 +321,56 @@ export class OrderService {
       throw new BadRequestException(
         `Cannot change status from ${order.allapot} to ${newStatus}. Valid transitions: ${allowedStatuses.join(', ')}`,
       );
+    }
+
+    // If shipping, reduce stock levels
+    if (newStatus === OrderStatus.SHIPPED && warehouseId) {
+      for (const orderItem of order.items) {
+        // Find stock level
+        const stockLevel = await this.prisma.stockLevel.findFirst({
+          where: {
+            itemId: orderItem.itemId,
+            warehouseId: warehouseId,
+            locationId: null,
+          },
+        });
+
+        if (stockLevel) {
+          const availableStock = (stockLevel.mennyiseg || 0) - (stockLevel.foglaltMennyiseg || 0);
+          
+          if (availableStock < orderItem.mennyiseg) {
+            throw new BadRequestException(
+              `Nincs elég készlet a termékhez: ${orderItem.item?.nev || orderItem.itemId}. Elérhető: ${availableStock}, Kért: ${orderItem.mennyiseg}`
+            );
+          }
+
+          // Update stock level - reduce quantity
+          await this.prisma.stockLevel.update({
+            where: { id: stockLevel.id },
+            data: {
+              mennyiseg: {
+                decrement: orderItem.mennyiseg,
+              },
+            },
+          });
+
+          // Create stock move for audit trail
+          await this.prisma.stockMove.create({
+            data: {
+              itemId: orderItem.itemId,
+              warehouseId: warehouseId,
+              tipus: 'ELADAS',
+              mennyiseg: -orderItem.mennyiseg,
+              referenciaId: order.id,
+              megjegyzesek: `Eladási rendelés: ${order.azonosito}`,
+            },
+          });
+        } else {
+          throw new BadRequestException(
+            `Nincs készlet a termékhez: ${orderItem.item?.nev || orderItem.itemId}`
+          );
+        }
+      }
     }
 
     const updateData: any = {

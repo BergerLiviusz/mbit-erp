@@ -41,7 +41,10 @@ model User {
   adHocQueries            AdHocQuery[]       @relation("AdHocQueryCreatedBy")
   chatMessages            ChatMessage[]      @relation("ChatMessages")
   chatParticipants        ChatParticipant[]  @relation("ChatParticipants")
-  createdWorkflows        Workflow[]         @relation("CreatedWorkflows")
+  createdWorkflows        Workflow[]              @relation("CreatedWorkflows")
+  assignedWorkflowSteps   WorkflowStep[]          @relation("AssignedWorkflowSteps")
+  createdWorkflowInstances WorkflowInstance[]     @relation("CreatedWorkflowInstances")
+  completedWorkflowSteps  WorkflowStepLog[]       @relation("CompletedWorkflowSteps")
 
   @@map("felhasznalok")
 }
@@ -418,6 +421,8 @@ model Invoice {
   id                    String           @id @default(uuid())
   accountId             String
   orderId               String?
+  purchaseOrderId       String? // Beszerzési rendelés ID
+  deliveryNoteId        String? // Szállítólevél ID
   szamlaSzam            String           @unique
   kiallitasDatum        DateTime         @default(now())
   teljesitesDatum       DateTime
@@ -436,11 +441,15 @@ model Invoice {
   updatedAt             DateTime         @updatedAt
   account               Account          @relation(fields: [accountId], references: [id], onDelete: Cascade)
   order                 Order?           @relation("OrderInvoices", fields: [orderId], references: [id], onDelete: SetNull)
+  purchaseOrder         PurchaseOrder?   @relation(fields: [purchaseOrderId], references: [id], onDelete: SetNull)
+  deliveryNote          DeliveryNote?    @relation(fields: [deliveryNoteId], references: [id], onDelete: SetNull)
   items                 InvoiceItem[]
   payments              InvoicePayment[]
 
   @@index([accountId])
   @@index([orderId])
+  @@index([purchaseOrderId])
+  @@index([deliveryNoteId])
   @@index([szamlaSzam])
   @@index([allapot])
   @@index([kiallitasDatum])
@@ -606,7 +615,7 @@ model StockLot {
   warehouseId       String
   sarzsGyartasiSzam String?
   mennyiseg         Float
-  beszerzesiAr      Float // Beszerzési ár ezen a sarzson
+  beszerzesiAr      Float     @default(0) // Beszerzési ár ezen a sarzson
   minKeszlet        Float     @default(0)
   maxKeszlet        Float?
   lejarat           DateTime?
@@ -943,6 +952,7 @@ model Document {
   ervenyessegVeg    DateTime?
   lejarat           DateTime?
   felelos           String?
+  jelenlegiHely    String?
   megjegyzesek      String?
   createdAt         DateTime              @default(now())
   updatedAt         DateTime              @updatedAt
@@ -1141,6 +1151,8 @@ model PurchaseOrder {
   supplier        Supplier            @relation(fields: [supplierId], references: [id], onDelete: Cascade)
   items           PurchaseOrderItem[]
   deliveryNotes   DeliveryNote[]
+  returns         Return[]
+  invoices        Invoice[]
 
   @@index([supplierId])
   @@index([allapot])
@@ -1177,6 +1189,7 @@ model DeliveryNote {
   updatedAt       DateTime       @updatedAt
   purchaseOrder   PurchaseOrder? @relation(fields: [purchaseOrderId], references: [id], onDelete: SetNull)
   shipment        Shipment?      @relation(fields: [shipmentId], references: [id], onDelete: SetNull)
+  invoices        Invoice[]
 
   @@index([purchaseOrderId])
   @@index([shipmentId])
@@ -1298,27 +1311,30 @@ model TaskWatcher {
 }
 
 model Return {
-  id            String   @id @default(uuid())
-  orderId       String?
-  itemId        String
-  warehouseId   String
-  mennyiseg     Float
-  ok            String
-  allapot       String   @default("PENDING")
-  visszaruDatum DateTime @default(now())
-  megjegyzesek  String?
-  createdById   String?
-  approvedById  String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id              String         @id @default(uuid())
+  orderId         String?        // CRM rendelés ID (eladás)
+  purchaseOrderId String?        // Beszerzési rendelés ID
+  itemId          String
+  warehouseId     String
+  mennyiseg       Float
+  ok              String
+  allapot         String         @default("PENDING")
+  visszaruDatum   DateTime       @default(now())
+  megjegyzesek    String?
+  createdById     String?
+  approvedById    String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
 
-  order      Order?    @relation(fields: [orderId], references: [id], onDelete: SetNull)
-  item       Item      @relation(fields: [itemId], references: [id], onDelete: Cascade)
-  warehouse  Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
-  createdBy  User?     @relation("ReturnCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
-  approvedBy User?     @relation("ReturnApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
+  order          Order?          @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  purchaseOrder  PurchaseOrder? @relation(fields: [purchaseOrderId], references: [id], onDelete: SetNull)
+  item           Item            @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  warehouse      Warehouse       @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+  createdBy      User?           @relation("ReturnCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  approvedBy     User?           @relation("ReturnApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
 
   @@index([orderId])
+  @@index([purchaseOrderId])
   @@index([itemId])
   @@index([warehouseId])
   @@index([allapot])
@@ -1812,15 +1828,16 @@ model DataLoadJob {
 }
 
 model Workflow {
-  id          String         @id @default(uuid())
+  id          String              @id @default(uuid())
   nev         String
   leiras      String?
-  aktiv       Boolean        @default(true)
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
+  aktiv       Boolean             @default(true)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
   createdById String?
-  createdBy   User?          @relation("CreatedWorkflows", fields: [createdById], references: [id], onDelete: SetNull)
+  createdBy   User?               @relation("CreatedWorkflows", fields: [createdById], references: [id], onDelete: SetNull)
   steps       WorkflowStep[]
+  instances   WorkflowInstance[]
 
   @@index([aktiv])
   @@index([createdById])
@@ -1828,7 +1845,7 @@ model Workflow {
 }
 
 model WorkflowStep {
-  id         String   @id @default(uuid())
+  id         String                @id @default(uuid())
   workflowId String
   nev        String
   leiras     String?
@@ -1836,13 +1853,62 @@ model WorkflowStep {
   lepesTipus String? // Szabadon beírható lépés típusa (pl. "Ellenőrzés", "Jóváhagyás")
   szin       String?  @default("#3B82F6") // Szín hex kódban
   kotelezo   Boolean  @default(false)
+  assignedToId String? // Hozzárendelt felhasználó
+  roleId     String? // Szerepkör
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   workflow   Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
   Role       Role?    @relation(fields: [roleId], references: [id])
-  roleId     String?
+  assignedTo User?    @relation("AssignedWorkflowSteps", fields: [assignedToId], references: [id], onDelete: SetNull)
+  stepLogs   WorkflowStepLog[]
+  currentInstances WorkflowInstance[] @relation("CurrentStep")
 
   @@unique([workflowId, sorrend])
   @@index([workflowId])
+  @@index([assignedToId])
+  @@index([roleId])
   @@map("workflow_lepesek")
+}
+
+model WorkflowInstance {
+  id          String            @id @default(uuid())
+  workflowId  String
+  nev         String? // Példány neve (opcionális)
+  allapot     String            @default("aktív") // aktív, befejezett, megszakított
+  aktualisLepesId String? // Jelenlegi lépés ID
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  completedAt DateTime?
+  createdById String?
+  workflow    Workflow          @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  createdBy   User?             @relation("CreatedWorkflowInstances", fields: [createdById], references: [id], onDelete: SetNull)
+  aktualisLepes WorkflowStep?   @relation("CurrentStep", fields: [aktualisLepesId], references: [id], onDelete: SetNull)
+  stepLogs    WorkflowStepLog[]
+
+  @@index([workflowId])
+  @@index([allapot])
+  @@index([createdById])
+  @@index([aktualisLepesId])
+  @@map("workflow_peldanyok")
+}
+
+model WorkflowStepLog {
+  id              String          @id @default(uuid())
+  instanceId      String
+  stepId          String
+  allapot         String          @default("várakozik") // várakozik, folyamatban, befejezve, kihagyva
+  megjegyzes      String?
+  completedById   String?
+  completedAt     DateTime?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  instance        WorkflowInstance @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+  step            WorkflowStep    @relation(fields: [stepId], references: [id], onDelete: Cascade)
+  completedBy     User?           @relation("CompletedWorkflowSteps", fields: [completedById], references: [id], onDelete: SetNull)
+
+  @@index([instanceId])
+  @@index([stepId])
+  @@index([allapot])
+  @@index([completedById])
+  @@map("workflow_lepes_logok")
 }

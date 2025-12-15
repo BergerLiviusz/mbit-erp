@@ -10,6 +10,15 @@ interface Warehouse {
   aktiv: boolean;
 }
 
+interface ItemGroup {
+  id: string;
+  nev: string;
+  leiras?: string | null;
+  _count?: {
+    items: number;
+  };
+}
+
 interface Product {
   id: string;
   azonosito: string;
@@ -21,6 +30,8 @@ interface Product {
   afaKulcs: number;
   aktiv: boolean;
   szavatossagiIdoNap?: number | null;
+  itemGroupId?: string | null;
+  itemGroup?: ItemGroup | null;
   stockLevels?: Array<{
     id: string;
     warehouseId: string;
@@ -52,11 +63,15 @@ interface Product {
 export default function Products() {
   const [products, setProducts] = useState<Product[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
+  const [itemGroups, setItemGroups] = useState<ItemGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedItemGroupId, setSelectedItemGroupId] = useState<string>('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSuppliersModalOpen, setIsSuppliersModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isItemGroupModalOpen, setIsItemGroupModalOpen] = useState(false);
+  const [editingItemGroupId, setEditingItemGroupId] = useState<string | null>(null);
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
@@ -74,14 +89,22 @@ export default function Products() {
     afaKulcs: '27',
     aktiv: true,
     szavatossagiIdoNap: '',
-    warehouses: [] as Array<{ warehouseId: string; mennyiseg: string; minimum: string; maximum: string }>,
+    itemGroupId: '',
+    beszerzesiAdatok: '',
+    warehouses: [] as Array<{ warehouseId: string; mennyiseg: string; minimum: string; maximum: string; sarzsGyartasiSzam?: string }>,
+  });
+
+  const [itemGroupFormData, setItemGroupFormData] = useState({
+    nev: '',
+    leiras: '',
   });
 
 
   useEffect(() => {
     loadProducts();
     loadWarehouses();
-  }, [searchTerm]);
+    loadItemGroups();
+  }, [searchTerm, selectedItemGroupId]);
 
   // Listen for products updated events from other components (like Warehouses)
   useEffect(() => {
@@ -107,18 +130,38 @@ export default function Products() {
     }
   };
 
+  const loadItemGroups = async () => {
+    try {
+      const response = await apiFetch('/logistics/item-groups?skip=0&take=100');
+      if (response.ok) {
+        const data = await response.json();
+        setItemGroups(data.data || []);
+      }
+    } catch (error) {
+      console.error('Hiba a cikkcsoportok betöltésekor:', error);
+    }
+  };
+
   const loadProducts = async () => {
     setLoading(true);
     try {
-      const url = searchTerm
-        ? `/logistics/items?skip=0&take=100&search=${encodeURIComponent(searchTerm)}`
-        : `/logistics/items?skip=0&take=100`;
+      let url = `/logistics/items?skip=0&take=100`;
+      if (searchTerm) {
+        url += `&search=${encodeURIComponent(searchTerm)}`;
+      }
 
       const response = await apiFetch(url);
 
       if (response.ok) {
         const data = await response.json();
-        setProducts(data.items || []);
+        let filteredProducts = data.items || [];
+        
+        // Filter by item group if selected
+        if (selectedItemGroupId) {
+          filteredProducts = filteredProducts.filter((p: Product) => p.itemGroupId === selectedItemGroupId);
+        }
+        
+        setProducts(filteredProducts);
       }
     } catch (error) {
       console.error('Hiba a termékek betöltésekor:', error);
@@ -165,12 +208,19 @@ export default function Products() {
         afaKulcs: product.afaKulcs?.toString() || '27',
         aktiv: product.aktiv ?? true,
         szavatossagiIdoNap: product.szavatossagiIdoNap?.toString() || '',
-        warehouses: product.stockLevels?.map(sl => ({
-          warehouseId: sl.warehouseId,
-          mennyiseg: sl.mennyiseg.toString(),
-          minimum: sl.minimum?.toString() || '',
-          maximum: sl.maximum?.toString() || '',
-        })) || [],
+        itemGroupId: product.itemGroupId || '',
+        beszerzesiAdatok: (product as any).beszerzesiAdatok || '',
+        warehouses: product.stockLevels?.map(sl => {
+          // Find corresponding stock lot for this warehouse
+          const stockLot = product.stockLots?.find(lot => lot.warehouse?.id === sl.warehouseId);
+          return {
+            warehouseId: sl.warehouseId,
+            mennyiseg: sl.mennyiseg.toString(),
+            minimum: sl.minimum?.toString() || '',
+            maximum: sl.maximum?.toString() || '',
+            sarzsGyartasiSzam: stockLot?.sarzsGyartasiSzam || '',
+          };
+        }) || [],
       });
     } else {
       setEditingProductId(null);
@@ -184,6 +234,8 @@ export default function Products() {
         afaKulcs: '27',
         aktiv: true,
         szavatossagiIdoNap: '',
+        itemGroupId: '',
+        beszerzesiAdatok: '',
         warehouses: [],
       });
     }
@@ -203,10 +255,12 @@ export default function Products() {
       beszerzesiAr: '0',
       eladasiAr: '0',
       afaKulcs: '27',
-      aktiv: true,
-      szavatossagiIdoNap: '',
-      warehouses: [],
-    });
+        aktiv: true,
+        szavatossagiIdoNap: '',
+        itemGroupId: '',
+        beszerzesiAdatok: '',
+        warehouses: [],
+      });
     setError('');
     setSuccess('');
   };
@@ -214,7 +268,7 @@ export default function Products() {
   const handleAddWarehouse = () => {
     setFormData({
       ...formData,
-      warehouses: [...formData.warehouses, { warehouseId: '', mennyiseg: '0', minimum: '', maximum: '' }],
+      warehouses: [...formData.warehouses, { warehouseId: '', mennyiseg: '0', minimum: '', maximum: '', sarzsGyartasiSzam: '' }],
     });
   };
 
@@ -225,7 +279,7 @@ export default function Products() {
     });
   };
 
-  const handleWarehouseChange = (index: number, field: 'warehouseId' | 'mennyiseg' | 'minimum' | 'maximum', value: string) => {
+  const handleWarehouseChange = (index: number, field: 'warehouseId' | 'mennyiseg' | 'minimum' | 'maximum' | 'sarzsGyartasiSzam', value: string) => {
     const newWarehouses = [...formData.warehouses];
     newWarehouses[index] = { ...newWarehouses[index], [field]: value };
     setFormData({ ...formData, warehouses: newWarehouses });
@@ -284,6 +338,8 @@ export default function Products() {
         afaKulcs: afaKulcs,
         aktiv: formData.aktiv,
         szavatossagiIdoNap: szavatossagiIdoNap && !isNaN(szavatossagiIdoNap) ? szavatossagiIdoNap : null,
+        itemGroupId: formData.itemGroupId || null,
+        beszerzesiAdatok: formData.beszerzesiAdatok?.trim() || null,
       };
 
       const response = await apiFetch(url, {
@@ -337,6 +393,8 @@ export default function Products() {
                 mennyiseg: mennyiseg,
                 minimum: minimum !== null && !isNaN(minimum) ? minimum : null,
                 maximum: maximum !== null && !isNaN(maximum) ? maximum : null,
+                sarzsGyartasiSzam: w.sarzsGyartasiSzam?.trim() || null,
+                beszerzesiAr: beszerzesiAr || null,
               }),
             }).catch(err => {
               console.error('Hiba a készletszint létrehozásakor:', err);
@@ -356,6 +414,86 @@ export default function Products() {
 
       setTimeout(() => {
         handleCloseModal();
+      }, 1500);
+    } catch (err: any) {
+      setError(err.message || 'Hiba történt a mentés során');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleOpenItemGroupModal = (itemGroup?: ItemGroup) => {
+    if (itemGroup) {
+      setEditingItemGroupId(itemGroup.id);
+      setItemGroupFormData({
+        nev: itemGroup.nev,
+        leiras: itemGroup.leiras || '',
+      });
+    } else {
+      setEditingItemGroupId(null);
+      setItemGroupFormData({
+        nev: '',
+        leiras: '',
+      });
+    }
+    setError('');
+    setSuccess('');
+    setIsItemGroupModalOpen(true);
+  };
+
+  const handleCloseItemGroupModal = () => {
+    setIsItemGroupModalOpen(false);
+    setEditingItemGroupId(null);
+    setItemGroupFormData({
+      nev: '',
+      leiras: '',
+    });
+    setError('');
+    setSuccess('');
+  };
+
+  const handleSaveItemGroup = async () => {
+    if (!itemGroupFormData.nev.trim()) {
+      setError('A név megadása kötelező');
+      return;
+    }
+
+    setSaving(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const url = editingItemGroupId
+        ? `/logistics/item-groups/${editingItemGroupId}`
+        : '/logistics/item-groups';
+      const method = editingItemGroupId ? 'PUT' : 'POST';
+
+      const response = await apiFetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          nev: itemGroupFormData.nev.trim(),
+          leiras: itemGroupFormData.leiras.trim() || null,
+        }),
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Nincs hitelesítve. Kérem jelentkezzen be újra.');
+        } else if (response.status === 403) {
+          throw new Error('Nincs jogosultsága ehhez a művelethez.');
+        } else {
+          const errorData = await response.json();
+          throw new Error(errorData.message || `Hiba a cikkcsoport ${editingItemGroupId ? 'frissítésekor' : 'létrehozásakor'}`);
+        }
+      }
+
+      setSuccess(editingItemGroupId ? 'Cikkcsoport sikeresen frissítve!' : 'Cikkcsoport sikeresen létrehozva!');
+      await loadItemGroups();
+      setTimeout(() => {
+        handleCloseItemGroupModal();
       }, 1500);
     } catch (err: any) {
       setError(err.message || 'Hiba történt a mentés során');
@@ -435,7 +573,7 @@ export default function Products() {
         </div>
       </div>
 
-      <div className="mb-6">
+      <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
         <input
           type="text"
           placeholder="Keresés név vagy azonosító alapján..."
@@ -443,6 +581,27 @@ export default function Products() {
           onChange={(e) => setSearchTerm(e.target.value)}
           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-mbit-blue"
         />
+        <div className="flex gap-2">
+          <select
+            value={selectedItemGroupId}
+            onChange={(e) => setSelectedItemGroupId(e.target.value)}
+            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-mbit-blue"
+          >
+            <option value="">Összes cikkcsoport</option>
+            {itemGroups.map(group => (
+              <option key={group.id} value={group.id}>
+                {group.nev} {group._count && `(${group._count.items})`}
+              </option>
+            ))}
+          </select>
+          <button
+            onClick={() => handleOpenItemGroupModal()}
+            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+            title="Új cikkcsoport"
+          >
+            + Csoport
+          </button>
+        </div>
       </div>
 
       <div className="mb-6">
@@ -471,6 +630,15 @@ export default function Products() {
                     <tr key={product.id} className="hover:bg-gray-50">
                       <td className="p-4 text-sm text-gray-900">{product.azonosito}</td>
                       <td className="p-4 text-sm font-medium text-gray-900">{product.nev}</td>
+                      <td className="p-4 text-sm text-gray-600">
+                        {product.itemGroup ? (
+                          <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">
+                            {product.itemGroup.nev}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
+                      </td>
                       <td className="p-4 text-sm text-gray-600">{product.egyseg}</td>
                       <td className="p-4 text-sm text-right text-gray-900">
                         {product.eladasiAr.toLocaleString('hu-HU')} Ft
@@ -594,6 +762,35 @@ export default function Products() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
+              Cikkcsoport
+            </label>
+            <div className="flex gap-2">
+              <select
+                value={formData.itemGroupId}
+                onChange={(e) => setFormData({ ...formData, itemGroupId: e.target.value })}
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-mbit-blue"
+              >
+                <option value="">-- Nincs cikkcsoport --</option>
+                {itemGroups.map(group => (
+                  <option key={group.id} value={group.id}>{group.nev}</option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsModalOpen(false);
+                  handleOpenItemGroupModal();
+                }}
+                className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm"
+                title="Új cikkcsoport"
+              >
+                + Új
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               Egység <span className="text-red-500">*</span>
             </label>
             <input
@@ -668,6 +865,20 @@ export default function Products() {
               placeholder="pl. 365"
             />
             <p className="mt-1 text-xs text-gray-500">A termék szavatossági ideje napokban</p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Beszerzési adatok
+            </label>
+            <textarea
+              value={formData.beszerzesiAdatok}
+              onChange={(e) => setFormData({ ...formData, beszerzesiAdatok: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-mbit-blue"
+              placeholder="Beszerzési információk, szállítói adatok, megjegyzések..."
+              rows={4}
+            />
+            <p className="mt-1 text-xs text-gray-500">További információk a beszerzésről (szállítók, rendelési információk, stb.)</p>
           </div>
 
           <div className="flex items-center">
@@ -757,6 +968,18 @@ export default function Products() {
                         placeholder="0"
                       />
                     </div>
+                    <div className="col-span-2">
+                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                        Sarzs/Gyártási szám (opcionális)
+                      </label>
+                      <input
+                        type="text"
+                        value={warehouse.sarzsGyartasiSzam || ''}
+                        onChange={(e) => handleWarehouseChange(index, 'sarzsGyartasiSzam', e.target.value)}
+                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        placeholder="Pl. SARZS-2024-001"
+                      />
+                    </div>
                   </div>
                   <button
                     type="button"
@@ -807,7 +1030,8 @@ export default function Products() {
             setSelectedProductId(null);
           }}
           title="Termék szállítói"
-          size="lg"
+          size="xl"
+          zIndex={100}
         >
           <ProductSuppliers itemId={selectedProductId} showHeader={false} />
         </Modal>
@@ -847,6 +1071,12 @@ export default function Products() {
                 <div className="col-span-2">
                   <div className="text-sm text-gray-600">Leírás</div>
                   <div className="text-sm">{selectedProduct.leiras}</div>
+                </div>
+              )}
+              {(selectedProduct as any).beszerzesiAdatok && (
+                <div className="col-span-2">
+                  <div className="text-sm text-gray-600">Beszerzési adatok</div>
+                  <div className="text-sm whitespace-pre-wrap">{(selectedProduct as any).beszerzesiAdatok}</div>
                 </div>
               )}
             </div>
@@ -897,6 +1127,72 @@ export default function Products() {
             )}
           </div>
         )}
+      </Modal>
+
+      {/* Item Group Modal */}
+      <Modal 
+        isOpen={isItemGroupModalOpen} 
+        onClose={handleCloseItemGroupModal} 
+        title={editingItemGroupId ? "Cikkcsoport szerkesztése" : "Új cikkcsoport létrehozása"}
+      >
+        <div className="space-y-4">
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+              {error}
+            </div>
+          )}
+
+          {success && (
+            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded">
+              {success}
+            </div>
+          )}
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Név <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={itemGroupFormData.nev}
+              onChange={(e) => setItemGroupFormData({ ...itemGroupFormData, nev: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-mbit-blue"
+              placeholder="Cikkcsoport neve"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Leírás
+            </label>
+            <textarea
+              value={itemGroupFormData.leiras}
+              onChange={(e) => setItemGroupFormData({ ...itemGroupFormData, leiras: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-mbit-blue"
+              placeholder="Cikkcsoport leírása"
+              rows={3}
+            />
+          </div>
+
+          <div className="flex justify-end gap-2 pt-4 border-t">
+            <button
+              type="button"
+              onClick={handleCloseItemGroupModal}
+              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+            >
+              Mégse
+            </button>
+            <button
+              type="button"
+              onClick={handleSaveItemGroup}
+              disabled={saving}
+              className="px-4 py-2 bg-mbit-blue text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
+            >
+              {saving ? 'Mentés...' : editingItemGroupId ? 'Frissítés' : 'Létrehozás'}
+            </button>
+          </div>
+        </div>
       </Modal>
     </div>
   );
