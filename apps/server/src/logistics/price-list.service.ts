@@ -87,7 +87,8 @@ export class PriceListService {
   }
 
   async create(dto: CreatePriceListDto) {
-    if (!dto.supplierId || dto.supplierId.trim() === '') {
+    // Validate supplierId - check for undefined, null, or empty string
+    if (!dto.supplierId || (typeof dto.supplierId === 'string' && dto.supplierId.trim() === '')) {
       throw new BadRequestException('Szállító megadása kötelező');
     }
 
