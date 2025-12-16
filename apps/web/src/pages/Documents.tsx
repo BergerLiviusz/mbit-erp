@@ -121,6 +121,16 @@ export default function Documents() {
   const [editingDocumentId, setEditingDocumentId] = useState<string | null>(null);
   const [detailDocument, setDetailDocument] = useState<Document | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
+  const [accountFormData, setAccountFormData] = useState({
+    nev: '',
+    tipus: 'ugyfél',
+    adoszam: '',
+    cim: '',
+    email: '',
+    telefon: '',
+    megjegyzesek: '',
+  });
 
   const [formData, setFormData] = useState({
     nev: '',
@@ -367,6 +377,66 @@ export default function Documents() {
       }
     } catch (error) {
       console.error('Hiba az ügyfelek betöltésekor:', error);
+    }
+  };
+
+  const validateEmail = (email: string) => {
+    if (!email) return true;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const createAccount = async () => {
+    if (!accountFormData.nev.trim()) {
+      setError('Kérem adja meg az ügyfél nevét!');
+      return;
+    }
+
+    if (accountFormData.email && !validateEmail(accountFormData.email)) {
+      setError('Kérem adjon meg érvényes email címet');
+      return;
+    }
+
+    setSaving(true);
+    setError('');
+    try {
+      const response = await apiFetch(`/crm/accounts`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(accountFormData),
+      });
+
+      if (response.ok) {
+        const newAccount = await response.json();
+        setSuccess('Ügyfél sikeresen létrehozva!');
+        setAccountFormData({
+          nev: '',
+          tipus: 'ugyfél',
+          adoszam: '',
+          cim: '',
+          email: '',
+          telefon: '',
+          megjegyzesek: '',
+        });
+        setIsAccountModalOpen(false);
+        await loadAccounts();
+        setFormData({ ...formData, accountId: newAccount.id });
+        setTimeout(() => setSuccess(''), 3000);
+      } else if (response.status === 401) {
+        setError('Nincs hitelesítve. Kérem jelentkezzen be újra.');
+      } else if (response.status === 403) {
+        setError('Nincs jogosultsága új ügyfél létrehozásához.');
+      } else {
+        const errorData = await response.json();
+        setError(errorData.message || 'Hiba az ügyfél létrehozásakor.');
+      }
+    } catch (error) {
+      setError('Hiba történt az ügyfél létrehozásakor.');
+      console.error(error);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -1363,9 +1433,21 @@ export default function Documents() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Ügyfél
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-sm font-medium text-gray-700">
+                  Ügyfél
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setIsAccountModalOpen(true)}
+                  className="text-sm text-mbit-blue hover:text-blue-800 flex items-center gap-1"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  Új ügyfél
+                </button>
+              </div>
               <select
                 value={formData.accountId}
                 onChange={(e) => setFormData({ ...formData, accountId: e.target.value })}
@@ -1520,6 +1602,157 @@ export default function Documents() {
               onClick={createCategory}
               className="px-4 py-2 bg-mbit-blue text-white rounded hover:bg-blue-600 disabled:opacity-50"
               disabled={saving || !newCategoryName.trim()}
+            >
+              {saving ? 'Létrehozás...' : 'Létrehozás'}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Account Creation Modal */}
+      <Modal
+        isOpen={isAccountModalOpen}
+        onClose={() => {
+          setIsAccountModalOpen(false);
+          setAccountFormData({
+            nev: '',
+            tipus: 'ugyfél',
+            adoszam: '',
+            cim: '',
+            email: '',
+            telefon: '',
+            megjegyzesek: '',
+          });
+        }}
+        title="Új ügyfél hozzáadása"
+        zIndex={200}
+      >
+        <div className="space-y-4">
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+              {error}
+            </div>
+          )}
+          {success && (
+            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded">
+              {success}
+            </div>
+          )}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Név <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={accountFormData.nev}
+              onChange={(e) => setAccountFormData({ ...accountFormData, nev: e.target.value })}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  createAccount();
+                }
+              }}
+              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="pl. Kovács Kft."
+              autoFocus
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Típus <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={accountFormData.tipus}
+              onChange={(e) => setAccountFormData({ ...accountFormData, tipus: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="partner">Partner</option>
+              <option value="ugyfél">Ügyfél</option>
+              <option value="szállító">Szállító</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Adószám</label>
+            <input
+              type="text"
+              value={accountFormData.adoszam}
+              onChange={(e) => setAccountFormData({ ...accountFormData, adoszam: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="pl. 12345678-1-23"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Cím</label>
+            <input
+              type="text"
+              value={accountFormData.cim}
+              onChange={(e) => setAccountFormData({ ...accountFormData, cim: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="pl. Budapest, Fő utca 1."
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+            <input
+              type="email"
+              value={accountFormData.email}
+              onChange={(e) => setAccountFormData({ ...accountFormData, email: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="pl. info@example.com"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Telefon</label>
+            <input
+              type="tel"
+              value={accountFormData.telefon}
+              onChange={(e) => setAccountFormData({ ...accountFormData, telefon: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="pl. +36 1 234 5678"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Megjegyzések</label>
+            <textarea
+              value={accountFormData.megjegyzesek}
+              onChange={(e) => setAccountFormData({ ...accountFormData, megjegyzesek: e.target.value })}
+              rows={3}
+              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Opcionális megjegyzések..."
+            />
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4">
+            <button
+              type="button"
+              onClick={() => {
+                setIsAccountModalOpen(false);
+                setAccountFormData({
+                  nev: '',
+                  tipus: 'ugyfél',
+                  adoszam: '',
+                  cim: '',
+                  email: '',
+                  telefon: '',
+                  megjegyzesek: '',
+                });
+              }}
+              className="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50"
+              disabled={saving}
+            >
+              Mégse
+            </button>
+            <button
+              type="button"
+              onClick={createAccount}
+              className="px-4 py-2 bg-mbit-blue text-white rounded hover:bg-blue-600 disabled:opacity-50"
+              disabled={saving || !accountFormData.nev.trim()}
             >
               {saving ? 'Létrehozás...' : 'Létrehozás'}
             </button>
