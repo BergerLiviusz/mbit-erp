@@ -104,40 +104,54 @@ export class DocumentService {
     }
 
     if (filters?.search) {
-      const searchConditions = [
-        { nev: { contains: filters.search, mode: 'insensitive' } },
-        { iktatoSzam: { contains: filters.search, mode: 'insensitive' } },
-        { tartalom: { contains: filters.search, mode: 'insensitive' } },
-        { 
-          tags: {
-            some: {
-              tag: {
-                nev: { contains: filters.search, mode: 'insensitive' }
+      // SQLite doesn't support 'insensitive' mode, so we use case-sensitive contains
+      // For case-insensitive search, we could use Prisma raw queries, but for simplicity
+      // we'll use contains which works reliably in SQLite
+      const searchTerm = filters.search.trim();
+      
+      if (searchTerm.length > 0) {
+        const searchConditions = [
+          { nev: { contains: searchTerm } },
+          { iktatoSzam: { contains: searchTerm } },
+          { fajlNev: { contains: searchTerm } },
+          // Only search in tartalom if it's not null
+          { 
+            AND: [
+              { tartalom: { not: null } },
+              { tartalom: { contains: searchTerm } }
+            ]
+          },
+          { 
+            tags: {
+              some: {
+                tag: {
+                  nev: { contains: searchTerm }
+                }
               }
             }
-          }
-        },
-        {
-          category: {
-            nev: { contains: filters.search, mode: 'insensitive' }
-          }
-        },
-        {
-          account: {
-            nev: { contains: filters.search, mode: 'insensitive' }
-          }
-        },
-      ];
-
-      // If we already have an OR condition for permissions, we need to combine them
-      if (where.OR) {
-        where.AND = [
-          { OR: where.OR },
-          { OR: searchConditions },
+          },
+          {
+            category: {
+              nev: { contains: searchTerm }
+            }
+          },
+          {
+            account: {
+              nev: { contains: searchTerm }
+            }
+          },
         ];
-        delete where.OR;
-      } else {
-        where.OR = searchConditions;
+
+        // If we already have an OR condition for permissions, we need to combine them
+        if (where.OR) {
+          where.AND = [
+            { OR: where.OR },
+            { OR: searchConditions },
+          ];
+          delete where.OR;
+        } else {
+          where.OR = searchConditions;
+        }
       }
     }
 
