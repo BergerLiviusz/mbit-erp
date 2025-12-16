@@ -8112,28 +8112,101 @@ Létrehozom a frontend logolási utility-t, majd frissítem a kódot:
 
 ---
 
-<tool-use data-tool-type="unknown" data-tool-name="write">
+<tool-use data-tool-type="write" data-tool-name="write">
+
+<details><summary>Tool use: **write** • Edit file: apps/web/src/lib/logger.ts</summary>
+
+**Chunk 1**
+Lines added: 43, lines removed: 1
+
+```diff
+@@ -1,1 +1,43 @@
+- 
++ /**
++  * Logger utility for Electron desktop app
++  * Writes logs to file in %appdata%/roaming/@mbit-erp/data/logs/app.log
++  * Falls back to console.log in browser environment
++  */
++ 
++ const isElectron = !!(window as any).electron || (navigator.userAgent.includes('Electron'));
++ 
++ interface LogLevel {
++   info: 'info';
++   warn: 'warn';
++   error: 'error';
++ }
++ 
++ export function writeLog(message: string, level: 'info' | 'warn' | 'error' = 'info'): void {
++   // Always log to console for immediate debugging
++   const consoleMethod = level === 'error' ? console.error : level === 'warn' ? console.warn : console.log;
++   consoleMethod(message);
++ 
++   // In Electron, also write to log file
++   if (isElectron &amp;&amp; (window as any).electron?.writeLog) {
++     try {
++       (window as any).electron.writeLog(message, level).catch((err: any) =&gt; {
++         console.error('[Logger] Failed to write to log file:', err);
++       });
++     } catch (error) {
++       console.error('[Logger] Error calling writeLog:', error);
++     }
++   }
++ }
++ 
++ export function logInfo(message: string): void {
++   writeLog(message, 'info');
++ }
++ 
++ export function logWarn(message: string): void {
++   writeLog(message, 'warn');
++ }
++ 
++ export function logError(message: string): void {
++   writeLog(message, 'error');
++ }
++ 
+```
+
+</details>
+
+</tool-use>
+
+---
+
+
+
+---
+
+
+Frissítem a PriceLists.tsx és logistics.ts fájlokat, hogy a logger-t használják:
+
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: apps/web/src/pages/PriceLists.tsx</summary>
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="search" data-tool-name="grep">
 <details>
-<summary>Tool use: **write**</summary>
+<summary>Tool use: **grep** • Grep for "^import" in "apps/web/src/pages/PriceLists.tsx" • 7 matches</summary>
+
+Output mode: content
 
 
-Parameters:
-
-```json
-{
-  "relativeWorkspacePath": "apps/web/src/lib/logger.ts"
-}
-```
-Additional data:
-
-```json
-{
-  "codeblockId": "d206dd1f-584a-468b-b954-38950af628e6"
-}
-```
-User decision: **accepted**
-
-Status: **loading**
+| File | Content | Line |
+|------|------|------|
+| `apps/web/src/pages/PriceLists.tsx` | `import \{ useState, useEffect \} from 'react';` | L1 |
+| `apps/web/src/pages/PriceLists.tsx` | `import Modal from '../components/Modal';` | L2 |
+| `apps/web/src/pages/PriceLists.tsx` | `import ConfirmModal from '../components/ConfirmModal';` | L3 |
+| `apps/web/src/pages/PriceLists.tsx` | `import \{` | L4 |
+| `apps/web/src/pages/PriceLists.tsx` | `import \{ useSuppliers \} from '../lib/api/logistics';` | L20 |
+| `apps/web/src/pages/PriceLists.tsx` | `import \{ useQuery \} from '@tanstack/react-query';` | L21 |
+| `apps/web/src/pages/PriceLists.tsx` | `import axios from '../lib/axios';` | L22 |
 
 
 </details>
@@ -8142,6 +8215,664 @@ Status: **loading**
 ---
 
 
+
+---
+
+
+
+
+
+---
+
+<tool-use data-tool-type="write" data-tool-name="search_replace">
+
+<details><summary>Tool use: **search_replace** • Edit file: apps/web/src/pages/PriceLists.tsx</summary>
+
+**Chunk 1**
+Lines added: 1, lines removed: undefined
+
+```diff
+@@ -21,4 +21,5 @@
+  import { useQuery } from '@tanstack/react-query';
+  import axios from '../lib/axios';
++ import { writeLog } from '../lib/logger';
+  
+  export default function PriceLists() {
+```
+
+</details>
+
+</tool-use>
+
+---
+
+<tool-use data-tool-type="write" data-tool-name="search_replace">
+
+<details><summary>Tool use: **search_replace** • Edit file: apps/web/src/pages/PriceLists.tsx</summary>
+
+**Chunk 1**
+Lines added: 2, lines removed: 2
+
+```diff
+@@ -126,8 +126,8 @@
+      // Validate required fields - check supplierId first
+      const supplierIdValue = formData.supplierId;
+-     console.log('[handleSubmit] Initial supplierId:', supplierIdValue, 'Type:', typeof supplierIdValue);
++     writeLog(&#96;[PriceLists.handleSubmit] Initial supplierId: ${supplierIdValue}, Type: ${typeof supplierIdValue}&#96;);
+      
+      if (!supplierIdValue || (typeof supplierIdValue === 'string' &amp;&amp; supplierIdValue.trim() === '')) {
+-       console.log('[handleSubmit] Validation failed: supplierId is empty');
++       writeLog('[PriceLists.handleSubmit] Validation failed: supplierId is empty', 'error');
+        setError('Kérem válasszon szállítót!');
+        return;
+```
+
+**Chunk 2**
+Lines added: 3, lines removed: 3
+
+```diff
+@@ -150,9 +150,9 @@
+          const trimmedSupplierId = typeof supplierIdValue === 'string' ? supplierIdValue.trim() : supplierIdValue;
+          
+-         console.log('[handleSubmit] formData:', JSON.stringify(formData, null, 2));
+-         console.log('[handleSubmit] trimmedSupplierId:', trimmedSupplierId);
++         writeLog(&#96;[PriceLists.handleSubmit] formData: ${JSON.stringify(formData, null, 2)}&#96;);
++         writeLog(&#96;[PriceLists.handleSubmit] trimmedSupplierId: ${trimmedSupplierId}&#96;);
+          
+          if (!trimmedSupplierId || (typeof trimmedSupplierId === 'string' &amp;&amp; trimmedSupplierId === '')) {
+-           console.log('[handleSubmit] Validation failed: trimmedSupplierId is empty');
++           writeLog('[PriceLists.handleSubmit] Validation failed: trimmedSupplierId is empty', 'error');
+            setError('Kérem válasszon szállítót!');
+            return;
+```
+
+**Chunk 3**
+Lines added: 2, lines removed: 2
+
+```diff
+@@ -167,6 +167,6 @@
+          };
+          
+-         console.log('[handleSubmit] submitData:', JSON.stringify(submitData, null, 2));
+-         console.log('[handleSubmit] About to call createPriceList.mutateAsync');
++         writeLog(&#96;[PriceLists.handleSubmit] submitData: ${JSON.stringify(submitData, null, 2)}&#96;);
++         writeLog('[PriceLists.handleSubmit] About to call createPriceList.mutateAsync');
+          
+          await createPriceList.mutateAsync(submitData);
+```
+
+</details>
+
+</tool-use>
+
+---
+
+<tool-use data-tool-type="search" data-tool-name="grep">
+<details>
+<summary>Tool use: **grep** • Grep for "console\.log.*Select onChange" in "apps/web/src/pages/PriceLists.tsx" • 2 matches</summary>
+
+Output mode: content
+
+
+| File | Content | Line |
+|------|------|------|
+| `apps/web/src/pages/PriceLists.tsx` | `console.log('Select onChange - new value:', newValue);` | L535 |
+| `apps/web/src/pages/PriceLists.tsx` | `console.log('Select onChange - updated formData:', updated);` | L538 |
+
+
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+
+
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: apps/web/src/pages/PriceLists.tsx</summary>
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="write" data-tool-name="search_replace">
+
+<details><summary>Tool use: **search_replace** • Edit file: apps/web/src/pages/PriceLists.tsx</summary>
+
+**Chunk 1**
+Lines added: 2, lines removed: 2
+
+```diff
+@@ -533,8 +533,8 @@
+                onChange={(e) =&gt; {
+                  const newValue = e.target.value;
+-                 console.log('Select onChange - new value:', newValue);
++                 writeLog(&#96;[PriceLists.Select.onChange] new value: ${newValue}&#96;);
+                  setFormData((prev) =&gt; {
+                    const updated = { ...prev, supplierId: newValue };
+-                   console.log('Select onChange - updated formData:', updated);
++                   writeLog(&#96;[PriceLists.Select.onChange] updated formData: ${JSON.stringify(updated, null, 2)}&#96;);
+                    return updated;
+                  });
+```
+
+</details>
+
+</tool-use>
+
+---
+
+<tool-use data-tool-type="write" data-tool-name="search_replace">
+
+<details><summary>Tool use: **search_replace** • Edit file: apps/web/src/lib/api/logistics.ts</summary>
+
+**Chunk 1**
+Lines added: 5, lines removed: 3
+
+```diff
+@@ -573,11 +573,13 @@
+  export function useCreatePriceList() {
+    const queryClient = useQueryClient();
++   const { writeLog } = require('../logger');
++   
+    return useMutation({
+      mutationFn: async (data: CreatePriceListDto) =&gt; {
+-       console.log('[useCreatePriceList] mutationFn called with data:', JSON.stringify(data, null, 2));
+-       console.log('[useCreatePriceList] data.supplierId:', data.supplierId, 'Type:', typeof data.supplierId);
++       writeLog(&#96;[useCreatePriceList] mutationFn called with data: ${JSON.stringify(data, null, 2)}&#96;);
++       writeLog(&#96;[useCreatePriceList] data.supplierId: ${data.supplierId}, Type: ${typeof data.supplierId}&#96;);
+        
+        if (!data.supplierId || (typeof data.supplierId === 'string' &amp;&amp; data.supplierId.trim() === '')) {
+-         console.error('[useCreatePriceList] ERROR: supplierId is empty!');
++         writeLog('[useCreatePriceList] ERROR: supplierId is empty!', 'error');
+          throw new Error('Szállító megadása kötelező');
+        }
+```
+
+</details>
+
+</tool-use>
+
+---
+
+
+
+---
+
+
+Javítom a logistics.ts importját:
+
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: apps/web/src/lib/api/logistics.ts</summary>
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="search" data-tool-name="grep">
+<details>
+<summary>Tool use: **grep** • Grep for "^import" in "apps/web/src/lib/api/logistics.ts" • 2 matches</summary>
+
+Output mode: content
+
+
+| File | Content | Line |
+|------|------|------|
+| `apps/web/src/lib/api/logistics.ts` | `import \{ useQuery, useMutation, useQueryClient \} from '@tanstack/react-query';` | L1 |
+| `apps/web/src/lib/api/logistics.ts` | `import axios from '../axios';` | L2 |
+
+
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+
+
+
+---
+
+<tool-use data-tool-type="write" data-tool-name="search_replace">
+
+<details><summary>Tool use: **search_replace** • Edit file: apps/web/src/lib/api/logistics.ts</summary>
+
+**Chunk 1**
+Lines added: 1, lines removed: undefined
+
+```diff
+@@ -1,4 +1,5 @@
+  import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+  import axios from '../axios';
++ import { writeLog } from '../logger';
+  
+  // Types
+```
+
+</details>
+
+</tool-use>
+
+---
+
+<tool-use data-tool-type="write" data-tool-name="search_replace">
+
+<details><summary>Tool use: **search_replace** • Edit file: apps/web/src/lib/api/logistics.ts</summary>
+
+**Chunk 1**
+Lines added: undefined, lines removed: 1
+
+```diff
+@@ -574,5 +574,4 @@
+  export function useCreatePriceList() {
+    const queryClient = useQueryClient();
+-   const { writeLog } = require('../logger');
+    
+    return useMutation({
+```
+
+</details>
+
+</tool-use>
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: apps/web/src/lib/axios.ts</summary>
+
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+
+
+
+---
+
+<tool-use data-tool-type="write" data-tool-name="search_replace">
+
+<details><summary>Tool use: **search_replace** • Edit file: apps/web/src/lib/axios.ts</summary>
+
+**Chunk 1**
+Lines added: 1, lines removed: undefined
+
+```diff
+@@ -1,3 +1,4 @@
+  import axios from 'axios';
++ import { writeLog } from './logger';
+  
+  const isElectron = !!(window as any).electron || (navigator.userAgent.includes('Electron'));
+```
+
+</details>
+
+</tool-use>
+
+---
+
+<tool-use data-tool-type="write" data-tool-name="search_replace">
+
+<details><summary>Tool use: **search_replace** • Edit file: apps/web/src/lib/axios.ts</summary>
+
+**Chunk 1**
+Lines added: 4, lines removed: 4
+
+```diff
+@@ -24,8 +24,8 @@
+      // Debug logging for price list creation
+      if (config.url?.includes('price-lists') &amp;&amp; config.method === 'post') {
+-       console.log('[Axios Request] URL:', config.url);
+-       console.log('[Axios Request] Method:', config.method);
+-       console.log('[Axios Request] Data:', JSON.stringify(config.data, null, 2));
+-       console.log('[Axios Request] Data type:', typeof config.data);
++       writeLog(&#96;[Axios Request] URL: ${config.url}&#96;);
++       writeLog(&#96;[Axios Request] Method: ${config.method}&#96;);
++       writeLog(&#96;[Axios Request] Data: ${JSON.stringify(config.data, null, 2)}&#96;);
++       writeLog(&#96;[Axios Request] Data type: ${typeof config.data}&#96;);
+      }
+      
+```
+
+</details>
+
+</tool-use>
+
+---
+
+<tool-use data-tool-type="generic" data-tool-name="read_lints">
+<details>
+          <summary>Tool use: **read_lints** • Read lints for 4 files</summary>
+      
+Lint paths:
+
+- `apps/web/src/lib/logger.ts`
+- `apps/web/src/pages/PriceLists.tsx`
+- `apps/web/src/lib/api/logistics.ts`
+- `apps/web/src/lib/axios.ts`
+
+Lint results
+
+
+**No lint errors found**
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+Hozzáadom a TypeScript típusdefiníciókat az Electron API-hoz:
+
+
+---
+
+<tool-use data-tool-type="generic" data-tool-name="glob_file_search">
+<details>
+<summary>Tool use: **glob_file_search** • Searched codebase "**/*.d.ts" • **1** result in **1** directory</summary>
+
+Directory: **/Users/liviuszberger/mbit-erp/apps/web/src** (1 file)
+
+| File |
+|------|
+| `vite-env.d.ts` |
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="search" data-tool-name="codebase_search">
+<details>
+                <summary>Tool use: **codebase_search** • Searched codebase "Where are TypeScript type definitions for Electron window.electron API?" • **15** results</summary>
+            
+| File | Lines |
+|------|-------|
+| `apps/web/src/vite-env.d.ts` | L5-26 |
+| `apps/web/src/lib/api.ts` | L10 |
+| `apps/web/src/lib/api.ts` | L5-115 |
+| `apps/web/src/components/ErrorBoundary.tsx` | L11 |
+| `apps/web/src/components/DebugPanel.tsx` | L2-41 |
+| `apps/web/src/lib/api.ts` | L23-115 |
+| `apps/web/src/lib/axios.ts` | L34 |
+| `apps/web/src/components/NotificationPanel.tsx` | L268 |
+| `apps/web/src/pages/Documents.tsx` | L95-1922 |
+| `apps/web/src/vite-env.d.ts` | L9 |
+| `apps/web/src/main.tsx` | L35 |
+| `apps/web/package.json` | L56 |
+| `apps/web/vite.config.ts` | L39-97 |
+| `apps/web/src/pages/CRM.tsx` | L1060 |
+| `apps/web/src/vite-env.d.ts` | L2-26 |
+
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+
+
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: apps/web/src/vite-env.d.ts</summary>
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="write" data-tool-name="search_replace">
+
+<details><summary>Tool use: **search_replace** • Edit file: apps/web/src/vite-env.d.ts</summary>
+
+**Chunk 1**
+Lines added: 1, lines removed: undefined
+
+```diff
+@@ -17,4 +17,5 @@
+        openFolder: (path: string) =&gt; Promise&lt;{ success: boolean; error?: string }&gt;;
+        openEmailClient: (to: string, subject: string, body?: string) =&gt; Promise&lt;{ success: boolean; error?: string }&gt;;
++       writeLog: (message: string, level?: 'info' | 'warn' | 'error') =&gt; Promise&lt;{ success: boolean; error?: string }&gt;;
+        platform: string;
+        versions: {
+```
+
+</details>
+
+</tool-use>
+
+---
+
+<tool-use data-tool-type="generic" data-tool-name="read_lints">
+<details>
+          <summary>Tool use: **read_lints** • Read lints for 2 files</summary>
+      
+Lint paths:
+
+- `apps/web/src/lib/logger.ts`
+- `apps/web/src/vite-env.d.ts`
+
+Lint results
+
+
+**No lint errors found**
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+Buildelés és tesztelés:
+
+
+---
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && npm run build --workspace=@mbit-erp/web 2>&1 | tail -10</summary>
+
+```bash
+cd /Users/liviuszberger/mbit-erp && npm run build --workspace=@mbit-erp/web 2>&1 | tail -10
+```
+
+```
+&gt; tsc &amp;&amp; vite build
+
+src/lib/logger.ts(9,11): error TS6196: 'LogLevel' is declared but never used.
+npm error Lifecycle script &#96;build&#96; failed with error:
+npm error code 2
+npm error path /Users/liviuszberger/mbit-erp/apps/web
+npm error workspace @mbit-erp/web@1.0.0
+npm error location /Users/liviuszberger/mbit-erp/apps/web
+npm error command failed
+npm error command sh -c tsc &amp;&amp; vite build
+
+```
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+
+
+
+---
+
+<tool-use data-tool-type="write" data-tool-name="search_replace">
+
+<details><summary>Tool use: **search_replace** • Edit file: apps/web/src/lib/logger.ts</summary>
+
+**Chunk 1**
+Lines added: undefined, lines removed: 6
+
+```diff
+@@ -6,10 +6,4 @@
+  
+  const isElectron = !!(window as any).electron || (navigator.userAgent.includes('Electron'));
+- 
+- interface LogLevel {
+-   info: 'info';
+-   warn: 'warn';
+-   error: 'error';
+- }
+  
+  export function writeLog(message: string, level: 'info' | 'warn' | 'error' = 'info'): void {
+```
+
+</details>
+
+</tool-use>
+
+---
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && npm run build --workspace=@mbit-erp/web 2>&1 | tail -5</summary>
+
+```bash
+cd /Users/liviuszberger/mbit-erp && npm run build --workspace=@mbit-erp/web 2>&1 | tail -5
+```
+
+```
+mode      generateSW
+precache  6 entries (934.29 KiB)
+files generated
+  dist/sw.js
+  dist/workbox-1be04862.js
+
+```
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+A build sikeres. Commitolom és pusholom a változtatásokat:
+
+
+---
+
+<tool-use data-tool-type="shell" data-tool-name="run_terminal_cmd">
+<details><summary>Tool use: **run_terminal_cmd** • Run command: cd /Users/liviuszberger/mbit-erp && git add -A && git commit -m "Implement file-based logging for Electron app - logs written to %appdata%/roaming/@mbit-erp/data/logs/app.log" && git push origin main && git checkout package-4 && git merge main -m "Merge main: implement file-based logging" && git push origin package-4 && git checkout main</summary>
+
+```bash
+cd /Users/liviuszberger/mbit-erp && git add -A && git commit -m "Implement file-based logging for Electron app - logs written to %appdata%/roaming/@mbit-erp/data/logs/app.log" && git push origin main && git checkout package-4 && git merge main -m "Merge main: implement file-based logging" && git push origin package-4 && git checkout main
+```
+
+```
+[main e248d3f] Implement file-based logging for Electron app - logs written to %appdata%/roaming/@mbit-erp/data/logs/app.log
+ 8 files changed, 4508 insertions(+), 10996 deletions(-)
+ create mode 100644 apps/web/src/lib/logger.ts
+To https://github.com/BergerLiviusz/mbit-erp.git
+   4cd7707..e248d3f  main -&gt; main
+Your branch is up to date with 'origin/package-4'.
+Merge made by the 'ort' strategy.
+ ...303\251si-\303\266tletek-kidolgoz\303\241sa.md" | 15418 ++++++-------------
+ apps/desktop/src/main.ts                           |    11 +
+ apps/desktop/src/preload.ts                        |     1 +
+ apps/web/src/lib/api/logistics.ts                  |     8 +-
+ apps/web/src/lib/axios.ts                          |     9 +-
+ apps/web/src/lib/logger.ts                         |    37 +
+ apps/web/src/pages/PriceLists.tsx                  |    19 +-
+ apps/web/src/vite-env.d.ts                         |     1 +
+ 8 files changed, 4508 insertions(+), 10996 deletions(-)
+ create mode 100644 apps/web/src/lib/logger.ts
+Switched to branch 'package-4'
+To https://github.com/BergerLiviusz/mbit-erp.git
+   dde7a9b..97354d3  package-4 -&gt; package-4
+Your branch is up to date with 'origin/main'.
+Switched to branch 'main'
+
+```
+</details>
+</tool-use>
+
+---
+
+
+
+---
+
+
+Implementáltam a fájlba író logolást az Electron alkalmazáshoz. A változtatások:
+
+## Implementált változtatások:
+
+1. **Electron Main Process (`apps/desktop/src/main.ts`)**:
+   - Hozzáadtam egy `write-log` IPC handler-t, ami a `writeLog` függvényt használja
+   - A logok a `%appdata%/roaming/@mbit-erp/data/logs/app.log` fájlba kerülnek
+
+2. **Electron Preload (`apps/desktop/src/preload.ts`)**:
+   - Exponáltam a `writeLog` metódust a `window.electron` objektumban
+
+3. **Frontend Logger Utility (`apps/web/src/lib/logger.ts`)**:
+   - Új logger utility fájl
+   - A `writeLog` függvény mind a konzolra, mind fájlba ír (Electron módban)
+   - Támogatott log szintek: `info`, `warn`, `error`
+
+4. **TypeScript típusok (`apps/web/src/vite-env.d.ts`)**:
+   - Hozzáadtam a `writeLog` metódust a `Window.electron` interface-hez
+
+5. **Frontend kód frissítések**:
+   - `PriceLists.tsx`: Minden `console.log` lecserélve `writeLog`-ra
+   - `logistics.ts`: A `useCreatePriceList` hook-ban `writeLog` használata
+   - `axios.ts`: Az axios interceptorban `writeLog` használata
+
+## Használat:
+
+Most amikor árlistát próbálsz létrehozni, a logok a következő helyre kerülnek:
+- **Windows**: `%appdata%/roaming/@mbit-erp/data/logs/app.log`
+- **macOS**: `~/Library/Application Support/@mbit-erp/data/logs/app.log`
+- **Linux**: `~/.config/@mbit-erp/data/logs/app.log`
+
+A logok tartalmazni fogják:
+- `[PriceLists.handleSubmit]` - form submit események
+- `[PriceLists.Select.onChange]` - select változások
+- `[useCreatePriceList]` - mutation hook hívások
+- `[Axios Request]` - axios request adatok
+
+Próbáld ki újra az árlista létrehozását, majd küldd el a log fájlt (`app.log`), hogy lássam, mi történik a `supplierId`-vel.
 
 ---
 
