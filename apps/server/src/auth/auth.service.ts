@@ -80,7 +80,7 @@ export class AuthService {
     });
 
     if (!adminRole) {
-      // Fallback to default admin email if no Admin role exists
+      console.log('[AuthService] Admin role not found, returning default email');
       return { email: 'admin@mbit.hu' };
     }
 
@@ -99,10 +99,11 @@ export class AuthService {
     });
 
     if (!adminUser) {
-      // Fallback to default admin email if no admin user found
+      console.log('[AuthService] Admin user not found, returning default email');
       return { email: 'admin@mbit.hu' };
     }
 
+    console.log('[AuthService] Found admin user:', { id: adminUser.id, email: adminUser.email });
     return { email: adminUser.email };
   }
 }
