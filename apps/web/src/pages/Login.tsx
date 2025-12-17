@@ -11,42 +11,75 @@ export default function Login({ onLogin }: LoginProps) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [isLoadingAdminEmail, setIsLoadingAdminEmail] = useState(true);
+  const [rememberLogin, setRememberLogin] = useState(false);
+  const [adminEmail, setAdminEmail] = useState('');
 
-  // Load last login email or admin email on mount
+  // Load admin email and determine default email on mount
   useEffect(() => {
     const loadDefaultEmail = async () => {
       try {
-        // First, try to get last login email from localStorage
-        const lastLoginEmail = localStorage.getItem('lastLoginEmail');
-        
-        if (lastLoginEmail) {
-          setEmail(lastLoginEmail);
-          setIsLoadingAdminEmail(false);
-        } else {
-          // If no last login email, fetch admin email from API
-          try {
-            const response = await axios.get('/api/auth/admin-email');
-            if (response.data?.email) {
-              setEmail(response.data.email);
-            } else {
-              // Fallback to default
-              setEmail('admin@mbit.hu');
-            }
-          } catch (err) {
-            // Fallback to default if API call fails
-            setEmail('admin@mbit.hu');
+        // Always fetch current admin email from API
+        let currentAdminEmail = 'admin@mbit.hu';
+        try {
+          const response = await axios.get('/api/auth/admin-email');
+          if (response.data?.email) {
+            currentAdminEmail = response.data.email;
+            setAdminEmail(currentAdminEmail);
           }
-          setIsLoadingAdminEmail(false);
+        } catch (err) {
+          console.error('Failed to fetch admin email:', err);
+        }
+
+        // Check if user wants to remember login
+        const rememberLoginSetting = localStorage.getItem('rememberLogin') === 'true';
+        setRememberLogin(rememberLoginSetting);
+
+        if (rememberLoginSetting) {
+          // If remember login is enabled, use last login email
+          const lastLoginEmail = localStorage.getItem('lastLoginEmail');
+          if (lastLoginEmail) {
+            setEmail(lastLoginEmail);
+          } else {
+            // If no last login email, use admin email
+            setEmail(currentAdminEmail);
+          }
+        } else {
+          // If remember login is disabled, always use current admin email
+          setEmail(currentAdminEmail);
+          
+          // Also update localStorage admin email for future reference
+          localStorage.setItem('adminEmail', currentAdminEmail);
         }
       } catch (err) {
         // Fallback to default
         setEmail('admin@mbit.hu');
+        setAdminEmail('admin@mbit.hu');
+      } finally {
         setIsLoadingAdminEmail(false);
       }
     };
 
     loadDefaultEmail();
   }, []);
+
+  const handleRememberLoginChange = (checked: boolean) => {
+    setRememberLogin(checked);
+    localStorage.setItem('rememberLogin', checked.toString());
+    
+    if (checked) {
+      // If enabling remember login, use last login email or current email
+      const lastLoginEmail = localStorage.getItem('lastLoginEmail');
+      if (lastLoginEmail) {
+        setEmail(lastLoginEmail);
+      } else {
+        // Save current email as last login email
+        localStorage.setItem('lastLoginEmail', email);
+      }
+    } else {
+      // If disabling remember login, switch to admin email
+      setEmail(adminEmail || 'admin@mbit.hu');
+    }
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,8 +90,17 @@ export default function Login({ onLogin }: LoginProps) {
       const response = await axios.post('/api/auth/login', { email, password });
       localStorage.setItem('token', response.data.access_token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
-      // Save email for next login (but not password for security)
-      localStorage.setItem('lastLoginEmail', email);
+      
+      // Save email for next login if remember login is enabled
+      if (rememberLogin) {
+        localStorage.setItem('lastLoginEmail', email);
+      }
+      
+      // Always update admin email reference
+      if (adminEmail) {
+        localStorage.setItem('adminEmail', adminEmail);
+      }
+      
       onLogin();
     } catch (err: any) {
       // Better error handling - show proper error message
@@ -112,7 +154,7 @@ export default function Login({ onLogin }: LoginProps) {
             />
           </div>
 
-          <div className="mb-6">
+          <div className="mb-4">
             <label className="block text-gray-700 mb-2">Jelszó</label>
             <input
               type="password"
@@ -122,6 +164,24 @@ export default function Login({ onLogin }: LoginProps) {
               required
               disabled={loading}
             />
+          </div>
+
+          <div className="mb-6">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={rememberLogin}
+                onChange={(e) => handleRememberLoginChange(e.target.checked)}
+                className="w-4 h-4 text-mbit-blue border-gray-300 rounded focus:ring-mbit-blue"
+                disabled={loading}
+              />
+              <span className="text-sm text-gray-700">Bejelentkezés megjegyzése</span>
+            </label>
+            <p className="text-xs text-gray-500 mt-1 ml-6">
+              {rememberLogin 
+                ? 'Az utolsó bejelentkezési email cím lesz használva' 
+                : 'Az alapértelmezett rendszergazda email cím lesz használva'}
+            </p>
           </div>
 
           <button

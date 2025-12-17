@@ -130,11 +130,23 @@ export default function UsersTab({ currentUserId, isAdmin = false }: UsersTabPro
           throw new Error(data.message || 'Hiba a felhasználó módosításakor');
         }
 
-        // If admin user's email was changed, update localStorage
+        // If admin user's email was changed, always update localStorage
         if (isAdminUser && formData.email !== oldEmail) {
-          const lastLoginEmail = localStorage.getItem('lastLoginEmail');
-          if (lastLoginEmail === oldEmail) {
+          // Always update admin email reference
+          localStorage.setItem('adminEmail', formData.email);
+          
+          // If remember login is not enabled, update the email field
+          const rememberLogin = localStorage.getItem('rememberLogin') !== 'true';
+          if (rememberLogin) {
+            // If not remembering login, update lastLoginEmail to new admin email
+            // so next login will use the new admin email
             localStorage.setItem('lastLoginEmail', formData.email);
+          } else {
+            // If remembering login and the old email was stored, update it
+            const lastLoginEmail = localStorage.getItem('lastLoginEmail');
+            if (lastLoginEmail === oldEmail) {
+              localStorage.setItem('lastLoginEmail', formData.email);
+            }
           }
         }
 
@@ -283,11 +295,15 @@ export default function UsersTab({ currentUserId, isAdmin = false }: UsersTabPro
         throw new Error(data.message || 'Hiba a jelszó módosításakor');
       }
 
-      // If admin user's password was changed, ensure localStorage has the correct email
-      // (Note: We don't store password, but we ensure the email is correct)
+      // If admin user's password was changed, update localStorage admin email reference
       if (isAdminUser && adminEmail) {
-        const lastLoginEmail = localStorage.getItem('lastLoginEmail');
-        if (!lastLoginEmail || lastLoginEmail !== adminEmail) {
+        // Always update admin email reference
+        localStorage.setItem('adminEmail', adminEmail);
+        
+        // If remember login is not enabled, update the email field
+        const rememberLogin = localStorage.getItem('rememberLogin') !== 'true';
+        if (rememberLogin) {
+          // If not remembering login, update lastLoginEmail to admin email
           localStorage.setItem('lastLoginEmail', adminEmail);
         }
       }
