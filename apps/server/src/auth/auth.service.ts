@@ -72,4 +72,37 @@ export class AuthService {
 
     return this.login(email, password);
   }
+
+  async getAdminEmail() {
+    // Find admin user by Admin role
+    const adminRole = await this.prisma.role.findUnique({
+      where: { nev: 'Admin' },
+    });
+
+    if (!adminRole) {
+      // Fallback to default admin email if no Admin role exists
+      return { email: 'admin@mbit.hu' };
+    }
+
+    const adminUser = await this.prisma.user.findFirst({
+      where: {
+        roles: {
+          some: {
+            roleId: adminRole.id,
+          },
+        },
+        aktiv: true,
+      },
+      orderBy: {
+        createdAt: 'asc', // Get the first admin user (usually the default one)
+      },
+    });
+
+    if (!adminUser) {
+      // Fallback to default admin email if no admin user found
+      return { email: 'admin@mbit.hu' };
+    }
+
+    return { email: adminUser.email };
+  }
 }

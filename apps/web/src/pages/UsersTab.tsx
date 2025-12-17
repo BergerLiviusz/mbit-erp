@@ -112,6 +112,11 @@ export default function UsersTab({ currentUserId, isAdmin = false }: UsersTabPro
           aktiv: formData.aktiv,
         };
 
+        // Check if this is an admin user before update
+        const userBeingEdited = users.find(u => u.id === editingUserId);
+        const isAdminUser = userBeingEdited?.roles?.some((ur: any) => ur.role?.nev === 'Admin');
+        const oldEmail = userBeingEdited?.email;
+
         const response = await apiFetch(`/system/users/${editingUserId}`, {
           method: 'PUT',
           headers: {
@@ -123,6 +128,14 @@ export default function UsersTab({ currentUserId, isAdmin = false }: UsersTabPro
         if (!response.ok) {
           const data = await response.json();
           throw new Error(data.message || 'Hiba a felhasználó módosításakor');
+        }
+
+        // If admin user's email was changed, update localStorage
+        if (isAdminUser && formData.email !== oldEmail) {
+          const lastLoginEmail = localStorage.getItem('lastLoginEmail');
+          if (lastLoginEmail === oldEmail) {
+            localStorage.setItem('lastLoginEmail', formData.email);
+          }
         }
 
         setSuccess('Felhasználó sikeresen módosítva!');
@@ -241,6 +254,11 @@ export default function UsersTab({ currentUserId, isAdmin = false }: UsersTabPro
     setLoading(true);
 
     try {
+      // Check if this is an admin user before password change
+      const userBeingChanged = users.find(u => u.id === changingPasswordUserId);
+      const isAdminUser = userBeingChanged?.roles?.some((ur: any) => ur.role?.nev === 'Admin');
+      const adminEmail = userBeingChanged?.email;
+
       const endpoint = isAdminPasswordChange
         ? `/system/users/${changingPasswordUserId}/admin-password`
         : `/system/users/${changingPasswordUserId}/password`;
@@ -263,6 +281,15 @@ export default function UsersTab({ currentUserId, isAdmin = false }: UsersTabPro
       if (!response.ok) {
         const data = await response.json();
         throw new Error(data.message || 'Hiba a jelszó módosításakor');
+      }
+
+      // If admin user's password was changed, ensure localStorage has the correct email
+      // (Note: We don't store password, but we ensure the email is correct)
+      if (isAdminUser && adminEmail) {
+        const lastLoginEmail = localStorage.getItem('lastLoginEmail');
+        if (!lastLoginEmail || lastLoginEmail !== adminEmail) {
+          localStorage.setItem('lastLoginEmail', adminEmail);
+        }
       }
 
       setSuccess('Jelszó sikeresen módosítva!');

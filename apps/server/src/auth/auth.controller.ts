@@ -1,4 +1,4 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, Get } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { Public } from '../common/rbac/rbac.decorator';
 
@@ -16,5 +16,11 @@ export class AuthController {
   @Public()
   async register(@Body() body: { email: string; password: string; nev: string }) {
     return this.authService.register(body.email, body.password, body.nev);
+  }
+
+  @Get('admin-email')
+  @Public()
+  async getAdminEmail() {
+    return this.authService.getAdminEmail();
   }
 }
