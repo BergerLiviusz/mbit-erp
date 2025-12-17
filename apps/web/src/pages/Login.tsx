@@ -18,39 +18,71 @@ export default function Login({ onLogin }: LoginProps) {
   useEffect(() => {
     const loadDefaultEmail = async () => {
       try {
-        // Always fetch current admin email from API
+        // Always fetch current admin email from API (no cache, always fresh)
         let currentAdminEmail = 'admin@mbit.hu';
         try {
-          const response = await axios.get('/api/auth/admin-email');
+          // Add timestamp to prevent caching
+          const response = await axios.get('/api/auth/admin-email', {
+            params: { _t: Date.now() }
+          });
           if (response.data?.email) {
             currentAdminEmail = response.data.email;
             setAdminEmail(currentAdminEmail);
+            console.log('[Login] Fetched admin email from API:', currentAdminEmail);
           }
         } catch (err) {
-          console.error('Failed to fetch admin email:', err);
+          console.error('[Login] Failed to fetch admin email:', err);
+          // Try to use cached admin email from localStorage as fallback
+          const cachedAdminEmail = localStorage.getItem('adminEmail');
+          if (cachedAdminEmail) {
+            currentAdminEmail = cachedAdminEmail;
+            setAdminEmail(cachedAdminEmail);
+            console.log('[Login] Using cached admin email from localStorage:', cachedAdminEmail);
+          }
         }
 
         // Check if user wants to remember login
         const rememberLoginSetting = localStorage.getItem('rememberLogin') === 'true';
         setRememberLogin(rememberLoginSetting);
+        console.log('[Login] Remember login setting:', rememberLoginSetting);
+
+        // Get stored admin email from localStorage (if exists)
+        const storedAdminEmail = localStorage.getItem('adminEmail');
+        console.log('[Login] Stored admin email in localStorage:', storedAdminEmail);
+        console.log('[Login] Current admin email from API:', currentAdminEmail);
+
+        // If admin email changed, update localStorage
+        if (storedAdminEmail && storedAdminEmail !== currentAdminEmail) {
+          console.log('[Login] Admin email changed! Updating localStorage');
+          localStorage.setItem('adminEmail', currentAdminEmail);
+        } else if (!storedAdminEmail) {
+          localStorage.setItem('adminEmail', currentAdminEmail);
+        }
 
         if (rememberLoginSetting) {
           // If remember login is enabled, use last login email
           const lastLoginEmail = localStorage.getItem('lastLoginEmail');
-          if (lastLoginEmail) {
+          console.log('[Login] Last login email:', lastLoginEmail);
+          
+          // If lastLoginEmail matches the old admin email, update it to new admin email
+          if (lastLoginEmail && storedAdminEmail && lastLoginEmail === storedAdminEmail && lastLoginEmail !== currentAdminEmail) {
+            console.log('[Login] Last login email matches old admin email, updating to new admin email');
+            localStorage.setItem('lastLoginEmail', currentAdminEmail);
+            setEmail(currentAdminEmail);
+          } else if (lastLoginEmail) {
             setEmail(lastLoginEmail);
           } else {
             // If no last login email, use admin email
             setEmail(currentAdminEmail);
+            localStorage.setItem('lastLoginEmail', currentAdminEmail);
           }
         } else {
           // If remember login is disabled, always use current admin email
           setEmail(currentAdminEmail);
-          
-          // Also update localStorage admin email for future reference
-          localStorage.setItem('adminEmail', currentAdminEmail);
+          console.log('[Login] Using admin email (remember login disabled):', currentAdminEmail);
         }
       } catch (err) {
+        console.error('[Login] Error loading default email:', err);
         // Fallback to default
         setEmail('admin@mbit.hu');
         setAdminEmail('admin@mbit.hu');

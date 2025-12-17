@@ -21,6 +21,20 @@ axiosInstance.interceptors.request.use(
       config.url = config.url.replace('/api/', '/');
     }
     
+    // Prevent caching for admin-email endpoint
+    if (config.url?.includes('admin-email') && config.method === 'get') {
+      config.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate';
+      config.headers['Pragma'] = 'no-cache';
+      config.headers['Expires'] = '0';
+      // Add timestamp to params if not already present
+      if (!config.params) {
+        config.params = {};
+      }
+      if (!config.params._t) {
+        config.params._t = Date.now();
+      }
+    }
+    
     // Debug logging for price list creation
     if (config.url?.includes('price-lists') && config.method === 'post') {
       writeLog(`[Axios Request] URL: ${config.url}`);

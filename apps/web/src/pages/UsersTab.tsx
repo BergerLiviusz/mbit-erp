@@ -132,21 +132,30 @@ export default function UsersTab({ currentUserId, isAdmin = false }: UsersTabPro
 
         // If admin user's email was changed, always update localStorage
         if (isAdminUser && formData.email !== oldEmail) {
+          console.log('[UsersTab] Admin email changed:', { oldEmail, newEmail: formData.email });
+          
           // Always update admin email reference
           localStorage.setItem('adminEmail', formData.email);
+          console.log('[UsersTab] Updated adminEmail in localStorage:', formData.email);
           
-          // If remember login is not enabled, update the email field
-          const rememberLogin = localStorage.getItem('rememberLogin') !== 'true';
-          if (rememberLogin) {
-            // If not remembering login, update lastLoginEmail to new admin email
-            // so next login will use the new admin email
+          // Always update lastLoginEmail if it matches the old admin email
+          // This ensures that even if rememberLogin is enabled, the new admin email will be used
+          const lastLoginEmail = localStorage.getItem('lastLoginEmail');
+          const rememberLogin = localStorage.getItem('rememberLogin') === 'true';
+          
+          console.log('[UsersTab] Current lastLoginEmail:', lastLoginEmail);
+          console.log('[UsersTab] Remember login enabled:', rememberLogin);
+          
+          // If lastLoginEmail matches old admin email, update it to new admin email
+          if (lastLoginEmail === oldEmail) {
             localStorage.setItem('lastLoginEmail', formData.email);
-          } else {
-            // If remembering login and the old email was stored, update it
-            const lastLoginEmail = localStorage.getItem('lastLoginEmail');
-            if (lastLoginEmail === oldEmail) {
-              localStorage.setItem('lastLoginEmail', formData.email);
-            }
+            console.log('[UsersTab] Updated lastLoginEmail to match new admin email');
+          }
+          
+          // If remember login is not enabled, always update lastLoginEmail to new admin email
+          if (!rememberLogin) {
+            localStorage.setItem('lastLoginEmail', formData.email);
+            console.log('[UsersTab] Updated lastLoginEmail (remember login disabled)');
           }
         }
 
