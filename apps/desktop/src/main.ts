@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, dialog, shell, Notification } from 'electron';
+import { app, BrowserWindow, ipcMain, dialog, shell, Notification, protocol } from 'electron';
 import * as path from 'path';
 import * as url from 'url';
 import { fork, ChildProcess } from 'child_process';
@@ -8,6 +8,12 @@ import * as http from 'http';
 let mainWindow: BrowserWindow | null = null;
 let backendProcess: ChildProcess | null = null;
 const BACKEND_PORT = 3000;
+
+// Register a custom protocol so we don't rely on file:// loading,
+// which can fail on some Windows environments/paths.
+protocol.registerSchemesAsPrivileged([
+  { scheme: 'app', privileges: { standard: true, secure: true, supportFetchAPI: true, corsEnabled: true } },
+]);
 
 // Allow overriding userData path in development via USER_DATA_DIR
 // This is useful on macOS to test different packages with isolated data directories
@@ -579,37 +585,24 @@ function createWindow(): void {
       });
     }
     
-    // Handle UNC paths properly - convert to file:// URL format
+    // Prefer app:// protocol in production to avoid file:// issues
     try {
-      let fileUrl: string;
+      const appUrl = 'app://index.html';
+      console.log('[Window] Loading from URL:', appUrl);
+      writeLog(`[Window] Loading from URL: ${appUrl}`);
       
-      // Check if path is UNC (starts with \\)
-      if (indexPath.startsWith('\\\\')) {
-        // UNC path: convert \\server\share\path to file://///server/share/path
-        // UNC paths need 5 slashes: file://///server/share/path
-        const uncPath = indexPath.replace(/\\/g, '/').replace(/^\/\//, '');
-        fileUrl = `file://///${uncPath}`;
-        console.log('[Window] Detected UNC path, converting to:', fileUrl);
-        writeLog(`[Window] Detected UNC path, converting to: ${fileUrl}`);
-      } else {
-        // Regular path: use pathToFileURL
-        fileUrl = url.pathToFileURL(indexPath).href;
-      }
-      
-      console.log('[Window] Loading from URL:', fileUrl);
-      writeLog(`[Window] Loading from URL: ${fileUrl}`);
-      
-      mainWindow.loadURL(fileUrl).catch((error) => {
+      mainWindow.loadURL(appUrl).catch((error) => {
         console.error('[Window] Error loading URL:', error);
         writeLog(`[Window] Error loading URL: ${error.message}`);
         
-        // Fallback 1: Try with loadFile (handles UNC paths better in some Electron versions)
-        console.log('[Window] Trying fallback: loadFile');
-        writeLog('[Window] Trying fallback: loadFile');
+        // Fallback 1: Try file:// URL
+        console.log('[Window] Trying fallback: file:// URL');
+        writeLog('[Window] Trying fallback: file:// URL');
         if (mainWindow && !mainWindow.isDestroyed()) {
-          mainWindow.loadFile(indexPath).catch((loadFileError) => {
-            console.error('[Window] loadFile also failed:', loadFileError);
-            writeLog(`[Window] loadFile also failed: ${loadFileError.message}`);
+          const fileUrl = url.pathToFileURL(indexPath).href;
+          mainWindow.loadURL(fileUrl).catch((fileUrlError) => {
+            console.error('[Window] file:// URL also failed:', fileUrlError);
+            writeLog(`[Window] file:// URL also failed: ${fileUrlError.message}`);
             
             // Fallback 2: Show error message in window - DON'T QUIT
             if (mainWindow && !mainWindow.isDestroyed()) {
@@ -621,7 +614,7 @@ function createWindow(): void {
                       mainWindow.webContents.executeJavaScript(`
                         document.body.innerHTML = '<div style="padding: 40px; font-family: Arial; text-align: center; background: #f0f0f0; min-height: 100vh; display: flex; flex-direction: column; justify-content: center;">
                           <h1 style="color: #d32f2f; margin-bottom: 20px;">⚠️ Hiba történt</h1>
-                          <p style="font-size: 16px; margin: 20px 0;">Az alkalmazás frontend fájlja nem tölthető be UNC path-ról.</p>
+                          <p style="font-size: 16px; margin: 20px 0;">Az alkalmazás frontend fájlja nem tölthető be.</p>
                           <p style="font-size: 14px; color: #666; margin: 10px 0; word-break: break-all;">Útvonal: ${indexPath}</p>
                           <div style="background: #fff3cd; border: 1px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 5px;">
                             <p style="font-size: 14px; color: #856404; margin: 0;"><strong>Megoldás:</strong></p>
@@ -763,6 +756,31 @@ app.whenReady().then(async () => {
   ensureDataDirectories();
   
   cleanupLegacyNodeModules();
+
+  // Register app:// protocol handler to serve the frontend from resources.
+  // Must be done after app is ready.
+  try {
+    const frontendRoot = path.join(process.resourcesPath, 'frontend');
+    protocol.registerFileProtocol('app', (request, callback) => {
+      try {
+        const requestUrl = new URL(request.url);
+        let pathname = decodeURIComponent(requestUrl.pathname);
+
+        // On Windows the pathname often starts with /, normalize it.
+        if (pathname.startsWith('/')) pathname = pathname.slice(1);
+        if (!pathname || pathname === '/') pathname = 'index.html';
+
+        const filePath = path.join(frontendRoot, pathname);
+        callback({ path: filePath });
+      } catch (err) {
+        callback({ error: -2 }); // net::ERR_FAILED
+      }
+    });
+    writeLog(`[Protocol] Registered app:// to ${frontendRoot}`);
+  } catch (e: any) {
+    console.error('[Protocol] Failed to register app:// protocol:', e);
+    writeLog(`[Protocol] ERROR: Failed to register app:// protocol: ${e?.message || e}`);
+  }
   
   // Create window immediately - don't wait for backend
   console.log('[App] Creating window immediately...');
