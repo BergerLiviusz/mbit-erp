@@ -44,7 +44,7 @@ import { LoadingScreen } from './components/LoadingScreen';
 import { ModuleRouteGuard } from './components/ModuleRouteGuard';
 import MbitLogo from './assets/logo.svg';
 import axios from './lib/axios';
-import { isModuleEnabled, getModuleMenuItems, isHrModuleEnabled, getActivePackage } from './config/modules';
+import { isModuleEnabled, getModuleMenuItems, getActivePackage } from './config/modules';
 
 function DropdownMenu({ title, items }: { title: string; items: Array<{ to: string; label: string }> }) {
   const [isOpen, setIsOpen] = useState(false);
