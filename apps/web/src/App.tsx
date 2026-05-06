@@ -242,20 +242,22 @@ function App() {
                     items={getModuleMenuItems('crm')}
                   />
                 )}
-                {/* Dokumentumok - mindig látható */}
-                <Link 
-                  to="/documents" 
-                  className="hover:bg-gray-800 px-3 py-2 rounded"
-                  onClick={() => {
-                    if (isElectron) {
-                      import('./components/DebugPanel').then(module => {
-                        module.addLog('info', 'Navigation: Clicked Dokumentumok', { to: '/documents' });
-                      }).catch(() => {});
-                    }
-                  }}
-                >
-                  Dokumentumok
-                </Link>
+                {/* Dokumentumok - csak ha engedélyezve */}
+                {isModuleEnabled('documents') && (
+                  <Link 
+                    to="/documents" 
+                    className="hover:bg-gray-800 px-3 py-2 rounded"
+                    onClick={() => {
+                      if (isElectron) {
+                        import('./components/DebugPanel').then(module => {
+                          module.addLog('info', 'Navigation: Clicked Dokumentumok', { to: '/documents' });
+                        }).catch(() => {});
+                      }
+                    }}
+                  >
+                    Dokumentumok
+                  </Link>
+                )}
                 {/* Csapat kommunikáció - csak ha Team modul engedélyezve */}
                 {isModuleEnabled('team') && (
                   <>
@@ -307,22 +309,11 @@ function App() {
                     items={getModuleMenuItems('logistics')}
                   />
                 )}
-                {/* HR - csak ha engedélyezve (nem package-5-ben) */}
-                {isHrModuleEnabled() && (
+                {/* HR - csak ha engedélyezve */}
+                {isModuleEnabled('hr') && (
                   <DropdownMenu 
                     title="HR"
-                    items={[
-                      { to: '/hr/job-positions', label: 'Munkakörök' },
-                      { to: '/hr/employees', label: 'Dolgozók' },
-                      { to: '/hr/contracts', label: 'Munkaszerződések' },
-                      { to: '/hr/cafeteria', label: 'Cafeteria' },
-                      { to: '/hr/recruitment', label: 'Toborzás' },
-                      { to: '/hr/onboarding', label: 'Beléptetés' },
-                      { to: '/hr/performance', label: 'Teljesítmény' },
-                      { to: '/hr/time', label: 'Időgazdálkodás' },
-                      { to: '/hr/leave', label: 'Távollétek' },
-                      { to: '/hr/reports', label: 'Riportok' }
-                    ]}
+                    items={getModuleMenuItems('hr')}
                   />
                 )}
                 {/* Kontrolling - csak ha Controlling modul engedélyezve */}
@@ -387,8 +378,10 @@ function App() {
             </>
           ) : null}
           
-          {/* Dokumentumok - mindig elérhető */}
-          <Route path="/documents" element={<Documents />} />
+          {/* Dokumentumok - csak ha engedélyezve */}
+          {isModuleEnabled('documents') ? (
+            <Route path="/documents" element={<Documents />} />
+          ) : null}
           
           {/* Team route - csak ha engedélyezve */}
           {isModuleEnabled('team') ? (
@@ -416,8 +409,8 @@ function App() {
             </>
           ) : null}
           
-          {/* HR routes - csak ha engedélyezve (nem package-5-ben) */}
-          {isHrModuleEnabled() ? (
+          {/* HR routes - csak ha engedélyezve */}
+          {isModuleEnabled('hr') ? (
             <>
               <Route path="/hr/job-positions" element={<JobPositions />} />
               <Route path="/hr/employees" element={<Employees />} />

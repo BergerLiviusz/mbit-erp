@@ -19,6 +19,7 @@ export interface PackageConfig {
     controlling: boolean;
     crm: boolean;
     logistics: boolean;
+    hr: boolean;
   };
 }
 
@@ -102,6 +103,35 @@ export const MODULE_CONTROLLING: ModuleConfig = {
   ]
 };
 
+export const MODULE_HR: ModuleConfig = {
+  enabled: false,
+  name: 'HR',
+  routes: [
+    '/hr/job-positions',
+    '/hr/employees',
+    '/hr/contracts',
+    '/hr/cafeteria',
+    '/hr/recruitment',
+    '/hr/onboarding',
+    '/hr/performance',
+    '/hr/time',
+    '/hr/leave',
+    '/hr/reports',
+  ],
+  menuItems: [
+    { to: '/hr/job-positions', label: 'Munkakörök', parentMenu: 'HR' },
+    { to: '/hr/employees', label: 'Dolgozók', parentMenu: 'HR' },
+    { to: '/hr/contracts', label: 'Munkaszerződések', parentMenu: 'HR' },
+    { to: '/hr/cafeteria', label: 'Cafeteria', parentMenu: 'HR' },
+    { to: '/hr/recruitment', label: 'Toborzás', parentMenu: 'HR' },
+    { to: '/hr/onboarding', label: 'Beléptetés', parentMenu: 'HR' },
+    { to: '/hr/performance', label: 'Teljesítmény', parentMenu: 'HR' },
+    { to: '/hr/time', label: 'Időgazdálkodás', parentMenu: 'HR' },
+    { to: '/hr/leave', label: 'Távollétek', parentMenu: 'HR' },
+    { to: '/hr/reports', label: 'Riportok', parentMenu: 'HR' },
+  ],
+};
+
 // Csomag konfigurációk
 export const PACKAGE_CONFIGS: Record<string, PackageConfig> = {
   'package-1': {
@@ -111,7 +141,8 @@ export const PACKAGE_CONFIGS: Record<string, PackageConfig> = {
       team: true,
       controlling: true,
       crm: false,
-      logistics: false
+      logistics: false,
+      hr: true
     }
   },
   'package-2': {
@@ -121,7 +152,8 @@ export const PACKAGE_CONFIGS: Record<string, PackageConfig> = {
       team: false,
       controlling: false,
       crm: true,
-      logistics: true
+      logistics: true,
+      hr: true
     }
   },
   'package-3': {
@@ -131,7 +163,8 @@ export const PACKAGE_CONFIGS: Record<string, PackageConfig> = {
       team: true,
       controlling: false,
       crm: true,
-      logistics: false
+      logistics: false,
+      hr: true
     }
   },
   'package-4': {
@@ -141,7 +174,8 @@ export const PACKAGE_CONFIGS: Record<string, PackageConfig> = {
       team: true,
       controlling: false,
       crm: true,
-      logistics: true
+      logistics: true,
+      hr: true
     }
   },
   'package-5': {
@@ -151,8 +185,20 @@ export const PACKAGE_CONFIGS: Record<string, PackageConfig> = {
       team: false,
       controlling: false,
       crm: true, // Engedélyezve, hogy a Partnerek elérhető legyen a dokumentumokhoz
-      logistics: false
+      logistics: false,
+      hr: false
     }
+  },
+  'package-hr': {
+    name: 'HR (csak HR modul)',
+    modules: {
+      documents: false,
+      team: false,
+      controlling: false,
+      crm: false,
+      logistics: false,
+      hr: true,
+    },
   },
   'full': {
     name: 'Teljes verzió',
@@ -161,7 +207,8 @@ export const PACKAGE_CONFIGS: Record<string, PackageConfig> = {
       team: true,
       controlling: true,
       crm: true,
-      logistics: true
+      logistics: true,
+      hr: true
     }
   }
 };
@@ -190,7 +237,7 @@ export function getActivePackage(): keyof typeof PACKAGE_CONFIGS {
 
 // Modul engedélyezés ellenőrzése
 export function isModuleEnabled(
-  module: 'documents' | 'team' | 'crm' | 'logistics' | 'controlling'
+  module: 'documents' | 'team' | 'crm' | 'logistics' | 'controlling' | 'hr'
 ): boolean {
   const activePackage = getActivePackage();
   const config = PACKAGE_CONFIGS[activePackage];
@@ -216,13 +263,15 @@ export function getModuleRoutes(module: 'documents' | 'team' | 'crm' | 'logistic
       return MODULE_LOGISTICS.routes;
     case 'controlling':
       return MODULE_CONTROLLING.routes;
+    case 'hr':
+      return MODULE_HR.routes;
     default:
       return [];
   }
 }
 
 // Modul menu items lekérése
-export function getModuleMenuItems(module: 'documents' | 'team' | 'crm' | 'logistics' | 'controlling'): MenuItem[] {
+export function getModuleMenuItems(module: 'documents' | 'team' | 'crm' | 'logistics' | 'controlling' | 'hr'): MenuItem[] {
   const activePackage = getActivePackage();
   
   switch (module) {
@@ -236,6 +285,8 @@ export function getModuleMenuItems(module: 'documents' | 'team' | 'crm' | 'logis
         return [{ to: '/crm', label: 'Partnerek', parentMenu: 'Ügyfélkezelés' }];
       }
       return MODULE_CRM.menuItems;
+    case 'hr':
+      return MODULE_HR.menuItems;
     case 'logistics':
       return MODULE_LOGISTICS.menuItems;
     case 'controlling':
@@ -245,10 +296,7 @@ export function getModuleMenuItems(module: 'documents' | 'team' | 'crm' | 'logis
   }
 }
 
-// Helper függvény: HR modul elérhetőségének ellenőrzése
-// Az HR modul minden package-ben elérhető, kivéve package-5-ben
 export function isHrModuleEnabled(): boolean {
-  const activePackage = getActivePackage();
-  return activePackage !== 'package-5';
+  return isModuleEnabled('hr');
 }
 
