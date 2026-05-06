@@ -4,6 +4,8 @@ import { PrismaService } from '../../prisma/prisma.service';
 export interface CreateWorkflowInstanceDto {
   workflowId: string;
   nev?: string;
+  /** HR / beléptetés: opcionális kötés dolgozóhoz (GINOP ellenőrzési folyamat) */
+  subjectEmployeeId?: string;
 }
 
 export interface UpdateWorkflowStepLogDto {
@@ -49,6 +51,7 @@ export class WorkflowInstanceService {
         allapot: 'aktív',
         aktualisLepesId: firstStep.id,
         createdById: userId,
+        subjectEmployeeId: dto.subjectEmployeeId || null,
       },
       include: {
         workflow: {

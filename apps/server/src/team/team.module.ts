@@ -33,7 +33,13 @@ import { WorkflowInstanceService } from './workflow/workflow-instance.service';
     WorkflowService,
     WorkflowInstanceService,
   ],
-  exports: [TaskService, BoardService, CommentService, ActivityService],
+  exports: [
+    TaskService,
+    BoardService,
+    CommentService,
+    ActivityService,
+    WorkflowInstanceService,
+  ],
 })
 export class TeamModule {}
 

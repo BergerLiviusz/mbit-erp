@@ -144,5 +144,47 @@ export class HrReportController {
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     res.send('\ufeff' + content);
   }
+
+  @Post('export/cafeteria-payroll')
+  @Permissions(Permission.HR_REPORT)
+  async exportCafeteriaPayroll(
+    @Body() body: { ev: number },
+    @Res() res: Response,
+    @Request() req: any,
+  ) {
+    const content = await this.hrReportService.generateCafeteriaPayrollExport(body.ev);
+    await this.auditService.logCreate('HrReport', `cafeteria-${body.ev}`, { type: 'CAFETERIA_PAYROLL', ...body }, req.user?.id);
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="cafeteria_berszamfejto_${body.ev}.csv"`);
+    res.send('\ufeff' + content);
+  }
+
+  @Post('export/time-payroll')
+  @Permissions(Permission.HR_REPORT)
+  async exportTimePayroll(
+    @Body() body: { ev: number; honap: number },
+    @Res() res: Response,
+    @Request() req: any,
+  ) {
+    const content = await this.hrReportService.generateTimePayrollExport(body.ev, body.honap);
+    await this.auditService.logCreate('HrReport', `time-${body.ev}-${body.honap}`, { type: 'TIME_PAYROLL', ...body }, req.user?.id);
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="munkaido_berszamfejto_${body.ev}_${body.honap}.csv"`);
+    res.send('\ufeff' + content);
+  }
+
+  @Post('export/leave-analytics')
+  @Permissions(Permission.HR_REPORT)
+  async exportLeaveAnalytics(
+    @Body() body: { evFrom: number; evTo?: number },
+    @Res() res: Response,
+    @Request() req: any,
+  ) {
+    const content = await this.hrReportService.generateLeaveAnalyticsExport(body.evFrom, body.evTo);
+    await this.auditService.logCreate('HrReport', `leave-${body.evFrom}`, { type: 'LEAVE_ANALYTICS', ...body }, req.user?.id);
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="tavollet_riport_${body.evFrom}.csv"`);
+    res.send('\ufeff' + content);
+  }
 }
 

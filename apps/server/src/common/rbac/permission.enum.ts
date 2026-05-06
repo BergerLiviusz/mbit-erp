@@ -136,6 +136,7 @@ export enum Permission {
   HR_EDIT = 'hr:edit',
   HR_DELETE = 'hr:delete',
   HR_REPORT = 'hr:report',
+  HR_APPROVE = 'hr:approve',
   
   // User Management
   USER_VIEW = 'user:view',
@@ -299,6 +300,7 @@ export const PermissionDescriptions: Record<Permission, { nev: string; modulo: s
   [Permission.HR_EDIT]: { nev: 'HR adat szerkesztés', modulo: 'HR', leiras: 'Dolgozói adatok módosítása' },
   [Permission.HR_DELETE]: { nev: 'HR adat törlés', modulo: 'HR', leiras: 'Dolgozói adatok törlése' },
   [Permission.HR_REPORT]: { nev: 'HR riportok', modulo: 'HR', leiras: 'NAV, KSH riportok generálása' },
+  [Permission.HR_APPROVE]: { nev: 'HR jóváhagyás', modulo: 'HR', leiras: 'Távollét és HR jóváhagyó folyamatok' },
   
   [Permission.USER_VIEW]: { nev: 'Felhasználók megtekintése', modulo: 'Felhasználók', leiras: 'Felhasználók listázása' },
   [Permission.USER_CREATE]: { nev: 'Felhasználó létrehozás', modulo: 'Felhasználók', leiras: 'Új felhasználók felvétele' },

@@ -9,6 +9,23 @@ let mainWindow: BrowserWindow | null = null;
 let backendProcess: ChildProcess | null = null;
 const BACKEND_PORT = 3000;
 
+// Allow overriding userData path in development via USER_DATA_DIR
+// This is useful on macOS to test different packages with isolated data directories
+// NOTE: We only apply this in development (when the app is not packaged),
+// so CI / Windows packaged builds remain unaffected.
+if (process.env.USER_DATA_DIR && !app.isPackaged) {
+  const customUserDataPath = process.env.USER_DATA_DIR;
+  try {
+    if (!fs.existsSync(customUserDataPath)) {
+      fs.mkdirSync(customUserDataPath, { recursive: true });
+    }
+    console.log(`[App] Using custom userData path from USER_DATA_DIR: ${customUserDataPath}`);
+    app.setPath('userData', customUserDataPath);
+  } catch (error) {
+    console.warn('[App] Failed to set custom USER_DATA_DIR path:', error);
+  }
+}
+
 function getUserDataPath(): string {
   return app.getPath('userData');
 }

@@ -56,6 +56,12 @@ async function seedSystemSettings() {
     { kulcs: 'logistics.auto_location_assign', ertek: 'false', tipus: 'boolean', kategoria: 'logistics', leiras: 'Automatikus raktári hely hozzárendelés' },
     { kulcs: 'purchase_order.approval.threshold', ertek: '500000', tipus: 'number', kategoria: 'logistics', leiras: 'Beszerzési rendelés jóváhagyási küszöb (HUF)' },
     { kulcs: 'system.lan.enabled', ertek: 'false', tipus: 'boolean', kategoria: 'system', leiras: 'LAN együttműködés engedélyezése' },
+    { kulcs: 'hr.smtp.host', ertek: '', tipus: 'string', kategoria: 'hr', leiras: 'HR e-mail (SMTP kiszolgáló; üres = küldés kikapcsolva)' },
+    { kulcs: 'hr.smtp.port', ertek: '587', tipus: 'number', kategoria: 'hr', leiras: 'SMTP port' },
+    { kulcs: 'hr.smtp.secure', ertek: 'false', tipus: 'boolean', kategoria: 'hr', leiras: 'TLS/SSL (true = 465 jellegű)' },
+    { kulcs: 'hr.smtp.user', ertek: '', tipus: 'string', kategoria: 'hr', leiras: 'SMTP felhasználó (opcionális)' },
+    { kulcs: 'hr.smtp.pass', ertek: '', tipus: 'string', kategoria: 'hr', leiras: 'SMTP jelszó (opcionális)' },
+    { kulcs: 'hr.smtp.from', ertek: '', tipus: 'string', kategoria: 'hr', leiras: 'Feladó cím (üres = user vagy noreply@mbit.local)' },
   ];
 
   for (const setting of settings) {
@@ -118,7 +124,7 @@ async function main() {
   const adminPermissions = permissions.filter(p => 
     p.modulo === 'CRM' || p.modulo === 'DMS' || p.modulo === 'Logisztika' || 
     p.modulo === 'Rendszer' || p.modulo === 'Felhasználók' || p.modulo === 'Szerepkörök' ||
-    p.modulo === 'Jelentések'
+    p.modulo === 'Jelentések' || p.modulo === 'HR' || p.modulo === 'Csapat kommunikáció'
   );
   
   for (const perm of adminPermissions) {

@@ -58,6 +58,42 @@ export class EmployeeController {
     return this.employeeService.findOne(id);
   }
 
+  @Post(':id/previous-employments')
+  @Permissions(Permission.HR_CREATE)
+  addPreviousEmployment(@Param('id') id: string, @Body() body: any) {
+    return this.employeeService.createPreviousEmployment(id, body);
+  }
+
+  @Put('previous-employments/:recId')
+  @Permissions(Permission.HR_EDIT)
+  updatePreviousEmployment(@Param('recId') recId: string, @Body() body: any) {
+    return this.employeeService.updatePreviousEmployment(recId, body);
+  }
+
+  @Delete('previous-employments/:recId')
+  @Permissions(Permission.HR_DELETE)
+  deletePreviousEmployment(@Param('recId') recId: string) {
+    return this.employeeService.deletePreviousEmployment(recId);
+  }
+
+  @Post(':id/awards')
+  @Permissions(Permission.HR_CREATE)
+  addAward(@Param('id') id: string, @Body() body: any) {
+    return this.employeeService.createAward(id, body);
+  }
+
+  @Put('awards/:recId')
+  @Permissions(Permission.HR_EDIT)
+  updateAward(@Param('recId') recId: string, @Body() body: any) {
+    return this.employeeService.updateAward(recId, body);
+  }
+
+  @Delete('awards/:recId')
+  @Permissions(Permission.HR_DELETE)
+  deleteAward(@Param('recId') recId: string) {
+    return this.employeeService.deleteAward(recId);
+  }
+
   @Post()
   @Permissions(Permission.HR_CREATE)
   async create(@Body() dto: CreateEmployeeDto, @Request() req: any) {

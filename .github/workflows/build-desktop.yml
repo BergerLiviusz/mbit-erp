@@ -1,3 +1,4 @@
+# Build gate: compile + package only (no functional HR/E2E tests). Add separate smoke/API tests later if needed.
 name: Build Desktop App
 
 on:
