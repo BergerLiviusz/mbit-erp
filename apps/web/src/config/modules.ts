@@ -251,7 +251,7 @@ export function isModuleEnabled(
 }
 
 // Modul route-ok lekérése
-export function getModuleRoutes(module: 'documents' | 'team' | 'crm' | 'logistics' | 'controlling'): string[] {
+export function getModuleRoutes(module: 'documents' | 'team' | 'crm' | 'logistics' | 'controlling' | 'hr'): string[] {
   switch (module) {
     case 'documents':
       return MODULE_DOCUMENTS.routes;

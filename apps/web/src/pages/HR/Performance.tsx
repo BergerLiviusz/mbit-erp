@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { apiFetch } from '../../lib/api';
+import { isModuleEnabled } from '../../config/modules';
 
 export default function HrPerformance() {
   const [employees, setEmployees] = useState<any[]>([]);
@@ -22,8 +23,12 @@ export default function HrPerformance() {
   const loadMeta = async () => {
     const a = await apiFetch('/hr/performance/analytics/goals');
     if (a.ok) setAnalytics(await a.json());
-    const w = await apiFetch('/team/workflows');
-    if (w.ok) setWorkflows(await w.json());
+    if (isModuleEnabled('team')) {
+      const w = await apiFetch('/team/workflows');
+      if (w.ok) setWorkflows(await w.json());
+    } else {
+      setWorkflows([]);
+    }
   };
 
   useEffect(() => { loadEmps(); loadMeta(); }, []);
@@ -68,7 +73,9 @@ export default function HrPerformance() {
           <input name="hatarido" type="date" className="border rounded px-2 py-2" />
           <select name="wf" className="border rounded px-2 py-2 sm:col-span-2">
             <option value="">Opcionális workflow indítása</option>
-            {workflows.map((w) => <option key={w.id} value={w.id}>{w.nev}</option>)}
+            {isModuleEnabled('team')
+              ? workflows.map((w) => <option key={w.id} value={w.id}>{w.nev}</option>)
+              : null}
           </select>
           <button type="submit" disabled={!empId} className="sm:col-span-2 py-2 bg-gray-900 text-white rounded">Cél létrehozása</button>
         </form>

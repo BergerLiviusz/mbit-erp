@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { apiFetch } from '../../lib/api';
+import { isModuleEnabled } from '../../config/modules';
 
 export default function HrOnboarding() {
   const [templates, setTemplates] = useState<any[]>([]);
@@ -15,8 +16,12 @@ export default function HrOnboarding() {
     if (i.ok) setInstances(await i.json());
     const e = await apiFetch('/hr/employees?skip=0&take=500&aktiv=true');
     if (e.ok) setEmployees((await e.json()).items || []);
-    const w = await apiFetch('/team/workflows');
-    if (w.ok) setWorkflows(await w.json());
+    if (isModuleEnabled('team')) {
+      const w = await apiFetch('/team/workflows');
+      if (w.ok) setWorkflows(await w.json());
+    } else {
+      setWorkflows([]);
+    }
     const a = await apiFetch('/hr/onboarding/analytics');
     if (a.ok) setAnalytics(await a.json());
   };
@@ -27,6 +32,11 @@ export default function HrOnboarding() {
     <div className="max-w-5xl mx-auto p-4 space-y-6">
       <h1 className="text-2xl font-semibold">Beléptetés</h1>
       <p className="text-sm text-gray-600">Sablonok, dokumentumlista (JSON), e-mail értesítés (SMTP: rendszerbeállítás hr.smtp.*). Opcionális workflow kapcsolás.</p>
+      {!isModuleEnabled('team') && (
+        <div className="text-sm bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-2 rounded">
+          A workflow kapcsolás ebben a csomagban nem elérhető (Team modul kikapcsolva).
+        </div>
+      )}
 
       <div className="text-sm flex flex-wrap gap-3">
         {analytics.map((x) => <span key={x.allapot}>{x.allapot}: {x._count?.allapot ?? x.count}</span>)}
@@ -85,7 +95,9 @@ export default function HrOnboarding() {
           </select>
           <select name="workflowId" className="border rounded px-2 py-2 sm:col-span-2">
             <option value="">Workflow (opcionális)</option>
-            {workflows.map((w) => <option key={w.id} value={w.id}>{w.nev}</option>)}
+            {isModuleEnabled('team')
+              ? workflows.map((w) => <option key={w.id} value={w.id}>{w.nev}</option>)
+              : null}
           </select>
           <button type="submit" className="sm:col-span-2 py-2 bg-green-800 text-white rounded">Indítás</button>
         </form>
