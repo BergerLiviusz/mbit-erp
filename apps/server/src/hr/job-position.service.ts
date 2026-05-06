@@ -9,6 +9,7 @@ export interface CreateJobPositionDto {
   hataskorok?: string;
   osztaly?: string;
   reszleg?: string;
+  jobDescriptionDocumentId?: string | null;
 }
 
 export interface UpdateJobPositionDto {
@@ -19,6 +20,7 @@ export interface UpdateJobPositionDto {
   osztaly?: string;
   reszleg?: string;
   aktiv?: boolean;
+  jobDescriptionDocumentId?: string | null;
 }
 
 @Injectable()
@@ -51,6 +53,9 @@ export class JobPositionService {
         skip,
         take,
         include: {
+          jobDescriptionDocument: {
+            select: { id: true, nev: true, iktatoSzam: true },
+          },
           _count: {
             select: {
               employees: true,
@@ -77,6 +82,14 @@ export class JobPositionService {
             vezetekNev: true,
             keresztNev: true,
             aktiv: true,
+          },
+        },
+        jobDescriptionDocument: {
+          select: {
+            id: true,
+            nev: true,
+            iktatoSzam: true,
+            fajlNev: true,
           },
         },
         _count: {

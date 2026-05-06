@@ -12,6 +12,8 @@ interface JobPosition {
   osztaly?: string | null;
   reszleg?: string | null;
   aktiv: boolean;
+  jobDescriptionDocumentId?: string | null;
+  jobDescriptionDocument?: { id: string; nev: string; iktatoSzam?: string | null } | null;
   createdAt: string;
   updatedAt: string;
   _count?: {
@@ -36,6 +38,7 @@ export default function JobPositions() {
     osztaly: '',
     reszleg: '',
     aktiv: true,
+    jobDescriptionDocumentId: '',
   });
 
   const [filters, setFilters] = useState({
@@ -83,6 +86,7 @@ export default function JobPositions() {
         osztaly: position.osztaly || '',
         reszleg: position.reszleg || '',
         aktiv: position.aktiv,
+        jobDescriptionDocumentId: position.jobDescriptionDocumentId || '',
       });
     } else {
       setEditingId(null);
@@ -95,6 +99,7 @@ export default function JobPositions() {
         osztaly: '',
         reszleg: '',
         aktiv: true,
+        jobDescriptionDocumentId: '',
       });
     }
     setIsModalOpen(true);
@@ -134,7 +139,11 @@ export default function JobPositions() {
           osztaly: formData.osztaly || undefined,
           reszleg: formData.reszleg || undefined,
           aktiv: formData.aktiv,
-        } : formData),
+          jobDescriptionDocumentId: formData.jobDescriptionDocumentId.trim() || null,
+        } : {
+          ...formData,
+          jobDescriptionDocumentId: formData.jobDescriptionDocumentId.trim() || undefined,
+        }),
       });
 
       if (!response.ok) {
@@ -367,6 +376,19 @@ export default function JobPositions() {
                 rows={4}
                 className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="A munkakör hatáskörei..."
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Munkaköri leírás dokumentum (DMS azonosító)
+              </label>
+              <input
+                type="text"
+                value={formData.jobDescriptionDocumentId}
+                onChange={(e) => setFormData({ ...formData, jobDescriptionDocumentId: e.target.value })}
+                placeholder="Dokumentum UUID a dokumentum modulból (opcionális)"
+                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 

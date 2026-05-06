@@ -23,6 +23,12 @@ import JobPositions from './pages/HR/JobPositions';
 import Employees from './pages/HR/Employees';
 import Contracts from './pages/HR/Contracts';
 import HrReports from './pages/HR/Reports';
+import HrCafeteria from './pages/HR/Cafeteria';
+import HrRecruitment from './pages/HR/Recruitment';
+import HrTimeTracking from './pages/HR/TimeTracking';
+import HrLeave from './pages/HR/Leave';
+import HrPerformance from './pages/HR/Performance';
+import HrOnboarding from './pages/HR/Onboarding';
 import Intrastat from './pages/Intrastat';
 import DatabaseConnections from './pages/Controlling/DatabaseConnections';
 import KPI from './pages/Controlling/KPI';
@@ -309,6 +315,12 @@ function App() {
                       { to: '/hr/job-positions', label: 'Munkakörök' },
                       { to: '/hr/employees', label: 'Dolgozók' },
                       { to: '/hr/contracts', label: 'Munkaszerződések' },
+                      { to: '/hr/cafeteria', label: 'Cafeteria' },
+                      { to: '/hr/recruitment', label: 'Toborzás' },
+                      { to: '/hr/onboarding', label: 'Beléptetés' },
+                      { to: '/hr/performance', label: 'Teljesítmény' },
+                      { to: '/hr/time', label: 'Időgazdálkodás' },
+                      { to: '/hr/leave', label: 'Távollétek' },
                       { to: '/hr/reports', label: 'Riportok' }
                     ]}
                   />
@@ -410,6 +422,12 @@ function App() {
               <Route path="/hr/job-positions" element={<JobPositions />} />
               <Route path="/hr/employees" element={<Employees />} />
               <Route path="/hr/contracts" element={<Contracts />} />
+              <Route path="/hr/cafeteria" element={<HrCafeteria />} />
+              <Route path="/hr/recruitment" element={<HrRecruitment />} />
+              <Route path="/hr/onboarding" element={<HrOnboarding />} />
+              <Route path="/hr/performance" element={<HrPerformance />} />
+              <Route path="/hr/time" element={<HrTimeTracking />} />
+              <Route path="/hr/leave" element={<HrLeave />} />
               <Route path="/hr/reports" element={<HrReports />} />
             </>
           ) : null}

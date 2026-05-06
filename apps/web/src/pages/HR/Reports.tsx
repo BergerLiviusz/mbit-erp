@@ -20,7 +20,14 @@ export default function HrReports() {
   const [kshForm, setKshForm] = useState({
     ev: new Date().getFullYear(),
     honap: '',
-    reportType: 'EMPLOYMENT' as 'EMPLOYMENT' | 'WAGE' | 'CONTRACT',
+  });
+
+  const [payrollExportForm, setPayrollExportForm] = useState({
+    cafeteriaEv: new Date().getFullYear(),
+    timeEv: new Date().getFullYear(),
+    timeHonap: new Date().getMonth() + 1,
+    leaveEvFrom: new Date().getFullYear(),
+    leaveEvTo: '' as string,
   });
 
   const handleNavPayrollExport = async () => {
@@ -103,17 +110,21 @@ export default function HrReports() {
     }
   };
 
-  const handleKshExport = async () => {
+  const handleKshExport = async (reportType: 'EMPLOYMENT' | 'WAGE' | 'CONTRACT') => {
     setLoading(true);
     setError('');
     setSuccess('');
 
+    const ev = kshForm.ev;
+    const honap = kshForm.honap ? parseInt(kshForm.honap) : undefined;
+
     try {
-      const endpoint = kshForm.reportType === 'EMPLOYMENT'
-        ? '/hr/reports/ksh/employment'
-        : kshForm.reportType === 'WAGE'
-        ? '/hr/reports/ksh/wage'
-        : '/hr/reports/ksh/contract';
+      const endpoint =
+        reportType === 'EMPLOYMENT'
+          ? '/hr/reports/ksh/employment'
+          : reportType === 'WAGE'
+            ? '/hr/reports/ksh/wage'
+            : '/hr/reports/ksh/contract';
 
       const response = await apiFetch(endpoint, {
         method: 'POST',
@@ -121,9 +132,9 @@ export default function HrReports() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          ev: kshForm.ev,
-          honap: kshForm.honap ? parseInt(kshForm.honap) : undefined,
-          reportType: kshForm.reportType,
+          ev,
+          honap,
+          reportType,
         }),
       });
 
@@ -135,14 +146,15 @@ export default function HrReports() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      const reportName = kshForm.reportType === 'EMPLOYMENT'
-        ? 'foglalkoztatotti'
-        : kshForm.reportType === 'WAGE'
-        ? 'berstatisztika'
-        : 'szerzodes';
+      const reportName =
+        reportType === 'EMPLOYMENT'
+          ? 'foglalkoztatotti'
+          : reportType === 'WAGE'
+            ? 'berstatisztika'
+            : 'szerzodes';
       const filename = kshForm.honap
-        ? `ksh_${reportName}_${kshForm.ev}_${kshForm.honap}.txt`
-        : `ksh_${reportName}_${kshForm.ev}.txt`;
+        ? `ksh_${reportName}_${ev}_${kshForm.honap}.txt`
+        : `ksh_${reportName}_${ev}.txt`;
       a.download = filename;
       document.body.appendChild(a);
       a.click();
@@ -155,6 +167,68 @@ export default function HrReports() {
       setLoading(false);
     }
   };
+
+  const downloadBlob = async (
+    path: string,
+    body: object,
+    filename: string,
+    successMsg: string,
+  ) => {
+    setLoading(true);
+    setError('');
+    setSuccess('');
+    try {
+      const response = await apiFetch(path, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      if (!response.ok) throw new Error('Hiba az exportálás során');
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      setSuccess(successMsg);
+    } catch (err: any) {
+      setError(err.message || 'Hiba az exportálás során');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCafeteriaPayrollExport = () =>
+    downloadBlob(
+      '/hr/reports/export/cafeteria-payroll',
+      { ev: payrollExportForm.cafeteriaEv },
+      `cafeteria_berszamfejto_${payrollExportForm.cafeteriaEv}.csv`,
+      'Cafeteria bérszámfejtő CSV export kész.',
+    );
+
+  const handleTimePayrollExport = () =>
+    downloadBlob(
+      '/hr/reports/export/time-payroll',
+      { ev: payrollExportForm.timeEv, honap: payrollExportForm.timeHonap },
+      `munkaido_berszamfejto_${payrollExportForm.timeEv}_${payrollExportForm.timeHonap}.csv`,
+      'Munkaidő bérszámfejtő CSV export kész.',
+    );
+
+  const handleLeaveAnalyticsExport = () =>
+    downloadBlob(
+      '/hr/reports/export/leave-analytics',
+      {
+        evFrom: payrollExportForm.leaveEvFrom,
+        ...(payrollExportForm.leaveEvTo.trim()
+          ? { evTo: parseInt(payrollExportForm.leaveEvTo, 10) }
+          : {}),
+      },
+      `tavollet_riport_${payrollExportForm.leaveEvFrom}.csv`,
+      'Távollét elemző CSV export kész.',
+    );
 
   return (
     <div>
@@ -285,10 +359,7 @@ export default function HrReports() {
               </select>
             </div>
             <button
-              onClick={() => {
-                setKshForm({ ...kshForm, reportType: 'EMPLOYMENT' });
-                handleKshExport();
-              }}
+              onClick={() => handleKshExport('EMPLOYMENT')}
               disabled={loading}
               className="w-full px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400"
             >
@@ -326,10 +397,7 @@ export default function HrReports() {
               </select>
             </div>
             <button
-              onClick={() => {
-                setKshForm({ ...kshForm, reportType: 'WAGE' });
-                handleKshExport();
-              }}
+              onClick={() => handleKshExport('WAGE')}
               disabled={loading}
               className="w-full px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400"
             >
@@ -367,10 +435,7 @@ export default function HrReports() {
               </select>
             </div>
             <button
-              onClick={() => {
-                setKshForm({ ...kshForm, reportType: 'CONTRACT' });
-                handleKshExport();
-              }}
+              onClick={() => handleKshExport('CONTRACT')}
               disabled={loading}
               className="w-full px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400"
             >
@@ -378,15 +443,134 @@ export default function HrReports() {
             </button>
           </div>
         </div>
+
+        <div className="col-span-1 md:col-span-2">
+          <h2 className="text-xl font-bold mb-4">Bérszámfejtő és HR elemzés (CSV)</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-white rounded-lg shadow p-6">
+              <h3 className="font-semibold mb-3">Cafeteria – bérszámfejtő</h3>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Év (választások)</label>
+              <input
+                type="number"
+                value={payrollExportForm.cafeteriaEv}
+                onChange={(e) =>
+                  setPayrollExportForm({ ...payrollExportForm, cafeteriaEv: parseInt(e.target.value, 10) })
+                }
+                className="w-full px-3 py-2 border border-gray-300 rounded mb-3"
+                min="2000"
+                max="2100"
+              />
+              <button
+                type="button"
+                onClick={handleCafeteriaPayrollExport}
+                disabled={loading}
+                className="w-full px-4 py-2 bg-slate-800 text-white rounded hover:bg-slate-900 disabled:bg-gray-400"
+              >
+                {loading ? 'Export...' : 'CSV letöltése'}
+              </button>
+            </div>
+            <div className="bg-white rounded-lg shadow p-6">
+              <h3 className="font-semibold mb-3">Munkaidő – bérszámfejtő</h3>
+              <div className="grid grid-cols-2 gap-2 mb-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Év</label>
+                  <input
+                    type="number"
+                    value={payrollExportForm.timeEv}
+                    onChange={(e) =>
+                      setPayrollExportForm({ ...payrollExportForm, timeEv: parseInt(e.target.value, 10) })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded"
+                    min="2000"
+                    max="2100"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Hónap</label>
+                  <select
+                    value={payrollExportForm.timeHonap}
+                    onChange={(e) =>
+                      setPayrollExportForm({
+                        ...payrollExportForm,
+                        timeHonap: parseInt(e.target.value, 10),
+                      })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded"
+                  >
+                    {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
+                      <option key={m} value={m}>
+                        {m}. hónap
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={handleTimePayrollExport}
+                disabled={loading}
+                className="w-full px-4 py-2 bg-slate-800 text-white rounded hover:bg-slate-900 disabled:bg-gray-400"
+              >
+                {loading ? 'Export...' : 'CSV letöltése'}
+              </button>
+            </div>
+            <div className="bg-white rounded-lg shadow p-6">
+              <h3 className="font-semibold mb-3">Távollétek – elemzés</h3>
+              <div className="grid grid-cols-2 gap-2 mb-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Évtól</label>
+                  <input
+                    type="number"
+                    value={payrollExportForm.leaveEvFrom}
+                    onChange={(e) =>
+                      setPayrollExportForm({
+                        ...payrollExportForm,
+                        leaveEvFrom: parseInt(e.target.value, 10),
+                      })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded"
+                    min="2000"
+                    max="2100"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Évig (opc.)</label>
+                  <input
+                    type="number"
+                    value={payrollExportForm.leaveEvTo}
+                    onChange={(e) =>
+                      setPayrollExportForm({ ...payrollExportForm, leaveEvTo: e.target.value })
+                    }
+                    placeholder="Üres = csak évig"
+                    className="w-full px-3 py-2 border border-gray-300 rounded"
+                    min="2000"
+                    max="2100"
+                  />
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={handleLeaveAnalyticsExport}
+                disabled={loading}
+                className="w-full px-4 py-2 bg-slate-800 text-white rounded hover:bg-slate-900 disabled:bg-gray-400"
+              >
+                {loading ? 'Export...' : 'CSV letöltése'}
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
         <h3 className="font-medium text-blue-900 mb-2">Megjegyzések</h3>
         <ul className="text-sm text-blue-800 space-y-1 list-disc list-inside">
-          <li>A NAV riportok TXT formátumban kerülnek generálásra, amelyek importálhatók a NAV rendszerébe.</li>
-          <li>A KSH riportok statisztikai célokat szolgálnak és TXT formátumban kerülnek exportálásra.</li>
+          <li>
+            A NAV és KSH TXT exportok strukturált, belső összesítők: az első sor figyelmeztet a hatósági / bérszámfejtő
+            formátum egyeztetésére. Ne tekintse őket önmagában bevallási fájlnak.
+          </li>
+          <li>A cafeteria és munkaidő CSV-k a bérszámfejtő partner által jóváhagyott oszlopokkal bővíthetők.</li>
           <li>Minden riport generálása audit naplóba kerül rögzítésre.</li>
-          <li>A riportok csak aktív dolgozók adatait tartalmazzák.</li>
+          <li>A riportok alapértelmezés szerint az aktív dolgozók / érintett időszak adatait használják.</li>
         </ul>
       </div>
     </div>

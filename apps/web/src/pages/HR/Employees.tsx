@@ -28,7 +28,11 @@ interface Employee {
     disciplinaryActions: number;
     studyContracts: number;
     employmentContracts: number;
+    previousEmployments?: number;
+    awards?: number;
   };
+  previousEmployments?: { id: string; munkaadoNev: string; munkakor?: string | null; kezdet?: string | null; veg?: string | null }[];
+  awards?: { id: string; megnevezes: string; datum: string; intezmeny?: string | null }[];
 }
 
 interface JobPosition {
@@ -76,6 +80,9 @@ export default function Employees() {
     aktiv: '',
     search: '',
   });
+
+  const [peForm, setPeForm] = useState({ munkaadoNev: '', munkakor: '', kezdet: '', veg: '' });
+  const [awardForm, setAwardForm] = useState({ megnevezes: '', datum: '', intezmeny: '' });
 
   useEffect(() => {
     loadJobPositions();
@@ -716,8 +723,159 @@ export default function Employees() {
                   <div className="text-sm text-gray-600">Munkaszerződések</div>
                   <div className="font-medium">{selectedEmployee._count.employmentContracts || 0}</div>
                 </div>
+                <div>
+                  <div className="text-sm text-gray-600">Korábbi munkahelyek</div>
+                  <div className="font-medium">{selectedEmployee._count.previousEmployments ?? 0}</div>
+                </div>
+                <div>
+                  <div className="text-sm text-gray-600">Kitüntetések</div>
+                  <div className="font-medium">{selectedEmployee._count.awards ?? 0}</div>
+                </div>
               </div>
             )}
+
+            {selectedEmployee.previousEmployments && selectedEmployee.previousEmployments.length > 0 && (
+              <div className="pt-4 border-t">
+                <h3 className="font-medium mb-2">Korábbi munkahelyek</h3>
+                <ul className="text-sm space-y-1">
+                  {selectedEmployee.previousEmployments.map((p) => (
+                    <li key={p.id} className="flex justify-between gap-2 border-b border-gray-100 pb-1">
+                      <span>{p.munkaadoNev} {p.munkakor ? `– ${p.munkakor}` : ''}</span>
+                      <button
+                        type="button"
+                        className="text-red-600 text-xs"
+                        onClick={async () => {
+                          await apiFetch(`/hr/employees/previous-employments/${p.id}`, { method: 'DELETE' });
+                          loadEmployeeDetails(selectedEmployee.id);
+                        }}
+                      >
+                        Törlés
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {selectedEmployee.awards && selectedEmployee.awards.length > 0 && (
+              <div className="pt-4 border-t">
+                <h3 className="font-medium mb-2">Kitüntetések</h3>
+                <ul className="text-sm space-y-1">
+                  {selectedEmployee.awards.map((a) => (
+                    <li key={a.id} className="flex justify-between gap-2 border-b border-gray-100 pb-1">
+                      <span>{a.megnevezes} ({a.datum?.slice(0, 10)})</span>
+                      <button
+                        type="button"
+                        className="text-red-600 text-xs"
+                        onClick={async () => {
+                          await apiFetch(`/hr/employees/awards/${a.id}`, { method: 'DELETE' });
+                          loadEmployeeDetails(selectedEmployee.id);
+                        }}
+                      >
+                        Törlés
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <div className="pt-4 border-t space-y-3">
+              <h3 className="font-medium">Új korábbi munkahely</h3>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <input
+                  placeholder="Munkáltató"
+                  className="border rounded px-2 py-1"
+                  value={peForm.munkaadoNev}
+                  onChange={(e) => setPeForm({ ...peForm, munkaadoNev: e.target.value })}
+                />
+                <input
+                  placeholder="Munkakör"
+                  className="border rounded px-2 py-1"
+                  value={peForm.munkakor}
+                  onChange={(e) => setPeForm({ ...peForm, munkakor: e.target.value })}
+                />
+                <input
+                  type="date"
+                  className="border rounded px-2 py-1"
+                  value={peForm.kezdet}
+                  onChange={(e) => setPeForm({ ...peForm, kezdet: e.target.value })}
+                />
+                <input
+                  type="date"
+                  className="border rounded px-2 py-1"
+                  value={peForm.veg}
+                  onChange={(e) => setPeForm({ ...peForm, veg: e.target.value })}
+                />
+              </div>
+              <button
+                type="button"
+                className="px-3 py-1 bg-gray-800 text-white rounded text-sm"
+                onClick={async () => {
+                  if (!peForm.munkaadoNev.trim()) return;
+                  const r = await apiFetch(`/hr/employees/${selectedEmployee.id}/previous-employments`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      munkaadoNev: peForm.munkaadoNev,
+                      munkakor: peForm.munkakor || undefined,
+                      kezdet: peForm.kezdet || undefined,
+                      veg: peForm.veg || undefined,
+                    }),
+                  });
+                  if (r.ok) {
+                    setPeForm({ munkaadoNev: '', munkakor: '', kezdet: '', veg: '' });
+                    loadEmployeeDetails(selectedEmployee.id);
+                  }
+                }}
+              >
+                Hozzáadás
+              </button>
+
+              <h3 className="font-medium pt-2">Új kitüntetés</h3>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <input
+                  placeholder="Megnevezés"
+                  className="border rounded px-2 py-1"
+                  value={awardForm.megnevezes}
+                  onChange={(e) => setAwardForm({ ...awardForm, megnevezes: e.target.value })}
+                />
+                <input
+                  type="date"
+                  className="border rounded px-2 py-1"
+                  value={awardForm.datum}
+                  onChange={(e) => setAwardForm({ ...awardForm, datum: e.target.value })}
+                />
+                <input
+                  placeholder="Intézmény"
+                  className="border rounded px-2 py-1 col-span-2"
+                  value={awardForm.intezmeny}
+                  onChange={(e) => setAwardForm({ ...awardForm, intezmeny: e.target.value })}
+                />
+              </div>
+              <button
+                type="button"
+                className="px-3 py-1 bg-gray-800 text-white rounded text-sm"
+                onClick={async () => {
+                  if (!awardForm.megnevezes.trim() || !awardForm.datum) return;
+                  const r = await apiFetch(`/hr/employees/${selectedEmployee.id}/awards`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      megnevezes: awardForm.megnevezes,
+                      datum: awardForm.datum,
+                      intezmeny: awardForm.intezmeny || undefined,
+                    }),
+                  });
+                  if (r.ok) {
+                    setAwardForm({ megnevezes: '', datum: '', intezmeny: '' });
+                    loadEmployeeDetails(selectedEmployee.id);
+                  }
+                }}
+              >
+                Hozzáadás
+              </button>
+            </div>
           </div>
         )}
       </Modal>

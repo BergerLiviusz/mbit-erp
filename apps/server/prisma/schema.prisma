@@ -45,6 +45,7 @@ model User {
   assignedWorkflowSteps   WorkflowStep[]          @relation("AssignedWorkflowSteps")
   createdWorkflowInstances WorkflowInstance[]     @relation("CreatedWorkflowInstances")
   completedWorkflowSteps  WorkflowStepLog[]       @relation("CompletedWorkflowSteps")
+  leaveApprovals          LeaveApproval[]         @relation("LeaveApprover")
 
   @@map("felhasznalok")
 }
@@ -969,6 +970,8 @@ model Document {
   tags              DocumentTag[]
   access            DocumentAccess[]
   tasks             Task[]
+  jobPositionAsDescription JobPosition?      @relation("JobPositionDescriptionDoc")
+  jobApplicationCvs       JobApplication[] @relation("JobApplicationCv")
 
   @@index([accountId])
   @@index([categoryId])
@@ -1456,18 +1459,21 @@ model BugReportComment {
 }
 
 model JobPosition {
-  id         String     @id @default(uuid())
-  azonosito  String     @unique
-  nev        String
-  leiras     String?
-  feladatok  String? // JSON vagy szöveg formátumban
-  hataskorok String? // JSON vagy szöveg formátumban
-  osztaly    String? // Szervezeti besorolás - osztály
-  reszleg    String? // Szervezeti besorolás - részleg
-  aktiv      Boolean    @default(true)
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
-  employees  Employee[]
+  id                       String        @id @default(uuid())
+  azonosito                String        @unique
+  nev                      String
+  leiras                   String?
+  feladatok                String? // JSON vagy szöveg formátumban
+  hataskorok               String? // JSON vagy szöveg formátumban
+  osztaly                  String? // Szervezeti besorolás - osztály
+  reszleg                  String? // Szervezeti besorolás - részleg
+  jobDescriptionDocumentId String?       @unique
+  aktiv                    Boolean       @default(true)
+  createdAt                DateTime      @default(now())
+  updatedAt                DateTime      @updatedAt
+  employees                Employee[]
+  jobPostings              JobPosting[]
+  jobDescriptionDocument   Document?     @relation("JobPositionDescriptionDoc", fields: [jobDescriptionDocumentId], references: [id], onDelete: SetNull)
 
   @@index([osztaly])
   @@index([reszleg])
@@ -1504,6 +1510,15 @@ model Employee {
   disciplinaryActions DisciplinaryAction[]
   studyContracts      StudyContract[]
   employmentContracts EmploymentContract[]
+  previousEmployments PreviousEmployment[]
+  awards              EmployeeAward[]
+  cafeteriaSelections EmployeeCafeteriaSelection[]
+  timeEntries         TimeEntry[]
+  leaveRequests       LeaveRequest[]
+  employeeGoals       EmployeeGoal[]
+  onboardingInstances OnboardingInstance[]
+  workflowSubjects    WorkflowInstance[]   @relation("WorkflowSubjectEmployee")
+  hiredFromApplications JobApplication[]   @relation("HiredFromApplication")
 
   @@index([jobPositionId])
   @@index([osztaly])
@@ -1641,6 +1656,276 @@ model ContractAmendment {
   @@index([employmentContractId])
   @@index([datum])
   @@map("szerzodes_modositasok")
+}
+
+model PreviousEmployment {
+  id          String    @id @default(uuid())
+  employeeId  String
+  munkaadoNev String
+  munkakor    String?
+  kezdet      DateTime?
+  veg         DateTime?
+  megjegyzes  String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([employeeId])
+  @@map("korabbi_munkahelyek")
+}
+
+model EmployeeAward {
+  id         String   @id @default(uuid())
+  employeeId String
+  megnevezes String
+  datum      DateTime
+  intezmeny  String?
+  megjegyzes String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([employeeId])
+  @@map("dolgozo_kituntetesek")
+}
+
+model CafeteriaBenefitGroup {
+  id        String               @id @default(uuid())
+  nev       String
+  leiras    String?
+  ev        Int? // tervév ( cafeteria időszak )
+  aktiv     Boolean              @default(true)
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
+  items     CafeteriaBenefitItem[]
+
+  @@index([ev])
+  @@map("cafeteria_juttatas_csoportok")
+}
+
+model CafeteriaBenefitItem {
+  id        String   @id @default(uuid())
+  groupId   String
+  nev       String
+  kod       String? // bérszámfejtő partnerkód
+  maxDb     Int? // max választható darab / fő
+  aktiv     Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  group       CafeteriaBenefitGroup      @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  selections  EmployeeCafeteriaSelection[]
+
+  @@index([groupId])
+  @@map("cafeteria_juttatas_elemek")
+}
+
+model EmployeeCafeteriaSelection {
+  id            String   @id @default(uuid())
+  employeeId    String
+  benefitItemId String
+  ev            Int
+  darab         Int      @default(1)
+  megjegyzes    String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  employee    Employee           @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  benefitItem CafeteriaBenefitItem @relation(fields: [benefitItemId], references: [id], onDelete: Cascade)
+
+  @@unique([employeeId, benefitItemId, ev])
+  @@index([employeeId])
+  @@index([ev])
+  @@map("dolgozo_cafeteria_valasztas")
+}
+
+model JobPosting {
+  id            String   @id @default(uuid())
+  cim           String
+  leiras        String?
+  jobPositionId String?
+  allapot       String   @default("PISZKOZAT") // PISZKOZAT, PUBLIKALT, LEZARVA
+  publikalva    DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  jobPosition  JobPosition?      @relation(fields: [jobPositionId], references: [id], onDelete: SetNull)
+  applications JobApplication[]
+
+  @@index([allapot])
+  @@index([jobPositionId])
+  @@map("allas_hirdetesek")
+}
+
+model JobApplication {
+  id                String    @id @default(uuid())
+  postingId         String
+  jelentkezoNev     String
+  email             String
+  telefon           String?
+  allapot           String    @default("BEERKEZETT") // BEERKEZETT, SZURT, INTERJU, ELUTASITVA, FELVETEL
+  megjegyzes        String?
+  cvFajlUtvonal     String?
+  cvFajlNev         String?
+  cvDocumentId      String?   @unique
+  hiredEmployeeId   String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  posting       JobPosting @relation(fields: [postingId], references: [id], onDelete: Cascade)
+  cvDocument    Document?  @relation("JobApplicationCv", fields: [cvDocumentId], references: [id], onDelete: SetNull)
+  hiredEmployee Employee?  @relation("HiredFromApplication", fields: [hiredEmployeeId], references: [id], onDelete: SetNull)
+
+  @@index([postingId])
+  @@index([allapot])
+  @@index([hiredEmployeeId])
+  @@map("palyazatok")
+}
+
+model TimeImportBatch {
+  id          String      @id @default(uuid())
+  fajlNev     String
+  sikeres     Boolean     @default(false)
+  hibaUzenet  String?
+  rekordok    Int?
+  letrehozva  DateTime    @default(now())
+  entries     TimeEntry[]
+
+  @@map("munkaido_import_batch")
+}
+
+model TimeEntry {
+  id            String   @id @default(uuid())
+  employeeId    String
+  datum         DateTime
+  ora           Float
+  tipus         String   @default("NORMAL") // NORMAL, TULORA, KIEGESZITO
+  megjegyzes    String?
+  forras        String   @default("KEZI") // KEZI, BELTPTO_IMPORT
+  importBatchId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  employee    Employee         @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  importBatch TimeImportBatch? @relation(fields: [importBatchId], references: [id], onDelete: SetNull)
+
+  @@index([employeeId])
+  @@index([datum])
+  @@index([importBatchId])
+  @@map("munkaido_bejegyzes")
+}
+
+model LeaveRequest {
+  id                 String   @id @default(uuid())
+  employeeId         String
+  tipus              String // SZABADSAG, TAPPENZ, EGYEB
+  kezdet             DateTime
+  veg                DateTime
+  allapot            String   @default("FOLYAMATBAN") // FOLYAMATBAN, JOVAHAGYVA, ELUTASITVA, VISSZAVONVA
+  indoklas           String?
+  workflowInstanceId String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  employee           Employee            @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  workflowInstance   WorkflowInstance?   @relation(fields: [workflowInstanceId], references: [id], onDelete: SetNull)
+  approvals          LeaveApproval[]
+
+  @@index([employeeId])
+  @@index([kezdet, veg])
+  @@index([allapot])
+  @@index([workflowInstanceId])
+  @@map("tavollet_kerelmek")
+}
+
+model LeaveApproval {
+  id             String    @id @default(uuid())
+  leaveRequestId String
+  sorrend        Int
+  approverUserId String?
+  allapot        String    @default("VAR") // VAR, JOVAHAGYVA, ELUTASITVA
+  dontesDatum    DateTime?
+  megjegyzes     String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  leaveRequest LeaveRequest @relation(fields: [leaveRequestId], references: [id], onDelete: Cascade)
+  approver     User?        @relation("LeaveApprover", fields: [approverUserId], references: [id], onDelete: SetNull)
+
+  @@unique([leaveRequestId, sorrend])
+  @@index([leaveRequestId])
+  @@index([approverUserId])
+  @@map("tavollet_jovahagyasok")
+}
+
+model EmployeeGoal {
+  id                 String   @id @default(uuid())
+  employeeId         String
+  cim                String
+  leiras             String?
+  celErtek           String?
+  suly               Float?
+  allapot            String   @default("TERVEZETT") // TERVEZETT, FOLYAMATBAN, TELJESULT, ELEGTELELEN
+  hatarido           DateTime?
+  workflowInstanceId String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  employee           Employee                  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  workflowInstance   WorkflowInstance?         @relation(fields: [workflowInstanceId], references: [id], onDelete: SetNull)
+  activities         EmployeeGoalActivity[]
+
+  @@index([employeeId])
+  @@index([allapot])
+  @@map("dolgozo_celok")
+}
+
+model EmployeeGoalActivity {
+  id         String   @id @default(uuid())
+  goalId     String
+  datum      DateTime @default(now())
+  megjegyzes String
+
+  goal EmployeeGoal @relation(fields: [goalId], references: [id], onDelete: Cascade)
+
+  @@index([goalId])
+  @@map("dolgozo_cel_tevekenysegek")
+}
+
+model OnboardingTemplate {
+  id          String   @id @default(uuid())
+  nev         String
+  leiras      String?
+  dokLista    String? // JSON: [{ "cim": "...", "documentId": "uuid?" }]
+  aktiv       Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  instances   OnboardingInstance[]
+
+  @@map("beleptetes_sablonok")
+}
+
+model OnboardingInstance {
+  id                 String    @id @default(uuid())
+  employeeId         String
+  templateId         String
+  allapot            String    @default("FOLYAMATBAN") // FOLYAMATBAN, BEFEJEZVE, MEGSZAKITVA
+  workflowInstanceId String?
+  megkezdve          DateTime  @default(now())
+  befejezve          DateTime?
+  megjegyzes         String?
+
+  employee           Employee            @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  template           OnboardingTemplate  @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  workflowInstance   WorkflowInstance?   @relation(fields: [workflowInstanceId], references: [id], onDelete: SetNull)
+
+  @@index([employeeId])
+  @@index([templateId])
+  @@index([allapot])
+  @@map("beleptetes_peldanyok")
 }
 
 model IntrastatDeclaration {
@@ -1871,24 +2156,30 @@ model WorkflowStep {
 }
 
 model WorkflowInstance {
-  id          String            @id @default(uuid())
-  workflowId  String
-  nev         String? // Példány neve (opcionális)
-  allapot     String            @default("aktív") // aktív, befejezett, megszakított
-  aktualisLepesId String? // Jelenlegi lépés ID
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
-  completedAt DateTime?
-  createdById String?
-  workflow    Workflow          @relation(fields: [workflowId], references: [id], onDelete: Cascade)
-  createdBy   User?             @relation("CreatedWorkflowInstances", fields: [createdById], references: [id], onDelete: SetNull)
-  aktualisLepes WorkflowStep?   @relation("CurrentStep", fields: [aktualisLepesId], references: [id], onDelete: SetNull)
-  stepLogs    WorkflowStepLog[]
+  id                 String               @id @default(uuid())
+  workflowId         String
+  nev                String? // Példány neve (opcionális)
+  allapot            String               @default("aktív") // aktív, befejezett, megszakított
+  aktualisLepesId    String? // Jelenlegi lépés ID
+  subjectEmployeeId  String? // HR: beléptetés / teljesítmény / általános ügyintézés kötése dolgozóhoz
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  completedAt        DateTime?
+  createdById        String?
+  workflow           Workflow             @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  createdBy          User?                @relation("CreatedWorkflowInstances", fields: [createdById], references: [id], onDelete: SetNull)
+  aktualisLepes      WorkflowStep?        @relation("CurrentStep", fields: [aktualisLepesId], references: [id], onDelete: SetNull)
+  subjectEmployee    Employee?            @relation("WorkflowSubjectEmployee", fields: [subjectEmployeeId], references: [id], onDelete: SetNull)
+  stepLogs           WorkflowStepLog[]
+  onboardingInstances OnboardingInstance[]
+  leaveRequests      LeaveRequest[]
+  employeeGoals      EmployeeGoal[]
 
   @@index([workflowId])
   @@index([allapot])
   @@index([createdById])
   @@index([aktualisLepesId])
+  @@index([subjectEmployeeId])
   @@map("workflow_peldanyok")
 }
 

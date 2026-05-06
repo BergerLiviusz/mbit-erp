@@ -101,6 +101,8 @@ export class EmployeeService {
               disciplinaryActions: true,
               studyContracts: true,
               employmentContracts: true,
+              previousEmployments: true,
+              awards: true,
             },
           },
         },
@@ -156,11 +158,17 @@ export class EmployeeService {
             kezdetDatum: 'desc',
           },
         },
+        previousEmployments: {
+          orderBy: { kezdet: 'desc' },
+        },
+        awards: {
+          orderBy: { datum: 'desc' },
+        },
       },
     });
 
     if (!employee) {
-      throw new NotFoundException('Dolgozó nem található');
+      throw new NotFoundException('Dolgoz? nem tal?lhat?');
     }
 
     return employee;
@@ -173,7 +181,7 @@ export class EmployeeService {
     });
 
     if (existing) {
-      throw new BadRequestException('Ez az azonosító már használatban van');
+      throw new BadRequestException('Ez az azonos?t? m?r haszn?latban van');
     }
 
     // Check if TAJ number already exists (if provided)
@@ -183,7 +191,7 @@ export class EmployeeService {
       });
 
       if (existingTaj) {
-        throw new BadRequestException('Ez a TAJ szám már használatban van');
+        throw new BadRequestException('Ez a TAJ sz?m m?r haszn?latban van');
       }
     }
 
@@ -212,7 +220,7 @@ export class EmployeeService {
       });
 
       if (existingTaj) {
-        throw new BadRequestException('Ez a TAJ szám már használatban van');
+        throw new BadRequestException('Ez a TAJ sz?m m?r haszn?latban van');
       }
     }
 
@@ -237,6 +245,98 @@ export class EmployeeService {
     return this.prisma.employee.delete({
       where: { id },
     });
+  }
+
+  async createPreviousEmployment(
+    employeeId: string,
+    dto: {
+      munkaadoNev: string;
+      munkakor?: string;
+      kezdet?: string;
+      veg?: string;
+      megjegyzes?: string;
+    },
+  ) {
+    await this.findOne(employeeId);
+    return this.prisma.previousEmployment.create({
+      data: {
+        employeeId,
+        munkaadoNev: dto.munkaadoNev,
+        munkakor: dto.munkakor,
+        kezdet: dto.kezdet ? new Date(dto.kezdet) : undefined,
+        veg: dto.veg ? new Date(dto.veg) : undefined,
+        megjegyzes: dto.megjegyzes,
+      },
+    });
+  }
+
+  async updatePreviousEmployment(
+    id: string,
+    dto: {
+      munkaadoNev?: string;
+      munkakor?: string;
+      kezdet?: string;
+      veg?: string;
+      megjegyzes?: string;
+    },
+  ) {
+    const row = await this.prisma.previousEmployment.findUnique({ where: { id } });
+    if (!row) throw new NotFoundException('Kor?bbi munkahely nem tal?lhat?');
+    return this.prisma.previousEmployment.update({
+      where: { id },
+      data: {
+        munkaadoNev: dto.munkaadoNev,
+        munkakor: dto.munkakor,
+        kezdet: dto.kezdet !== undefined ? (dto.kezdet ? new Date(dto.kezdet) : null) : undefined,
+        veg: dto.veg !== undefined ? (dto.veg ? new Date(dto.veg) : null) : undefined,
+        megjegyzes: dto.megjegyzes,
+      },
+    });
+  }
+
+  async deletePreviousEmployment(id: string) {
+    const row = await this.prisma.previousEmployment.findUnique({ where: { id } });
+    if (!row) throw new NotFoundException('Kor?bbi munkahely nem tal?lhat?');
+    return this.prisma.previousEmployment.delete({ where: { id } });
+  }
+
+  async createAward(
+    employeeId: string,
+    dto: { megnevezes: string; datum: string; intezmeny?: string; megjegyzes?: string },
+  ) {
+    await this.findOne(employeeId);
+    return this.prisma.employeeAward.create({
+      data: {
+        employeeId,
+        megnevezes: dto.megnevezes,
+        datum: new Date(dto.datum),
+        intezmeny: dto.intezmeny,
+        megjegyzes: dto.megjegyzes,
+      },
+    });
+  }
+
+  async updateAward(
+    id: string,
+    dto: { megnevezes?: string; datum?: string; intezmeny?: string; megjegyzes?: string },
+  ) {
+    const row = await this.prisma.employeeAward.findUnique({ where: { id } });
+    if (!row) throw new NotFoundException('Kit?ntet?s nem tal?lhat?');
+    return this.prisma.employeeAward.update({
+      where: { id },
+      data: {
+        megnevezes: dto.megnevezes,
+        datum: dto.datum ? new Date(dto.datum) : undefined,
+        intezmeny: dto.intezmeny,
+        megjegyzes: dto.megjegyzes,
+      },
+    });
+  }
+
+  async deleteAward(id: string) {
+    const row = await this.prisma.employeeAward.findUnique({ where: { id } });
+    if (!row) throw new NotFoundException('Kit?ntet?s nem tal?lhat?');
+    return this.prisma.employeeAward.delete({ where: { id } });
   }
 }
 

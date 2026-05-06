@@ -20,6 +20,10 @@ export interface KshReportDto {
 
 @Injectable()
 export class HrReportService {
+  /** Első sor a generált TXT riportokban: emlékeztető, hogy nem helyettesíti a hatósági formátumot. */
+  private readonly statutoryExportNote =
+    'MBIT_SPEC_MEGJEGYZES:Belső strukturált összesítő export. A tényleges NAV/KSH bevallási fájlforma és mezők egyeztetése a bérszámfejtővel / hatósági előírásokkal szükséges.';
+
   constructor(private prisma: PrismaService) {}
 
   async generateNavPayrollReport(dto: NavPayrollReportDto): Promise<string> {
@@ -51,6 +55,7 @@ export class HrReportService {
     });
 
     const lines: string[] = [];
+    lines.push(this.statutoryExportNote);
     lines.push('NAV_BERKIFIZETESI_JEGYZEK');
     lines.push(`EV:${dto.ev}`);
     lines.push(`HONAP:${dto.honap}`);
@@ -113,6 +118,7 @@ export class HrReportService {
     });
 
     const lines: string[] = [];
+    lines.push(this.statutoryExportNote);
     lines.push('NAV_SZJA_BEVALLAS');
     lines.push(`EV:${dto.ev}`);
     if (dto.quarter) {
@@ -174,6 +180,7 @@ export class HrReportService {
     });
 
     const lines: string[] = [];
+    lines.push(this.statutoryExportNote);
     lines.push('KSH_FOGLALKOZATOTTI_STATISZTIKA');
     lines.push(`EV:${dto.ev}`);
     if (dto.honap) {
@@ -257,6 +264,7 @@ export class HrReportService {
     });
 
     const lines: string[] = [];
+    lines.push(this.statutoryExportNote);
     lines.push('KSH_BERSTATISZTIKA');
     lines.push(`EV:${dto.ev}`);
     if (dto.honap) {
@@ -318,6 +326,7 @@ export class HrReportService {
     });
 
     const lines: string[] = [];
+    lines.push(this.statutoryExportNote);
     lines.push('KSH_SZERZODES_STATISZTIKA');
     lines.push(`EV:${dto.ev}`);
     if (dto.honap) {
@@ -341,6 +350,105 @@ export class HrReportService {
     lines.push(``);
     lines.push(`OSSZES_SZERZODES:${totalContracts}`);
 
+    return lines.join('\n');
+  }
+
+  /** Cafeteria választások CSV – bérszámfejtő interfészhez (partner egyeztetés szerint bővíthető) */
+  async generateCafeteriaPayrollExport(ev: number): Promise<string> {
+    const rows = await this.prisma.employeeCafeteriaSelection.findMany({
+      where: { ev },
+      include: {
+        employee: { select: { azonosito: true, vezetekNev: true, keresztNev: true, tajSzam: true } },
+        benefitItem: { select: { nev: true, kod: true, group: { select: { nev: true } } } },
+      },
+    });
+    const header = ['azonosito', 'vezetek', 'kereszt', 'taj', 'juttatas_csoport', 'juttatas', 'partner_kod', 'ev', 'darab'].join(';');
+    const lines = [header];
+    for (const r of rows) {
+      lines.push(
+        [
+          r.employee.azonosito,
+          r.employee.vezetekNev,
+          r.employee.keresztNev,
+          r.employee.tajSzam || '',
+          r.benefitItem.group?.nev || '',
+          r.benefitItem.nev,
+          r.benefitItem.kod || '',
+          String(r.ev),
+          String(r.darab),
+        ].join(';'),
+      );
+    }
+    return lines.join('\n');
+  }
+
+  /** Munkaidő összesítő CSV hónapra – bérszámfejtő export */
+  async generateTimePayrollExport(ev: number, honap: number): Promise<string> {
+    const start = new Date(ev, honap - 1, 1);
+    const end = new Date(ev, honap, 0, 23, 59, 59);
+    const entries = await this.prisma.timeEntry.findMany({
+      where: { datum: { gte: start, lte: end } },
+      include: {
+        employee: { select: { azonosito: true, vezetekNev: true, keresztNev: true, tajSzam: true } },
+      },
+    });
+    const sums = new Map<string, { employee: any; normal: number; tulora: number; egyeb: number }>();
+    for (const e of entries) {
+      const k = e.employeeId;
+      if (!sums.has(k)) {
+        sums.set(k, { employee: e.employee, normal: 0, tulora: 0, egyeb: 0 });
+      }
+      const s = sums.get(k)!;
+      if (e.tipus === 'TULORA') s.tulora += e.ora;
+      else if (e.tipus === 'KIEGESZITO') s.egyeb += e.ora;
+      else s.normal += e.ora;
+    }
+    const header = ['azonosito', 'vezetek', 'kereszt', 'taj', 'ev', 'honap', 'normal_ora', 'tulora', 'egyeb_ora', 'osszes_ora'].join(';');
+    const out = [header];
+    for (const [, s] of sums) {
+      const ossz = s.normal + s.tulora + s.egyeb;
+      out.push(
+        [
+          s.employee.azonosito,
+          s.employee.vezetekNev,
+          s.employee.keresztNev,
+          s.employee.tajSzam || '',
+          String(ev),
+          String(honap),
+          s.normal.toFixed(2),
+          s.tulora.toFixed(2),
+          s.egyeb.toFixed(2),
+          ossz.toFixed(2),
+        ].join(';'),
+      );
+    }
+    return out.join('\n');
+  }
+
+  /** Távollét riport (elemzés) – CSV */
+  async generateLeaveAnalyticsExport(evFrom: number, evTo?: number): Promise<string> {
+    const start = new Date(evFrom, 0, 1);
+    const end = evTo ? new Date(evTo, 11, 31, 23, 59, 59) : new Date(evFrom, 11, 31, 23, 59, 59);
+    const rows = await this.prisma.leaveRequest.findMany({
+      where: {
+        kezdet: { lte: end },
+        veg: { gte: start },
+      },
+      include: {
+        employee: { select: { azonosito: true, vezetekNev: true, keresztNev: true } },
+        approvals: { orderBy: { sorrend: 'asc' } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    const header = ['azonosito', 'nev', 'tipus', 'kezdet', 'veg', 'allapot', 'jovahagyasi_lepesek'].join(';');
+    const lines = [header];
+    for (const r of rows) {
+      const nev = `${r.employee.vezetekNev} ${r.employee.keresztNev}`;
+      const appr = r.approvals.map((a) => `${a.sorrend}:${a.allapot}`).join('|');
+      lines.push(
+        [r.employee.azonosito, nev, r.tipus, r.kezdet.toISOString(), r.veg.toISOString(), r.allapot, appr].join(';'),
+      );
+    }
     return lines.join('\n');
   }
 }
