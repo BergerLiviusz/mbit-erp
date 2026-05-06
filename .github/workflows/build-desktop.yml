@@ -346,6 +346,8 @@ jobs:
 
       - name: Package desktop app
         shell: pwsh
+        env:
+          VITE_ACTIVE_PACKAGE: ${{ steps.package.outputs.package }}
         run: |
           Write-Host "=== Packaging desktop app ==="
           cd apps/desktop

@@ -1,4 +1,4 @@
-import { Routes, Route, Link, useLocation } from 'react-router-dom';
+import { Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
 import { useState, useEffect, useCallback } from 'react';
 import Dashboard from './pages/Dashboard';
 import CRM from './pages/CRM';
@@ -90,6 +90,8 @@ function App() {
   // Check if running in Electron desktop mode
   const isElectron = !!(window as any).electron || (navigator.userAgent.includes('Electron'));
   const location = useLocation();
+  const activePackage = getActivePackage();
+  const isHrOnlyPackage = activePackage === 'package-hr';
   
   // Log route changes
   useEffect(() => {
@@ -222,28 +224,30 @@ function App() {
                   <img src={MbitLogo} alt="Mbit Logo" className="h-10 w-auto" />
                 </Link>
                 <div className="flex space-x-4">
-                <Link 
-                  to="/" 
-                  className="hover:bg-gray-800 px-3 py-2 rounded"
-                  onClick={() => {
-                    if (isElectron) {
-                      import('./components/DebugPanel').then(module => {
-                        module.addLog('info', 'Navigation: Clicked Főoldal', { to: '/' });
-                      }).catch(() => {});
-                    }
-                  }}
-                >
-                  Főoldal
-                </Link>
+                {!isHrOnlyPackage && (
+                  <Link 
+                    to="/" 
+                    className="hover:bg-gray-800 px-3 py-2 rounded"
+                    onClick={() => {
+                      if (isElectron) {
+                        import('./components/DebugPanel').then(module => {
+                          module.addLog('info', 'Navigation: Clicked Főoldal', { to: '/' });
+                        }).catch(() => {});
+                      }
+                    }}
+                  >
+                    Főoldal
+                  </Link>
+                )}
                 {/* Ügyfélkezelés - csak ha CRM modul engedélyezve */}
-                {isModuleEnabled('crm') && (
+                {!isHrOnlyPackage && isModuleEnabled('crm') && (
                   <DropdownMenu 
                     title="Ügyfélkezelés"
                     items={getModuleMenuItems('crm')}
                   />
                 )}
                 {/* Dokumentumok - csak ha engedélyezve */}
-                {isModuleEnabled('documents') && (
+                {!isHrOnlyPackage && isModuleEnabled('documents') && (
                   <Link 
                     to="/documents" 
                     className="hover:bg-gray-800 px-3 py-2 rounded"
@@ -259,7 +263,7 @@ function App() {
                   </Link>
                 )}
                 {/* Csapat kommunikáció - csak ha Team modul engedélyezve */}
-                {isModuleEnabled('team') && (
+                {!isHrOnlyPackage && isModuleEnabled('team') && (
                   <>
                     <Link 
                       to="/team" 
@@ -303,7 +307,7 @@ function App() {
                   </>
                 )}
                 {/* Logisztika - csak ha Logistics modul engedélyezve */}
-                {isModuleEnabled('logistics') && (
+                {!isHrOnlyPackage && isModuleEnabled('logistics') && (
                   <DropdownMenu 
                     title="Logisztika"
                     items={getModuleMenuItems('logistics')}
@@ -317,7 +321,7 @@ function App() {
                   />
                 )}
                 {/* Kontrolling - csak ha Controlling modul engedélyezve */}
-                {isModuleEnabled('controlling') && (
+                {!isHrOnlyPackage && isModuleEnabled('controlling') && (
                   <DropdownMenu 
                     title="Kontrolling"
                     items={getModuleMenuItems('controlling')}
@@ -359,7 +363,10 @@ function App() {
         {isElectron && <BackendStatus />}
         {isElectron && <NotificationPanel />}
         <Routes>
-          <Route path="/" element={<Dashboard />} />
+          <Route
+            path="/"
+            element={isHrOnlyPackage ? <Navigate to="/hr/employees" replace /> : <Dashboard />}
+          />
           
           {/* CRM routes - csak ha engedélyezve */}
           {isModuleEnabled('crm') ? (
