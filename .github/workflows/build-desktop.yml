@@ -346,8 +346,15 @@ jobs:
 
       - name: Package desktop app
         shell: pwsh
+        env:
+          VITE_ACTIVE_PACKAGE: ${{ steps.package.outputs.package }}
         run: |
           Write-Host "=== Packaging desktop app ==="
+          Write-Host "VITE_ACTIVE_PACKAGE for repackage step: $env:VITE_ACTIVE_PACKAGE"
+          if (-not $env:VITE_ACTIVE_PACKAGE) {
+            Write-Host "❌ ERROR: VITE_ACTIVE_PACKAGE is not set in Package step!"
+            exit 1
+          }
           cd apps/desktop
           
           # Clean release directory to avoid file locking issues on Windows
