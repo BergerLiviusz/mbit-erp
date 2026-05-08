@@ -154,6 +154,16 @@ export const PACKAGE_CONFIGS: Record<string, PackageConfig> = {
       logistics: false
     }
   },
+  'package-dtl': {
+    name: 'Dokumentumok + Csapat + Logisztika',
+    modules: {
+      documents: true,
+      team: true,
+      controlling: false,
+      crm: false,
+      logistics: true
+    }
+  },
   'full': {
     name: 'Teljes verzió',
     modules: {
@@ -246,9 +256,9 @@ export function getModuleMenuItems(module: 'documents' | 'team' | 'crm' | 'logis
 }
 
 // Helper függvény: HR modul elérhetőségének ellenőrzése
-// Az HR modul minden package-ben elérhető, kivéve package-5-ben
+// Az HR modul minden package-ben elérhető, kivéve package-5 és package-dtl
 export function isHrModuleEnabled(): boolean {
   const activePackage = getActivePackage();
-  return activePackage !== 'package-5';
+  return activePackage !== 'package-5' && activePackage !== 'package-dtl';
 }
 
