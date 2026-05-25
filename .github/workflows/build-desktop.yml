@@ -61,12 +61,6 @@ jobs:
           node-version: '18.18.2'
           cache: 'npm'
 
-      - name: Build shared config package
-        shell: pwsh
-        run: |
-          Write-Host "=== Building @mbit-erp/config ==="
-          npm run build --workspace=@mbit-erp/config
-
       - name: Install dependencies
         shell: pwsh
         run: |
@@ -92,6 +86,12 @@ jobs:
               }
             }
           }
+
+      - name: Build shared config package
+        shell: pwsh
+        run: |
+          Write-Host "=== Building @mbit-erp/config ==="
+          npm run build --workspace=@mbit-erp/config
 
       - name: Determine package from branch
         id: package
@@ -383,7 +383,6 @@ jobs:
           BUILD_SHA: ${{ github.sha }}
           BUILD_DATE: ${{ github.event.head_commit.timestamp }}
         run: |
-          npm run build --workspace=@mbit-erp/config
           node apps/desktop/scripts/write-build-meta.mjs
 
       - name: Package desktop app
