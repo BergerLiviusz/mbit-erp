@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { apiFetch } from '../../lib/api';
 import Modal from '../../components/Modal';
+import DmsDocumentLinker from '../../components/hr/DmsDocumentLinker';
+import { usePermissions } from '../../hooks/usePermissions';
 
 interface EmploymentContract {
   id: string;
@@ -11,6 +13,9 @@ interface EmploymentContract {
   vegDatum?: string | null;
   probaidoVege?: string | null;
   fizetes?: number | null;
+  munkaido?: string | null;
+  documentId?: string | null;
+  aktiv?: boolean;
   megjegyzesek?: string | null;
   createdAt: string;
   updatedAt: string;
@@ -60,6 +65,7 @@ const AMENDMENT_TIPUSOK = [
 ];
 
 export default function Contracts() {
+  const perms = usePermissions();
   const [contracts, setContracts] = useState<EmploymentContract[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
@@ -79,6 +85,9 @@ export default function Contracts() {
     vegDatum: '',
     probaidoVege: '',
     fizetes: '',
+    munkaido: '',
+    documentId: '',
+    aktiv: true,
     megjegyzesek: '',
   });
 
@@ -88,6 +97,7 @@ export default function Contracts() {
     leiras: '',
     ujFizetes: '',
     ujVegDatum: '',
+    valtozottMezok: '',
     megjegyzesek: '',
   });
 
@@ -161,6 +171,9 @@ export default function Contracts() {
         vegDatum: contract.vegDatum ? contract.vegDatum.split('T')[0] : '',
         probaidoVege: contract.probaidoVege ? contract.probaidoVege.split('T')[0] : '',
         fizetes: contract.fizetes?.toString() || '',
+        munkaido: contract.munkaido || '',
+        documentId: contract.documentId || '',
+        aktiv: contract.aktiv !== false,
         megjegyzesek: contract.megjegyzesek || '',
       });
     } else {
@@ -173,6 +186,9 @@ export default function Contracts() {
         vegDatum: '',
         probaidoVege: '',
         fizetes: '',
+        munkaido: '',
+        documentId: '',
+        aktiv: true,
         megjegyzesek: '',
       });
     }
@@ -215,6 +231,9 @@ export default function Contracts() {
           vegDatum: formData.vegDatum || undefined,
           probaidoVege: formData.probaidoVege || undefined,
           fizetes: formData.fizetes ? parseFloat(formData.fizetes) : undefined,
+          munkaido: formData.munkaido || undefined,
+          documentId: formData.documentId || undefined,
+          aktiv: formData.aktiv,
           megjegyzesek: formData.megjegyzesek || undefined,
         } : {
           employeeId: formData.employeeId,
@@ -224,6 +243,9 @@ export default function Contracts() {
           vegDatum: formData.vegDatum || undefined,
           probaidoVege: formData.probaidoVege || undefined,
           fizetes: formData.fizetes ? parseFloat(formData.fizetes) : undefined,
+          munkaido: formData.munkaido || undefined,
+          documentId: formData.documentId || undefined,
+          aktiv: formData.aktiv,
           megjegyzesek: formData.megjegyzesek || undefined,
         }),
       });
@@ -251,6 +273,7 @@ export default function Contracts() {
       leiras: '',
       ujFizetes: '',
       ujVegDatum: '',
+      valtozottMezok: '',
       megjegyzesek: '',
     });
     setIsAmendmentModalOpen(true);
@@ -283,7 +306,9 @@ export default function Contracts() {
           leiras: amendmentFormData.leiras,
           ujFizetes: amendmentFormData.ujFizetes ? parseFloat(amendmentFormData.ujFizetes) : undefined,
           ujVegDatum: amendmentFormData.ujVegDatum || undefined,
-          megjegyzesek: amendmentFormData.megjegyzesek || undefined,
+          megjegyzesek: amendmentFormData.valtozottMezok
+            ? `valtozott_mezok:${amendmentFormData.valtozottMezok};${amendmentFormData.megjegyzesek || ''}`
+            : amendmentFormData.megjegyzesek || undefined,
         }),
       });
 
@@ -351,12 +376,34 @@ export default function Contracts() {
           >
             Lejáró szerződések
           </button>
-          <button
-            onClick={() => handleOpenModal()}
-            className="bg-mbit-blue text-white px-4 py-2 rounded hover:bg-blue-600"
-          >
-            + Új szerződés
-          </button>
+          {perms.canExportHr && (
+            <button
+              type="button"
+              onClick={async () => {
+                const res = await apiFetch('/hr/reports/ginop/contract-amendments?format=csv', {
+                  method: 'POST',
+                });
+                if (res.ok) {
+                  const blob = await res.blob();
+                  const a = document.createElement('a');
+                  a.href = URL.createObjectURL(blob);
+                  a.download = 'szerzodes_modositasok.csv';
+                  a.click();
+                }
+              }}
+              className="border px-4 py-2 rounded"
+            >
+              Export lista
+            </button>
+          )}
+          {perms.canManageContracts && (
+            <button
+              onClick={() => handleOpenModal()}
+              className="bg-mbit-blue text-white px-4 py-2 rounded hover:bg-blue-600"
+            >
+              + Új szerződés
+            </button>
+          )}
         </div>
       </div>
 
@@ -614,6 +661,31 @@ export default function Contracts() {
             </div>
 
             <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Munkaidő</label>
+              <input
+                className="w-full px-3 py-2 border border-gray-300 rounded"
+                value={formData.munkaido}
+                onChange={(e) => setFormData({ ...formData, munkaido: e.target.value })}
+              />
+            </div>
+
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={formData.aktiv}
+                onChange={(e) => setFormData({ ...formData, aktiv: e.target.checked })}
+              />
+              Aktív szerződés
+            </label>
+
+            <DmsDocumentLinker
+              label="Munkaszerződés dokumentum (DMS)"
+              suggestionKey="munkaszerzodes"
+              documentId={formData.documentId || null}
+              onLinked={(id) => setFormData({ ...formData, documentId: id || '' })}
+            />
+
+            <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Megjegyzések</label>
               <textarea
                 value={formData.megjegyzesek}
@@ -690,6 +762,18 @@ export default function Contracts() {
                 rows={4}
                 className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Változott mezők</label>
+              <input
+                className="w-full px-3 py-2 border border-gray-300 rounded"
+                placeholder="pl. fizetes, munkaido, vegDatum"
+                value={amendmentFormData.valtozottMezok}
+                onChange={(e) =>
+                  setAmendmentFormData({ ...amendmentFormData, valtozottMezok: e.target.value })
+                }
               />
             </div>
 

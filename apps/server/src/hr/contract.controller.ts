@@ -64,7 +64,7 @@ export class ContractController {
   }
 
   @Post()
-  @Permissions(Permission.HR_CREATE)
+  @Permissions(Permission.HR_CONTRACT_MANAGE, Permission.HR_CREATE)
   async create(@Body() dto: CreateEmploymentContractDto, @Request() req: any) {
     const contract = await this.contractService.create(dto);
     
@@ -79,7 +79,7 @@ export class ContractController {
   }
 
   @Put(':id')
-  @Permissions(Permission.HR_EDIT)
+  @Permissions(Permission.HR_CONTRACT_MANAGE, Permission.HR_EDIT)
   async update(
     @Param('id') id: string,
     @Body() dto: UpdateEmploymentContractDto,
@@ -100,7 +100,7 @@ export class ContractController {
   }
 
   @Post(':id/amendments')
-  @Permissions(Permission.HR_EDIT)
+  @Permissions(Permission.HR_CONTRACT_MANAGE, Permission.HR_EDIT)
   async addAmendment(
     @Param('id') contractId: string,
     @Body() dto: CreateContractAmendmentDto,

@@ -80,9 +80,56 @@ export class StorageService {
     return path.relative(this.baseDir, fullPath);
   }
 
+  /**
+   * Normalizes DB-stored paths (e.g. legacy `/uploads/...`) to safe relative paths under MBIT_DATA_DIR.
+   */
+  normalizeRelativePath(relativePath: string): string {
+    let p = relativePath.trim().replace(/\\/g, '/');
+    while (p.startsWith('/')) {
+      p = p.slice(1);
+    }
+    if (p.startsWith('mbit-data/')) {
+      p = p.slice('mbit-data/'.length);
+    }
+    return p;
+  }
+
+  /** Candidate paths for legacy uploads and migrated files/ layout. */
+  private resolveReadCandidates(relativePath: string): string[] {
+    const normalized = this.normalizeRelativePath(relativePath);
+    const baseName = path.basename(normalized);
+    const candidates = new Set<string>();
+
+    candidates.add(normalized);
+
+    if (normalized.startsWith('uploads/')) {
+      candidates.add(normalized.replace(/^uploads\//, 'files/'));
+    } else if (!normalized.startsWith('files/') && baseName) {
+      candidates.add(`files/${baseName}`);
+      candidates.add(`uploads/${normalized}`);
+      candidates.add(`uploads/documents/${baseName}`);
+    }
+
+    return [...candidates];
+  }
+
+  async resolveExistingRelativePath(relativePath: string): Promise<string | null> {
+    for (const candidate of this.resolveReadCandidates(relativePath)) {
+      if (await this.fileExists(candidate)) {
+        return candidate;
+      }
+    }
+    return null;
+  }
+
   async readFile(relativePath: string): Promise<Buffer> {
-    const fullPath = path.join(this.baseDir, relativePath);
-    
+    const resolved = await this.resolveExistingRelativePath(relativePath);
+    if (!resolved) {
+      throw new Error(`Fájl nem található: ${relativePath}`);
+    }
+
+    const fullPath = path.join(this.baseDir, resolved);
+
     if (!this.isPathSafe(fullPath)) {
       throw new Error('Unsafe file path detected');
     }
@@ -103,7 +150,9 @@ export class StorageService {
 
   async fileExists(relativePath: string): Promise<boolean> {
     try {
-      const fullPath = path.join(this.baseDir, relativePath);
+      const normalized = this.normalizeRelativePath(relativePath);
+      const fullPath = path.join(this.baseDir, normalized);
+      if (!this.isPathSafe(fullPath)) return false;
       await fs.access(fullPath);
       return true;
     } catch {
@@ -156,12 +205,20 @@ export class StorageService {
   }
 
   getAbsolutePath(relativePath: string): string {
-    const fullPath = path.join(this.baseDir, relativePath);
-    
+    const normalized = this.normalizeRelativePath(relativePath);
+    const fullPath = path.join(this.baseDir, normalized);
+
     if (!this.isPathSafe(fullPath)) {
       throw new Error('Unsafe file path detected');
     }
 
     return fullPath;
+  }
+
+  /** Returns absolute path if file exists (with legacy fallback), otherwise null. */
+  async getResolvableAbsolutePath(relativePath: string): Promise<string | null> {
+    const resolved = await this.resolveExistingRelativePath(relativePath);
+    if (!resolved) return null;
+    return this.getAbsolutePath(resolved);
   }
 }

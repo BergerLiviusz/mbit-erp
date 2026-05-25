@@ -48,6 +48,12 @@ export class JobPositionController {
     );
   }
 
+  @Get(':id/employees')
+  @Permissions(Permission.HR_VIEW)
+  findEmployees(@Param('id') id: string) {
+    return this.jobPositionService.findEmployees(id);
+  }
+
   @Get(':id')
   @Permissions(Permission.HR_VIEW)
   findOne(@Param('id') id: string) {

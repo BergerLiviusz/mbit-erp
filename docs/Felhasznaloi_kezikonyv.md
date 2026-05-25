@@ -234,21 +234,30 @@ Az OCR (Optical Character Recognition) automatikusan szöveggé alakítja a beol
 
 ⚠️ Ha a készlet a min. szint alá esik, automatikus figyelmeztetést kap!
 
-### 5.3 Készletmozgások
+### 5.3 Kategóriák és sarzs
 
-#### Készlet Növelése (Beérkeztetés):
-1. **Logisztika > Készlet > Mozgás**
-2. Típus: **Beérkeztetés**
-3. Válasszon cikket és raktárt
-4. Adja meg a mennyiséget
-5. Opcionális: sarzs/gyártási szám
+- **Logisztika > Kategóriák** – hierarchikus termékkategóriák, export
+- **Logisztika > Sarzsok** – sarzs készlet, lejárati riport (XLSX)
 
-#### Készlet Csökkentése (Kiadás):
-1. Típus: **Kiadás**
-2. Kapcsolja össze rendeléssel
-3. Rendszer automatikusan csökkenti a készletet
+### 5.4 Készletmozgások
 
-### 5.4 Árlista Kezelés
+#### Készlet növelése (bevételezés):
+1. **Logisztika > Készletmozgások > Új mozgás**
+2. Típus: **Bevételezés** – cikk, raktár, mennyiség, opcionális sarzs
+
+#### Kiadás és átmozgatás:
+- **Kiadás** – mennyiség csökkentés, referencia bizonylat megadható
+- **Raktárközi átmozgatás** – forrás és cél raktár
+
+#### Riasztások és beszerzés:
+- **Készlet riasztások** – minimum alatt / maximum felett
+- **Beszerzések** – rendelés, jóváhagyás, beérkezés, készletre vétel
+- **Riportok** – CSV/XLSX export (auditált)
+- **Audit napló** – logisztikai műveletek listája
+
+GINOP demo: `docs/LOGISZTIKA_DEMO_FORGATOKONYV.md`
+
+### 5.5 Árlista Kezelés
 
 #### Szállítói Árlista Feltöltése:
 1. **Logisztika > Árlisták > Új Árlista**
@@ -265,7 +274,16 @@ Az OCR (Optical Character Recognition) automatikusan szöveggé alakítja a beol
 
 ---
 
-## 6. Riportok és Kimutatások
+## 6. Kontrolling / Döntéstámogatás
+
+- **Kontrolling → Dashboard** – KPI kártyák, grafikonok, modul szűrő, gyors export
+- **Kontrolling → Riportok** – előre definiált riportok (CRM, DMS, HR, Logisztika, Rendszer), CSV/XLSX
+- **Kontrolling → Ad-hoc riport** – modul és mezők kiválasztása, export
+- **Kontrolling → KPI** – egyedi KPI definíciók (haladó)
+
+Demo: `docs/CONTROLLING_DEMO_FORGATOKONYV.md`
+
+## 7. Riportok és Kimutatások
 
 ### 6.1 Előre Definiált Riportok
 
@@ -347,7 +365,21 @@ V: Logisztika > Készlet Áttekintés > "Összes raktár" nézet
 
 ---
 
-## 10. Támogatás
+## 10. HR menedzsment modul
+
+A Windows desktop alkalmazás **HR menedzsment alapmodult** tartalmaz (nem teljes bérszámfejtés).
+
+**Menü:** HR → Dolgozók, Munkakörök, Szerződések, Riportok
+
+- Dolgozói törzsadatok, jogviszony, végzettség, nyelv, orvosi vizsgálat (részben API)
+- Munkaszerződések és módosítások; dokumentumok a **DMS**-ből csatolhatók
+- Riportok: CSV/XLSX, köztük a **NAV/KSH HR alapadat analitika** (belső export, nem hatósági beküldés)
+
+Részletes demo: `docs/HR_DEMO_FORGATOKONYV.md`
+
+---
+
+## 11. Támogatás
 
 Ha további segítségre van szüksége:
 

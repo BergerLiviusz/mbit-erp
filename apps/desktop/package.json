@@ -1,6 +1,6 @@
 {
   "name": "@mbit-erp/desktop",
-  "version": "1.0.0",
+  "version": "1.0.1a",
   "private": true,
   "description": "Electron desktop application for Mbit ERP - on-premise capable",
   "author": {
@@ -24,6 +24,7 @@
     "test:local": "npm run build && electron-builder --dir && echo '✅ Packaged app built in dist/ directory. Run it manually or use npm run start:packaged'",
     "dev": "concurrently \"tsc -w\" \"wait-on dist-electron/main.js && electron .\"",
     "package": "npm run build && electron-builder",
+    "prepackage:win": "node scripts/write-build-meta.mjs",
     "package:win": "npm run build && electron-builder --win --x64",
     "package:mac": "npm run build && electron-builder --mac",
     "package:linux": "npm run build && electron-builder --linux",
@@ -34,7 +35,7 @@
   },
   "build": {
     "appId": "com.mbit.erp",
-    "productName": "Mbit ERP",
+    "productName": "MBIT ERP",
     "copyright": "Copyright © 2025 MB-IT Kft.",
     "electronVersion": "28.3.3",
     "electronDownload": {
@@ -98,6 +99,11 @@
       {
         "from": "resources/icon.png",
         "to": "icon.png"
+      },
+      {
+        "from": "resources/erp-build-meta.json",
+        "to": "erp-build-meta.json",
+        "filter": ["**/*"]
       }
     ],
     "win": {
@@ -116,7 +122,7 @@
         }
       ],
       "icon": "resources/icon.ico",
-      "artifactName": "${productName}-Setup-${version}.${ext}",
+      "artifactName": "mbit-erp-v${version}-${env.ERP_PACKAGE}-setup.${ext}",
       "publisherName": "MB-IT Kft.",
       "extraResources": [
         {

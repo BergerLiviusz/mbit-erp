@@ -33,10 +33,23 @@ import Intrastat from './pages/Intrastat';
 import DatabaseConnections from './pages/Controlling/DatabaseConnections';
 import KPI from './pages/Controlling/KPI';
 import Queries from './pages/Controlling/Queries';
+import ControllingDashboard from './pages/Controlling/Dashboard';
+import ControllingReports from './pages/Controlling/Reports';
+import AdHocReport from './pages/Controlling/AdHocReport';
 import Invoices from './pages/CRM/Invoices';
 import Chat from './pages/CRM/Chat';
+import Discounts from './pages/CRM/Discounts';
+import AuditLog from './pages/CRM/AuditLog';
+import AccountImport from './pages/CRM/AccountImport';
 import StockValuation from './pages/Logistics/StockValuation';
 import StockReservations from './pages/Logistics/StockReservations';
+import PurchaseOrders from './pages/Logistics/PurchaseOrders';
+import StockMovements from './pages/Logistics/StockMovements';
+import LogisticsCategories from './pages/Logistics/Categories';
+import LogisticsBatches from './pages/Logistics/Batches';
+import StockAlerts from './pages/Logistics/StockAlerts';
+import LogisticsReports from './pages/Logistics/Reports';
+import LogisticsAuditLog from './pages/Logistics/AuditLog';
 import PriceLists from './pages/PriceLists';
 import { BackendStatus } from './components/BackendStatus';
 import { NotificationPanel } from './components/NotificationPanel';
@@ -44,7 +57,9 @@ import { LoadingScreen } from './components/LoadingScreen';
 import { ModuleRouteGuard } from './components/ModuleRouteGuard';
 import MbitLogo from './assets/logo.svg';
 import axios from './lib/axios';
-import { isModuleEnabled, getModuleMenuItems, getActivePackage } from './config/modules';
+import { isModuleEnabled, getModuleMenuItems, getActivePackage, isHrOnlyPackage, getPackageDisplayInfo } from './config/modules';
+import { AppVersionFooter } from './components/AppVersionFooter';
+import { getShortVersionLine } from './config/version';
 
 function DropdownMenu({ title, items }: { title: string; items: Array<{ to: string; label: string }> }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -90,8 +105,8 @@ function App() {
   // Check if running in Electron desktop mode
   const isElectron = !!(window as any).electron || (navigator.userAgent.includes('Electron'));
   const location = useLocation();
-  const activePackage = getActivePackage();
-  const isHrOnlyPackage = activePackage === 'package-hr';
+  const hrOnly = isHrOnlyPackage();
+  const packageInfo = getPackageDisplayInfo();
   
   // Log route changes
   useEffect(() => {
@@ -224,7 +239,7 @@ function App() {
                   <img src={MbitLogo} alt="Mbit Logo" className="h-10 w-auto" />
                 </Link>
                 <div className="flex space-x-4">
-                {!isHrOnlyPackage && (
+                {!hrOnly && (
                   <Link 
                     to="/" 
                     className="hover:bg-gray-800 px-3 py-2 rounded"
@@ -240,14 +255,14 @@ function App() {
                   </Link>
                 )}
                 {/* Ügyfélkezelés - csak ha CRM modul engedélyezve */}
-                {!isHrOnlyPackage && isModuleEnabled('crm') && (
+                {!hrOnly && isModuleEnabled('crm') && (
                   <DropdownMenu 
                     title="Ügyfélkezelés"
                     items={getModuleMenuItems('crm')}
                   />
                 )}
                 {/* Dokumentumok - csak ha engedélyezve */}
-                {!isHrOnlyPackage && isModuleEnabled('documents') && (
+                {!hrOnly && isModuleEnabled('documents') && (
                   <Link 
                     to="/documents" 
                     className="hover:bg-gray-800 px-3 py-2 rounded"
@@ -263,7 +278,7 @@ function App() {
                   </Link>
                 )}
                 {/* Csapat kommunikáció - csak ha Team modul engedélyezve */}
-                {!isHrOnlyPackage && isModuleEnabled('team') && (
+                {!hrOnly && isModuleEnabled('team') && (
                   <>
                     <Link 
                       to="/team" 
@@ -307,7 +322,7 @@ function App() {
                   </>
                 )}
                 {/* Logisztika - csak ha Logistics modul engedélyezve */}
-                {!isHrOnlyPackage && isModuleEnabled('logistics') && (
+                {!hrOnly && isModuleEnabled('logistics') && (
                   <DropdownMenu 
                     title="Logisztika"
                     items={getModuleMenuItems('logistics')}
@@ -321,7 +336,7 @@ function App() {
                   />
                 )}
                 {/* Kontrolling - csak ha Controlling modul engedélyezve */}
-                {!isHrOnlyPackage && isModuleEnabled('controlling') && (
+                {!hrOnly && isModuleEnabled('controlling') && (
                   <DropdownMenu 
                     title="Kontrolling"
                     items={getModuleMenuItems('controlling')}
@@ -365,7 +380,7 @@ function App() {
         <Routes>
           <Route
             path="/"
-            element={isHrOnlyPackage ? <Navigate to="/hr/employees" replace /> : <Dashboard />}
+            element={hrOnly ? <Navigate to="/hr/employees" replace /> : <Dashboard />}
           />
           
           {/* CRM routes - csak ha engedélyezve */}
@@ -380,6 +395,9 @@ function App() {
                   <Route path="/orders" element={<ModuleRouteGuard module="crm"><Orders /></ModuleRouteGuard>} />
                   <Route path="/crm/invoices" element={<ModuleRouteGuard module="crm"><Invoices /></ModuleRouteGuard>} />
                   <Route path="/crm/chat" element={<ModuleRouteGuard module="crm"><Chat /></ModuleRouteGuard>} />
+                  <Route path="/crm/discounts" element={<ModuleRouteGuard module="crm"><Discounts /></ModuleRouteGuard>} />
+                  <Route path="/crm/audit" element={<ModuleRouteGuard module="crm"><AuditLog /></ModuleRouteGuard>} />
+                  <Route path="/crm/import" element={<ModuleRouteGuard module="crm"><AccountImport /></ModuleRouteGuard>} />
                 </>
               )}
             </>
@@ -403,13 +421,20 @@ function App() {
           {/* Logistics routes - csak ha engedélyezve */}
           {isModuleEnabled('logistics') ? (
             <>
-              <Route path="/warehouses" element={<ModuleRouteGuard module="logistics"><Warehouses /></ModuleRouteGuard>} />
               <Route path="/products" element={<ModuleRouteGuard module="logistics"><Products /></ModuleRouteGuard>} />
-              <Route path="/returns" element={<ModuleRouteGuard module="logistics"><Returns /></ModuleRouteGuard>} />
-              <Route path="/suppliers" element={<ModuleRouteGuard module="logistics"><Suppliers /></ModuleRouteGuard>} />
+              <Route path="/logistics/categories" element={<ModuleRouteGuard module="logistics"><LogisticsCategories /></ModuleRouteGuard>} />
+              <Route path="/warehouses" element={<ModuleRouteGuard module="logistics"><Warehouses /></ModuleRouteGuard>} />
+              <Route path="/logistics/stock-movements" element={<ModuleRouteGuard module="logistics"><StockMovements /></ModuleRouteGuard>} />
+              <Route path="/logistics/batches" element={<ModuleRouteGuard module="logistics"><LogisticsBatches /></ModuleRouteGuard>} />
+              <Route path="/logistics/stock-alerts" element={<ModuleRouteGuard module="logistics"><StockAlerts /></ModuleRouteGuard>} />
               <Route path="/price-lists" element={<ModuleRouteGuard module="logistics"><PriceLists /></ModuleRouteGuard>} />
-              <Route path="/orders-logistics" element={<ModuleRouteGuard module="logistics"><OrdersLogistics /></ModuleRouteGuard>} />
+              <Route path="/logistics/purchase-orders" element={<ModuleRouteGuard module="logistics"><PurchaseOrders /></ModuleRouteGuard>} />
+              <Route path="/returns" element={<ModuleRouteGuard module="logistics"><Returns /></ModuleRouteGuard>} />
               <Route path="/inventory-sheets" element={<ModuleRouteGuard module="logistics"><InventorySheets /></ModuleRouteGuard>} />
+              <Route path="/logistics/reports" element={<ModuleRouteGuard module="logistics"><LogisticsReports /></ModuleRouteGuard>} />
+              <Route path="/logistics/audit" element={<ModuleRouteGuard module="logistics"><LogisticsAuditLog /></ModuleRouteGuard>} />
+              <Route path="/suppliers" element={<ModuleRouteGuard module="logistics"><Suppliers /></ModuleRouteGuard>} />
+              <Route path="/orders-logistics" element={<ModuleRouteGuard module="logistics"><OrdersLogistics /></ModuleRouteGuard>} />
               <Route path="/intrastat" element={<ModuleRouteGuard module="logistics"><Intrastat /></ModuleRouteGuard>} />
               <Route path="/logistics/stock-valuation" element={<ModuleRouteGuard module="logistics"><StockValuation /></ModuleRouteGuard>} />
               <Route path="/logistics/stock-reservations" element={<ModuleRouteGuard module="logistics"><StockReservations /></ModuleRouteGuard>} />
@@ -419,24 +444,27 @@ function App() {
           {/* HR routes - csak ha engedélyezve */}
           {isModuleEnabled('hr') ? (
             <>
-              <Route path="/hr/job-positions" element={<JobPositions />} />
-              <Route path="/hr/employees" element={<Employees />} />
-              <Route path="/hr/contracts" element={<Contracts />} />
-              <Route path="/hr/cafeteria" element={<HrCafeteria />} />
-              <Route path="/hr/recruitment" element={<HrRecruitment />} />
-              <Route path="/hr/onboarding" element={<HrOnboarding />} />
-              <Route path="/hr/performance" element={<HrPerformance />} />
-              <Route path="/hr/time" element={<HrTimeTracking />} />
-              <Route path="/hr/leave" element={<HrLeave />} />
-              <Route path="/hr/reports" element={<HrReports />} />
+              <Route path="/hr/job-positions" element={<ModuleRouteGuard module="hr"><JobPositions /></ModuleRouteGuard>} />
+              <Route path="/hr/employees" element={<ModuleRouteGuard module="hr"><Employees /></ModuleRouteGuard>} />
+              <Route path="/hr/contracts" element={<ModuleRouteGuard module="hr"><Contracts /></ModuleRouteGuard>} />
+              <Route path="/hr/cafeteria" element={<ModuleRouteGuard module="hr"><HrCafeteria /></ModuleRouteGuard>} />
+              <Route path="/hr/recruitment" element={<ModuleRouteGuard module="hr"><HrRecruitment /></ModuleRouteGuard>} />
+              <Route path="/hr/onboarding" element={<ModuleRouteGuard module="hr"><HrOnboarding /></ModuleRouteGuard>} />
+              <Route path="/hr/performance" element={<ModuleRouteGuard module="hr"><HrPerformance /></ModuleRouteGuard>} />
+              <Route path="/hr/time" element={<ModuleRouteGuard module="hr"><HrTimeTracking /></ModuleRouteGuard>} />
+              <Route path="/hr/leave" element={<ModuleRouteGuard module="hr"><HrLeave /></ModuleRouteGuard>} />
+              <Route path="/hr/reports" element={<ModuleRouteGuard module="hr"><HrReports /></ModuleRouteGuard>} />
             </>
           ) : null}
           
           {/* Controlling routes - csak ha engedélyezve */}
           {isModuleEnabled('controlling') ? (
             <>
-              <Route path="/controlling/database-connections" element={<ModuleRouteGuard module="controlling"><DatabaseConnections /></ModuleRouteGuard>} />
+              <Route path="/controlling/dashboard" element={<ModuleRouteGuard module="controlling"><ControllingDashboard /></ModuleRouteGuard>} />
+              <Route path="/controlling/reports" element={<ModuleRouteGuard module="controlling"><ControllingReports /></ModuleRouteGuard>} />
+              <Route path="/controlling/adhoc" element={<ModuleRouteGuard module="controlling"><AdHocReport /></ModuleRouteGuard>} />
               <Route path="/controlling/kpi" element={<ModuleRouteGuard module="controlling"><KPI /></ModuleRouteGuard>} />
+              <Route path="/controlling/database-connections" element={<ModuleRouteGuard module="controlling"><DatabaseConnections /></ModuleRouteGuard>} />
               <Route path="/controlling/queries" element={<ModuleRouteGuard module="controlling"><Queries /></ModuleRouteGuard>} />
             </>
           ) : null}
@@ -446,6 +474,14 @@ function App() {
           <Route path="/bug-report" element={<BugReport />} />
         </Routes>
       </main>
+      <AppVersionFooter />
+      {isElectron && (
+        <div className="fixed bottom-0 left-0 right-0 pointer-events-none">
+          <div className="text-center text-[10px] text-gray-400 pb-1">
+            {getShortVersionLine()} · {packageInfo.editionLabel}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

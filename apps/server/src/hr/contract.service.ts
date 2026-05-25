@@ -9,6 +9,9 @@ export interface CreateEmploymentContractDto {
   vegDatum?: string;
   probaidoVege?: string;
   fizetes?: number;
+  munkaido?: string;
+  documentId?: string;
+  aktiv?: boolean;
   megjegyzesek?: string;
 }
 
@@ -17,6 +20,9 @@ export interface UpdateEmploymentContractDto {
   vegDatum?: string;
   probaidoVege?: string;
   fizetes?: number;
+  munkaido?: string;
+  documentId?: string;
+  aktiv?: boolean;
   megjegyzesek?: string;
 }
 
@@ -49,11 +55,7 @@ export class ContractService {
     }
 
     if (filters?.aktiv !== undefined) {
-      if (filters.aktiv) {
-        where.vegDatum = null;
-      } else {
-        where.vegDatum = { not: null };
-      }
+      where.aktiv = filters.aktiv;
     }
 
     const [total, items] = await Promise.all([
@@ -152,6 +154,9 @@ export class ContractService {
         vegDatum,
         probaidoVege,
         fizetes: dto.fizetes,
+        munkaido: dto.munkaido,
+        documentId: dto.documentId,
+        aktiv: dto.aktiv !== undefined ? dto.aktiv : true,
         megjegyzesek: dto.megjegyzesek,
       },
       include: {
@@ -173,6 +178,13 @@ export class ContractService {
 
     if (probaidoVege && probaidoVege < contract.kezdetDatum) {
       throw new BadRequestException('A próbaidő vége nem lehet korábbi, mint a kezdetdátum');
+    }
+
+    if (dto.aktiv === true) {
+      await this.prisma.employmentContract.updateMany({
+        where: { employeeId: contract.employeeId, id: { not: id } },
+        data: { aktiv: false },
+      });
     }
 
     const data: any = {

@@ -32,6 +32,12 @@ import { StockReservationController } from './stock-reservation.controller';
 import { StockReservationService } from './stock-reservation.service';
 import { PriceListController } from './price-list.controller';
 import { PriceListService } from './price-list.service';
+import { StockMovementController } from './stock-movement.controller';
+import { StockMovementService } from './stock-movement.service';
+import { ProductCategoryController } from './product-category.controller';
+import { ProductCategoryService } from './product-category.service';
+import { LogisticsExportController } from './logistics-export.controller';
+import { LogisticsExportService } from './logistics-export.service';
 
 @Module({
   imports: [PrismaModule, AuditModule, StorageModule, SystemModule],
@@ -51,6 +57,9 @@ import { PriceListService } from './price-list.service';
     StockValuationController,
     StockReservationController,
     PriceListController,
+    StockMovementController,
+    ProductCategoryController,
+    LogisticsExportController,
   ],
   providers: [
     ItemService,
@@ -67,7 +76,17 @@ import { PriceListService } from './price-list.service';
     StockValuationService,
     StockReservationService,
     PriceListService,
+    StockMovementService,
+    ProductCategoryService,
+    LogisticsExportService,
   ],
-  exports: [WarehouseService, InventoryService, PurchaseOrderService, StockValuationService, StockReservationService],
+  exports: [
+    WarehouseService,
+    InventoryService,
+    PurchaseOrderService,
+    StockValuationService,
+    StockReservationService,
+    StockMovementService,
+  ],
 })
 export class LogisticsModule {}

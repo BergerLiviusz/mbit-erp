@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { Permission, PermissionDescriptions } from '../src/common/rbac/permission.enum';
+import { seedCrmDemo } from './seed-crm';
 
 const prisma = new PrismaClient();
 
@@ -54,6 +55,7 @@ async function seedSystemSettings() {
     { kulcs: 'logistics.low_stock_threshold', ertek: '10', tipus: 'number', kategoria: 'logistics', leiras: 'Alacsony készlet riasztási küszöb (%)' },
     { kulcs: 'logistics.valuation_method', ertek: 'FIFO', tipus: 'string', kategoria: 'logistics', leiras: 'Készlet értékelési módszer (FIFO/AVG)' },
     { kulcs: 'logistics.auto_location_assign', ertek: 'false', tipus: 'boolean', kategoria: 'logistics', leiras: 'Automatikus raktári hely hozzárendelés' },
+    { kulcs: 'logistics.allow_negative_stock', ertek: 'false', tipus: 'boolean', kategoria: 'logistics', leiras: 'Negatív készlet engedélyezése' },
     { kulcs: 'purchase_order.approval.threshold', ertek: '500000', tipus: 'number', kategoria: 'logistics', leiras: 'Beszerzési rendelés jóváhagyási küszöb (HUF)' },
     { kulcs: 'system.lan.enabled', ertek: 'false', tipus: 'boolean', kategoria: 'system', leiras: 'LAN együttműködés engedélyezése' },
     { kulcs: 'hr.smtp.host', ertek: '', tipus: 'string', kategoria: 'hr', leiras: 'HR e-mail (SMTP kiszolgáló; üres = küldés kikapcsolva)' },
@@ -117,6 +119,75 @@ async function main() {
         permissions: JSON.stringify(['*.read', '*.export']),
       },
     }),
+    prisma.role.upsert({
+      where: { nev: 'Sales' },
+      update: {},
+      create: {
+        nev: 'Sales',
+        leiras: 'Értékesítő',
+        permissions: JSON.stringify(['crm:*', 'customer:*', 'campaign:*', 'quote:*', 'order:*']),
+      },
+    }),
+    prisma.role.upsert({
+      where: { nev: 'Viewer' },
+      update: {},
+      create: {
+        nev: 'Viewer',
+        leiras: 'Megtekintő',
+        permissions: JSON.stringify(['*.read']),
+      },
+    }),
+    prisma.role.upsert({
+      where: { nev: 'HR Admin' },
+      update: {},
+      create: {
+        nev: 'HR Admin',
+        leiras: 'HR modul teljes kezelése',
+        permissions: JSON.stringify(['hr:*']),
+      },
+    }),
+    prisma.role.upsert({
+      where: { nev: 'HR User' },
+      update: {},
+      create: {
+        nev: 'HR User',
+        leiras: 'Dolgozók, szerződések és riportok kezelése',
+        permissions: JSON.stringify([
+          'hr:view',
+          'hr:create',
+          'hr:edit',
+          'hr:export',
+          'hr:contract_manage',
+          'hr:report',
+        ]),
+      },
+    }),
+    prisma.role.upsert({
+      where: { nev: 'Logistics Admin' },
+      update: {},
+      create: {
+        nev: 'Logistics Admin',
+        leiras: 'Logisztika modul teljes kezelése',
+        permissions: JSON.stringify(['logistics:admin', 'logistics:export', 'purchase:manage', 'inventory:manage']),
+      },
+    }),
+    prisma.role.upsert({
+      where: { nev: 'Warehouse User' },
+      update: {},
+      create: {
+        nev: 'Warehouse User',
+        leiras: 'Raktári felhasználó – készlet és leltár',
+        permissions: JSON.stringify([
+          'logistics:view',
+          'stock:view',
+          'stock:move',
+          'stock:adjust',
+          'stock:inventory',
+          'stock:transfer',
+          'inventory:manage',
+        ]),
+      },
+    }),
   ]);
 
   console.log('✅ Szerepkörök létrehozva');
@@ -144,6 +215,126 @@ async function main() {
   }
 
   console.log('✅ Admin szerepkörhöz jogosultságok hozzárendelve');
+
+  const hrPermissionCodes = [
+    'hr:view',
+    'hr:create',
+    'hr:edit',
+    'hr:delete',
+    'hr:report',
+    'hr:export',
+    'hr:contract_manage',
+    'hr:admin',
+    'hr:approve',
+  ];
+  const hrAdminRole = roles.find((r) => r.nev === 'HR Admin');
+  const hrUserRole = roles.find((r) => r.nev === 'HR User');
+  const viewerRole = roles.find((r) => r.nev === 'Viewer');
+
+  if (hrAdminRole) {
+    for (const perm of permissions.filter((p) => p.modulo === 'HR')) {
+      await prisma.rolePermission.upsert({
+        where: {
+          roleId_permissionId: { roleId: hrAdminRole.id, permissionId: perm.id },
+        },
+        update: {},
+        create: { roleId: hrAdminRole.id, permissionId: perm.id },
+      });
+    }
+  }
+
+  const logisticsAdminRole = roles.find((r) => r.nev === 'Logistics Admin');
+  const warehouseUserRole = roles.find((r) => r.nev === 'Warehouse User');
+  const logisticsPermCodesAdmin = permissions.filter((p) => p.modulo === 'Logisztika').map((p) => p.kod);
+  const warehousePermCodes = [
+    'logistics:view',
+    'product:view',
+    'warehouse:view',
+    'stock:view',
+    'stock:move',
+    'stock:adjust',
+    'stock:inventory',
+    'stock:transfer',
+    'inventory:manage',
+    'return:view',
+    'return:create',
+    'inventory:report_print',
+  ];
+
+  if (logisticsAdminRole) {
+    for (const kod of logisticsPermCodesAdmin) {
+      const perm = permissions.find((p) => p.kod === kod);
+      if (perm) {
+        await prisma.rolePermission.upsert({
+          where: {
+            roleId_permissionId: { roleId: logisticsAdminRole.id, permissionId: perm.id },
+          },
+          update: {},
+          create: { roleId: logisticsAdminRole.id, permissionId: perm.id },
+        });
+      }
+    }
+  }
+
+  if (warehouseUserRole) {
+    for (const kod of warehousePermCodes) {
+      const perm = permissions.find((p) => p.kod === kod);
+      if (perm) {
+        await prisma.rolePermission.upsert({
+          where: {
+            roleId_permissionId: { roleId: warehouseUserRole.id, permissionId: perm.id },
+          },
+          update: {},
+          create: { roleId: warehouseUserRole.id, permissionId: perm.id },
+        });
+      }
+    }
+  }
+
+  if (viewerRole) {
+    for (const kod of ['logistics:view', 'product:view', 'warehouse:view', 'stock:view', 'purchase_order:view', 'supplier:view', 'price_list:view', 'return:view']) {
+      const perm = permissions.find((p) => p.kod === kod);
+      if (perm) {
+        await prisma.rolePermission.upsert({
+          where: {
+            roleId_permissionId: { roleId: viewerRole.id, permissionId: perm.id },
+          },
+          update: {},
+          create: { roleId: viewerRole.id, permissionId: perm.id },
+        });
+      }
+    }
+  }
+
+  if (hrUserRole) {
+    for (const kod of hrPermissionCodes.filter((k) => k !== 'hr:delete' && k !== 'hr:admin')) {
+      const perm = permissions.find((p) => p.kod === kod);
+      if (perm) {
+        await prisma.rolePermission.upsert({
+          where: {
+            roleId_permissionId: { roleId: hrUserRole.id, permissionId: perm.id },
+          },
+          update: {},
+          create: { roleId: hrUserRole.id, permissionId: perm.id },
+        });
+      }
+    }
+  }
+
+  if (viewerRole) {
+    const viewPerm = permissions.find((p) => p.kod === 'hr:view');
+    if (viewPerm) {
+      await prisma.rolePermission.upsert({
+        where: {
+          roleId_permissionId: { roleId: viewerRole.id, permissionId: viewPerm.id },
+        },
+        update: {},
+        create: { roleId: viewerRole.id, permissionId: viewPerm.id },
+      });
+    }
+  }
+
+  console.log('✅ HR Admin / HR User / Viewer HR jogosultságok hozzárendelve');
 
   const hashedPassword = await bcrypt.hash('admin123', 10);
   const adminUser = await prisma.user.upsert({
@@ -713,6 +904,8 @@ async function main() {
   console.log('✅ Tudásbázis elemek létrehozva');
 
   await seedSystemSettings();
+
+  await seedCrmDemo(prisma, adminUser, accounts, catalogItems);
 
   console.log('🎉 Adatbázis feltöltése sikeres!');
 }

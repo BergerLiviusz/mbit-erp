@@ -18,6 +18,8 @@ export class OcrService {
   ) {}
 
   async createJob(documentId: string) {
+    await this.prisma.oCRJob.deleteMany({ where: { documentId } });
+
     const job = await this.prisma.oCRJob.create({
       data: {
         documentId,
@@ -33,14 +35,32 @@ export class OcrService {
     return job;
   }
 
-  async findAll(skip = 0, take = 50) {
+  async findAll(skip = 0, take = 50, userId?: string, isAdmin = false) {
+    const accessFilter =
+      !isAdmin && userId
+        ? {
+            document: {
+              OR: [{ createdById: userId }, { access: { some: { userId } } }],
+            },
+          }
+        : {};
+
     const [total, items] = await Promise.all([
-      this.prisma.oCRJob.count(),
+      this.prisma.oCRJob.count({ where: accessFilter }),
       this.prisma.oCRJob.findMany({
+        where: accessFilter,
         skip,
         take,
         include: {
-          document: true,
+          document: {
+            select: {
+              id: true,
+              nev: true,
+              iktatoSzam: true,
+              fajlNev: true,
+              allapot: true,
+            },
+          },
         },
         orderBy: { createdAt: 'desc' },
       }),
@@ -78,6 +98,7 @@ export class OcrService {
 
       const filePath = this.storage.getAbsolutePath(job.document.fajlUtvonal);
       let extractedText = '';
+      let ocrConfidence: number | undefined;
 
       // PDF fájlokhoz először próbáljuk meg a pdf-parse-t
       if (job.document.mimeType === 'application/pdf') {
@@ -90,19 +111,25 @@ export class OcrService {
           if (extractedText.length > 0) {
             this.logger.log(`PDF text extracted using pdf-parse: ${extractedText.length} characters`);
           } else {
-            // Ha nincs szöveg (pl. scanned PDF), használjuk a Tesseract.js-t
-            this.logger.log('PDF has no embedded text, using OCR');
-            extractedText = await this.extractTextWithTesseract(filePath);
+            this.logger.log('PDF has no embedded text, using page OCR (first page)');
+            const ocrResult = await this.extractTextFromScannedPdf(pdfBuffer);
+            extractedText = ocrResult.text;
+            ocrConfidence = ocrResult.confidence;
           }
         } catch (error) {
-          this.logger.warn(`pdf-parse failed, falling back to OCR: ${error}`);
-          extractedText = await this.extractTextWithTesseract(filePath);
+          this.logger.warn(`pdf-parse failed, falling back to page OCR: ${error}`);
+          const pdfBuffer = await this.storage.readFile(job.document.fajlUtvonal);
+          const ocrResult = await this.extractTextFromScannedPdf(pdfBuffer);
+          extractedText = ocrResult.text;
+          ocrConfidence = ocrResult.confidence;
         }
       } else {
         // Kép fájlokhoz először előfeldolgozzuk, majd Tesseract.js-t használunk
         const preprocessedPath = await this.preprocessImage(filePath, job.document.mimeType);
         try {
-          extractedText = await this.extractTextWithTesseract(preprocessedPath);
+          const ocrResult = await this.extractTextWithTesseract(preprocessedPath);
+          extractedText = ocrResult.text;
+          ocrConfidence = ocrResult.confidence;
         } finally {
           // Töröljük az előfeldolgozott képet
           try {
@@ -124,6 +151,7 @@ export class OcrService {
           allapot: 'kesz',
           eredmeny: extractedText,
           txtFajlUtvonal: txtRelativePath,
+          pontossag: ocrConfidence,
           feldolgozasVeg: new Date(),
         },
       });
@@ -147,6 +175,47 @@ export class OcrService {
           feldolgozasVeg: new Date(),
         },
       });
+    }
+  }
+
+  /**
+   * Scanned PDF: rasterize first page via sharp (libvips PDF support) then OCR.
+   * Multi-page full OCR is not supported — documented limitation.
+   */
+  private async extractTextFromScannedPdf(
+    pdfBuffer: Buffer,
+  ): Promise<{ text: string; confidence?: number }> {
+    const tempDir = this.storage.getPath('temp');
+    await this.storage.ensureDir(tempDir);
+    const pngPath = path.join(
+      tempDir,
+      `pdf-ocr-${Date.now()}-${Math.random().toString(16).slice(2)}.png`,
+    );
+
+    try {
+      await sharp(pdfBuffer, { page: 0, density: 200 })
+        .greyscale()
+        .normalize()
+        .png()
+        .toFile(pngPath);
+
+      const preprocessed = await this.preprocessImage(pngPath, 'image/png');
+      try {
+        return await this.extractTextWithTesseract(preprocessed);
+      } finally {
+        if (preprocessed !== pngPath) {
+          await fs.unlink(preprocessed).catch(() => undefined);
+        }
+      }
+    } catch (error) {
+      this.logger.warn(
+        `PDF page rasterization failed (first page only supported): ${error}`,
+      );
+      throw new Error(
+        'Szkennelt PDF OCR nem sikerült (első oldal). Ellenőrizze, hogy a libvips PDF támogatás elérhető-e, vagy használjon képfájlt.',
+      );
+    } finally {
+      await fs.unlink(pngPath).catch(() => undefined);
     }
   }
 
@@ -185,7 +254,9 @@ export class OcrService {
   /**
    * Extract text using Tesseract.js with optimized configuration
    */
-  private async extractTextWithTesseract(filePath: string): Promise<string> {
+  private async extractTextWithTesseract(
+    filePath: string,
+  ): Promise<{ text: string; confidence?: number }> {
     if (!this.worker) {
       this.worker = await createWorker('hun', undefined, {
         logger: (m) => {
@@ -215,7 +286,7 @@ export class OcrService {
         .replace(/\n\s*\n/g, '\n') // Replace multiple newlines with single newline
         .trim();
       
-      return cleanedText;
+      return { text: cleanedText, confidence };
     } catch (error) {
       this.logger.error(`Tesseract recognition failed: ${error}`);
       throw error;

@@ -1,10 +1,17 @@
-import { Controller, Post, Body, Get } from '@nestjs/common';
+import { Controller, Post, Body, Get, Request, UseGuards } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import { Public } from '../common/rbac/rbac.decorator';
 
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
+
+  @Get('me')
+  @UseGuards(AuthGuard('jwt'))
+  async me(@Request() req: { user: { id: string } }) {
+    return this.authService.getMe(req.user.id);
+  }
 
   @Post('login')
   @Public()

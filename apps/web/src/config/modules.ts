@@ -1,111 +1,119 @@
+import {
+  ErpModuleKey,
+  ERP_PACKAGES,
+  getPackageDefinition,
+  resolvePackageId,
+  isPackageModuleEnabled,
+} from '@mbit-erp/config';
+
+export type { ErpModuleKey };
+
 export interface MenuItem {
   to: string;
   label: string;
   parentMenu?: string;
 }
 
-export interface ModuleConfig {
-  enabled: boolean;
-  name: string;
-  routes: string[];
-  menuItems: MenuItem[];
-}
-
-export interface PackageConfig {
-  name: string;
-  modules: {
-    documents: boolean;
-    team: boolean;
-    controlling: boolean;
-    crm: boolean;
-    logistics: boolean;
-    hr: boolean;
-  };
-}
-
-// Modul definíciók
-export const MODULE_DOCUMENTS: ModuleConfig = {
-  enabled: true, // Mindig engedélyezve (minden csomagban benne van)
-  name: 'Dokumentum kezelés',
+export const MODULE_DOCUMENTS = {
   routes: ['/documents'],
-  menuItems: [
-    { to: '/documents', label: 'Dokumentumok' }
-  ]
+  menuItems: [{ to: '/documents', label: 'Dokumentumok' }] as MenuItem[],
 };
 
-export const MODULE_TEAM: ModuleConfig = {
-  enabled: false,
-  name: 'Csapatmunka',
+export const MODULE_TEAM = {
   routes: ['/team', '/workflows', '/workflow-tasks', '/workflow-instances'],
   menuItems: [
     { to: '/team', label: 'Csapat kommunikáció' },
     { to: '/workflows', label: 'Folyamatleltár' },
     { to: '/workflow-tasks', label: 'Feladatlista' },
-    { to: '/workflow-instances', label: 'Workflow példányok' }
-  ]
+    { to: '/workflow-instances', label: 'Workflow példányok' },
+  ] as MenuItem[],
 };
 
-export const MODULE_CRM: ModuleConfig = {
-  enabled: false,
-  name: 'CRM',
-  routes: ['/crm', '/opportunities', '/quotes', '/orders', '/crm/invoices', '/crm/chat'],
+export const MODULE_CRM = {
+  routes: [
+    '/crm',
+    '/opportunities',
+    '/quotes',
+    '/orders',
+    '/crm/invoices',
+    '/crm/chat',
+    '/crm/discounts',
+    '/crm/audit',
+    '/crm/import',
+  ],
   menuItems: [
     { to: '/crm', label: 'Partnerek', parentMenu: 'Ügyfélkezelés' },
     { to: '/opportunities', label: 'Lehetőségek', parentMenu: 'Ügyfélkezelés' },
     { to: '/quotes', label: 'Árajánlatok', parentMenu: 'Ügyfélkezelés' },
     { to: '/orders', label: 'Rendelések', parentMenu: 'Ügyfélkezelés' },
     { to: '/crm/invoices', label: 'Számlák', parentMenu: 'Ügyfélkezelés' },
-    { to: '/crm/chat', label: 'Chat', parentMenu: 'Ügyfélkezelés' }
-  ]
+    { to: '/crm/discounts', label: 'Kedvezmények', parentMenu: 'Ügyfélkezelés' },
+    { to: '/crm/chat', label: 'Chat', parentMenu: 'Ügyfélkezelés' },
+    { to: '/crm/audit', label: 'Audit napló', parentMenu: 'Rendszer' },
+    { to: '/crm/import', label: 'Ügyfél import', parentMenu: 'Ügyfélkezelés' },
+  ] as MenuItem[],
 };
 
-export const MODULE_LOGISTICS: ModuleConfig = {
-  enabled: false,
-  name: 'Logisztika',
+export const MODULE_LOGISTICS = {
   routes: [
-    '/warehouses',
     '/products',
+    '/logistics/categories',
+    '/warehouses',
+    '/logistics/stock-movements',
+    '/logistics/batches',
+    '/logistics/stock-alerts',
+    '/price-lists',
+    '/logistics/purchase-orders',
     '/returns',
+    '/inventory-sheets',
+    '/logistics/reports',
+    '/logistics/audit',
     '/suppliers',
     '/orders-logistics',
-    '/inventory-sheets',
     '/intrastat',
     '/logistics/stock-valuation',
     '/logistics/stock-reservations',
-    '/price-lists'
   ],
   menuItems: [
+    { to: '/products', label: 'Cikkek', parentMenu: 'Logisztika' },
+    { to: '/logistics/categories', label: 'Kategóriák', parentMenu: 'Logisztika' },
     { to: '/warehouses', label: 'Raktárak', parentMenu: 'Logisztika' },
-    { to: '/products', label: 'Termékek', parentMenu: 'Logisztika' },
-    { to: '/returns', label: 'Visszárúk', parentMenu: 'Logisztika' },
-    { to: '/suppliers', label: 'Szállítók', parentMenu: 'Logisztika' },
+    { to: '/logistics/stock-movements', label: 'Készletmozgások', parentMenu: 'Logisztika' },
+    { to: '/logistics/batches', label: 'Sarzsok', parentMenu: 'Logisztika' },
+    { to: '/logistics/stock-alerts', label: 'Készlet riasztások', parentMenu: 'Logisztika' },
     { to: '/price-lists', label: 'Árlisták', parentMenu: 'Logisztika' },
-    { to: '/orders-logistics', label: 'Rendelések', parentMenu: 'Logisztika' },
-    { to: '/inventory-sheets', label: 'Leltárívek', parentMenu: 'Logisztika' },
+    { to: '/logistics/purchase-orders', label: 'Beszerzések', parentMenu: 'Logisztika' },
+    { to: '/returns', label: 'Visszárú', parentMenu: 'Logisztika' },
+    { to: '/inventory-sheets', label: 'Leltár', parentMenu: 'Logisztika' },
+    { to: '/logistics/reports', label: 'Riportok', parentMenu: 'Logisztika' },
+    { to: '/logistics/audit', label: 'Audit napló', parentMenu: 'Logisztika' },
+    { to: '/suppliers', label: 'Szállítók', parentMenu: 'Logisztika' },
+    { to: '/logistics/stock-valuation', label: 'Készletérték', parentMenu: 'Logisztika' },
+    { to: '/logistics/stock-reservations', label: 'Foglaltság', parentMenu: 'Logisztika' },
     { to: '/intrastat', label: 'INTRASTAT', parentMenu: 'Logisztika' },
-    { to: '/logistics/stock-valuation', label: 'Készletérték értékelés', parentMenu: 'Logisztika' },
-    { to: '/logistics/stock-reservations', label: 'Foglaltság és konszignáció', parentMenu: 'Logisztika' }
-  ]
+  ] as MenuItem[],
 };
 
-export const MODULE_CONTROLLING: ModuleConfig = {
-  enabled: false,
-  name: 'Kontrolling',
+export const MODULE_CONTROLLING = {
   routes: [
-    '/controlling/database-connections',
+    '/controlling/dashboard',
+    '/controlling/reports',
+    '/controlling/adhoc',
     '/controlling/kpi',
-    '/controlling/queries'
+    '/controlling/database-connections',
+    '/controlling/queries',
   ],
   menuItems: [
-    { to: '/controlling/database-connections', label: 'Adatbázis kapcsolatok', parentMenu: 'Kontrolling' },
+    { to: '/controlling/dashboard', label: 'Dashboard', parentMenu: 'Kontrolling' },
     { to: '/controlling/kpi', label: 'KPI mutatószámok', parentMenu: 'Kontrolling' },
-    { to: '/controlling/queries', label: 'Lekérdezések', parentMenu: 'Kontrolling' }
-  ]
+    { to: '/controlling/reports', label: 'Riportok', parentMenu: 'Kontrolling' },
+    { to: '/controlling/adhoc', label: 'Ad-hoc riport', parentMenu: 'Kontrolling' },
+    { to: '/controlling/database-connections', label: 'Adatbázis kapcsolatok', parentMenu: 'Kontrolling' },
+    { to: '/controlling/queries', label: 'Lekérdezések', parentMenu: 'Kontrolling' },
+  ] as MenuItem[],
 };
 
-export const MODULE_HR: ModuleConfig = {
-  enabled: false,
-  name: 'HR',
+export const MODULE_HR = {
   routes: [
     '/hr/job-positions',
     '/hr/employees',
@@ -119,139 +127,48 @@ export const MODULE_HR: ModuleConfig = {
     '/hr/reports',
   ],
   menuItems: [
-    { to: '/hr/job-positions', label: 'Munkakörök', parentMenu: 'HR' },
     { to: '/hr/employees', label: 'Dolgozók', parentMenu: 'HR' },
-    { to: '/hr/contracts', label: 'Munkaszerződések', parentMenu: 'HR' },
+    { to: '/hr/job-positions', label: 'Munkakörök', parentMenu: 'HR' },
+    { to: '/hr/contracts', label: 'Szerződések', parentMenu: 'HR' },
+    { to: '/hr/reports', label: 'Riportok', parentMenu: 'HR' },
     { to: '/hr/cafeteria', label: 'Cafeteria', parentMenu: 'HR' },
     { to: '/hr/recruitment', label: 'Toborzás', parentMenu: 'HR' },
     { to: '/hr/onboarding', label: 'Beléptetés', parentMenu: 'HR' },
     { to: '/hr/performance', label: 'Teljesítmény', parentMenu: 'HR' },
     { to: '/hr/time', label: 'Időgazdálkodás', parentMenu: 'HR' },
     { to: '/hr/leave', label: 'Távollétek', parentMenu: 'HR' },
-    { to: '/hr/reports', label: 'Riportok', parentMenu: 'HR' },
-  ],
+  ] as MenuItem[],
 };
 
-// Csomag konfigurációk
-export const PACKAGE_CONFIGS: Record<string, PackageConfig> = {
-  'package-1': {
-    name: 'Csomag 1',
-    modules: {
-      documents: true,
-      team: true,
-      controlling: true,
-      crm: false,
-      logistics: false,
-      hr: true
-    }
-  },
-  'package-2': {
-    name: 'Csomag 2',
-    modules: {
-      documents: true,
-      team: false,
-      controlling: false,
-      crm: true,
-      logistics: true,
-      hr: true
-    }
-  },
-  'package-3': {
-    name: 'Csomag 3',
-    modules: {
-      documents: true,
-      team: true,
-      controlling: false,
-      crm: true,
-      logistics: false,
-      hr: true
-    }
-  },
-  'package-4': {
-    name: 'Csomag 4',
-    modules: {
-      documents: true,
-      team: true,
-      controlling: false,
-      crm: true,
-      logistics: true,
-      hr: true
-    }
-  },
-  'package-5': {
-    name: 'Csomag 5',
-    modules: {
-      documents: true,
-      team: false,
-      controlling: false,
-      crm: true, // Engedélyezve, hogy a Partnerek elérhető legyen a dokumentumokhoz
-      logistics: false,
-      hr: false
-    }
-  },
-  'package-hr': {
-    name: 'HR (csak HR modul)',
-    modules: {
-      documents: false,
-      team: false,
-      controlling: false,
-      crm: false,
-      logistics: false,
-      hr: true,
-    },
-  },
-  'full': {
-    name: 'Teljes verzió',
-    modules: {
-      documents: true,
-      team: true,
-      controlling: true,
-      crm: true,
-      logistics: true,
-      hr: true
-    }
-  }
-};
+/** Régi PACKAGE_CONFIGS kompatibilitás – delegál a központi ERP_PACKAGES-re */
+export const PACKAGE_CONFIGS = Object.fromEntries(
+  Object.entries(ERP_PACKAGES).map(([id, pkg]) => [
+    id,
+    { name: pkg.displayName, modules: pkg.modules },
+  ]),
+);
 
-// Aktuális csomag meghatározása build-time változóból
-export function getActivePackage(): keyof typeof PACKAGE_CONFIGS {
-  // Vite build-time változó: VITE_ACTIVE_PACKAGE
-  // Vite automatikusan elérhetővé teszi a VITE_ prefixű environment változókat
+export function getActivePackage(): string {
   const packageName = import.meta.env.VITE_ACTIVE_PACKAGE || 'full';
-  
-  // Debug információ (csak development módban)
   if (import.meta.env.DEV) {
-    console.log('[Module Config] Active package:', packageName);
-    console.log('[Module Config] VITE_ACTIVE_PACKAGE env:', import.meta.env.VITE_ACTIVE_PACKAGE);
-    console.log('[Module Config] All env vars:', Object.keys(import.meta.env).filter(k => k.startsWith('VITE_')));
+    console.log('[Module Config] Active package:', resolvePackageId(packageName));
   }
-  
-  // Validálás: ha nem létező package, akkor default 'full'
-  if (!PACKAGE_CONFIGS[packageName]) {
-    console.warn(`[Module Config] Unknown package: ${packageName}, falling back to 'full'`);
-    return 'full';
-  }
-  
-  return packageName as keyof typeof PACKAGE_CONFIGS;
+  return resolvePackageId(packageName);
 }
 
-// Modul engedélyezés ellenőrzése
-export function isModuleEnabled(
-  module: 'documents' | 'team' | 'crm' | 'logistics' | 'controlling' | 'hr'
-): boolean {
-  const activePackage = getActivePackage();
-  const config = PACKAGE_CONFIGS[activePackage];
-  
-  if (!config) {
-    console.warn(`Package config not found for: ${activePackage}`);
-    return false;
-  }
-  
-  return config.modules[module] ?? false;
+export function getPackageDisplayInfo() {
+  return getPackageDefinition(getActivePackage());
 }
 
-// Modul route-ok lekérése
-export function getModuleRoutes(module: 'documents' | 'team' | 'crm' | 'logistics' | 'controlling' | 'hr'): string[] {
+export function isModuleEnabled(module: ErpModuleKey): boolean {
+  return isPackageModuleEnabled(module, getActivePackage());
+}
+
+export function isHrOnlyPackage(): boolean {
+  return getActivePackage() === 'hr' || getActivePackage() === 'package-hr';
+}
+
+export function getModuleRoutes(module: ErpModuleKey): string[] {
   switch (module) {
     case 'documents':
       return MODULE_DOCUMENTS.routes;
@@ -270,17 +187,14 @@ export function getModuleRoutes(module: 'documents' | 'team' | 'crm' | 'logistic
   }
 }
 
-// Modul menu items lekérése
-export function getModuleMenuItems(module: 'documents' | 'team' | 'crm' | 'logistics' | 'controlling' | 'hr'): MenuItem[] {
+export function getModuleMenuItems(module: ErpModuleKey): MenuItem[] {
   const activePackage = getActivePackage();
-  
   switch (module) {
     case 'documents':
       return MODULE_DOCUMENTS.menuItems;
     case 'team':
       return MODULE_TEAM.menuItems;
     case 'crm':
-      // Package-5-ben csak a Partnerek menüpontot mutatjuk meg
       if (activePackage === 'package-5') {
         return [{ to: '/crm', label: 'Partnerek', parentMenu: 'Ügyfélkezelés' }];
       }
@@ -299,4 +213,3 @@ export function getModuleMenuItems(module: 'documents' | 'team' | 'crm' | 'logis
 export function isHrModuleEnabled(): boolean {
   return isModuleEnabled('hr');
 }
-

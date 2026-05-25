@@ -56,4 +56,35 @@ export class TicketService {
       where: { id },
     });
   }
+
+  async assign(id: string, assignedToId: string) {
+    return this.prisma.ticket.update({
+      where: { id },
+      data: { assignedToId, allapot: 'folyamatban' },
+      include: { assignedTo: { select: { id: true, nev: true } }, account: true },
+    });
+  }
+
+  async escalate(id: string) {
+    return this.prisma.ticket.update({
+      where: { id },
+      data: { eszkalalva: true, allapot: 'eszkalalt', prioritas: 'magas' },
+    });
+  }
+
+  async changeStatus(id: string, allapot: string) {
+    const data: Record<string, unknown> = { allapot };
+    if (allapot === 'lezart') data.lezarasDatum = new Date();
+    return this.prisma.ticket.update({ where: { id }, data });
+  }
+
+  async exportReport() {
+    return this.prisma.ticket.findMany({
+      include: {
+        account: { select: { nev: true, azonosito: true } },
+        assignedTo: { select: { nev: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
 }

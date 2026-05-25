@@ -163,6 +163,46 @@ export class PurchaseOrderService {
     });
   }
 
+  async transitionStatus(id: string, allapot: string) {
+    const po = await this.findOne(id);
+    if (!po) throw new BadRequestException('Beszerzési rendelés nem található');
+    const allowed: Record<string, string[]> = {
+      draft: ['approved', 'ordered'],
+      DRAFT: ['approved', 'APPROVED', 'ordered', 'ORDERED'],
+      approved: ['ordered'],
+      APPROVED: ['ordered', 'ORDERED'],
+      ordered: ['partial', 'received'],
+      ORDERED: ['partial', 'PARTIAL', 'received', 'RECEIVED'],
+      partial: ['received', 'closed'],
+      PARTIAL: ['received', 'RECEIVED', 'closed', 'CLOSED'],
+      received: ['closed'],
+      RECEIVED: ['closed', 'CLOSED'],
+      BEEERKEZETT: ['closed', 'CLOSED', 'LEZARVA'],
+    };
+    const current = po.allapot?.toLowerCase?.() ?? po.allapot;
+    const nextList =
+      allowed[po.allapot] ||
+      allowed[current] ||
+      [];
+    if (
+      nextList.length > 0 &&
+      !nextList.includes(allapot) &&
+      !nextList.includes(allapot.toUpperCase())
+    ) {
+      throw new BadRequestException(
+        `Állapotváltás nem engedélyezett: ${po.allapot} → ${allapot}`,
+      );
+    }
+    return this.prisma.purchaseOrder.update({
+      where: { id },
+      data: { allapot },
+      include: {
+        supplier: true,
+        items: { include: { item: true } },
+      },
+    });
+  }
+
   async receive(id: string, warehouseId: string, receivedItems: Array<{ itemId: string; mennyiseg: number; sarzsGyartasiSzam?: string; beszerzesiAr?: number }>) {
     const purchaseOrder = await this.findOne(id);
 
@@ -170,8 +210,9 @@ export class PurchaseOrderService {
       throw new Error('Beszerzési rendelés nem található');
     }
 
-    if (purchaseOrder.allapot === 'BEEERKEZETT' || purchaseOrder.allapot === 'LEZARVA') {
-      throw new Error('A beszerzési rendelés már beérkezett vagy lezárva');
+    const closed = ['received', 'RECEIVED', 'BEEERKEZETT', 'closed', 'CLOSED', 'LEZARVA'];
+    if (closed.includes(purchaseOrder.allapot)) {
+      throw new BadRequestException('A beszerzési rendelés már lezárva vagy teljesen beérkezett');
     }
 
     // Update stock levels for each received item
@@ -238,11 +279,15 @@ export class PurchaseOrderService {
       });
     }
 
-    // Update purchase order status
+    const totalOrdered = purchaseOrder.items.reduce((s, i) => s + i.mennyiseg, 0);
+    const totalReceived = receivedItems.reduce((s, i) => s + i.mennyiseg, 0);
+    const newStatus =
+      totalReceived >= totalOrdered ? 'received' : 'partial';
+
     return this.prisma.purchaseOrder.update({
       where: { id },
       data: {
-        allapot: 'BEEERKEZETT',
+        allapot: newStatus,
       },
       include: {
         supplier: true,

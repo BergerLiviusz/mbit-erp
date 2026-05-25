@@ -565,6 +565,28 @@ export default function Orders() {
                           </button>
                         </>
                       )}
+                      {(order.allapot === 'NEW' || order.allapot === 'IN_PROCESS') && (
+                        <button
+                          onClick={async () => {
+                            try {
+                              const response = await apiFetch(`/crm/shipments/from-order/${order.id}`, { method: 'POST' });
+                              if (response.ok) {
+                                setSuccess('Szállítás létrehozva!');
+                                setTimeout(() => setSuccess(''), 3000);
+                              } else {
+                                const error = await response.json();
+                                setError(error.message || 'Hiba');
+                              }
+                            } catch (err: any) {
+                              setError(err.message);
+                            }
+                          }}
+                          className="text-indigo-600 hover:text-indigo-900"
+                          title="Szállítás létrehozása rendelésből"
+                        >
+                          📦
+                        </button>
+                      )}
                       {order.allapot === 'IN_PROCESS' && (
                         <>
                           <button
@@ -582,6 +604,28 @@ export default function Orders() {
                             ✗
                           </button>
                         </>
+                      )}
+                      {(order.allapot === 'NEW' || order.allapot === 'IN_PROCESS' || order.allapot === 'SHIPPED') && (
+                        <button
+                          onClick={async () => {
+                            try {
+                              const response = await apiFetch(`/crm/invoice-stubs/from-order/${order.id}`, { method: 'POST' });
+                              if (response.ok) {
+                                setSuccess('Számla-meta létrehozva!');
+                                setTimeout(() => setSuccess(''), 3000);
+                              } else {
+                                const error = await response.json();
+                                setError(error.message || 'Hiba');
+                              }
+                            } catch (err: any) {
+                              setError(err.message);
+                            }
+                          }}
+                          className="text-teal-600 hover:text-teal-900"
+                          title="CRM számla-meta (bizonylati stub, nem NAV-számla)"
+                        >
+                          🧾 Meta
+                        </button>
                       )}
                       {order.allapot === 'SHIPPED' && (
                         <>

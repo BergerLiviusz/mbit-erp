@@ -56,6 +56,7 @@ export enum Permission {
   DMS_UPLOAD = 'dms:upload',
   DMS_VERSION = 'dms:version',
   DMS_APPROVE_DISPOSAL = 'dms:approve_disposal',
+  DMS_EXPORT = 'dms:export',
   
   // Document specific
   DOCUMENT_VIEW = 'document:view',
@@ -70,7 +71,12 @@ export enum Permission {
   LOGISTICS_VIEW = 'logistics:view',
   LOGISTICS_CREATE = 'logistics:create',
   LOGISTICS_EDIT = 'logistics:edit',
+  LOGISTICS_UPDATE = 'logistics:update',
   LOGISTICS_DELETE = 'logistics:delete',
+  LOGISTICS_EXPORT = 'logistics:export',
+  LOGISTICS_ADMIN = 'logistics:admin',
+  INVENTORY_MANAGE = 'inventory:manage',
+  PURCHASE_MANAGE = 'purchase:manage',
   
   // Warehouse specific
   WAREHOUSE_VIEW = 'warehouse:view',
@@ -136,6 +142,9 @@ export enum Permission {
   HR_EDIT = 'hr:edit',
   HR_DELETE = 'hr:delete',
   HR_REPORT = 'hr:report',
+  HR_EXPORT = 'hr:export',
+  HR_CONTRACT_MANAGE = 'hr:contract_manage',
+  HR_ADMIN = 'hr:admin',
   HR_APPROVE = 'hr:approve',
   
   // User Management
@@ -151,6 +160,13 @@ export enum Permission {
   ROLE_EDIT = 'role:edit',
   ROLE_DELETE = 'role:delete',
   
+  // Controlling / Decision support
+  CONTROLLING_VIEW = 'controlling:view',
+  CONTROLLING_EXPORT = 'controlling:export',
+  CONTROLLING_ADMIN = 'controlling:admin',
+  KPI_MANAGE = 'kpi:manage',
+  REPORT_MANAGE = 'report:manage',
+
   // Report Permissions
   REPORT_VIEW = 'report:view',
   REPORT_CREATE = 'report:create',
@@ -243,6 +259,7 @@ export const PermissionDescriptions: Record<Permission, { nev: string; modulo: s
   [Permission.DMS_UPLOAD]: { nev: 'Fájl feltöltés', modulo: 'DMS', leiras: 'Fájlok feltöltése' },
   [Permission.DMS_VERSION]: { nev: 'Verziókezelés', modulo: 'DMS', leiras: 'Dokumentum verziók kezelése' },
   [Permission.DMS_APPROVE_DISPOSAL]: { nev: 'Selejtezés jóváhagyás', modulo: 'DMS', leiras: 'Dokumentum selejtezés engedélyezése' },
+  [Permission.DMS_EXPORT]: { nev: 'DMS export', modulo: 'DMS', leiras: 'Dokumentumlista és riport export' },
   
   [Permission.DOCUMENT_VIEW]: { nev: 'Dokumentum megtekintés', modulo: 'DMS', leiras: 'Egyes dokumentumok megtekintése' },
   [Permission.DOCUMENT_CREATE]: { nev: 'Dokumentum létrehozás', modulo: 'DMS', leiras: 'Új dokumentum rekord rögzítése' },
@@ -255,7 +272,12 @@ export const PermissionDescriptions: Record<Permission, { nev: string; modulo: s
   [Permission.LOGISTICS_VIEW]: { nev: 'Logisztika megtekintése', modulo: 'Logisztika', leiras: 'Logisztikai adatok böngészése' },
   [Permission.LOGISTICS_CREATE]: { nev: 'Logisztika létrehozás', modulo: 'Logisztika', leiras: 'Új törzsadatok rögzítése' },
   [Permission.LOGISTICS_EDIT]: { nev: 'Logisztika szerkesztés', modulo: 'Logisztika', leiras: 'Törzsadatok módosítása' },
+  [Permission.LOGISTICS_UPDATE]: { nev: 'Logisztika módosítás', modulo: 'Logisztika', leiras: 'Logisztikai rekordok frissítése' },
   [Permission.LOGISTICS_DELETE]: { nev: 'Logisztika törlés', modulo: 'Logisztika', leiras: 'Törzsadatok törlése' },
+  [Permission.LOGISTICS_EXPORT]: { nev: 'Logisztika export', modulo: 'Logisztika', leiras: 'Riportok és listák CSV/XLSX exportja' },
+  [Permission.LOGISTICS_ADMIN]: { nev: 'Logisztika admin', modulo: 'Logisztika', leiras: 'Teljes logisztikai modul kezelése' },
+  [Permission.INVENTORY_MANAGE]: { nev: 'Készletkezelés', modulo: 'Logisztika', leiras: 'Készletmozgások, leltár, sarzs kezelés' },
+  [Permission.PURCHASE_MANAGE]: { nev: 'Beszerzés kezelés', modulo: 'Logisztika', leiras: 'Beszerzési rendelések és beérkezés' },
   
   [Permission.WAREHOUSE_VIEW]: { nev: 'Raktárak megtekintése', modulo: 'Logisztika', leiras: 'Raktárak és helyek böngészése' },
   [Permission.WAREHOUSE_CREATE]: { nev: 'Raktár létrehozás', modulo: 'Logisztika', leiras: 'Új raktár rögzítése' },
@@ -300,6 +322,9 @@ export const PermissionDescriptions: Record<Permission, { nev: string; modulo: s
   [Permission.HR_EDIT]: { nev: 'HR adat szerkesztés', modulo: 'HR', leiras: 'Dolgozói adatok módosítása' },
   [Permission.HR_DELETE]: { nev: 'HR adat törlés', modulo: 'HR', leiras: 'Dolgozói adatok törlése' },
   [Permission.HR_REPORT]: { nev: 'HR riportok', modulo: 'HR', leiras: 'NAV, KSH riportok generálása' },
+  [Permission.HR_EXPORT]: { nev: 'HR export', modulo: 'HR', leiras: 'HR analitikák CSV/XLSX exportja' },
+  [Permission.HR_CONTRACT_MANAGE]: { nev: 'Munkaszerződés kezelés', modulo: 'HR', leiras: 'Szerződések és módosítások rögzítése' },
+  [Permission.HR_ADMIN]: { nev: 'HR adminisztráció', modulo: 'HR', leiras: 'HR modul teljes kezelése és beállítások' },
   [Permission.HR_APPROVE]: { nev: 'HR jóváhagyás', modulo: 'HR', leiras: 'Távollét és HR jóváhagyó folyamatok' },
   
   [Permission.USER_VIEW]: { nev: 'Felhasználók megtekintése', modulo: 'Felhasználók', leiras: 'Felhasználók listázása' },
@@ -313,6 +338,12 @@ export const PermissionDescriptions: Record<Permission, { nev: string; modulo: s
   [Permission.ROLE_EDIT]: { nev: 'Szerepkör szerkesztés', modulo: 'Szerepkörök', leiras: 'Szerepkörök módosítása' },
   [Permission.ROLE_DELETE]: { nev: 'Szerepkör törlés', modulo: 'Szerepkörök', leiras: 'Szerepkörök törlése' },
   
+  [Permission.CONTROLLING_VIEW]: { nev: 'Kontrolling megtekintése', modulo: 'Kontrolling', leiras: 'Dashboard és riportok böngészése' },
+  [Permission.CONTROLLING_EXPORT]: { nev: 'Kontrolling export', modulo: 'Kontrolling', leiras: 'Riportok és KPI export' },
+  [Permission.CONTROLLING_ADMIN]: { nev: 'Kontrolling admin', modulo: 'Kontrolling', leiras: 'Kontrolling modul teljes kezelése' },
+  [Permission.KPI_MANAGE]: { nev: 'KPI kezelés', modulo: 'Kontrolling', leiras: 'KPI definíciók létrehozása és szerkesztése' },
+  [Permission.REPORT_MANAGE]: { nev: 'Riport sablon kezelés', modulo: 'Kontrolling', leiras: 'Riport sablonok és futtatás' },
+
   [Permission.REPORT_VIEW]: { nev: 'Jelentések megtekintése', modulo: 'Jelentések', leiras: 'Riportok böngészése' },
   [Permission.REPORT_CREATE]: { nev: 'Jelentés készítés', modulo: 'Jelentések', leiras: 'Új riportok generálása' },
   [Permission.REPORT_EDIT]: { nev: 'Jelentés szerkesztés', modulo: 'Jelentések', leiras: 'Riportok módosítása' },

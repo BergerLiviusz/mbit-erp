@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import Modal from '../components/Modal';
 import FileUpload from '../components/FileUpload';
 import { apiFetch } from '../lib/api';
+import { usePermissions } from '../hooks/usePermissions';
 
 interface Document {
   id: string;
@@ -11,6 +12,7 @@ interface Document {
   irany?: string | null;
   fajlNev: string;
   fajlMeret: number;
+  mimeType?: string;
   allapot: string;
   tartalom?: string | null;
   ervenyessegKezdet?: string | null;
@@ -90,12 +92,18 @@ const TIPUSOK = [
 ];
 
 const ALLAPOTOK = [
-  { kod: 'aktiv', nev: 'Aktív', szin: 'bg-green-100 text-green-800' },
-  { kod: 'archivalva', nev: 'Archivált', szin: 'bg-yellow-100 text-yellow-800' },
-  { kod: 'torolve', nev: 'Törölve', szin: 'bg-red-100 text-red-800' },
+  { kod: 'beerkezett', nev: 'Beérkezett', szin: 'bg-gray-100 text-gray-800' },
+  { kod: 'iktatott', nev: 'Iktatott', szin: 'bg-blue-100 text-blue-800' },
+  { kod: 'feldolgozas_alatt', nev: 'Feldolgozás alatt', szin: 'bg-yellow-100 text-yellow-800' },
+  { kod: 'jovahagyasra_var', nev: 'Jóváhagyásra vár', szin: 'bg-orange-100 text-orange-800' },
+  { kod: 'jovahagyott', nev: 'Jóváhagyott', szin: 'bg-green-100 text-green-800' },
+  { kod: 'archivalva', nev: 'Archivált', szin: 'bg-purple-100 text-purple-800' },
+  { kod: 'elutasitva', nev: 'Elutasítva / lezárt', szin: 'bg-red-100 text-red-800' },
+  { kod: 'aktiv', nev: 'Aktív (legacy)', szin: 'bg-green-100 text-green-800' },
 ];
 
 export default function Documents() {
+  const { canExportDms, canCreateDms } = usePermissions();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedAllapot, setSelectedAllapot] = useState<string>('');
@@ -121,6 +129,9 @@ export default function Documents() {
   const [editingDocumentId, setEditingDocumentId] = useState<string | null>(null);
   const [detailDocument, setDetailDocument] = useState<Document | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [workflowMegjegyzes, setWorkflowMegjegyzes] = useState('');
+  const [iktatoSearch, setIktatoSearch] = useState('');
   const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
   const [accountFormData, setAccountFormData] = useState({
     nev: '',
@@ -140,7 +151,7 @@ export default function Documents() {
     accountId: '',
     opportunityId: '',
     quoteId: '',
-    allapot: 'aktiv',
+    allapot: 'beerkezett',
     ervenyessegKezdet: '',
     ervenyessegVeg: '',
     lejarat: '',
@@ -509,7 +520,7 @@ export default function Documents() {
         accountId: '',
         opportunityId: '',
         quoteId: '',
-        allapot: 'aktiv',
+        allapot: 'beerkezett',
         ervenyessegKezdet: '',
         ervenyessegVeg: '',
         lejarat: '',
@@ -533,7 +544,7 @@ export default function Documents() {
         accountId: '',
         opportunityId: '',
         quoteId: '',
-        allapot: 'aktiv',
+        allapot: 'beerkezett',
       ervenyessegKezdet: '',
       ervenyessegVeg: '',
       lejarat: '',
@@ -1007,13 +1018,78 @@ export default function Documents() {
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-3xl font-bold">Dokumentumok</h1>
-        <button 
-          onClick={() => handleOpenModal()}
-          className="bg-mbit-blue text-white px-4 py-2 rounded hover:bg-blue-600"
+        <div className="flex gap-2 flex-wrap">
+          {canExportDms && (
+          <>
+          <button
+            type="button"
+            onClick={async () => {
+              const res = await apiFetch('/dms/documents/export/csv');
+              if (res.ok) {
+                const blob = await res.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'dokumentumok.csv';
+                a.click();
+              }
+            }}
+            className="px-3 py-2 border rounded text-sm"
+          >
+            Export CSV
+          </button>
+          <button
+            type="button"
+            onClick={async () => {
+              const res = await apiFetch('/dms/documents/export/excel');
+              if (res.ok) {
+                const blob = await res.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'dokumentumok.xlsx';
+                a.click();
+              }
+            }}
+            className="px-3 py-2 border rounded text-sm"
+          >
+            Export XLSX
+          </button>
+          </>
+          )}
+          {canCreateDms && (
+          <button 
+            onClick={() => handleOpenModal()}
+            className="bg-mbit-blue text-white px-4 py-2 rounded hover:bg-blue-600"
+          >
+            + Új dokumentum / iktatás
+          </button>
+          )}
+        </div>
+      </div>
+      <div className="mb-4 flex gap-2">
+        <input
+          className="border rounded px-3 py-2 flex-1 max-w-md"
+          placeholder="Iktatószám keresés..."
+          value={iktatoSearch}
+          onChange={(e) => setIktatoSearch(e.target.value)}
+        />
+        <button
+          type="button"
+          className="px-3 py-2 bg-gray-100 rounded"
+          onClick={async () => {
+            if (!iktatoSearch.trim()) return;
+            const res = await apiFetch(`/dms/documents/lookup/iktato/${encodeURIComponent(iktatoSearch.trim())}`);
+            if (res.ok) {
+              const doc = await res.json();
+              setDetailDocument(doc);
+              setIsDetailModalOpen(true);
+            } else setError('Nem található iktatószám');
+          }}
         >
-          + Új dokumentum
+          Iktatószám kereső
         </button>
       </div>
 
@@ -1839,6 +1915,110 @@ export default function Documents() {
       >
         {detailDocument && (
           <div className="space-y-6">
+            <div className="flex flex-wrap gap-2 border-b pb-4">
+              <button
+                type="button"
+                className="text-sm px-3 py-1 border rounded"
+                onClick={async () => {
+                  const res = await apiFetch(`/dms/documents/${detailDocument.id}/download`);
+                  if (res.ok) {
+                    const blob = await res.blob();
+                    const url = URL.createObjectURL(blob);
+                    setPreviewUrl(url);
+                  } else if (res.status === 404) {
+                    setError('A dokumentum fájlja nem található. Lehetséges régi tárolási útvonal – töltse fel újra a fájlt.');
+                  } else {
+                    const err = await res.json().catch(() => ({}));
+                    setError((err as { message?: string }).message || 'A fájl letöltése sikertelen.');
+                  }
+                }}
+              >
+                Előnézet / megnyitás
+              </button>
+              <button
+                type="button"
+                className="text-sm px-3 py-1 border rounded"
+                onClick={() => handleOcrTrigger(detailDocument.id)}
+              >
+                OCR indítása
+              </button>
+              <select
+                className="text-sm border rounded px-2"
+                defaultValue=""
+                onChange={async (e) => {
+                  if (!e.target.value) return;
+                  await apiFetch(`/dms/documents/${detailDocument.id}/workflow`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ujAllapot: e.target.value, megjegyzes: workflowMegjegyzes }),
+                  });
+                  const refreshed = await apiFetch(`/dms/documents/${detailDocument.id}`);
+                  if (refreshed.ok) setDetailDocument(await refreshed.json());
+                }}
+              >
+                <option value="">Állapotváltás...</option>
+                {ALLAPOTOK.map((a) => (
+                  <option key={a.kod} value={a.kod}>{a.nev}</option>
+                ))}
+              </select>
+              <input
+                className="text-sm border rounded px-2 flex-1 min-w-[120px]"
+                placeholder="Megjegyzés állapotváltáshoz"
+                value={workflowMegjegyzes}
+                onChange={(e) => setWorkflowMegjegyzes(e.target.value)}
+              />
+              <button
+                type="button"
+                className="text-sm px-3 py-1 bg-purple-100 rounded"
+                onClick={async () => {
+                  await apiFetch(`/dms/documents/${detailDocument.id}/archive`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ megjegyzes: 'Archiválás' }),
+                  });
+                  const refreshed = await apiFetch(`/dms/documents/${detailDocument.id}`);
+                  if (refreshed.ok) setDetailDocument(await refreshed.json());
+                }}
+              >
+                Archiválás
+              </button>
+              <label className="text-sm px-3 py-1 border rounded cursor-pointer">
+                Új verzió
+                <input
+                  type="file"
+                  className="hidden"
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  onChange={async (e) => {
+                    const f = e.target.files?.[0];
+                    if (!f) return;
+                    const fd = new FormData();
+                    fd.append('file', f);
+                    fd.append('valtoztatasLeiras', 'Új verzió feltöltve');
+                    await apiFetch(`/dms/documents/${detailDocument.id}/versions`, {
+                      method: 'POST',
+                      body: fd,
+                    });
+                    const refreshed = await apiFetch(`/dms/documents/${detailDocument.id}`);
+                    if (refreshed.ok) setDetailDocument(await refreshed.json());
+                  }}
+                />
+              </label>
+            </div>
+            {previewUrl && (
+              <div className="border rounded p-2">
+                {detailDocument.mimeType?.startsWith('image/') ? (
+                  <img src={previewUrl} alt="preview" className="max-h-96 mx-auto" />
+                ) : (
+                  <iframe src={previewUrl} title="preview" className="w-full h-96" />
+                )}
+              </div>
+            )}
+            {detailDocument.tartalom && (
+              <div className="border rounded p-3 bg-gray-50 text-sm max-h-32 overflow-y-auto">
+                <strong>OCR szöveg:</strong> {detailDocument.tartalom.slice(0, 500)}
+                {detailDocument.tartalom.length > 500 ? '…' : ''}
+              </div>
+            )}
             {/* Alap információk */}
             <div className="grid grid-cols-2 gap-4">
               <div>

@@ -3,7 +3,7 @@ import { ReactNode } from 'react';
 import { isModuleEnabled, getModuleRoutes } from '../config/modules';
 
 interface ModuleRouteGuardProps {
-  module: 'documents' | 'team' | 'crm' | 'logistics' | 'controlling';
+  module: 'documents' | 'team' | 'crm' | 'logistics' | 'controlling' | 'hr';
   children: ReactNode;
 }
 
@@ -38,7 +38,7 @@ export function ModuleRouteGuard({ module, children }: ModuleRouteGuardProps) {
 /**
  * Hook a modul engedélyezés ellenőrzéséhez
  */
-export function useModuleAccess(module: 'documents' | 'team' | 'crm' | 'logistics' | 'controlling'): boolean {
+export function useModuleAccess(module: 'documents' | 'team' | 'crm' | 'logistics' | 'controlling' | 'hr'): boolean {
   return isModuleEnabled(module);
 }
 

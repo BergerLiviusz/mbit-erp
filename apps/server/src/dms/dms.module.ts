@@ -5,6 +5,7 @@ import { StorageModule } from '../common/storage/storage.module';
 import { SystemModule } from '../system/system.module';
 import { DocumentController } from './document.controller';
 import { DocumentService } from './document.service';
+import { DocumentOperationsService } from './document-operations.service';
 import { DocumentCategoryController } from './document-category.controller';
 import { DocumentCategoryService } from './document-category.service';
 import { OcrService } from './ocr.service';
@@ -27,6 +28,7 @@ import { TagController } from './tag.controller';
   ],
   providers: [
     DocumentService,
+    DocumentOperationsService,
     DocumentCategoryService,
     OcrService,
     DocumentNotificationService,

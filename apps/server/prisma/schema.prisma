@@ -46,6 +46,10 @@ model User {
   createdWorkflowInstances WorkflowInstance[]     @relation("CreatedWorkflowInstances")
   completedWorkflowSteps  WorkflowStepLog[]       @relation("CompletedWorkflowSteps")
   leaveApprovals          LeaveApproval[]         @relation("LeaveApprover")
+  assignedTickets         Ticket[]                @relation("AssignedTickets")
+  customerInteractions    CustomerInteraction[]   @relation("InteractionOwner")
+  crmMessages             Message[]               @relation("CrmMessages")
+  reportExecutions        ReportExecution[]       @relation("ReportExecutions")
 
   @@map("felhasznalok")
 }
@@ -138,6 +142,8 @@ model Account {
   tipus         String
   adoszam       String?
   cim           String?
+  szamlazasiCim String?
+  szallitasiCim String?
   email         String?
   telefon       String?
   iparag        String?
@@ -159,13 +165,62 @@ model Account {
   tickets       Ticket[]
   documents     Document[]
   chatRooms     ChatRoom[]
-  customFields  AccountCustomField[]
-  tasks         Task[]
+  customFields       AccountCustomField[]
+  tasks              Task[]
+  interactions       CustomerInteraction[]
+  communications     Message[]
+  discountRules      DiscountRule[]
 
   @@index([ownerId])
   @@index([iparag])
   @@index([regio])
   @@map("ugyfelek")
+}
+
+model CustomerInteraction {
+  id                String    @id @default(uuid())
+  accountId         String
+  tipus             String
+  datum             DateTime  @default(now())
+  targy             String
+  tartalom          String?
+  felelosId         String?
+  kovetkezoFeladat  String?
+  kovetkezoHatarido DateTime?
+  allapot           String    @default("NYITOTT")
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  account           Account   @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  felelos           User?     @relation("InteractionOwner", fields: [felelosId], references: [id], onDelete: SetNull)
+
+  @@index([accountId])
+  @@index([felelosId])
+  @@index([kovetkezoHatarido])
+  @@map("ugyfel_interakciok")
+}
+
+model DiscountRule {
+  id              String    @id @default(uuid())
+  nev             String
+  tipus           String
+  ertek           Float
+  mennyisegiHatar Float?
+  ertekHatar      Float?
+  kezdetDatum     DateTime?
+  vegesDatum      DateTime?
+  prioritas       Int       @default(100)
+  accountId       String?
+  itemId          String?
+  aktiv           Boolean   @default(true)
+  leiras          String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  account         Account?  @relation(fields: [accountId], references: [id], onDelete: SetNull)
+  item            Item?     @relation(fields: [itemId], references: [id], onDelete: SetNull)
+
+  @@index([accountId])
+  @@index([tipus])
+  @@map("kedvezmeny_szabalyok")
 }
 
 model AccountCustomField {
@@ -497,17 +552,37 @@ model InvoicePayment {
   @@map("szamla_fizetesek")
 }
 
+model ProductCategory {
+  id        String            @id @default(uuid())
+  nev       String
+  leiras    String?
+  parentId  String?
+  aktiv     Boolean           @default(true)
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+  parent    ProductCategory?  @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children  ProductCategory[] @relation("CategoryHierarchy")
+  items     Item[]
+
+  @@index([parentId])
+  @@map("termek_kategoriak")
+}
+
 model Item {
   id                   String                @id @default(uuid())
   azonosito            String                @unique
   nev                  String
   leiras               String?
   itemGroupId          String?
+  categoryId           String?
   egyseg               String
   beszerzesiAr         Float
   eladasiAr            Float
   afaKulcs             Float
   aktiv                Boolean               @default(true)
+  sarzsKotelezo        Boolean               @default(false)
+  minKeszlet           Float?
+  maxKeszlet           Float?
   beszerzesiAdatok     String?
   suly                 Float?
   mertekEgyseg         String?
@@ -516,6 +591,7 @@ model Item {
   createdAt            DateTime              @default(now())
   updatedAt            DateTime              @updatedAt
   itemGroup            ItemGroup?            @relation(fields: [itemGroupId], references: [id], onDelete: SetNull)
+  category             ProductCategory?      @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   quoteItems           QuoteItem[]
   orderItems           OrderItem[]
   stockLots            StockLot[]
@@ -530,8 +606,10 @@ model Item {
   invoiceItems         InvoiceItem[]         @relation("InvoiceItem")
   stockReservations    StockReservation[]
   expectedReceiptItems ExpectedReceiptItem[]
+  discountRules        DiscountRule[]
 
   @@index([itemGroupId])
+  @@index([categoryId])
   @@map("cikkek")
 }
 
@@ -551,6 +629,7 @@ model Warehouse {
   azonosito        String              @unique
   nev              String
   cim              String?
+  felelos          String?
   ertekelesMod     String              @default("FIFO") // FIFO, LIFO, AVG
   konszignacios    Boolean             @default(false) // Konszignációs raktár
   aktiv            Boolean             @default(true)
@@ -632,20 +711,27 @@ model StockLot {
 }
 
 model StockMove {
-  id                String    @id @default(uuid())
-  itemId            String
-  warehouseId       String
-  tipus             String
-  mennyiseg         Float
-  sarzsGyartasiSzam String?
-  referenciaId      String?
-  megjegyzesek      String?
-  createdAt         DateTime  @default(now())
-  item              Item      @relation(fields: [itemId], references: [id])
-  warehouse         Warehouse @relation(fields: [warehouseId], references: [id])
+  id                  String    @id @default(uuid())
+  itemId              String
+  warehouseId         String
+  forrasRaktarId      String?
+  celRaktarId         String?
+  tipus               String
+  mennyiseg           Float
+  sarzsGyartasiSzam   String?
+  referenciaId        String?
+  referenciaTipus     String?
+  referenciaAzonosito String?
+  userId              String?
+  megjegyzesek        String?
+  createdAt           DateTime  @default(now())
+  item                Item      @relation(fields: [itemId], references: [id])
+  warehouse           Warehouse @relation(fields: [warehouseId], references: [id])
 
   @@index([itemId])
   @@index([warehouseId])
+  @@index([forrasRaktarId])
+  @@index([celRaktarId])
   @@index([createdAt])
   @@index([sarzsGyartasiSzam])
   @@map("keszlet_mozgasok")
@@ -729,6 +815,7 @@ model PriceList {
   id                String          @id @default(uuid())
   supplierId        String
   nev               String
+  verzio            Int             @default(1)
   ervenyessegKezdet DateTime
   ervenyessegVeg    DateTime?
   aktiv             Boolean         @default(true)
@@ -773,6 +860,7 @@ model Ticket {
   assignedToId   String?
   account        Account?  @relation(fields: [accountId], references: [id], onDelete: SetNull)
   createdBy      User?     @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  assignedTo     User?     @relation("AssignedTickets", fields: [assignedToId], references: [id], onDelete: SetNull)
   messages       Message[]
   tasks          Task[]
 
@@ -783,15 +871,22 @@ model Ticket {
 
 model Message {
   id          String   @id @default(uuid())
+  accountId   String?
   ticketId    String?
+  channel     String   @default("EMAIL")
   felhaszCsak String?
   targy       String?
   szoveg      String
   tipus       String
+  createdById String?
   createdAt   DateTime @default(now())
+  account     Account? @relation(fields: [accountId], references: [id], onDelete: Cascade)
   ticket      Ticket?  @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  createdBy   User?    @relation("CrmMessages", fields: [createdById], references: [id], onDelete: SetNull)
 
   @@index([ticketId])
+  @@index([accountId])
+  @@index([channel])
   @@map("uzenetek")
 }
 
@@ -972,6 +1067,7 @@ model Document {
   tasks             Task[]
   jobPositionAsDescription JobPosition?      @relation("JobPositionDescriptionDoc")
   jobApplicationCvs       JobApplication[] @relation("JobApplicationCv")
+  employmentContract      EmploymentContract? @relation("EmploymentContractDoc")
 
   @@index([accountId])
   @@index([categoryId])
@@ -1496,6 +1592,12 @@ model Employee {
   munkaviszonyKezdete    DateTime?
   munkaviszonyVege       DateTime?
   munkaviszonyTipusa     String? // HATAROZATLAN, HATAROZOTT, RESZIDOS, STB.
+  szuletesiNev           String?
+  adoszam                String?
+  anyjaNeve              String?
+  allapot                String    @default("ACTIVE") // ACTIVE, INACTIVE, TERMINATED
+  besorolas              String?
+  munkaido               String?
   jobPositionId          String?
   osztaly                String?
   reszleg                String?
@@ -1626,17 +1728,35 @@ model EmploymentContract {
   vegDatum      DateTime?
   probaidoVege  DateTime?
   fizetes       Float?
+  munkaido      String?
+  documentId    String?   @unique
+  aktiv         Boolean   @default(true)
   megjegyzesek  String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
   employee   Employee            @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  document   Document?           @relation("EmploymentContractDoc", fields: [documentId], references: [id], onDelete: SetNull)
   amendments ContractAmendment[]
 
   @@index([employeeId])
   @@index([kezdetDatum])
   @@index([vegDatum])
   @@map("munkaszerzodesek")
+}
+
+model HrExportLog {
+  id          String   @id @default(uuid())
+  reportType  String
+  format      String
+  parameters  String?
+  filePath    String?
+  createdById String?
+  createdAt   DateTime @default(now())
+
+  @@index([reportType])
+  @@index([createdAt])
+  @@map("hr_export_naplo")
 }
 
 model ContractAmendment {
@@ -1992,23 +2112,90 @@ model DatabaseConnection {
 }
 
 model KPI {
-  id              String    @id @default(uuid())
-  azonosito       String    @unique
-  nev             String
-  leiras          String?
-  tipus           String // NUMBER, PERCENTAGE, CURRENCY, NATURAL
-  formula         String? // Képlet vagy lekérdezés
-  parameterek     String? // JSON formátumban
-  egyseg          String? // Mértékegység
-  celErtek        Float?
-  aktualisErtek   Float?
-  utolsoFrissites DateTime?
-  aktiv           Boolean   @default(true)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id                String    @id @default(uuid())
+  azonosito         String    @unique
+  nev               String
+  leiras            String?
+  kategoria         String?
+  tipus             String // NUMBER, PERCENTAGE, CURRENCY, NATURAL
+  formula           String?
+  parameterek       String?
+  egyseg            String?
+  celErtek          Float?
+  warningThreshold  Float?
+  criticalThreshold Float?
+  aktualisErtek     Float?
+  utolsoFrissites   DateTime?
+  aktiv             Boolean   @default(true)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
   @@index([aktiv])
+  @@index([kategoria])
   @@map("kpi_kulcsszervezo")
+}
+
+model DashboardWidget {
+  id             String   @id @default(uuid())
+  nev            String
+  tipus          String
+  konfiguracio   String?
+  pozicio        Int      @default(0)
+  lathato        Boolean  @default(true)
+  szerepkorok    String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("dashboard_widgetek")
+}
+
+model ReportTemplate {
+  id              String            @id @default(uuid())
+  kod             String            @unique
+  nev             String
+  kategoria       String
+  leiras          String?
+  queryConfig     String?
+  defaultFilters  String?
+  exportFormats   String            @default("csv,xlsx")
+  aktiv           Boolean           @default(true)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  executions      ReportExecution[]
+
+  @@index([kategoria])
+  @@index([aktiv])
+  @@map("riport_sablonok")
+}
+
+model ReportExecution {
+  id               String         @id @default(uuid())
+  reportTemplateId String
+  executedById     String?
+  parameterek      String?
+  formatum         String
+  fajlUtvonal      String?
+  createdAt        DateTime       @default(now())
+  reportTemplate   ReportTemplate @relation(fields: [reportTemplateId], references: [id], onDelete: Cascade)
+  executedBy       User?          @relation("ReportExecutions", fields: [executedById], references: [id], onDelete: SetNull)
+
+  @@index([reportTemplateId])
+  @@index([createdAt])
+  @@map("riport_futtatasok")
+}
+
+model SystemMetricSnapshot {
+  id           String   @id @default(uuid())
+  metricCode   String
+  metricValue  Float
+  snapshotDate DateTime @default(now())
+  sourceModule String
+  meta         String?
+
+  @@index([metricCode])
+  @@index([snapshotDate])
+  @@index([sourceModule])
+  @@map("rendszer_metrika_pillanatkepek")
 }
 
 model QueryTemplate {

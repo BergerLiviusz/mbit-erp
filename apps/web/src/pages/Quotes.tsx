@@ -535,13 +535,36 @@ export default function Quotes() {
                   </td>
                   <td className="p-4 text-sm">{formatDate(quote.ervenyessegDatum)}</td>
                   <td className="p-4 text-sm text-gray-500">{formatDate(quote.createdAt)}</td>
-                  <td className="p-4 text-right">
+                  <td className="p-4 text-right space-x-2">
                     <button
                       onClick={() => handleOpenModal(quote)}
                       className="text-mbit-blue hover:text-blue-600 text-sm font-medium"
                     >
                       Szerkesztés
                     </button>
+                    {(quote.allapot === 'jovahagyott' || quote.allapot === 'elfogadva') && (
+                      <button
+                        onClick={async () => {
+                          if (!confirm('Rendelés létrehozása ebből az árajánlatból?')) return;
+                          try {
+                            const res = await apiFetch(`/crm/quotes/${quote.id}/convert-to-order`, { method: 'POST' });
+                            if (res.ok) {
+                              setSuccess('Rendelés létrehozva!');
+                              setTimeout(() => setSuccess(''), 3000);
+                            } else {
+                              const err = await res.json();
+                              setError(err.message || 'Hiba');
+                            }
+                          } catch (e: any) {
+                            setError(e.message);
+                          }
+                        }}
+                        className="text-green-700 hover:text-green-900 text-sm font-medium"
+                        title="Rendelés létrehozása ajánlatból"
+                      >
+                        → Rendelés
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}

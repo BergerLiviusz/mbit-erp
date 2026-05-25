@@ -9,6 +9,7 @@ import { RoleController } from './role.controller';
 import { RoleService } from './role.service';
 import { BugReportController } from './bug-report.controller';
 import { BugReportService } from './bug-report.service';
+import { VersionController } from './version.controller';
 import { PrismaModule } from '../prisma/prisma.module';
 import { BackupModule } from '../common/backup/backup.module';
 import { AuditModule } from '../common/audit/audit.module';
@@ -17,7 +18,7 @@ import { RbacModule } from '../common/rbac/rbac.module';
 
 @Module({
   imports: [PrismaModule, BackupModule, AuditModule, StorageModule, RbacModule],
-  controllers: [SystemSettingsController, HealthController, DiagnosticsController, UserController, RoleController, BugReportController],
+  controllers: [SystemSettingsController, HealthController, DiagnosticsController, VersionController, UserController, RoleController, BugReportController],
   providers: [SystemSettingsService, UserService, RoleService, BugReportService],
   exports: [SystemSettingsService, UserService, RoleService, BugReportService],
 })

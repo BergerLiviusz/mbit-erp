@@ -1,5 +1,5 @@
 # Mbit ERP
-## Modular Vállalati Alkalmazás | Desktop & PWA | Magyar Nyelvű
+## Modular Vállalati Alkalmazás | Windows Desktop (on-premise) | Magyar Nyelvű
 
 [![Build Desktop App](https://github.com/BergerLiviusz/mbit-erp/actions/workflows/build-desktop.yml/badge.svg)](https://github.com/BergerLiviusz/mbit-erp/actions/workflows/build-desktop.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
@@ -31,20 +31,21 @@ Az **Mbit ERP** egy átfogó, moduláris vállalati alkalmazás, amely egyesíti
 
 - ✅ **100% Magyar nyelvű** felhasználói felület
 - 🏢 **On-premise képes** - minden adat a saját infrastruktúrán marad
-- 💻 **Electron Desktop App** - Windows & macOS telepítők
-- 📦 **Egyszerű telepítés** - egy kattintásos installer
-- 📱 **PWA támogatás** - böngészőből is elérhető
+- 💻 **Windows Desktop App (végtermék)** – GitHub Actions CI artifact (installer + portable ZIP)
+- 📦 **Moduláris package-ek** – teljes ERP, GINOP CRM+DMS+HR, legacy csomagok (lásd `docs/PACKAGE_STRATEGY.md`)
+- 🏷️ **Verziókövetés** – központi `MBIT ERP v1.0.1a` (Login, Beállítások, lábléc, API)
+- 📦 **Egyszerű telepítés** – egy kattintásos installer vagy portable csomag
+- 🔌 **Beágyazott backend + SQLite** – internet nélkül futtatható on-premise
 - 🔐 **GDPR compliant** - teljes adatvédelmi megfelelés
 - 📊 **Audit-ready** - részletes naplózás és riportálás
 - 🚀 **Gyors és modern** - React + NestJS + TypeScript
 
-### 🖥️ Desktop Alkalmazás
+### 🖥️ Desktop Alkalmazás (GINOP / on-premise végtermék)
 
-A **teljes ERP rendszer** most elérhető **natív desktop alkalmazásként**:
+A **teljes ERP rendszer** elsődleges szállítási formája **Windows desktop alkalmazás**:
 
-- **Windows** - `.exe` telepítő (NSIS) + portable verzió
-- **macOS** - `.dmg` telepítő (Intel + Apple Silicon)
-- **100% offline működés** - nincs internet szükséges
+- **Windows** – `.exe` telepítő (NSIS) + **ajánlott** portable ZIP
+- **100% offline működés** – nincs internet szükséges runtime alatt
 - **Embedded backend** - NestJS szerver beépítve
 - **SQLite adatbázis** - helyi fájlban tárolva
 - **Teljes OCR támogatás** - Tesseract.js lokálisan
@@ -62,7 +63,7 @@ A **teljes ERP rendszer** most elérhető **natív desktop alkalmazásként**:
 ### 📞 CRM Modul
 - **Ügyfélkapcsolat-kezelés** - 360° ügyfélnézet
 - **Kampánymenedzsment** - célközönség szegmentálás, nyomon követés
-- **Értékesítési folyamat** - Ajánlat → Rendelés → Számlázás integráció
+- **Értékesítési folyamat** - Ajánlat → Rendelés → **bizonylati stub** (nem NAV Online számlázó)
 - **Kedvezménykezelés** - mennyiségi, egyedi, időszaki kedvezmények
 - **Reklamációkezelés** - ticketing rendszer eszkalációval
 - **Front office** - email, chat integráció
@@ -75,17 +76,33 @@ A **teljes ERP rendszer** most elérhető **natív desktop alkalmazásként**:
 - **Archiválás** - hosszú távú megőrzés törvényi megfelelőséggel
 - **Audit trail** - minden művelet naplózva
 
-### 📦 Logisztika Modul
-- **Cikktörzs kezelés** - cikkcsoportok, tulajdonságok
-- **Többraktáros rendszer** - készletszintek raktáranként
-- **Min/Max készletriasztás** - automatikus figyelmeztetések
-- **Sarzs/gyártási szám** - teljes nyomonkövethetőség
-- **Árlista menedzsment** - több szállító, import CSV/Excel
-- **Beszerzési lánc** - rendelés → szállítás → számlázás
+### 📦 Logisztika Modul (GINOP on-premise)
+- **Cikktörzs** – CRUD, kategóriák, cikkcsoportok, archiválás, audit
+- **Többraktáros készlet** – raktárak, készletszint, raktárközi átmozgatás
+- **Készletmozgások** – bevétel, kiadás, korrekció, mozgástörténet, export
+- **Sarzs / gyártási szám** – sarzs készlet, lejárati riport
+- **Min/max riasztások** – dashboard lista, export
+- **Árlisták** – szállítónként, verzió, érvényesség, CSV/XLSX import
+- **Beszerzés** – draft → jóváhagyás → rendelés → beérkezés → lezárás
+- **Leltár, visszáru, riportok, audit** – desktop UI, lokális export
+- Részletek: `docs/GINOP_LOGISZTIKA_MEGFELELOSEG.md`, `docs/LOGISZTIKA_DEMO_FORGATOKONYV.md`
+
+### 👥 HR menedzsment modul (GINOP on-premise)
+- **Dolgozói törzsadatok** – teljes adatlap, jogviszony, végzettség, nyelv, orvosi vizsgálat
+- **Munkakörök** – feladatok, hatáskörök, munkaköri leírás DMS dokumentummal
+- **Munkaszerződések** – szerződés, módosítások, DMS csatolás
+- **HR riportok** – CSV/XLSX export (törzslista, jogviszony, NAV/KSH alapadat analitika)
+- **Nem teljes bérszámfejtés** – analitikák és belső exportok; nincs közvetlen hatósági beküldés
+- Részletek: `docs/GINOP_HR_MEGFELELOSEG.md`, `docs/HR_DEMO_FORGATOKONYV.md`
+
+### 📊 Kontrolling / Döntéstámogatás (GINOP on-premise)
+- **Dashboard** – KPI kártyák CRM/DMS/HR/Logisztika/Rendszer modulokból, recharts grafikonok
+- **Riportok** – előre definiált sablonok, CSV/XLSX export, auditált futtatás
+- **Ad-hoc riport** – modul + mező választás, minimál builder
+- **Permission sync** – startup szinkron meglévő DB-khez (reseed nélkül)
+- Részletek: `docs/GINOP_CONTROLLING_MEGFELELOSEG.md`, `docs/CONTROLLING_DEMO_FORGATOKONYV.md`
 
 ### 🔮 Jövőbeli Modulok (Scaffold)
-- HR & Bérszámfejtés
-- Controlling / BI
 - Gyártás
 - Webáruház
 - Online Marketing
@@ -116,9 +133,8 @@ A **teljes ERP rendszer** most elérhető **natív desktop alkalmazásként**:
 - **Electron** - Cross-platform wrapper
 - **electron-builder** - Packaging (MSI, DMG, AppImage)
 
-### PWA
-- **Vite PWA Plugin** - Service worker
-- **IndexedDB** - Offline data storage
+### Fejlesztői PWA (opcionális, nem végtermék)
+- **Vite PWA Plugin** – csak fejlesztői / teszt célra; a GINOP ellenőrzés **Windows desktop** artefakton történik
 
 ### DevOps
 - **Turbo** - Monorepo build system
@@ -207,7 +223,7 @@ mbit-erp/
 │   │   │   ├── logistics/ # Logisztika
 │   │   │   └── audit/   # Audit naplók
 │   │   └── prisma/      # Adatbázis séma
-│   ├── web/             # React frontend (PWA)
+│   ├── web/             # React UI (Electron shell része)
 │   └── desktop/         # Electron wrapper
 ├── packages/
 │   ├── ui/              # Shared UI komponensek
@@ -240,6 +256,10 @@ Minden dokumentáció **magyar nyelven** érhető el:
 | [GDPR Adatkezelési Tájékoztató](docs/Adatkezelesi_tajekoztato_GDPR.md) | Adatvédelmi irányelvek |
 | [IT Biztonsági Szabályzat](docs/IT_biztonsagi_szabalyzat.md) | Biztonsági politikák és kontrollok |
 | [Verziókezelési Stratégia](docs/Verziokezeles_es_karbantartas.md) | Release management, karbantartás |
+| **[Package stratégia](docs/PACKAGE_STRATEGY.md)** | Modulcsomagok, build parancsok, branch → package |
+| **[Verziókövetés (GINOP)](docs/VERSIONING_STRATEGY.md)** | MBIT ERP v1.0.1a, build meta, UI megjelenítés |
+| **[GINOP CRM+DMS+HR változat](docs/GINOP_PACKAGE_VARIANT.md)** | Pályázati desktop package specifikáció |
+| **[GINOP release checklist](docs/GINOP_RELEASE_CHECKLIST.md)** | CI artifact + Windows smoke-test, elfogadás |
 | [DRP Összefoglaló](docs/DRP_osszefoglalo.md) | Disaster Recovery Plan |
 
 ---
@@ -257,6 +277,9 @@ npm run web                    # Csak frontend
 # Build
 npm run build                  # Production build
 npm run build:desktop          # Desktop app build
+npm run build:config           # Központi @mbit-erp/config
+npm run package:full           # Windows desktop – teljes ERP
+npm run package:ginop          # Windows desktop – GINOP CRM+DMS+HR
 npm run build:pwa              # PWA build
 
 # Database
@@ -294,28 +317,28 @@ git push origin feature/crm-kedvezmeny-kezeles
 
 ## 🚢 Deployment
 
-### Desktop Alkalmazás
+**Elsődleges végtermék:** Windows desktop (Electron), on-premise – nincs kötelező böngészős webapp vagy cloud.
+
+### Windows desktop (CI artifact)
 
 ```bash
-# Windows (MSI installer)
+npm ci
+npm run build -w @mbit-erp/server
+npm run build -w @mbit-erp/web
 npm run package:win
-
-# macOS (DMG + ZIP)
-npm run package:mac
-
-# Linux (AppImage)
-npm run package:linux
 ```
 
-**Kimenet:** `apps/desktop/dist/`
+**Kimenet:** `apps/desktop/dist/` – portable ZIP / installer (GitHub Actions: `build-desktop.yml`)
 
-### PWA Build
+A React UI (`apps/web`) **csak** az Electron shell része; önálló SaaS webalkalmazásként nem cél.
+
+### Opcionális: fejlesztői PWA build
 
 ```bash
 npm run build:pwa
 ```
 
-**Kimenet:** `apps/web/dist-pwa/`
+**Kimenet:** `apps/web/dist-pwa/` – nem a GINOP végtermék.
 
 ### Production Server
 
@@ -367,6 +390,17 @@ CMD ["npm", "run", "start:prod"]
 - ✅ **Hibabejelentés:** Beépített ticketing rendszer
 - ✅ **Backup & ÜBT:** Automatikus mentések + DR terv
 - ✅ **Elérhetőség:** ≥96% SLA target
+
+### GINOP PLUSZ-2.1.3-24 – CRM / Értékesítés (on-premise)
+
+- 📄 [Megfelelőségi mátrix](docs/GINOP_CRM_MEGFELELOSEG.md)
+- 🎬 [Demo forgatókönyv](docs/CRM_DEMO_FORGATOKONYV.md)
+- 🪟 [Windows desktop build](docs/WINDOWS_DESKTOP_BUILD.md)
+
+### GINOP PLUSZ-2.1.3-24 – DMS / Elektronikus iratkezelés (on-premise)
+
+- 📄 [DMS megfelelőség](docs/GINOP_DMS_MEGFELELOSEG.md)
+- 🎬 [DMS demo forgatókönyv](docs/DMS_DEMO_FORGATOKONYV.md)
 
 ### Dokumentáltság
 
@@ -423,11 +457,11 @@ Jelenleg belső fejlesztés alatt. További információ hamarosan.
 - [x] CRM modul alapfunkciók
 - [x] DMS modul + OCR
 - [x] Logisztika modul
-- [x] Desktop + PWA build
+- [x] Windows desktop build (elsődleges végtermék)
 - [x] Magyar dokumentáció
 
 ### v1.1 (2026 Q1)
-- [ ] HR modul alapok
+- [x] HR menedzsment alapmodul (GINOP on-premise)
 - [ ] Controlling/BI riportok
 - [ ] Email integráció
 - [ ] SMS értesítések

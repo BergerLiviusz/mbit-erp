@@ -5,13 +5,17 @@ import { PrismaService } from '../prisma/prisma.service';
 export class ItemService {
   constructor(private prisma: PrismaService) {}
 
-  async findAll(skip = 0, take = 50, search?: string) {
-    const where = search ? {
-      OR: [
+  async findAll(skip = 0, take = 50, search?: string, categoryId?: string) {
+    const where: Record<string, unknown> = {};
+    if (search) {
+      where.OR = [
         { nev: { contains: search } },
         { azonosito: { contains: search } },
-      ],
-    } : {};
+      ];
+    }
+    if (categoryId) {
+      where.categoryId = categoryId;
+    }
 
     const [total, items] = await Promise.all([
       this.prisma.item.count({ where }),
@@ -21,6 +25,7 @@ export class ItemService {
         take,
         include: {
           itemGroup: true,
+          category: true,
           stockLevels: {
             include: {
               warehouse: true,
@@ -39,6 +44,7 @@ export class ItemService {
       where: { id },
       include: {
         itemGroup: true,
+        category: true,
         stockLots: {
           include: {
             warehouse: true,
@@ -126,8 +132,10 @@ export class ItemService {
   }
 
   async delete(id: string) {
-    return this.prisma.item.delete({
+    return this.prisma.item.update({
       where: { id },
+      data: { aktiv: false },
+      include: { itemGroup: true },
     });
   }
 

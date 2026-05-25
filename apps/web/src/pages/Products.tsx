@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import Modal from '../components/Modal';
 import { apiFetch } from '../lib/api';
 import ProductSuppliers from '../components/logistics/ProductSuppliers';
+import CategoryTreeSelect from '../components/logistics/CategoryTreeSelect';
+import { usePermissions } from '../hooks/usePermissions';
 
 interface Warehouse {
   id: string;
@@ -32,6 +34,8 @@ interface Product {
   szavatossagiIdoNap?: number | null;
   itemGroupId?: string | null;
   itemGroup?: ItemGroup | null;
+  categoryId?: string | null;
+  category?: { id: string; nev: string } | null;
   stockLevels?: Array<{
     id: string;
     warehouseId: string;
@@ -61,12 +65,15 @@ interface Product {
 }
 
 export default function Products() {
+  const { canCreateProduct, canEditProduct, canDeleteProduct } = usePermissions();
   const [products, setProducts] = useState<Product[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [itemGroups, setItemGroups] = useState<ItemGroup[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedItemGroupId, setSelectedItemGroupId] = useState<string>('');
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSuppliersModalOpen, setIsSuppliersModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -90,6 +97,7 @@ export default function Products() {
     aktiv: true,
     szavatossagiIdoNap: '',
     itemGroupId: '',
+    categoryId: '',
     beszerzesiAdatok: '',
     warehouses: [] as Array<{ warehouseId: string; mennyiseg: string; minimum: string; maximum: string; sarzsGyartasiSzam?: string }>,
   });
@@ -104,7 +112,8 @@ export default function Products() {
     loadProducts();
     loadWarehouses();
     loadItemGroups();
-  }, [searchTerm, selectedItemGroupId]);
+    loadCategories();
+  }, [searchTerm, selectedItemGroupId, selectedCategoryId]);
 
   // Listen for products updated events from other components (like Warehouses)
   useEffect(() => {
@@ -130,6 +139,15 @@ export default function Products() {
     }
   };
 
+  const loadCategories = async () => {
+    try {
+      const response = await apiFetch('/logistics/categories?tree=true');
+      if (response.ok) setCategories(await response.json());
+    } catch (error) {
+      console.error('Hiba a kategóriák betöltésekor:', error);
+    }
+  };
+
   const loadItemGroups = async () => {
     try {
       const response = await apiFetch('/logistics/item-groups?skip=0&take=100');
@@ -149,6 +167,9 @@ export default function Products() {
       if (searchTerm) {
         url += `&search=${encodeURIComponent(searchTerm)}`;
       }
+      if (selectedCategoryId) {
+        url += `&categoryId=${encodeURIComponent(selectedCategoryId)}`;
+      }
 
       const response = await apiFetch(url);
 
@@ -156,7 +177,6 @@ export default function Products() {
         const data = await response.json();
         let filteredProducts = data.items || [];
         
-        // Filter by item group if selected
         if (selectedItemGroupId) {
           filteredProducts = filteredProducts.filter((p: Product) => p.itemGroupId === selectedItemGroupId);
         }
@@ -209,6 +229,7 @@ export default function Products() {
         aktiv: product.aktiv ?? true,
         szavatossagiIdoNap: product.szavatossagiIdoNap?.toString() || '',
         itemGroupId: product.itemGroupId || '',
+        categoryId: product.categoryId || '',
         beszerzesiAdatok: (product as any).beszerzesiAdatok || '',
         warehouses: product.stockLevels?.map(sl => {
           // Find corresponding stock lot for this warehouse
@@ -235,6 +256,7 @@ export default function Products() {
         aktiv: true,
         szavatossagiIdoNap: '',
         itemGroupId: '',
+        categoryId: '',
         beszerzesiAdatok: '',
         warehouses: [],
       });
@@ -258,6 +280,7 @@ export default function Products() {
         aktiv: true,
         szavatossagiIdoNap: '',
         itemGroupId: '',
+        categoryId: '',
         beszerzesiAdatok: '',
         warehouses: [],
       });
@@ -339,6 +362,7 @@ export default function Products() {
         aktiv: formData.aktiv,
         szavatossagiIdoNap: szavatossagiIdoNap && !isNaN(szavatossagiIdoNap) ? szavatossagiIdoNap : null,
         itemGroupId: formData.itemGroupId || null,
+        categoryId: formData.categoryId || null,
         beszerzesiAdatok: formData.beszerzesiAdatok?.trim() || null,
       };
 
@@ -545,12 +569,14 @@ export default function Products() {
     <div>
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-3xl font-bold">Termékek</h1>
-        <button 
-          onClick={() => handleOpenModal()}
-          className="bg-mbit-blue text-white px-4 py-2 rounded hover:bg-blue-600"
-        >
-          + Új termék
-        </button>
+        {canCreateProduct && (
+          <button
+            onClick={() => handleOpenModal()}
+            className="bg-mbit-blue text-white px-4 py-2 rounded hover:bg-blue-600"
+          >
+            + Új termék
+          </button>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -573,13 +599,19 @@ export default function Products() {
         </div>
       </div>
 
-      <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
         <input
           type="text"
           placeholder="Keresés név vagy azonosító alapján..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-mbit-blue"
+        />
+        <CategoryTreeSelect
+          value={selectedCategoryId}
+          onChange={setSelectedCategoryId}
+          categories={categories}
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg"
         />
         <div className="flex gap-2">
           <select
@@ -618,6 +650,7 @@ export default function Products() {
                   <tr>
                     <th className="text-left p-4 font-medium text-gray-700">Azonosító</th>
                     <th className="text-left p-4 font-medium text-gray-700">Név</th>
+                    <th className="text-left p-4 font-medium text-gray-700">Kategória</th>
                     <th className="text-left p-4 font-medium text-gray-700">Egység</th>
                     <th className="text-right p-4 font-medium text-gray-700">Eladási ár</th>
                     <th className="text-center p-4 font-medium text-gray-700">ÁFA (%)</th>
@@ -631,12 +664,12 @@ export default function Products() {
                       <td className="p-4 text-sm text-gray-900">{product.azonosito}</td>
                       <td className="p-4 text-sm font-medium text-gray-900">{product.nev}</td>
                       <td className="p-4 text-sm text-gray-600">
-                        {product.itemGroup ? (
-                          <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">
-                            {product.itemGroup.nev}
+                        {product.category?.nev ? (
+                          <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded text-xs">
+                            {product.category.nev}
                           </span>
                         ) : (
-                          <span className="text-gray-400">-</span>
+                          <span className="text-gray-400">—</span>
                         )}
                       </td>
                       <td className="p-4 text-sm text-gray-600">{product.egyseg}</td>
@@ -674,12 +707,14 @@ export default function Products() {
                         >
                           Részletek
                         </button>
-                        <button
-                          onClick={() => handleOpenModal(product)}
-                          className="text-mbit-blue hover:text-blue-600 mr-3"
-                        >
-                          Szerkesztés
-                        </button>
+                        {canEditProduct && (
+                          <button
+                            onClick={() => handleOpenModal(product)}
+                            className="text-mbit-blue hover:text-blue-600 mr-3"
+                          >
+                            Szerkesztés
+                          </button>
+                        )}
                         <button
                           onClick={() => {
                             setSelectedProductId(product.id);
@@ -690,12 +725,14 @@ export default function Products() {
                         >
                           Szállítók
                         </button>
-                        <button
-                          onClick={() => handleDeleteProduct(product.id, product.nev)}
-                          className="text-red-600 hover:text-red-800"
-                        >
-                          Törlés
-                        </button>
+                        {canDeleteProduct && (
+                          <button
+                            onClick={() => handleDeleteProduct(product.id, product.nev)}
+                            className="text-red-600 hover:text-red-800"
+                          >
+                            Archiválás
+                          </button>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -787,6 +824,15 @@ export default function Products() {
                 + Új
               </button>
             </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Kategória</label>
+            <CategoryTreeSelect
+              value={formData.categoryId}
+              onChange={(id) => setFormData({ ...formData, categoryId: id })}
+              categories={categories}
+            />
           </div>
 
           <div>

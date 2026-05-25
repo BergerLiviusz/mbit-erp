@@ -118,6 +118,81 @@ export class CampaignService {
     });
   }
 
+  async close(id: string) {
+    return this.prisma.campaign.update({
+      where: { id },
+      data: { allapot: 'lezart', befejezesDatum: new Date() },
+    });
+  }
+
+  async selectAudience(campaignId: string, filters: CampaignFilters) {
+    const where: any = { aktiv: true };
+    if (filters.iparag) where.iparag = filters.iparag;
+    if (filters.regio) where.regio = filters.regio;
+    if (filters.tipus) where.tipus = filters.tipus;
+
+    const accounts = await this.prisma.account.findMany({
+      where,
+      include: { contacts: { where: { elsodleges: true }, take: 1 } },
+    });
+
+    for (const account of accounts) {
+      await this.prisma.campaignAccount.upsert({
+        where: {
+          campaignId_accountId: { campaignId, accountId: account.id },
+        },
+        create: { campaignId, accountId: account.id },
+        update: {},
+      });
+    }
+
+    return this.findOne(campaignId);
+  }
+
+  async setFeedback(campaignId: string, accountId: string, visszajelzes: string) {
+    return this.prisma.campaignAccount.upsert({
+      where: {
+        campaignId_accountId: { campaignId, accountId },
+      },
+      create: { campaignId, accountId, visszajelzes },
+      update: { visszajelzes },
+    });
+  }
+
+  async getResultsReport(campaignId?: string) {
+    const campaigns = await this.prisma.campaign.findMany({
+      where: campaignId ? { id: campaignId } : { allapot: 'lezart' },
+      include: {
+        accounts: { include: { account: true } },
+        _count: { select: { leads: true, accounts: true } },
+      },
+    });
+
+    return campaigns.map((c) => ({
+      id: c.id,
+      nev: c.nev,
+      allapot: c.allapot,
+      celcsoportSzam: c._count.accounts,
+      leadSzam: c._count.leads,
+      visszajelzesek: c.accounts.filter((a) => a.visszajelzes).length,
+      pozitiv: c.accounts.filter((a) =>
+        (a.visszajelzes || '').toLowerCase().includes('pozitiv'),
+      ).length,
+    }));
+  }
+
+  async exportAudience(campaignId: string, format: 'csv' | 'excel') {
+    const rows = await this.prisma.campaignAccount.findMany({
+      where: { campaignId },
+      include: {
+        account: {
+          include: { contacts: true },
+        },
+      },
+    });
+    return { rows, format, campaignId };
+  }
+
   async exportCampaigns(filters?: CampaignFilters, format: 'csv' | 'excel' = 'csv') {
     const campaigns = await this.prisma.campaign.findMany({
       where: filters ? this.buildWhereClause(filters) : {},

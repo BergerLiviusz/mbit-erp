@@ -9,13 +9,16 @@ import {
   Query,
   BadRequestException,
   Logger,
+  UseGuards,
 } from '@nestjs/common';
+import { RbacGuard } from '../common/rbac/rbac.guard';
 import { OpportunityService, CreateOpportunityDto, UpdateOpportunityDto } from './opportunity.service';
 import { Permissions } from '../common/rbac/rbac.decorator';
 import { Permission } from '../common/rbac/permission.enum';
 import { AuditService } from '../common/audit/audit.service';
 
 @Controller('crm/opportunities')
+@UseGuards(RbacGuard)
 export class OpportunityController {
   private readonly logger = new Logger(OpportunityController.name);
 

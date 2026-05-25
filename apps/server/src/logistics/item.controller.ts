@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards } from '@nestjs/common';
 import { ItemService } from './item.service';
 import { SupplierService } from './supplier.service';
+import { AuditService } from '../common/audit/audit.service';
 import { LinkItemSupplierDto } from './dto/link-item-supplier.dto';
 import { Permissions } from '../common/rbac/rbac.decorator';
 import { Permission } from '../common/rbac/permission.enum';
@@ -12,6 +13,7 @@ export class ItemController {
   constructor(
     private itemService: ItemService,
     private supplierService: SupplierService,
+    private auditService: AuditService,
   ) {}
 
   @Get()
@@ -19,12 +21,14 @@ export class ItemController {
   findAll(
     @Query('skip') skip?: string,
     @Query('take') take?: string,
-    @Query('search') search?: string
+    @Query('search') search?: string,
+    @Query('categoryId') categoryId?: string,
   ) {
     return this.itemService.findAll(
       skip ? parseInt(skip) : 0,
       take ? parseInt(take) : 50,
-      search
+      search,
+      categoryId,
     );
   }
 
@@ -36,20 +40,28 @@ export class ItemController {
 
   @Post()
   @Permissions(Permission.PRODUCT_CREATE)
-  create(@Body() data: any) {
-    return this.itemService.create(data);
+  async create(@Body() data: any) {
+    const created = await this.itemService.create(data);
+    await this.auditService.logCreate('Item', created.id, created);
+    return created;
   }
 
   @Put(':id')
   @Permissions(Permission.PRODUCT_EDIT)
-  update(@Param('id') id: string, @Body() data: any) {
-    return this.itemService.update(id, data);
+  async update(@Param('id') id: string, @Body() data: any) {
+    const old = await this.itemService.findOne(id);
+    const updated = await this.itemService.update(id, data);
+    await this.auditService.logUpdate('Item', id, old, updated);
+    return updated;
   }
 
   @Delete(':id')
   @Permissions(Permission.PRODUCT_DELETE)
-  delete(@Param('id') id: string) {
-    return this.itemService.delete(id);
+  async delete(@Param('id') id: string) {
+    const old = await this.itemService.findOne(id);
+    await this.itemService.delete(id);
+    await this.auditService.logDelete('Item', id, old);
+    return { message: 'Cikk törölve / archiválva' };
   }
 
   @Get(':id/suppliers')

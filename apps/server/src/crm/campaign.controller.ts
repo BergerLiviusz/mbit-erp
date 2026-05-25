@@ -163,6 +163,101 @@ export class CampaignController {
     }
   }
 
+  @Get('report/results')
+  @Permissions(Permission.CAMPAIGN_VIEW)
+  async resultsReport(@Query('campaignId') campaignId?: string) {
+    return this.campaignService.getResultsReport(campaignId);
+  }
+
+  @Post(':id/close')
+  @Permissions(Permission.CAMPAIGN_EDIT)
+  async close(@Param('id') id: string) {
+    const old = await this.campaignService.findOne(id);
+    const campaign = await this.campaignService.close(id);
+    await this.auditService.logUpdate('Campaign', id, old, { allapot: 'lezart' });
+    return campaign;
+  }
+
+  @Post(':id/audience/select')
+  @Permissions(Permission.CAMPAIGN_EDIT)
+  async selectAudience(@Param('id') id: string, @Body() filters: CampaignFilters) {
+    const campaign = await this.campaignService.selectAudience(id, filters);
+    await this.auditService.log({
+      esemeny: 'update',
+      entitas: 'CampaignAudience',
+      entitasId: id,
+      uj: filters,
+    });
+    return campaign;
+  }
+
+  @Post(':id/audience/:accountId/feedback')
+  @Permissions(Permission.CAMPAIGN_EDIT)
+  async feedback(
+    @Param('id') id: string,
+    @Param('accountId') accountId: string,
+    @Body('visszajelzes') visszajelzes: string,
+  ) {
+    return this.campaignService.setFeedback(id, accountId, visszajelzes);
+  }
+
+  @Get(':id/audience/export/:format')
+  @Permissions(Permission.CAMPAIGN_VIEW)
+  async exportAudience(
+    @Param('id') id: string,
+    @Param('format') format: 'csv' | 'excel',
+    @Res() res: Response,
+  ) {
+    const { rows } = await this.campaignService.exportAudience(id, format);
+    await this.auditService.log({
+      esemeny: 'export',
+      entitas: 'CampaignAudience',
+      entitasId: id,
+      uj: { format },
+    });
+
+    if (format === 'csv') {
+      const header =
+        'UgyfelAzonosito,UgyfelNev,Email,Telefon,Visszajelzes,KapcsolatNev,KapcsolatEmail';
+      const lines = rows.map((r) => {
+        const c = r.account.contacts[0];
+        return [
+          r.account.azonosito,
+          r.account.nev,
+          r.account.email || '',
+          r.account.telefon || '',
+          r.visszajelzes || '',
+          c?.nev || '',
+          c?.email || '',
+        ]
+          .map((x) => `"${x}"`)
+          .join(',');
+      });
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res.send('\ufeff' + [header, ...lines].join('\n'));
+      return;
+    }
+
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet('Celkozonseg');
+    sheet.addRow(['Azonosító', 'Név', 'Email', 'Telefon', 'Visszajelzés']);
+    rows.forEach((r) =>
+      sheet.addRow([
+        r.account.azonosito,
+        r.account.nev,
+        r.account.email,
+        r.account.telefon,
+        r.visszajelzes,
+      ]),
+    );
+    const buffer = await workbook.xlsx.writeBuffer();
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    );
+    res.end(buffer);
+  }
+
   @Get(':id')
   @Permissions(Permission.CAMPAIGN_VIEW)
   async findOne(@Param('id') id: string) {

@@ -15,6 +15,10 @@ import { ModelAnalysisController } from './model-analysis.controller';
 import { ModelAnalysisService } from './model-analysis.service';
 import { DataSourceController } from './data-source.controller';
 import { DataSourceService } from './data-source.service';
+import { DashboardController } from './dashboard.controller';
+import { DashboardAggregationService } from './dashboard-aggregation.service';
+import { ReportCatalogController } from './report-catalog.controller';
+import { ReportCatalogService } from './report-catalog.service';
 
 @Module({
   imports: [PrismaModule, AuditModule, RbacModule],
@@ -25,6 +29,8 @@ import { DataSourceService } from './data-source.service';
     ReportExportController,
     ModelAnalysisController,
     DataSourceController,
+    DashboardController,
+    ReportCatalogController,
   ],
   providers: [
     DatabaseConnectionService,
@@ -33,6 +39,8 @@ import { DataSourceService } from './data-source.service';
     ReportExportService,
     ModelAnalysisService,
     DataSourceService,
+    DashboardAggregationService,
+    ReportCatalogService,
   ],
   exports: [
     DatabaseConnectionService,
@@ -41,6 +49,8 @@ import { DataSourceService } from './data-source.service';
     ReportExportService,
     ModelAnalysisService,
     DataSourceService,
+    DashboardAggregationService,
+    ReportCatalogService,
   ],
 })
 export class ControllingModule {}

@@ -8,16 +8,21 @@ import {
   Param,
   Query,
   BadRequestException,
+  UseGuards,
 } from '@nestjs/common';
 import { QuoteService, CreateQuoteDto, UpdateQuoteDto } from './quote.service';
+import { SalesFlowService } from './sales-flow.service';
 import { Permissions } from '../common/rbac/rbac.decorator';
 import { Permission } from '../common/rbac/permission.enum';
+import { RbacGuard } from '../common/rbac/rbac.guard';
 import { AuditService } from '../common/audit/audit.service';
 
 @Controller('crm/quotes')
+@UseGuards(RbacGuard)
 export class QuoteController {
   constructor(
     private quoteService: QuoteService,
+    private salesFlowService: SalesFlowService,
     private auditService: AuditService,
   ) {}
 
@@ -62,6 +67,19 @@ export class QuoteController {
     const quote = await this.quoteService.update(id, updateDto);
     await this.auditService.logUpdate('Quote', id, old, updateDto);
     return quote;
+  }
+
+  @Post(':id/convert-to-order')
+  @Permissions(Permission.ORDER_CREATE)
+  async convertToOrder(@Param('id') id: string) {
+    const order = await this.salesFlowService.convertQuoteToOrder(id);
+    await this.auditService.log({
+      esemeny: 'generate',
+      entitas: 'Order',
+      entitasId: order.id,
+      uj: { quoteId: id },
+    });
+    return order;
   }
 
   @Post(':id/approve')

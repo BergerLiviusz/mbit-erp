@@ -1,6 +1,6 @@
 import { apiFetch } from '../lib/api';
 import { useState, useEffect } from 'react';
-import BugReport from './BugReport';
+import IncidentReports from './IncidentReports';
 
 interface SystemSetting {
   id: number;
@@ -15,8 +15,19 @@ interface HealthStatus {
   status: string;
   timestamp: string;
   version: string;
-  database: { status: string; latency: number };
+  versionLabel?: string;
+  packageId?: string;
+  packageDisplayName?: string;
+  editionLabel?: string;
+  buildSha?: string | null;
+  buildDate?: string | null;
+  environment?: string;
+  runtime?: string;
+  database: { type?: string; status: string; latency: number };
   storage: { status: string; dataDir: string; available: boolean };
+  ocr?: { enabled: boolean };
+  backup?: { lastBackup?: string; totalBackups?: number };
+  organizationName?: string;
 }
 
 import UsersTab from './UsersTab';
@@ -32,6 +43,9 @@ export default function Settings() {
   const [healthError, setHealthError] = useState<string>('');
   const [message, setMessage] = useState('');
   const [orgData, setOrgData] = useState<Record<string, string>>({});
+  const [backupList, setBackupList] = useState<
+    { id: string; fajlNev?: string; meret?: number; allapot: string; inditas: string }[]
+  >([]);
 
 
   useEffect(() => {
@@ -39,7 +53,21 @@ export default function Settings() {
     if (activeTab === 'system') {
       loadHealth();
     }
+    if (activeTab === 'backup') {
+      loadBackupList();
+    }
   }, [activeTab]);
+
+  const loadBackupList = async () => {
+    try {
+      const res = await apiFetch('/system/diagnostics/backup/list');
+      if (res.ok) {
+        setBackupList(await res.json());
+      }
+    } catch {
+      setBackupList([]);
+    }
+  };
 
   useEffect(() => {
     initializeDefaults();
@@ -143,7 +171,8 @@ export default function Settings() {
 
       if (response.ok) {
         const data = await response.json();
-        setMessage(`Mentés elkészült: ${data.filename}`);
+        setMessage(`Mentés elkészült: ${data.fajlUtvonal || data.message || 'OK'}`);
+        await loadBackupList();
       } else {
         setMessage('Hiba a mentés során.');
       }
@@ -280,6 +309,27 @@ export default function Settings() {
           </button>
         </div>
 
+        <div className="mt-6">
+          <h4 className="font-medium mb-2">Mentések listája</h4>
+          <p className="text-xs text-gray-500 mb-2">
+            Fájlok: mbit-data/backups/ (lokális on-premise tároló)
+          </p>
+          {backupList.length === 0 ? (
+            <p className="text-sm text-gray-500">Még nincs mentés.</p>
+          ) : (
+            <ul className="text-sm border rounded divide-y max-h-48 overflow-y-auto">
+              {backupList.map((b) => (
+                <li key={b.id} className="p-2 flex justify-between">
+                  <span>{b.fajlNev || b.id}</span>
+                  <span className="text-gray-500">
+                    {b.allapot} · {new Date(b.inditas).toLocaleString('hu-HU')}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
         <div className="space-y-4 mt-6">
           <h4 className="font-medium">Ütemezett mentések</h4>
           {backupSettings.map(setting => (
@@ -354,9 +404,30 @@ export default function Settings() {
         <h3 className="text-lg font-semibold mb-4">Rendszerinformációk</h3>
         
         <div className="grid grid-cols-2 gap-4">
+          <div className="bg-gray-50 p-4 rounded col-span-2">
+            <div className="text-sm text-gray-600">Ügyfél / szervezet</div>
+            <div className="text-lg font-semibold">{health.organizationName || '—'}</div>
+          </div>
           <div className="bg-gray-50 p-4 rounded">
             <div className="text-sm text-gray-600">Verzió</div>
-            <div className="text-lg font-semibold">{health.version}</div>
+            <div className="text-lg font-semibold">
+              {health.versionLabel || `MBIT ERP v${health.version}`}
+            </div>
+            {health.editionLabel && (
+              <div className="text-sm text-gray-600 mt-1">Csomag: {health.editionLabel}</div>
+            )}
+            {health.packageId && (
+              <div className="text-xs text-gray-500 font-mono">Package ID: {health.packageId}</div>
+            )}
+            {health.environment && (
+              <div className="text-xs text-gray-500">Környezet: {health.environment}</div>
+            )}
+            {health.buildSha && (
+              <div className="text-xs text-gray-500 font-mono">SHA: {health.buildSha.slice(0, 12)}</div>
+            )}
+            {health.buildDate && (
+              <div className="text-xs text-gray-500">Build: {health.buildDate}</div>
+            )}
           </div>
           
           <div className="bg-gray-50 p-4 rounded">
@@ -369,7 +440,7 @@ export default function Settings() {
           </div>
           
           <div className="bg-gray-50 p-4 rounded">
-            <div className="text-sm text-gray-600">Adatbázis</div>
+            <div className="text-sm text-gray-600">Adatbázis ({health.database?.type || 'sqlite'})</div>
             <div className="text-lg font-semibold">
               <span className={health.database?.status === 'healthy' ? 'text-green-600' : 'text-red-600'}>
                 {health.database?.status === 'healthy' ? 'Elérhető' : 'Nem elérhető'}
@@ -377,6 +448,23 @@ export default function Settings() {
               <div className="text-sm text-gray-500">
                 {health.database?.latency}ms késleltetés
               </div>
+            </div>
+          </div>
+          <div className="bg-gray-50 p-4 rounded">
+            <div className="text-sm text-gray-600">OCR</div>
+            <div className="text-lg font-semibold">
+              {health.ocr?.enabled ? 'Bekapcsolva' : 'Kikapcsolva'}
+            </div>
+          </div>
+          <div className="bg-gray-50 p-4 rounded">
+            <div className="text-sm text-gray-600">Utolsó backup</div>
+            <div className="text-sm font-semibold">
+              {health.backup?.lastBackup
+                ? new Date(health.backup.lastBackup).toLocaleString('hu-HU')
+                : 'Nincs adat'}
+            </div>
+            <div className="text-xs text-gray-500">
+              Összes: {health.backup?.totalBackups ?? 0}
             </div>
           </div>
           
@@ -484,7 +572,7 @@ export default function Settings() {
         )}
         {activeTab === 'bug-report' && (
           <div>
-            <BugReport />
+            <IncidentReports />
             <div className="mt-8 pt-6 border-t border-gray-200">
               <h3 className="text-lg font-semibold mb-4">Kijelentkezés</h3>
               <p className="text-sm text-gray-600 mb-4">

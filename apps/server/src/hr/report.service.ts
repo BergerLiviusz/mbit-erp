@@ -1,5 +1,14 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import * as ExcelJS from 'exceljs';
+
+export type HrExportFormat = 'csv' | 'xlsx';
+
+export interface HrExportResult {
+  contentType: string;
+  body: Buffer | string;
+  filename: string;
+}
 
 export interface NavPayrollReportDto {
   ev: number;
@@ -450,6 +459,265 @@ export class HrReportService {
       );
     }
     return lines.join('\n');
+  }
+
+  private formatExport(
+    headers: string[],
+    rows: (string | number | null | undefined)[][],
+    format: HrExportFormat,
+    baseName: string,
+  ): Promise<HrExportResult> {
+    if (format === 'csv') {
+      const escape = (v: unknown) =>
+        `"${(v ?? '').toString().replace(/"/g, '""')}"`;
+      const lines = [
+        headers.map(escape).join(';'),
+        ...rows.map((r) => r.map(escape).join(';')),
+      ];
+      return Promise.resolve({
+        contentType: 'text/csv; charset=utf-8',
+        body: '\ufeff' + lines.join('\n'),
+        filename: `${baseName}.csv`,
+      });
+    }
+
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet('Riport');
+    sheet.addRow(headers);
+    rows.forEach((r) => sheet.addRow(r));
+    return workbook.xlsx.writeBuffer().then((buffer) => ({
+      contentType:
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      body: Buffer.from(buffer),
+      filename: `${baseName}.xlsx`,
+    }));
+  }
+
+  private employeeWhere(filters?: {
+    jobPositionId?: string;
+    osztaly?: string;
+    aktiv?: string;
+    allapot?: string;
+  }) {
+    const where: Record<string, unknown> = {};
+    if (filters?.jobPositionId) where.jobPositionId = filters.jobPositionId;
+    if (filters?.osztaly) where.osztaly = filters.osztaly;
+    if (filters?.aktiv === 'true') where.aktiv = true;
+    if (filters?.aktiv === 'false') where.aktiv = false;
+    if (filters?.allapot) where.allapot = filters.allapot;
+    return where;
+  }
+
+  async exportEmployeeMaster(
+    format: HrExportFormat,
+    filters?: { jobPositionId?: string; osztaly?: string; aktiv?: string },
+  ): Promise<HrExportResult> {
+    const employees = await this.prisma.employee.findMany({
+      where: this.employeeWhere(filters),
+      include: { jobPosition: true },
+      orderBy: [{ vezetekNev: 'asc' }, { keresztNev: 'asc' }],
+    });
+    const headers = [
+      'Azonosító',
+      'Vezetéknév',
+      'Keresztnév',
+      'TAJ',
+      'Adószám',
+      'Email',
+      'Állapot',
+      'Munkakör',
+      'Osztály',
+      'Részleg',
+      'Jogviszony kezdete',
+      'Jogviszony vége',
+    ];
+    const rows = employees.map((e) => [
+      e.azonosito,
+      e.vezetekNev,
+      e.keresztNev,
+      e.tajSzam,
+      e.adoszam,
+      e.email,
+      e.allapot,
+      e.jobPosition?.nev,
+      e.osztaly,
+      e.reszleg,
+      e.munkaviszonyKezdete?.toISOString().split('T')[0],
+      e.munkaviszonyVege?.toISOString().split('T')[0],
+    ]);
+    return this.formatExport(headers, rows, format, 'dolgozoi_torzslista');
+  }
+
+  async exportEmploymentRelations(
+    format: HrExportFormat,
+    filters?: { jobPositionId?: string; osztaly?: string; aktiv?: string },
+  ): Promise<HrExportResult> {
+    const employees = await this.prisma.employee.findMany({
+      where: this.employeeWhere(filters),
+      include: { jobPosition: true },
+      orderBy: { munkaviszonyKezdete: 'desc' },
+    });
+    const headers = [
+      'Azonosító',
+      'Név',
+      'Jogviszony típusa',
+      'Kezdet',
+      'Vége',
+      'Besorolás',
+      'Munkaidő',
+      'Munkakör',
+      'Állapot',
+    ];
+    const rows = employees.map((e) => [
+      e.azonosito,
+      `${e.vezetekNev} ${e.keresztNev}`,
+      e.munkaviszonyTipusa,
+      e.munkaviszonyKezdete?.toISOString().split('T')[0],
+      e.munkaviszonyVege?.toISOString().split('T')[0],
+      e.besorolas,
+      e.munkaido,
+      e.jobPosition?.nev,
+      e.allapot,
+    ]);
+    return this.formatExport(headers, rows, format, 'jogviszony_lista');
+  }
+
+  async exportJobPositions(format: HrExportFormat): Promise<HrExportResult> {
+    const positions = await this.prisma.jobPosition.findMany({
+      include: { _count: { select: { employees: true } } },
+      orderBy: { nev: 'asc' },
+    });
+    const headers = ['Azonosító', 'Név', 'Osztály', 'Részleg', 'Aktív', 'Dolgozók száma'];
+    const rows = positions.map((p) => [
+      p.azonosito,
+      p.nev,
+      p.osztaly,
+      p.reszleg,
+      p.aktiv ? 'Igen' : 'Nem',
+      p._count.employees,
+    ]);
+    return this.formatExport(headers, rows, format, 'munkakor_lista');
+  }
+
+  async exportMedicalExpiry(format: HrExportFormat, withinDays = 90): Promise<HrExportResult> {
+    const limit = new Date();
+    limit.setDate(limit.getDate() + withinDays);
+    const exams = await this.prisma.medicalExamination.findMany({
+      where: {
+        ervenyessegVege: { lte: limit },
+      },
+      include: {
+        employee: { select: { azonosito: true, vezetekNev: true, keresztNev: true } },
+      },
+      orderBy: { ervenyessegVege: 'asc' },
+    });
+    const headers = [
+      'Dolgozó',
+      'Azonosító',
+      'Vizsgálat típusa',
+      'Vizsgálat dátuma',
+      'Érvényesség vége',
+      'Eredmény',
+    ];
+    const rows = exams.map((x) => [
+      `${x.employee.vezetekNev} ${x.employee.keresztNev}`,
+      x.employee.azonosito,
+      x.vizsgalatTipusa,
+      x.vizsgalatDatuma.toISOString().split('T')[0],
+      x.ervenyessegVege?.toISOString().split('T')[0],
+      x.eredmeny,
+    ]);
+    return this.formatExport(headers, rows, format, 'orvosi_vizsgalat_lejarat');
+  }
+
+  async exportContractAmendments(format: HrExportFormat): Promise<HrExportResult> {
+    const amendments = await this.prisma.contractAmendment.findMany({
+      include: {
+        employmentContract: {
+          include: {
+            employee: { select: { azonosito: true, vezetekNev: true, keresztNev: true } },
+          },
+        },
+      },
+      orderBy: { datum: 'desc' },
+    });
+    const headers = [
+      'Dolgozó',
+      'Szerződés szám',
+      'Módosítás dátuma',
+      'Típus',
+      'Leírás',
+      'Új fizetés',
+    ];
+    const rows = amendments.map((a) => [
+      `${a.employmentContract.employee.vezetekNev} ${a.employmentContract.employee.keresztNev}`,
+      a.employmentContract.szerzodesSzam,
+      a.datum.toISOString().split('T')[0],
+      a.tipus,
+      a.leiras,
+      a.ujFizetes,
+    ]);
+    return this.formatExport(headers, rows, format, 'szerzodes_modositasok');
+  }
+
+  /** NAV/KSH HR alapadat analitika – strukturált export, nem hatósági beküldés. */
+  async exportNavKshHrAnalytics(
+    format: HrExportFormat,
+    filters?: { jobPositionId?: string; osztaly?: string; aktiv?: string },
+  ): Promise<HrExportResult> {
+    const employees = await this.prisma.employee.findMany({
+      where: this.employeeWhere(filters),
+      include: {
+        jobPosition: true,
+        employmentContracts: {
+          where: { aktiv: true },
+          orderBy: { kezdetDatum: 'desc' },
+          take: 1,
+        },
+      },
+      orderBy: [{ vezetekNev: 'asc' }, { keresztNev: 'asc' }],
+    });
+    const headers = [
+      'Név',
+      'Adóazonosító',
+      'TAJ',
+      'Jogviszony kezdete',
+      'Jogviszony vége',
+      'Munkakör',
+      'Foglalkoztatás típusa',
+      'Munkaidő',
+      'Besorolás',
+      'Szervezeti egység (osztály)',
+      'Szervezeti egység (részleg)',
+    ];
+    const note =
+      'MEGJEGYZES: Belső HR analitika – nem minősül közvetlen NAV/KSH elektronikus beküldésnek.';
+    const rows = employees.map((e) => {
+      const contract = e.employmentContracts[0];
+      return [
+        `${e.vezetekNev} ${e.keresztNev}`,
+        e.adoszam || '',
+        e.tajSzam || '',
+        e.munkaviszonyKezdete?.toISOString().split('T')[0] || '',
+        e.munkaviszonyVege?.toISOString().split('T')[0] || '',
+        e.jobPosition?.nev || '',
+        e.munkaviszonyTipusa || contract?.tipus || '',
+        e.munkaido || contract?.munkaido || '',
+        e.besorolas || '',
+        e.osztaly || '',
+        e.reszleg || '',
+      ];
+    });
+    const result = await this.formatExport(
+      headers,
+      rows,
+      format,
+      'nav_ksh_hr_alapadat_analitika',
+    );
+    if (format === 'csv' && typeof result.body === 'string') {
+      result.body = `${note}\n${result.body}`;
+    }
+    return result;
   }
 }
 

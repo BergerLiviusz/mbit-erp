@@ -47,6 +47,7 @@ export default function Dashboard() {
   if (isModuleEnabled('logistics')) enabledModuleNames.push('logisztikai');
   if (isModuleEnabled('team')) enabledModuleNames.push('csapatmunka');
   if (isModuleEnabled('controlling')) enabledModuleNames.push('kontrolling');
+  if (isModuleEnabled('hr')) enabledModuleNames.push('HR');
 
   // Bevezető szöveg összeállítása
   let welcomeText = 'Ez a moduláris vállalati alkalmazás';
@@ -98,6 +99,13 @@ export default function Dashboard() {
           <div className="bg-white p-6 rounded-lg shadow">
             <h3 className="text-gray-500 text-sm uppercase">Dokumentumok</h3>
             <p className="text-4xl font-bold text-purple-900">{stats?.documents || 0}</p>
+          </div>
+        )}
+        {isModuleEnabled('hr') && (
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h3 className="text-gray-500 text-sm uppercase">HR</h3>
+            <p className="text-4xl font-bold text-teal-900">—</p>
+            <p className="text-xs text-gray-500 mt-1">Dolgozók a HR modulban</p>
           </div>
         )}
         {isModuleEnabled('logistics') && (
@@ -166,6 +174,17 @@ export default function Dashboard() {
                 <li>• Feladatkezelés</li>
                 <li>• Email értesítések</li>
                 <li>• Kommentek és tevékenységek</li>
+              </ul>
+            </div>
+          )}
+          {isModuleEnabled('hr') && (
+            <div className="border-l-4 border-teal-600 pl-4">
+              <h3 className="font-bold mb-2">HR Modul</h3>
+              <ul className="text-sm text-gray-600 space-y-1">
+                <li>• Dolgozói törzsadatok</li>
+                <li>• Munkaszerződések</li>
+                <li>• HR riportok és export</li>
+                <li>• Toborzás és teljesítmény</li>
               </ul>
             </div>
           )}

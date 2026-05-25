@@ -29,7 +29,7 @@ export class KpiController {
   ) {}
 
   @Get()
-  @Permissions(Permission.REPORT_VIEW)
+  @Permissions(Permission.CONTROLLING_VIEW, Permission.REPORT_VIEW)
   findAll(
     @Query('skip') skip?: string,
     @Query('take') take?: string,
@@ -59,7 +59,7 @@ export class KpiController {
   }
 
   @Post()
-  @Permissions(Permission.REPORT_CREATE)
+  @Permissions(Permission.KPI_MANAGE, Permission.REPORT_CREATE)
   async create(@Body() dto: CreateKPIDto, @Request() req: any) {
     const kpi = await this.kpiService.create(dto);
     

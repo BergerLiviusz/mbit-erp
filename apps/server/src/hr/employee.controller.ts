@@ -94,6 +94,110 @@ export class EmployeeController {
     return this.employeeService.deleteAward(recId);
   }
 
+  @Post(':id/educations')
+  @Permissions(Permission.HR_CREATE)
+  async addEducation(@Param('id') id: string, @Body() body: any, @Request() req: any) {
+    const row = await this.employeeService.createEducation(id, body);
+    await this.auditService.logCreate('Education', row.id, row, req.user?.id);
+    return row;
+  }
+
+  @Put('educations/:recId')
+  @Permissions(Permission.HR_EDIT)
+  async updateEducation(@Param('recId') recId: string, @Body() body: any, @Request() req: any) {
+    const row = await this.employeeService.updateEducation(recId, body);
+    await this.auditService.logUpdate('Education', recId, {}, row, req.user?.id);
+    return row;
+  }
+
+  @Delete('educations/:recId')
+  @Permissions(Permission.HR_DELETE)
+  async deleteEducation(@Param('recId') recId: string, @Request() req: any) {
+    await this.employeeService.deleteEducation(recId);
+    await this.auditService.logDelete('Education', recId, {}, req.user?.id);
+    return { message: 'Törölve' };
+  }
+
+  @Post(':id/language-skills')
+  @Permissions(Permission.HR_CREATE)
+  async addLanguage(@Param('id') id: string, @Body() body: any, @Request() req: any) {
+    const row = await this.employeeService.createLanguageSkill(id, body);
+    await this.auditService.logCreate('LanguageSkill', row.id, row, req.user?.id);
+    return row;
+  }
+
+  @Put('language-skills/:recId')
+  @Permissions(Permission.HR_EDIT)
+  updateLanguage(@Param('recId') recId: string, @Body() body: any) {
+    return this.employeeService.updateLanguageSkill(recId, body);
+  }
+
+  @Delete('language-skills/:recId')
+  @Permissions(Permission.HR_DELETE)
+  deleteLanguage(@Param('recId') recId: string) {
+    return this.employeeService.deleteLanguageSkill(recId);
+  }
+
+  @Post(':id/medical-examinations')
+  @Permissions(Permission.HR_CREATE)
+  async addMedical(@Param('id') id: string, @Body() body: any, @Request() req: any) {
+    const row = await this.employeeService.createMedicalExamination(id, body);
+    await this.auditService.logCreate('MedicalExamination', row.id, row, req.user?.id);
+    return row;
+  }
+
+  @Put('medical-examinations/:recId')
+  @Permissions(Permission.HR_EDIT)
+  updateMedical(@Param('recId') recId: string, @Body() body: any) {
+    return this.employeeService.updateMedicalExamination(recId, body);
+  }
+
+  @Delete('medical-examinations/:recId')
+  @Permissions(Permission.HR_DELETE)
+  deleteMedical(@Param('recId') recId: string) {
+    return this.employeeService.deleteMedicalExamination(recId);
+  }
+
+  @Post(':id/disciplinary-actions')
+  @Permissions(Permission.HR_CREATE)
+  async addDisciplinary(@Param('id') id: string, @Body() body: any, @Request() req: any) {
+    const row = await this.employeeService.createDisciplinaryAction(id, body);
+    await this.auditService.logCreate('DisciplinaryAction', row.id, row, req.user?.id);
+    return row;
+  }
+
+  @Put('disciplinary-actions/:recId')
+  @Permissions(Permission.HR_EDIT)
+  updateDisciplinary(@Param('recId') recId: string, @Body() body: any) {
+    return this.employeeService.updateDisciplinaryAction(recId, body);
+  }
+
+  @Delete('disciplinary-actions/:recId')
+  @Permissions(Permission.HR_DELETE)
+  deleteDisciplinary(@Param('recId') recId: string) {
+    return this.employeeService.deleteDisciplinaryAction(recId);
+  }
+
+  @Post(':id/study-contracts')
+  @Permissions(Permission.HR_CREATE)
+  async addStudyContract(@Param('id') id: string, @Body() body: any, @Request() req: any) {
+    const row = await this.employeeService.createStudyContract(id, body);
+    await this.auditService.logCreate('StudyContract', row.id, row, req.user?.id);
+    return row;
+  }
+
+  @Put('study-contracts/:recId')
+  @Permissions(Permission.HR_EDIT)
+  updateStudyContract(@Param('recId') recId: string, @Body() body: any) {
+    return this.employeeService.updateStudyContract(recId, body);
+  }
+
+  @Delete('study-contracts/:recId')
+  @Permissions(Permission.HR_DELETE)
+  deleteStudyContract(@Param('recId') recId: string) {
+    return this.employeeService.deleteStudyContract(recId);
+  }
+
   @Post()
   @Permissions(Permission.HR_CREATE)
   async create(@Body() dto: CreateEmployeeDto, @Request() req: any) {

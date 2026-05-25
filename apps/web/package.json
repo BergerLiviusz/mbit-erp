@@ -1,6 +1,6 @@
 {
   "name": "@mbit-erp/web",
-  "version": "1.0.0",
+  "version": "1.0.1a",
   "private": true,
   "type": "module",
   "scripts": {
@@ -12,6 +12,7 @@
     "test": "vitest"
   },
   "dependencies": {
+    "@mbit-erp/config": "*",
     "@mbit-erp/types": "*",
     "@mbit-erp/ui": "*",
     "react": "^18.2.0",

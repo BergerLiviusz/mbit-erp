@@ -12,6 +12,8 @@ on:
       - package-4
       - package-5
       - package-hr
+      - release/ginop-crm-dms-hr
+      - release/full
     tags:
       - 'v*'
   pull_request:
@@ -32,6 +34,7 @@ on:
           - package-4
           - package-5
           - package-hr
+          - ginop-crm-dms-hr
         default: 'full'
 
 permissions:
@@ -57,6 +60,12 @@ jobs:
         with:
           node-version: '18.18.2'
           cache: 'npm'
+
+      - name: Build shared config package
+        shell: pwsh
+        run: |
+          Write-Host "=== Building @mbit-erp/config ==="
+          npm run build --workspace=@mbit-erp/config
 
       - name: Install dependencies
         shell: pwsh
@@ -107,8 +116,14 @@ jobs:
             $package = "package-5"
             Write-Host "Detected package-5 branch"
           } elseif ("${{ github.ref }}" -eq "refs/heads/package-hr") {
-            $package = "package-hr"
-            Write-Host "Detected package-hr branch"
+            $package = "hr"
+            Write-Host "Detected package-hr branch (mapped to hr)"
+          } elseif ("${{ github.ref }}" -eq "refs/heads/release/ginop-crm-dms-hr") {
+            $package = "ginop-crm-dms-hr"
+            Write-Host "Detected release/ginop-crm-dms-hr branch"
+          } elseif ("${{ github.ref }}" -eq "refs/heads/release/full") {
+            $package = "full"
+            Write-Host "Detected release/full branch"
           } elseif ("${{ github.ref }}" -eq "refs/heads/main" -or "${{ github.ref }}" -eq "refs/heads/master") {
             $package = "full"
             Write-Host "Detected main/master branch, using full package"
@@ -154,10 +169,21 @@ jobs:
             Write-Host "Note: Prisma will use db push for schema synchronization in Electron environment"
           }
 
-      - name: Build server
+      - name: Run server unit tests (CRM)
         shell: pwsh
         run: |
-          Write-Host "=== Building server ==="
+          Write-Host "=== Running CRM unit tests ==="
+          cd apps/server
+          npm test 2>&1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Build server
+        shell: pwsh
+        env:
+          ERP_PACKAGE: ${{ steps.package.outputs.package }}
+          APP_VERSION: "1.0.1a"
+        run: |
+          Write-Host "=== Building server (package: $env:ERP_PACKAGE) ==="
           cd apps/server
           npm run build
           
@@ -257,6 +283,10 @@ jobs:
         shell: pwsh
         env:
           VITE_ACTIVE_PACKAGE: ${{ steps.package.outputs.package }}
+          ERP_PACKAGE: ${{ steps.package.outputs.package }}
+          VITE_APP_VERSION: "1.0.1a"
+          VITE_BUILD_SHA: ${{ github.sha }}
+          VITE_BUILD_DATE: ${{ github.event.head_commit.timestamp }}
         run: |
           Write-Host "=== Building frontend for package: ${{ steps.package.outputs.package }} ==="
           Write-Host "VITE_ACTIVE_PACKAGE environment variable: $env:VITE_ACTIVE_PACKAGE"
@@ -344,10 +374,26 @@ jobs:
             Write-Host "✅ icon.png found: $size KB"
           }
 
+      - name: Write desktop build meta
+        shell: pwsh
+        env:
+          ERP_PACKAGE: ${{ steps.package.outputs.package }}
+          VITE_ACTIVE_PACKAGE: ${{ steps.package.outputs.package }}
+          APP_VERSION: "1.0.1a"
+          BUILD_SHA: ${{ github.sha }}
+          BUILD_DATE: ${{ github.event.head_commit.timestamp }}
+        run: |
+          npm run build --workspace=@mbit-erp/config
+          node apps/desktop/scripts/write-build-meta.mjs
+
       - name: Package desktop app
         shell: pwsh
         env:
           VITE_ACTIVE_PACKAGE: ${{ steps.package.outputs.package }}
+          ERP_PACKAGE: ${{ steps.package.outputs.package }}
+          APP_VERSION: "1.0.1a"
+          BUILD_SHA: ${{ github.sha }}
+          BUILD_DATE: ${{ github.event.head_commit.timestamp }}
         run: |
           Write-Host "=== Packaging desktop app ==="
           cd apps/desktop
@@ -559,9 +605,10 @@ jobs:
           
           $packageJson = Get-Content "apps/desktop/package.json" -Raw | ConvertFrom-Json
           $version = $packageJson.version
+          $pkg = "${{ steps.package.outputs.package }}"
           
           $unpackedDir = "apps/desktop/release/win-unpacked"
-          $zipPath = "apps/desktop/release/Mbit-ERP-Portable-$version.zip"
+          $zipPath = "apps/desktop/release/mbit-erp-v$version-$pkg-windows.zip"
           
           if (-not (Test-Path $unpackedDir)) {
             Write-Host "❌ ERROR: win-unpacked directory not found!"
@@ -626,11 +673,21 @@ jobs:
             Write-Host "✅ Installer size looks correct (>= 200 MB, likely includes bundled resources)"
           }
 
+      - name: Resolve version for artifact name
+        id: appver
+        shell: pwsh
+        run: |
+          $pkg = Get-Content apps/desktop/package.json | ConvertFrom-Json
+          $ver = $pkg.version
+          $sha = "${{ github.sha }}".Substring(0, 7)
+          echo "version=$ver" >> $env:GITHUB_OUTPUT
+          echo "short_sha=$sha" >> $env:GITHUB_OUTPUT
+
       - name: Upload artifacts (Windows)
         if: matrix.os == 'windows-latest'
         uses: actions/upload-artifact@v4
         with:
-          name: mbit-erp-${{ steps.package.outputs.package }}-windows-installer
+          name: mbit-erp-v${{ steps.appver.outputs.version }}-${{ steps.appver.outputs.short_sha }}-${{ steps.package.outputs.package }}-windows
           path: |
             apps/desktop/release/*Setup*.exe
             apps/desktop/release/*Portable*.zip

@@ -35,6 +35,8 @@ export class AuthService {
       roles: user.roles.map(ur => ur.role.nev),
     };
 
+    const permissions = await this.getUserPermissionCodes(user.id);
+
     return {
       access_token: this.jwtService.sign(payload),
       user: {
@@ -42,7 +44,46 @@ export class AuthService {
         email: user.email,
         nev: user.nev,
         roles: user.roles.map(ur => ur.role.nev),
+        permissions,
       },
+    };
+  }
+
+  async getUserPermissionCodes(userId: string): Promise<string[]> {
+    const userRoles = await this.prisma.userRole.findMany({
+      where: { userId },
+      include: {
+        role: {
+          include: {
+            rolePermissions: { include: { permission: true } },
+          },
+        },
+      },
+    });
+    const codes = new Set<string>();
+    for (const ur of userRoles) {
+      for (const rp of ur.role.rolePermissions) {
+        codes.add(rp.permission.kod);
+      }
+    }
+    return [...codes];
+  }
+
+  async getMe(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { roles: { include: { role: true } } },
+    });
+    if (!user) {
+      throw new UnauthorizedException('Felhasználó nem található');
+    }
+    const permissions = await this.getUserPermissionCodes(userId);
+    return {
+      id: user.id,
+      email: user.email,
+      nev: user.nev,
+      roles: user.roles.map((ur) => ur.role.nev),
+      permissions,
     };
   }
 

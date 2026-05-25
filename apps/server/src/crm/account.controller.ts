@@ -1,5 +1,6 @@
 import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards, BadRequestException } from '@nestjs/common';
 import { AccountService } from './account.service';
+import { AccountImportService } from './account-import.service';
 import { Permissions } from '../common/rbac/rbac.decorator';
 import { Permission } from '../common/rbac/permission.enum';
 import { RbacGuard } from '../common/rbac/rbac.guard';
@@ -10,6 +11,7 @@ import { AuditService } from '../common/audit/audit.service';
 export class AccountController {
   constructor(
     private accountService: AccountService,
+    private accountImportService: AccountImportService,
     private auditService: AuditService,
   ) {}
 
@@ -27,6 +29,32 @@ export class AccountController {
     }
     
     return await this.accountService.findAll(skip, take);
+  }
+
+  @Post('import/preview')
+  @Permissions(Permission.CUSTOMER_CREATE)
+  async importPreview(@Body('content') content: string) {
+    const rows = this.accountImportService.parseCsv(content);
+    return this.accountImportService.preview(rows);
+  }
+
+  @Post('import')
+  @Permissions(Permission.CUSTOMER_CREATE)
+  async importAccounts(
+    @Body() body: { content?: string; rows?: any[]; updateDuplicates?: boolean },
+  ) {
+    const rows = body.rows?.length
+      ? body.rows
+      : this.accountImportService.parseCsv(body.content || '');
+    const result = await this.accountImportService.importRows(rows, {
+      updateDuplicates: body.updateDuplicates ?? true,
+    });
+    await this.auditService.log({
+      esemeny: 'import',
+      entitas: 'Account',
+      uj: result,
+    });
+    return result;
   }
 
   @Get(':id')

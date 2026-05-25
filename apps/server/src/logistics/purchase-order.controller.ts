@@ -50,9 +50,13 @@ export class PurchaseOrderController {
   }
 
   @Post()
-  @Permissions(Permission.PURCHASE_ORDER_CREATE)
+  @Permissions(Permission.PURCHASE_ORDER_CREATE, Permission.PURCHASE_MANAGE)
   async create(@Body() dto: CreatePurchaseOrderDto) {
-    const purchaseOrder = await this.purchaseOrderService.create(dto);
+    const payload = {
+      ...dto,
+      allapot: dto.allapot || 'draft',
+    };
+    const purchaseOrder = await this.purchaseOrderService.create(payload);
     await this.auditService.logCreate(
       'purchase_order',
       purchaseOrder.id,
@@ -70,8 +74,35 @@ export class PurchaseOrderController {
     return updated;
   }
 
+  @Post(':id/approve')
+  @Permissions(Permission.PURCHASE_ORDER_APPROVE, Permission.PURCHASE_MANAGE)
+  async approve(@Param('id') id: string) {
+    const old = await this.purchaseOrderService.findOne(id);
+    const updated = await this.purchaseOrderService.transitionStatus(id, 'approved');
+    await this.auditService.logUpdate('purchase_order', id, old, updated);
+    return updated;
+  }
+
+  @Post(':id/order')
+  @Permissions(Permission.PURCHASE_ORDER_EDIT, Permission.PURCHASE_MANAGE)
+  async markOrdered(@Param('id') id: string) {
+    const old = await this.purchaseOrderService.findOne(id);
+    const updated = await this.purchaseOrderService.transitionStatus(id, 'ordered');
+    await this.auditService.logUpdate('purchase_order', id, old, updated);
+    return updated;
+  }
+
+  @Post(':id/close')
+  @Permissions(Permission.PURCHASE_ORDER_EDIT, Permission.PURCHASE_MANAGE)
+  async close(@Param('id') id: string) {
+    const old = await this.purchaseOrderService.findOne(id);
+    const updated = await this.purchaseOrderService.transitionStatus(id, 'closed');
+    await this.auditService.logUpdate('purchase_order', id, old, updated);
+    return updated;
+  }
+
   @Post(':id/receive')
-  @Permissions(Permission.PURCHASE_ORDER_RECEIVE)
+  @Permissions(Permission.PURCHASE_ORDER_RECEIVE, Permission.PURCHASE_MANAGE)
   async receive(
     @Param('id') id: string,
     @Body() body: { warehouseId: string; receivedItems: Array<{ itemId: string; mennyiseg: number; sarzsGyartasiSzam?: string; beszerzesiAr?: number }> },

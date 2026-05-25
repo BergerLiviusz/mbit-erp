@@ -1,10 +1,28 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { apiFetch } from '../../lib/api';
+import { usePermissions } from '../../hooks/usePermissions';
 
 export default function HrReports() {
+  const perms = usePermissions();
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+  const [jobPositions, setJobPositions] = useState<{ id: string; nev: string }[]>([]);
+  const [ginopFilters, setGinopFilters] = useState({
+    jobPositionId: '',
+    osztaly: '',
+    aktiv: '',
+    withinDays: '90',
+  });
+
+  useEffect(() => {
+    apiFetch('/hr/job-positions?take=200').then(async (r) => {
+      if (r.ok) {
+        const d = await r.json();
+        setJobPositions(d.items || []);
+      }
+    });
+  }, []);
 
   const [navPayrollForm, setNavPayrollForm] = useState({
     ev: new Date().getFullYear(),
@@ -230,11 +248,59 @@ export default function HrReports() {
       'Távollét elemző CSV export kész.',
     );
 
+  const handleGinopExport = async (reportKey: string, format: 'csv' | 'xlsx') => {
+    if (!perms.canExportHr) {
+      setError('Nincs export jogosultság');
+      return;
+    }
+    setLoading(true);
+    setError('');
+    setSuccess('');
+    try {
+      const q = new URLSearchParams({ format });
+      if (ginopFilters.jobPositionId) q.append('jobPositionId', ginopFilters.jobPositionId);
+      if (ginopFilters.osztaly) q.append('osztaly', ginopFilters.osztaly);
+      if (ginopFilters.aktiv) q.append('aktiv', ginopFilters.aktiv);
+      if (reportKey === 'medical-expiry' && ginopFilters.withinDays) {
+        q.append('withinDays', ginopFilters.withinDays);
+      }
+      const response = await apiFetch(`/hr/reports/ginop/${reportKey}?${q.toString()}`, {
+        method: 'POST',
+      });
+      if (!response.ok) throw new Error('Export sikertelen');
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${reportKey}.${format === 'xlsx' ? 'xlsx' : 'csv'}`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      setSuccess('GINOP HR riport exportálva.');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Hiba az exportálás során');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const ginopReports: { key: string; label: string }[] = [
+    { key: 'employee-master', label: 'Dolgozói törzslista' },
+    { key: 'employment-relations', label: 'Jogviszony lista' },
+    { key: 'job-positions', label: 'Munkakör lista' },
+    { key: 'medical-expiry', label: 'Orvosi vizsgálat lejárat' },
+    { key: 'contract-amendments', label: 'Szerződésmódosítások' },
+    { key: 'nav-ksh-analytics', label: 'NAV/KSH HR alapadat analitika' },
+  ];
+
   return (
     <div>
       <div className="mb-6">
         <h1 className="text-3xl font-bold">HR Riportok</h1>
-        <p className="text-gray-600 mt-2">NAV és KSH törvényi kötelezettségek teljesítése</p>
+        <p className="text-gray-600 mt-2">
+          HR menedzsment analitikák (CSV/XLSX). Nem minősül közvetlen NAV/KSH elektronikus beküldésnek.
+        </p>
       </div>
 
       {error && (
@@ -248,6 +314,74 @@ export default function HrReports() {
           {success}
         </div>
       )}
+
+      <div className="bg-white rounded-lg shadow p-6 mb-6">
+        <h2 className="text-xl font-bold mb-2">GINOP HR alapriportok</h2>
+        <p className="text-sm text-gray-600 mb-4">
+          Üres adatbázis mellett is lefut; a fájl csak fejlécet tartalmazhat. Export auditálva.
+        </p>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4 text-sm">
+          <select
+            className="border rounded px-2 py-1"
+            value={ginopFilters.jobPositionId}
+            onChange={(e) => setGinopFilters({ ...ginopFilters, jobPositionId: e.target.value })}
+          >
+            <option value="">Minden munkakör</option>
+            {jobPositions.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.nev}
+              </option>
+            ))}
+          </select>
+          <input
+            className="border rounded px-2 py-1"
+            placeholder="Osztály"
+            value={ginopFilters.osztaly}
+            onChange={(e) => setGinopFilters({ ...ginopFilters, osztaly: e.target.value })}
+          />
+          <select
+            className="border rounded px-2 py-1"
+            value={ginopFilters.aktiv}
+            onChange={(e) => setGinopFilters({ ...ginopFilters, aktiv: e.target.value })}
+          >
+            <option value="">Minden státusz</option>
+            <option value="true">Aktív</option>
+            <option value="false">Inaktív</option>
+          </select>
+          <input
+            type="number"
+            className="border rounded px-2 py-1"
+            title="Orvosi lejárat napok"
+            value={ginopFilters.withinDays}
+            onChange={(e) => setGinopFilters({ ...ginopFilters, withinDays: e.target.value })}
+          />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          {ginopReports.map((r) => (
+            <div key={r.key} className="border rounded p-3">
+              <div className="font-medium text-sm mb-2">{r.label}</div>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  disabled={loading}
+                  onClick={() => handleGinopExport(r.key, 'csv')}
+                  className="flex-1 px-2 py-1 text-sm border rounded hover:bg-gray-50 disabled:opacity-50"
+                >
+                  CSV
+                </button>
+                <button
+                  type="button"
+                  disabled={loading}
+                  onClick={() => handleGinopExport(r.key, 'xlsx')}
+                  className="flex-1 px-2 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+                >
+                  XLSX
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* NAV Bérkifizetési jegyzék */}

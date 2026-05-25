@@ -27,6 +27,13 @@ export interface UpdateJobPositionDto {
 export class JobPositionService {
   constructor(private prisma: PrismaService) {}
 
+  private normalizeOptionalId(value: string | null | undefined): string | null | undefined {
+    if (value === undefined) return undefined;
+    if (value === null) return null;
+    const trimmed = value.trim();
+    return trimmed.length === 0 ? null : trimmed;
+  }
+
   async findAll(skip = 0, take = 50, filters?: {
     osztaly?: string;
     reszleg?: string;
@@ -69,6 +76,27 @@ export class JobPositionService {
     ]);
 
     return { total, items };
+  }
+
+  async findEmployees(id: string) {
+    await this.findOne(id);
+    return this.prisma.employee.findMany({
+      where: { jobPositionId: id },
+      select: {
+        id: true,
+        azonosito: true,
+        vezetekNev: true,
+        keresztNev: true,
+        email: true,
+        telefon: true,
+        allapot: true,
+        aktiv: true,
+        munkaviszonyKezdete: true,
+        osztaly: true,
+        reszleg: true,
+      },
+      orderBy: [{ vezetekNev: 'asc' }, { keresztNev: 'asc' }],
+    });
   }
 
   async findOne(id: string) {
@@ -117,17 +145,30 @@ export class JobPositionService {
       throw new BadRequestException('Ez az azonosító már használatban van');
     }
 
+    const data: CreateJobPositionDto = {
+      ...dto,
+      jobDescriptionDocumentId: this.normalizeOptionalId(dto.jobDescriptionDocumentId),
+    };
+
     return this.prisma.jobPosition.create({
-      data: dto,
+      data,
     });
   }
 
   async update(id: string, dto: UpdateJobPositionDto) {
     const position = await this.findOne(id);
 
+    const data: UpdateJobPositionDto = {
+      ...dto,
+      jobDescriptionDocumentId:
+        dto.jobDescriptionDocumentId !== undefined
+          ? this.normalizeOptionalId(dto.jobDescriptionDocumentId)
+          : undefined,
+    };
+
     return this.prisma.jobPosition.update({
       where: { id },
-      data: dto,
+      data,
     });
   }
 

@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Body,
+  Param,
   Query,
   Res,
   UseGuards,
@@ -171,6 +172,60 @@ export class HrReportController {
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', `attachment; filename="munkaido_berszamfejto_${body.ev}_${body.honap}.csv"`);
     res.send('\ufeff' + content);
+  }
+
+  @Post('ginop/:reportKey')
+  @Permissions(Permission.HR_EXPORT, Permission.HR_REPORT)
+  async exportGinopReport(
+    @Param('reportKey') reportKey: string,
+    @Res() res: Response,
+    @Request() req: any,
+    @Query('format') format: 'csv' | 'xlsx' = 'csv',
+    @Query('withinDays') withinDays?: string,
+    @Query('jobPositionId') jobPositionId?: string,
+    @Query('osztaly') osztaly?: string,
+    @Query('aktiv') aktiv?: string,
+  ) {
+    const fmt = format === 'xlsx' ? 'xlsx' : 'csv';
+    const filters = { jobPositionId, osztaly, aktiv };
+    let result;
+    switch (reportKey) {
+      case 'employee-master':
+        result = await this.hrReportService.exportEmployeeMaster(fmt, filters);
+        break;
+      case 'employment-relations':
+        result = await this.hrReportService.exportEmploymentRelations(fmt, filters);
+        break;
+      case 'job-positions':
+        result = await this.hrReportService.exportJobPositions(fmt);
+        break;
+      case 'medical-expiry':
+        result = await this.hrReportService.exportMedicalExpiry(
+          fmt,
+          withinDays ? parseInt(withinDays, 10) : 90,
+        );
+        break;
+      case 'contract-amendments':
+        result = await this.hrReportService.exportContractAmendments(fmt);
+        break;
+      case 'nav-ksh-analytics':
+        result = await this.hrReportService.exportNavKshHrAnalytics(fmt, filters);
+        break;
+      default:
+        res.status(400).json({ message: `Ismeretlen riport: ${reportKey}` });
+        return;
+    }
+
+    await this.auditService.logCreate(
+      'HrExportLog',
+      reportKey,
+      { reportKey, format: fmt },
+      req.user?.id,
+    );
+
+    res.setHeader('Content-Type', result.contentType);
+    res.setHeader('Content-Disposition', `attachment; filename="${result.filename}"`);
+    res.send(result.body);
   }
 
   @Post('export/leave-analytics')

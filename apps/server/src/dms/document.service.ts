@@ -19,7 +19,10 @@ export interface CreateDocumentDto {
   ervenyessegKezdet?: string;
   ervenyessegVeg?: string;
   lejarat?: string;
+  felelos?: string;
+  typeId?: string;
   jelenlegiHely?: string;
+  iktatoSzam?: string;
 }
 
 export interface UpdateDocumentDto {
@@ -35,6 +38,8 @@ export interface UpdateDocumentDto {
   ervenyessegKezdet?: string;
   ervenyessegVeg?: string;
   lejarat?: string;
+  felelos?: string;
+  typeId?: string;
   jelenlegiHely?: string;
 }
 
@@ -47,6 +52,9 @@ export interface DocumentFilters {
   tagId?: string; // Címszó alapú szűrés
   opportunityId?: string;
   quoteId?: string;
+  felelos?: string;
+  ocrAllapot?: string;
+  typeId?: string;
 }
 
 @Injectable()
@@ -95,6 +103,18 @@ export class DocumentService {
       where.quoteId = filters.quoteId;
     }
 
+    if (filters?.felelos) {
+      where.felelos = filters.felelos;
+    }
+
+    if (filters?.typeId) {
+      where.typeId = filters.typeId;
+    }
+
+    if (filters?.ocrAllapot) {
+      where.ocrJob = { allapot: filters.ocrAllapot };
+    }
+
     // Permission-based filtering: non-admin users only see documents they created or have access to
     if (!isAdmin && userId) {
       where.OR = [
@@ -114,6 +134,8 @@ export class DocumentService {
           { nev: { contains: searchTerm } },
           { iktatoSzam: { contains: searchTerm } },
           { fajlNev: { contains: searchTerm } },
+          { megjegyzesek: { contains: searchTerm } },
+          { felelos: { contains: searchTerm } },
           // Only search in tartalom if it's not null
           { 
             AND: [
@@ -300,13 +322,33 @@ export class DocumentService {
     return document;
   }
 
-  async create(dto: CreateDocumentDto, userId?: string) {
-    const iktatoSzam = await this.generateIktatoSzam();
+  async create(
+    dto: CreateDocumentDto,
+    userId?: string,
+    options?: { manualIktato?: boolean; isAdmin?: boolean },
+  ) {
+    let iktatoSzam: string;
+    if (dto.iktatoSzam && options?.manualIktato && options?.isAdmin) {
+      const exists = await this.prisma.document.findUnique({
+        where: { iktatoSzam: dto.iktatoSzam },
+      });
+      if (exists) {
+        throw new Error('Az iktatószám már foglalt');
+      }
+      iktatoSzam = dto.iktatoSzam;
+    } else {
+      if (dto.iktatoSzam && !options?.isAdmin) {
+        throw new Error('Manuális iktatószám csak admin jogosultsággal adható meg');
+      }
+      iktatoSzam = await this.generateIktatoSzam(dto.tipus);
+    }
 
     const document = await this.prisma.document.create({
       data: {
         nev: dto.nev,
         tipus: dto.tipus,
+        typeId: dto.typeId,
+        felelos: dto.felelos,
         irany: dto.irany || null,
         categoryId: dto.categoryId,
         accountId: dto.accountId,
@@ -367,7 +409,7 @@ export class DocumentService {
     });
   }
 
-  async generateIktatoSzam(): Promise<string> {
+  async generateIktatoSzam(tipus?: string): Promise<string> {
     const pattern = await this.systemSettings.get('numbering.document.pattern');
     const defaultPattern = 'MBIT/{YYYY}/{####}';
     const template = pattern || defaultPattern;
@@ -390,8 +432,11 @@ export class DocumentService {
 
     const sequenceNumber = countThisYear + 1;
 
+    const tipusCode = (tipus || 'DOC').toUpperCase().slice(0, 8);
+
     let iktatoSzam = template
       .replace('{ORG}', orgPrefix)
+      .replace('{TIPUS}', tipusCode)
       .replace('{YYYY}', year.toString())
       .replace('{YY}', year.toString().slice(-2))
       .replace('{####}', sequenceNumber.toString().padStart(4, '0'))

@@ -29,10 +29,43 @@ export class TicketController {
     return await this.ticketService.findAll(skip, take);
   }
 
+  @Get('export/report')
+  @Permissions(Permission.TICKET_VIEW)
+  async exportReport() {
+    return this.ticketService.exportReport();
+  }
+
   @Get(':id')
   @Permissions(Permission.TICKET_VIEW)
   async findOne(@Param('id') id: string) {
     return await this.ticketService.findOne(id);
+  }
+
+  @Post(':id/assign')
+  @Permissions(Permission.TICKET_ASSIGN)
+  async assign(@Param('id') id: string, @Body('assignedToId') assignedToId: string) {
+    const old = await this.ticketService.findOne(id);
+    const ticket = await this.ticketService.assign(id, assignedToId);
+    await this.auditService.logUpdate('Ticket', id, old, { assignedToId });
+    return ticket;
+  }
+
+  @Post(':id/escalate')
+  @Permissions(Permission.TICKET_EDIT)
+  async escalate(@Param('id') id: string) {
+    const old = await this.ticketService.findOne(id);
+    const ticket = await this.ticketService.escalate(id);
+    await this.auditService.logUpdate('Ticket', id, old, { eszkalalva: true, allapot: 'eszkalalt' });
+    return ticket;
+  }
+
+  @Post(':id/status')
+  @Permissions(Permission.TICKET_EDIT)
+  async changeStatus(@Param('id') id: string, @Body('allapot') allapot: string) {
+    const old = await this.ticketService.findOne(id);
+    const ticket = await this.ticketService.changeStatus(id, allapot);
+    await this.auditService.logUpdate('Ticket', id, old, { allapot });
+    return ticket;
   }
 
   @Post()

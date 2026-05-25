@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from '../lib/axios';
+import { getClientVersionLabel, getShortVersionLine } from '../config/version';
+import { getPackageDisplayInfo } from '../config/modules';
 
 interface LoginProps {
   onLogin: () => void;
@@ -154,7 +156,8 @@ export default function Login({ onLogin }: LoginProps) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
         <div className="bg-white p-8 rounded-lg shadow-md w-96">
-          <h1 className="text-2xl font-bold mb-6 text-center">Mbit ERP</h1>
+          <h1 className="text-2xl font-bold mb-2 text-center">{getShortVersionLine()}</h1>
+          <p className="text-xs text-center text-gray-500 mb-6">{getPackageDisplayInfo().editionLabel}</p>
           <div className="text-center text-gray-600">Betöltés...</div>
         </div>
       </div>
@@ -164,7 +167,9 @@ export default function Login({ onLogin }: LoginProps) {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="bg-white p-8 rounded-lg shadow-md w-96">
-        <h1 className="text-2xl font-bold mb-6 text-center">Mbit ERP</h1>
+        <h1 className="text-2xl font-bold mb-1 text-center">{getShortVersionLine()}</h1>
+        <p className="text-xs text-center text-gray-500 mb-1">{getPackageDisplayInfo().editionLabel}</p>
+        <p className="text-[10px] text-center text-gray-400 mb-4 font-mono">{getClientVersionLabel()}</p>
         <h2 className="text-lg mb-4 text-center text-gray-600">Bejelentkezés</h2>
         
         {error && (

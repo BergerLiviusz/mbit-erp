@@ -3,10 +3,13 @@ import axios from '../lib/axios';
 import { useState, useEffect } from 'react';
 import Modal from '../components/Modal';
 import { apiFetch } from '../lib/api';
+import CustomerCommunications from './CRM/CustomerCommunications';
+import { usePermissions } from '../hooks/usePermissions';
 
 const isElectron = !!(window as any).electron || (navigator.userAgent.includes('Electron'));
 
 export default function CRM() {
+  const { canExportCrm } = usePermissions();
   const [activeTab, setActiveTab] = useState<'accounts' | 'campaigns' | 'tickets'>('accounts');
   const queryClient = useQueryClient();
   
@@ -22,6 +25,9 @@ export default function CRM() {
   const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
   const [isCampaignModalOpen, setIsCampaignModalOpen] = useState(false);
   const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
+  const [lifecycleData, setLifecycleData] = useState<any>(null);
+  const [lifecycleAccountName, setLifecycleAccountName] = useState('');
+  const [lifecycleAccountId, setLifecycleAccountId] = useState<string | null>(null);
   const [editingAccountId, setEditingAccountId] = useState<string | null>(null);
 
   const [accountFormData, setAccountFormData] = useState({
@@ -523,6 +529,19 @@ export default function CRM() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{account.tipus}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <button
+                        onClick={async () => {
+                          const res = await apiFetch(`/crm/interactions/lifecycle/${account.id}`);
+                          if (res.ok) {
+                            setLifecycleData(await res.json());
+                            setLifecycleAccountName(account.nev);
+                            setLifecycleAccountId(account.id);
+                          }
+                        }}
+                        className="text-indigo-600 hover:text-indigo-800 mr-3"
+                      >
+                        Élettörténet
+                      </button>
+                      <button
                         onClick={() => handleOpenAccountModal(account)}
                         className="text-mbit-blue hover:text-blue-600 mr-3"
                       >
@@ -606,12 +625,14 @@ export default function CRM() {
               >
                 Szűrők törlése
               </button>
+              {canExportCrm && (
               <button
                 onClick={handleExportCampaigns}
                 className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
               >
                 Exportálás (Excel)
               </button>
+              )}
             </div>
           </div>
 
@@ -643,6 +664,48 @@ export default function CRM() {
                           </>
                         )}
                       </div>
+                      {canExportCrm && (
+                      <div className="mt-3 flex gap-2">
+                        <button
+                          type="button"
+                          className="text-sm px-2 py-1 border rounded"
+                          onClick={async () => {
+                            const res = await apiFetch(
+                              `/crm/campaigns/${campaign.id}/audience/export/csv`,
+                            );
+                            if (res.ok) {
+                              const blob = await res.blob();
+                              const url = URL.createObjectURL(blob);
+                              const a = document.createElement('a');
+                              a.href = url;
+                              a.download = `celkozonseg_${campaign.nev}.csv`;
+                              a.click();
+                            }
+                          }}
+                        >
+                          Célközönség CSV
+                        </button>
+                        <button
+                          type="button"
+                          className="text-sm px-2 py-1 border rounded"
+                          onClick={async () => {
+                            const res = await apiFetch(
+                              `/crm/campaigns/${campaign.id}/audience/export/excel`,
+                            );
+                            if (res.ok) {
+                              const blob = await res.blob();
+                              const url = URL.createObjectURL(blob);
+                              const a = document.createElement('a');
+                              a.href = url;
+                              a.download = `celkozonseg_${campaign.nev}.xlsx`;
+                              a.click();
+                            }
+                          }}
+                        >
+                          Célközönség XLSX
+                        </button>
+                      </div>
+                      )}
                     </div>
                   ))
                 )}
@@ -668,6 +731,7 @@ export default function CRM() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Prioritás</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Állapot</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Típus</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Művelet</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -675,6 +739,9 @@ export default function CRM() {
                   <tr key={ticket.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {ticket.azonosito}
+                      {ticket.eszkalalva && (
+                        <span className="ml-2 text-xs bg-red-600 text-white px-1 rounded">ESZKALÁLT</span>
+                      )}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900">{ticket.targy}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
@@ -686,6 +753,20 @@ export default function CRM() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{ticket.allapot}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{ticket.tipus}</td>
+                    <td className="px-6 py-4 text-right">
+                      {!ticket.eszkalalva && (
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            await apiFetch(`/crm/tickets/${ticket.id}/escalate`, { method: 'POST' });
+                            queryClient.invalidateQueries({ queryKey: ['tickets'] });
+                          }}
+                          className="text-red-700 text-sm hover:underline"
+                        >
+                          Eszkalálás
+                        </button>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -1055,6 +1136,37 @@ export default function CRM() {
             </button>
           </div>
         </form>
+      </Modal>
+
+      <Modal
+        isOpen={!!lifecycleData}
+        onClose={() => {
+          setLifecycleData(null);
+          setLifecycleAccountId(null);
+        }}
+        title={`Élettörténet – ${lifecycleAccountName}`}
+        size="lg"
+      >
+        {lifecycleAccountId && (
+          <CustomerCommunications
+            accountId={lifecycleAccountId}
+            onSaved={async () => {
+              const res = await apiFetch(`/crm/interactions/lifecycle/${lifecycleAccountId}`);
+              if (res.ok) setLifecycleData(await res.json());
+            }}
+          />
+        )}
+        <ul className="space-y-2 max-h-96 overflow-y-auto mt-4">
+          {lifecycleData?.timeline?.map((e: any, i: number) => (
+            <li key={i} className="border-l-4 border-mbit-blue pl-3 py-1">
+              <div className="text-xs text-gray-500">
+                {new Date(e.date).toLocaleString('hu-HU')} · {e.type}
+              </div>
+              <div className="font-medium">{e.title}</div>
+              {e.detail && <div className="text-sm text-gray-600">{e.detail}</div>}
+            </li>
+          ))}
+        </ul>
       </Modal>
     </div>
   );
