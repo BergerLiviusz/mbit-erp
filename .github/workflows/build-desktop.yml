@@ -204,6 +204,15 @@ jobs:
           cd apps/server
           Remove-Item -Recurse -Force node_modules -ErrorAction SilentlyContinue
           npm install --omit=dev --install-strategy=hoisted --install-links=false --workspaces=false
+          npm install file:../../packages/config --omit=dev --install-strategy=hoisted --install-links=false
+          
+          Write-Host ""
+          Write-Host "=== Verifying @mbit-erp/config in server node_modules ==="
+          if (-not (Test-Path "node_modules/@mbit-erp/config/package.json")) {
+            Write-Host "❌ ERROR: @mbit-erp/config not installed in server node_modules"
+            exit 1
+          }
+          Write-Host "✅ @mbit-erp/config present"
           
           Write-Host ""
           Write-Host "=== Generating Prisma Client for production ==="
