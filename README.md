@@ -31,7 +31,7 @@ Az **Mbit ERP** egy átfogó, moduláris vállalati alkalmazás, amely egyesíti
 
 - ✅ **100% Magyar nyelvű** felhasználói felület
 - 🏢 **On-premise képes** - minden adat a saját infrastruktúrán marad
-- 💻 **Windows Desktop App (végtermék)** – GitHub Actions CI artifact (installer + portable ZIP)
+- 💻 **Windows Desktop App (végtermék)** – GitHub Actions: portable app mappa + ZIP + opcionális installer
 - 📦 **Moduláris package-ek** – teljes ERP, GINOP CRM+DMS+HR, legacy csomagok (lásd `docs/PACKAGE_STRATEGY.md`)
 - 🏷️ **Verziókövetés** – központi `MBIT ERP v1.0.1a` (Login, Beállítások, lábléc, API)
 - 📦 **Egyszerű telepítés** – egy kattintásos installer vagy portable csomag
@@ -328,7 +328,15 @@ npm run build -w @mbit-erp/web
 npm run package:win
 ```
 
-**Kimenet:** `apps/desktop/dist/` – portable ZIP / installer (GitHub Actions: `build-desktop.yml`)
+**CI artifactok** (`.github/workflows/build-desktop.yml`):
+
+| Artifact | Tartalom |
+|----------|----------|
+| `…-portable-app` | Teljes futtatható mappa (`win-unpacked/`) – **`MBIT ERP.exe`** közvetlenül |
+| `…-portable-zip` | Ugyanaz ZIP-ben |
+| `…-installer` | NSIS `*-setup.exe` (opcionális telepítő) |
+
+**Teszteléshez töltsd le a `…-portable-app` artifactot**, majd futtasd a `MBIT ERP.exe`-t setup nélkül. Részletek: [WINDOWS_DESKTOP_BUILD.md](docs/WINDOWS_DESKTOP_BUILD.md).
 
 A React UI (`apps/web`) **csak** az Electron shell része; önálló SaaS webalkalmazásként nem cél.
 

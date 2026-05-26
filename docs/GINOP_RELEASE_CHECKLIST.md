@@ -13,12 +13,15 @@
 | Package ID | `ginop-crm-dms-hr` |
 | APP_VERSION | `1.0.1a` |
 | Edition | GINOP CRM+DMS+HR Edition |
-| Commit SHA | `e757398` → _(legújabb push után frissül)_ |
-| Workflow run | https://github.com/BergerLiviusz/mbit-erp/actions?query=branch%3Arelease%2Fginop-crm-dms-hr |
+| Commit SHA | `facce6a` (release branch HEAD) |
+| Aktív CI run | https://github.com/BergerLiviusz/mbit-erp/actions/runs/26401673136 |
+| Workflow runs | https://github.com/BergerLiviusz/mbit-erp/actions?query=branch%3Arelease%2Fginop-crm-dms-hr |
 | Első run (hiba) | https://github.com/BergerLiviusz/mbit-erp/actions/runs/26400886300 – config build npm ci előtt |
 | Javítás után | https://github.com/BergerLiviusz/mbit-erp/actions/runs/26401213125 – @mbit-erp/config hoisted install |
 | Artifact név (CI) | `mbit-erp-v1.0.1a-{sha}-ginop-crm-dms-hr-windows` |
-| Portable ZIP (repo) | `mbit-erp-v1.0.1a-ginop-crm-dms-hr-windows.zip` |
+| Portable app artifact (CI) | `…-ginop-crm-dms-hr-portable-app` → `win-unpacked/MBIT ERP.exe` |
+| Portable ZIP artifact (CI) | `…-ginop-crm-dms-hr-portable-zip` |
+| Installer artifact (CI) | `…-ginop-crm-dms-hr-installer` (opcionális) |
 
 ---
 

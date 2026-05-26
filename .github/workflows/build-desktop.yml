@@ -604,7 +604,48 @@ jobs:
             Write-Host "If icon.ico is specified in package.json, it should be embedded in the .exe"
           }
 
-      - name: Create win-unpacked ZIP for distribution
+      - name: Verify portable app folder (win-unpacked)
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          Write-Host "=== Verifying portable app folder (win-unpacked) ==="
+          
+          $unpackedDir = "apps/desktop/release/win-unpacked"
+          if (-not (Test-Path $unpackedDir)) {
+            Write-Host "❌ ERROR: win-unpacked directory not found at $unpackedDir"
+            exit 1
+          }
+          
+          $exeFiles = Get-ChildItem $unpackedDir -Filter "*.exe" -File
+          if ($exeFiles.Count -eq 0) {
+            Write-Host "❌ ERROR: No .exe launcher found in win-unpacked!"
+            Get-ChildItem $unpackedDir | Format-Table Name, Length
+            exit 1
+          }
+          
+          foreach ($exe in $exeFiles) {
+            $sizeMB = $exe.Length / 1MB
+            Write-Host ("✅ Launcher: {0} ({1:N2} MB)" -f $exe.Name, $sizeMB)
+          }
+          
+          $requiredPaths = @(
+            "resources/backend",
+            "resources/frontend",
+            "resources/backend/node_modules"
+          )
+          foreach ($rel in $requiredPaths) {
+            $full = Join-Path $unpackedDir $rel
+            if (-not (Test-Path $full)) {
+              Write-Host "❌ ERROR: Missing required path: $rel"
+              exit 1
+            }
+            Write-Host "✅ Found: $rel"
+          }
+          
+          Write-Host ""
+          Write-Host "Portable app is ready for artifact upload (direct run, no installer)."
+
+      - name: Create portable ZIP from win-unpacked
         if: matrix.os == 'windows-latest'
         shell: pwsh
         run: |
@@ -615,18 +656,26 @@ jobs:
           $pkg = "${{ steps.package.outputs.package }}"
           
           $unpackedDir = "apps/desktop/release/win-unpacked"
-          $zipPath = "apps/desktop/release/mbit-erp-v$version-$pkg-windows.zip"
+          $zipPath = "apps/desktop/release/mbit-erp-v$version-$pkg-portable-windows.zip"
           
           if (-not (Test-Path $unpackedDir)) {
             Write-Host "❌ ERROR: win-unpacked directory not found!"
             exit 1
           }
           
-          Write-Host "Packaging version: $version"
+          Write-Host "Packaging version: $version package: $pkg"
+          if (Test-Path $zipPath) { Remove-Item $zipPath -Force }
           Compress-Archive -Path "$unpackedDir/*" -DestinationPath $zipPath -Force
           
           $zipSizeMB = (Get-Item $zipPath).Length / 1MB
-          Write-Host ("✅ Created portable ZIP: {0:N2} MB" -f $zipSizeMB)
+          Write-Host ("✅ Created portable ZIP: {0} ({1:N2} MB)" -f (Split-Path $zipPath -Leaf), $zipSizeMB)
+
+      - name: List release outputs before artifact upload
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          Write-Host "=== Release folder contents ==="
+          Get-ChildItem "apps/desktop/release" -Recurse -Depth 2 | Select-Object FullName, Length | Format-Table -AutoSize
 
       - name: Verify NSIS installer contents
         if: matrix.os == 'windows-latest'
@@ -690,23 +739,43 @@ jobs:
           echo "version=$ver" >> $env:GITHUB_OUTPUT
           echo "short_sha=$sha" >> $env:GITHUB_OUTPUT
 
-      - name: Upload artifacts (Windows)
+      # --- Artifact 1: teljes futtatható alkalmazásmappa (win-unpacked) – KÖTELEZŐ teszteléshez ---
+      - name: Upload portable app folder (win-unpacked)
         if: matrix.os == 'windows-latest'
         uses: actions/upload-artifact@v4
         with:
-          name: mbit-erp-v${{ steps.appver.outputs.version }}-${{ steps.appver.outputs.short_sha }}-${{ steps.package.outputs.package }}-windows
-          path: |
-            apps/desktop/release/*Setup*.exe
-            apps/desktop/release/*Portable*.zip
+          name: mbit-erp-v${{ steps.appver.outputs.version }}-${{ steps.appver.outputs.short_sha }}-${{ steps.package.outputs.package }}-portable-app
+          path: apps/desktop/release/win-unpacked/
           retention-days: 30
+          if-no-files-found: error
+
+      # --- Artifact 2: portable ZIP (kicsomagolható, ugyanaz a tartalom) ---
+      - name: Upload portable ZIP
+        if: matrix.os == 'windows-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: mbit-erp-v${{ steps.appver.outputs.version }}-${{ steps.appver.outputs.short_sha }}-${{ steps.package.outputs.package }}-portable-zip
+          path: apps/desktop/release/mbit-erp-v${{ steps.appver.outputs.version }}-${{ steps.package.outputs.package }}-portable-windows.zip
+          retention-days: 30
+          if-no-files-found: error
+
+      # --- Artifact 3: NSIS telepítő (opcionális; ismert issue: kisebb méretnél ne használd) ---
+      - name: Upload installer (setup exe)
+        if: matrix.os == 'windows-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: mbit-erp-v${{ steps.appver.outputs.version }}-${{ steps.appver.outputs.short_sha }}-${{ steps.package.outputs.package }}-installer
+          path: apps/desktop/release/*-setup.exe
+          retention-days: 30
+          if-no-files-found: warn
 
       - name: Create Release (on tag)
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            apps/desktop/release/*.exe
-            apps/desktop/release/*Portable*.zip
+            apps/desktop/release/mbit-erp-v*-portable-windows.zip
+            apps/desktop/release/*-setup.exe
           draft: false
           prerelease: false
         env:

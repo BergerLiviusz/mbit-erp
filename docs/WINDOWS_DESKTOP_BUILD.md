@@ -31,8 +31,29 @@ cd ../desktop && ERP_PACKAGE=ginop-crm-dms-hr APP_VERSION=1.0.1a npm run package
 
 Kimenet: `apps/desktop/release/`
 
-- `mbit-erp-v{ver}-{package}-setup.exe` – NSIS installer
-- `mbit-erp-v{ver}-{package}-windows.zip` – ajánlott portable offline telepítés
+- `win-unpacked/` – **teljes futtatható alkalmazásmappa** (közvetlen indítás)
+- `MBIT ERP.exe` – indítófájl a `win-unpacked/` gyökerében
+- `mbit-erp-v{ver}-{package}-portable-windows.zip` – ugyanez ZIP-ben (kicsomagolás után futtatható)
+- `mbit-erp-v{ver}-{package}-setup.exe` – NSIS telepítő (opcionális; kisebb méretnél ne használd)
+
+## CI artifactok (GitHub Actions)
+
+Minden sikeres build után **három** artifact készül:
+
+| Artifact név végződés | Tartalom | Mikor használd |
+|----------------------|----------|----------------|
+| **`-portable-app`** | Teljes `win-unpacked/` mappa | **Tesztelés / kézi futtatás** – letöltés után futtasd a `MBIT ERP.exe`-t |
+| **`-portable-zip`** | ZIP a teljes app mappából | Archiválás, másolás ZIP-ként |
+| **`-installer`** | `*-setup.exe` NSIS telepítő | Csak telepítős disztribúcióhoz |
+
+### Régi működés visszaállítása (setup nélkül)
+
+1. Actions → sikeres workflow run → Artifacts
+2. Töltsd le: **`…-portable-app`**
+3. A mappa gyökerében futtasd: **`MBIT ERP.exe`**
+4. Első indításkor az app létrehozza az adatkönyvtárat (`%APPDATA%/…` / `mbit-erp`)
+
+> **Ne** csak az `-installer` artifactot töltsd le teszteléshez – az csak a setup telepítő.
 
 ## GitHub Actions
 
@@ -51,11 +72,11 @@ Workflow: `.github/workflows/build-desktop.yml`
 4. Server + web + Electron build
 5. `npm run package:win`
 
-**Artifact név:**
+**Artifact nevek (példa GINOP build):**
 
-`mbit-erp-v{verzió}-{commit-sha}-{package}-windows`
-
-Példa: `mbit-erp-v1.0.1a-a1b2c3d-ginop-crm-dms-hr-windows`
+- `mbit-erp-v1.0.1a-a1b2c3d-ginop-crm-dms-hr-portable-app` ← **ezt töltsd le teszteléshez**
+- `mbit-erp-v1.0.1a-a1b2c3d-ginop-crm-dms-hr-portable-zip`
+- `mbit-erp-v1.0.1a-a1b2c3d-ginop-crm-dms-hr-installer`
 
 ## Build meta (rendszerinformáció képernyő)
 
