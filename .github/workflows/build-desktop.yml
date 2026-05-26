@@ -485,6 +485,14 @@ jobs:
           $releaseFiles = Get-ChildItem release -Recurse -File | Measure-Object
           Write-Host "✅ Package completed: $($releaseFiles.Count) files in release/"
 
+      - name: Fix Prisma client in win-unpacked (post-package)
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          Write-Host "=== fix-windows-unpacked-prisma (staging → resources/backend/node_modules/.prisma) ==="
+          node scripts/fix-windows-unpacked-prisma.mjs apps/desktop/release/win-unpacked
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
       - name: Verify packaged build (Windows)
         if: matrix.os == 'windows-latest'
         shell: pwsh
@@ -736,16 +744,19 @@ jobs:
         shell: pwsh
         run: |
           $unpacked = "apps/desktop/release/win-unpacked"
-          $prismaDir = "$unpacked/resources/backend/node_modules/.prisma"
-          $prismaClient = "$prismaDir/client"
+          $prismaClient = "$unpacked/resources/backend/node_modules/.prisma/client"
+          $prismaDefault = "$prismaClient/default.js"
 
-          if (-not (Test-Path $prismaClient)) {
-            Write-Host "❌ CRITICAL: resources/backend/node_modules/.prisma/client missing before upload!"
+          if (-not (Test-Path $prismaDefault)) {
+            Write-Host "❌ CRITICAL: resources/backend/node_modules/.prisma/client/default.js missing before upload!"
+            Write-Host "   (resources/backend/prisma/schema.prisma alone is NOT sufficient)"
             exit 1
           }
 
           Write-Host "=== .prisma files in final portable artifact (pre-upload) ==="
-          Get-ChildItem -Recurse $prismaDir -ErrorAction Stop | Select-Object FullName
+          Get-ChildItem -Recurse "$unpacked/resources/backend/node_modules/.prisma" -ErrorAction Stop |
+            Select-Object FullName, Length |
+            Format-Table -AutoSize
 
           Write-Host ""
           Write-Host "=== Final verify-windows-artifact on win-unpacked ==="
@@ -821,6 +832,7 @@ jobs:
         with:
           name: mbit-erp-v${{ steps.appver.outputs.version }}-${{ steps.appver.outputs.short_sha }}-${{ steps.package.outputs.package }}-portable-app
           path: apps/desktop/release/win-unpacked/
+          include-hidden-files: true
           retention-days: 30
           if-no-files-found: error
 
@@ -831,6 +843,7 @@ jobs:
         with:
           name: mbit-erp-v${{ steps.appver.outputs.version }}-${{ steps.appver.outputs.short_sha }}-${{ steps.package.outputs.package }}-portable-zip
           path: apps/desktop/release/mbit-erp-v${{ steps.appver.outputs.version }}-${{ steps.package.outputs.package }}-portable-windows.zip
+          include-hidden-files: true
           retention-days: 30
           if-no-files-found: error
 

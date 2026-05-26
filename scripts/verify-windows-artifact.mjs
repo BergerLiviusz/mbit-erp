@@ -1,16 +1,7 @@
 #!/usr/bin/env node
 /**
  * Ellenőrzi a csomagolt Windows Electron app mappát (win-unpacked).
- *
- * Használat:
- *   node scripts/verify-windows-artifact.mjs [app-root]
- *   npm run verify:windows-artifact -- apps/desktop/release/win-unpacked
- *
- * Alapértelmezés: apps/desktop/release/win-unpacked
- *
- * Runtime Prisma (kötelező):
- *   <appRoot>/resources/backend/node_modules/.prisma/client/default.js
- *   <appRoot>/resources/backend/node_modules/.prisma/client/query_engine-windows.dll.node
+ * Futtasd a fix:windows-unpacked-prisma UTÁN (CI és lokális package után).
  */
 import fs from 'fs';
 import path from 'path';
@@ -40,41 +31,19 @@ function warn(message) {
 function resolveBackendRoot(root) {
   const resourcesBackend = path.join(root, 'resources', 'backend');
   if (fs.existsSync(resourcesBackend)) {
-    return {
-      dir: resourcesBackend,
-      source: 'resources/backend (Electron portable layout – primary)',
-    };
+    return { dir: resourcesBackend, source: 'resources/backend' };
   }
   const legacyBackend = path.join(root, 'backend');
   if (fs.existsSync(legacyBackend)) {
-    return {
-      dir: legacyBackend,
-      source: 'backend (legacy fallback – NOT the portable layout)',
-    };
+    return { dir: legacyBackend, source: 'backend (legacy – invalid for portable)' };
   }
   return { dir: null, source: null };
 }
 
-function resolveFrontendRoot(root) {
-  const electronPath = path.join(root, 'resources', 'frontend');
-  if (fs.existsSync(electronPath)) {
-    return { dir: electronPath, source: 'resources/frontend (Electron extraResources)' };
-  }
-  const legacyPath = path.join(root, 'frontend');
-  if (fs.existsSync(legacyPath)) {
-    return { dir: legacyPath, source: 'frontend (legacy fallback)' };
-  }
-  return { dir: null, source: null };
-}
-
-function checkFile(label, filePath, optional = false) {
+function checkFile(label, filePath) {
   if (fs.existsSync(filePath)) {
     pass(label);
     return true;
-  }
-  if (optional) {
-    warn(`${label} (optional, not found)`);
-    return false;
   }
   fail(label);
   console.error(`   Expected: ${filePath}`);
@@ -82,18 +51,12 @@ function checkFile(label, filePath, optional = false) {
 }
 
 console.log('=== verify-windows-artifact ===\n');
-
 console.log(`App root: ${appRoot}`);
 
 if (!fs.existsSync(appRoot)) {
-  console.error('');
   console.error(
-    'A Windows artifact még nem készült el. Futtasd a Windows packaginget vagy töltsd le a CI portable-app artifactot.',
+    '\nA Windows artifact még nem készült el. Futtasd a packaginget vagy töltsd le a CI portable-app artifactot.',
   );
-  console.error('');
-  console.error('Példa:');
-  console.error('  cd apps/desktop && ERP_PACKAGE=ginop-crm-dms-hr npm run package:win');
-  console.error('  npm run verify:windows-artifact apps/desktop/release/win-unpacked');
   process.exit(1);
 }
 
@@ -103,39 +66,39 @@ const exeFiles = fs
   .map((e) => e.name);
 
 if (exeFiles.length === 0) {
-  fail('No .exe launcher in app root (e.g. MBIT ERP.exe)');
+  fail('No .exe launcher in app root');
 } else {
   pass(`Launcher .exe: ${exeFiles.join(', ')}`);
 }
 
 const backend = resolveBackendRoot(appRoot);
 console.log(`Backend root: ${backend.dir ?? '(not found)'}`);
-if (backend.source) {
-  console.log(`  → ${backend.source}`);
-  if (backend.dir?.includes(`${path.sep}resources${path.sep}backend`)) {
-    console.log('  → Using resources/backend as backend root (required for portable artifact)');
-  }
-} else {
-  console.error('  → Expected: <appRoot>/resources/backend');
-}
-
-const frontend = resolveFrontendRoot(appRoot);
-console.log(`Frontend root: ${frontend.dir ?? '(not found)'}`);
-if (frontend.source) {
-  console.log(`  → ${frontend.source}`);
+if (backend.dir?.includes(`${path.sep}resources${path.sep}backend`)) {
+  console.log('  → Using resources/backend (portable layout)');
 }
 
 console.log('');
 
-if (!backend.dir) {
-  fail('Backend directory missing – expected win-unpacked/resources/backend');
-} else if (!backend.dir.includes(`${path.sep}resources${path.sep}backend`)) {
-  fail(
-    'Portable artifact must use resources/backend – found legacy backend/ only (afterPack may not have run)',
-  );
+if (!backend.dir?.includes(`${path.sep}resources${path.sep}backend`)) {
+  fail('Expected win-unpacked/resources/backend');
 } else {
   const nodeModules = path.join(backend.dir, 'node_modules');
   const prismaClientDir = path.join(nodeModules, '.prisma/client');
+  const schemaPath = path.join(backend.dir, 'prisma/schema.prisma');
+
+  // schema.prisma alone is NOT sufficient for runtime
+  if (fs.existsSync(schemaPath)) {
+    pass('resources/backend/prisma/schema.prisma (present – NOT sufficient alone for runtime)');
+  } else {
+    fail('resources/backend/prisma/schema.prisma');
+  }
+
+  if (fs.existsSync(path.join(backend.dir, 'prisma/prisma.service.js'))) {
+    pass('resources/backend/prisma/prisma.service.js (Nest wrapper – still requires generated client)');
+  }
+
+  console.log('');
+  console.log('--- Required generated Prisma client (runtime) ---');
 
   checkFile('resources/backend/main.js', path.join(backend.dir, 'main.js'));
   checkFile(
@@ -143,11 +106,14 @@ if (!backend.dir) {
     path.join(nodeModules, '@prisma/client/default.js'),
   );
   checkFile('resources/backend/node_modules/.prisma/client', prismaClientDir);
-
-  const prismaDefault = path.join(prismaClientDir, 'default.js');
-  const prismaIndex = path.join(prismaClientDir, 'index.js');
-  checkFile('resources/backend/node_modules/.prisma/client/default.js', prismaDefault);
-  checkFile('resources/backend/node_modules/.prisma/client/index.js', prismaIndex);
+  checkFile(
+    'resources/backend/node_modules/.prisma/client/default.js (REQUIRED)',
+    path.join(prismaClientDir, 'default.js'),
+  );
+  checkFile(
+    'resources/backend/node_modules/.prisma/client/index.js',
+    path.join(prismaClientDir, 'index.js'),
+  );
 
   if (fs.existsSync(prismaClientDir)) {
     const clientFiles = fs.readdirSync(prismaClientDir);
@@ -161,20 +127,18 @@ if (!backend.dir) {
       pass(`Prisma engine file(s): ${engines.join(', ')}`);
     }
     if (!winEngine) {
-      fail('query_engine-windows.dll.node missing (required for Windows portable runtime)');
-      console.error(`   Expected: ${path.join(prismaClientDir, 'query_engine-windows.dll.node')}`);
+      fail('query_engine-windows.dll.node missing (Windows portable runtime)');
     } else {
       pass(`Windows Prisma engine: ${winEngine}`);
     }
+  } else {
+    fail(
+      'node_modules/.prisma/client missing – run: npm run fix:windows-unpacked-prisma apps/desktop/release/win-unpacked',
+    );
+    console.error(
+      '   Runtime error without this: Cannot find module \'.prisma/client/default\'',
+    );
   }
-
-  checkFile('resources/backend/prisma/schema.prisma', path.join(backend.dir, 'prisma/schema.prisma'));
-}
-
-if (frontend.dir) {
-  pass(`Frontend present: ${frontend.dir}`);
-} else {
-  warn('resources/frontend not found (optional for Prisma check)');
 }
 
 console.log('');
@@ -182,4 +146,4 @@ if (failed > 0) {
   console.error(`FAILED: ${failed} check(s)`);
   process.exit(1);
 }
-console.log('PASSED: win-unpacked/resources/backend contains full Prisma client for Windows runtime.');
+console.log('PASSED: Generated Prisma client present under resources/backend/node_modules/.prisma/client');

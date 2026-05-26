@@ -76,19 +76,22 @@ Node feloldás szerint **kötelező** léteznie:
 | `resources/backend/node_modules/.prisma/client/query_engine-windows.dll.node` |
 | `resources/backend/prisma/schema.prisma` |
 
-**Build folyamat:**
+**Build folyamat (CI):**
 
-1. Staging: `npm run prepare:backend-bundle` → `apps/server/packaging/backend/` (itt is benne van `.prisma`)
-2. electron-builder `extraResources` (gyakran **kihagyja** a dot-mappákat)
-3. **`afterPack` hook** (`apps/desktop/scripts/after-pack.cjs`) – a teljes staging másolása → `win-unpacked/resources/backend/` (`.prisma` is)
-
-Artifact ellenőrzés (végleges output, nem staging):
+1. `npm run prepare:backend-bundle` → `apps/server/packaging/backend/`
+2. `electron-builder` → `win-unpacked/` (gyakran **kihagyja** a `node_modules/.prisma` dot-mappát)
+3. **`npm run fix:windows-unpacked-prisma`** – stagingből explicit másolás → `resources/backend/node_modules/.prisma` és `@prisma/client`
+4. `npm run verify:windows-artifact` – a **végleges** `win-unpacked` ellenőrzése
+5. Artifact upload **`include-hidden-files: true`** (különben a `.prisma` mappa kimarad a feltöltésből)
 
 ```bash
+npm run fix:windows-unpacked-prisma apps/desktop/release/win-unpacked
 npm run verify:windows-artifact apps/desktop/release/win-unpacked
 ```
 
-Ha a backend **„Cannot find module '.prisma/client/default'”** hibát ad, a portable artifactból hiányzik a `resources/backend/node_modules/.prisma/client` mappa – tölts le friss **`-portable-app`** CI artifactot (commit ahol az `afterPack` hook már benne van).
+> **Fontos:** `resources/backend/prisma/schema.prisma` **nem elég** a futáshoz. Kötelező: `resources/backend/node_modules/.prisma/client/default.js`
+
+Ha a backend **„Cannot find module '.prisma/client/default'”** hibát ad, hiányzik a generált client – futtasd a fix scriptet, vagy tölts le friss **`-portable-app`** artifactot.
 
 ## GitHub Actions
 
@@ -106,9 +109,10 @@ Workflow: `.github/workflows/build-desktop.yml`
 3. **CRM unit tesztek** (`apps/server` – `npm test`)
 4. Server + web + Electron build
 5. `prepare-backend-bundle` (staging)
-6. `electron-builder` Windows package (`afterPack` bemásolja a staging backendet)
-7. `verify-windows-artifact` a **végleges** `win-unpacked/` mappán (upload előtt)
-8. Artifact upload (`-portable-app`)
+6. `electron-builder` Windows package
+7. `fix:windows-unpacked-prisma` (staging → `resources/backend/node_modules/.prisma`)
+8. `verify-windows-artifact` a **végleges** `win-unpacked/` mappán
+9. Artifact upload (`-portable-app`, `include-hidden-files: true`)
 
 **Artifact nevek (példa GINOP build):**
 

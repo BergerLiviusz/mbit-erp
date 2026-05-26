@@ -21,6 +21,7 @@
     "package:crm": "npm run build:config && VITE_ACTIVE_PACKAGE=crm ERP_PACKAGE=crm APP_VERSION=1.0.1a npm run package:win",
     "package:hr": "npm run build:config && VITE_ACTIVE_PACKAGE=hr ERP_PACKAGE=hr APP_VERSION=1.0.1a npm run package:win",
     "verify:windows-artifact": "node scripts/verify-windows-artifact.mjs",
+    "fix:windows-unpacked-prisma": "node scripts/fix-windows-unpacked-prisma.mjs",
     "prepare:backend-bundle": "node scripts/prepare-backend-bundle.mjs",
     "package:mac": "cd apps/desktop && npm run package:mac",
     "package:linux": "cd apps/desktop && npm run package:linux",
