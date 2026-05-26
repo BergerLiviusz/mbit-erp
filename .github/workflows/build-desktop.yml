@@ -731,6 +731,27 @@ jobs:
           Write-Host "=== Release folder contents ==="
           Get-ChildItem "apps/desktop/release" -Recurse -Depth 2 | Select-Object FullName, Length | Format-Table -AutoSize
 
+      - name: Debug .prisma in win-unpacked and final verify (pre-upload)
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          $unpacked = "apps/desktop/release/win-unpacked"
+          $prismaDir = "$unpacked/resources/backend/node_modules/.prisma"
+          $prismaClient = "$prismaDir/client"
+
+          if (-not (Test-Path $prismaClient)) {
+            Write-Host "❌ CRITICAL: resources/backend/node_modules/.prisma/client missing before upload!"
+            exit 1
+          }
+
+          Write-Host "=== .prisma files in final portable artifact (pre-upload) ==="
+          Get-ChildItem -Recurse $prismaDir -ErrorAction Stop | Select-Object FullName
+
+          Write-Host ""
+          Write-Host "=== Final verify-windows-artifact on win-unpacked ==="
+          node scripts/verify-windows-artifact.mjs $unpacked
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
       - name: Verify NSIS installer contents
         if: matrix.os == 'windows-latest'
         shell: pwsh

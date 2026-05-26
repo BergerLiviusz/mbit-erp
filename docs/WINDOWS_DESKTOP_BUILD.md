@@ -55,18 +55,40 @@ Minden sikeres build után **három** artifact készül:
 
 > **Ne** csak az `-installer` artifactot töltsd le teszteléshez – az csak a setup telepítő.
 
-### Backend / Prisma (kötelező a csomagban)
+### Backend / Prisma (kötelező a portable artifactban)
 
-A backendhez generált Prisma client kell:
+Runtime alatt a NestJS backend itt fut:
 
-- `resources/backend/node_modules/.prisma/client/default.js`
-- `resources/backend/node_modules/@prisma/client/default.js`
-- `query_engine-windows.dll.node` (Windows build)
+`resources/backend/main.js`
 
-Build előtt: `npm run prepare:backend-bundle` (staging: `apps/server/packaging/backend`).  
-Artifact ellenőrzés: `npm run verify:windows-artifact [útvonal]`
+A `@prisma/client/default.js` ezt require-olja:
 
-Ha a backend **„Cannot find module '.prisma/client/default'”** hibát ad, a csomagból hiányzik a `.prisma` mappa – használj frissebb CI artifactot (`-portable-app`).
+`.prisma/client/default`
+
+Node feloldás szerint **kötelező** léteznie:
+
+| Útvonal (win-unpacked alatt) |
+|------------------------------|
+| `resources/backend/main.js` |
+| `resources/backend/node_modules/@prisma/client/default.js` |
+| `resources/backend/node_modules/.prisma/client/default.js` |
+| `resources/backend/node_modules/.prisma/client/index.js` |
+| `resources/backend/node_modules/.prisma/client/query_engine-windows.dll.node` |
+| `resources/backend/prisma/schema.prisma` |
+
+**Build folyamat:**
+
+1. Staging: `npm run prepare:backend-bundle` → `apps/server/packaging/backend/` (itt is benne van `.prisma`)
+2. electron-builder `extraResources` (gyakran **kihagyja** a dot-mappákat)
+3. **`afterPack` hook** (`apps/desktop/scripts/after-pack.cjs`) – a teljes staging másolása → `win-unpacked/resources/backend/` (`.prisma` is)
+
+Artifact ellenőrzés (végleges output, nem staging):
+
+```bash
+npm run verify:windows-artifact apps/desktop/release/win-unpacked
+```
+
+Ha a backend **„Cannot find module '.prisma/client/default'”** hibát ad, a portable artifactból hiányzik a `resources/backend/node_modules/.prisma/client` mappa – tölts le friss **`-portable-app`** CI artifactot (commit ahol az `afterPack` hook már benne van).
 
 ## GitHub Actions
 
@@ -83,7 +105,10 @@ Workflow: `.github/workflows/build-desktop.yml`
 2. Prisma generate + validate
 3. **CRM unit tesztek** (`apps/server` – `npm test`)
 4. Server + web + Electron build
-5. `npm run package:win`
+5. `prepare-backend-bundle` (staging)
+6. `electron-builder` Windows package (`afterPack` bemásolja a staging backendet)
+7. `verify-windows-artifact` a **végleges** `win-unpacked/` mappán (upload előtt)
+8. Artifact upload (`-portable-app`)
 
 **Artifact nevek (példa GINOP build):**
 
