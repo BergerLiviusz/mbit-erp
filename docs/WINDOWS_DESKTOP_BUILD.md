@@ -55,6 +55,19 @@ Minden sikeres build után **három** artifact készül:
 
 > **Ne** csak az `-installer` artifactot töltsd le teszteléshez – az csak a setup telepítő.
 
+### Backend / Prisma (kötelező a csomagban)
+
+A backendhez generált Prisma client kell:
+
+- `resources/backend/node_modules/.prisma/client/default.js`
+- `resources/backend/node_modules/@prisma/client/default.js`
+- `query_engine-windows.dll.node` (Windows build)
+
+Build előtt: `npm run prepare:backend-bundle` (staging: `apps/server/packaging/backend`).  
+Artifact ellenőrzés: `npm run verify:windows-artifact [útvonal]`
+
+Ha a backend **„Cannot find module '.prisma/client/default'”** hibát ad, a csomagból hiányzik a `.prisma` mappa – használj frissebb CI artifactot (`-portable-app`).
+
 ## GitHub Actions
 
 Workflow: `.github/workflows/build-desktop.yml`

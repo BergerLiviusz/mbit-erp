@@ -20,6 +20,8 @@
     "package:ginop": "npm run build:config && VITE_ACTIVE_PACKAGE=ginop-crm-dms-hr ERP_PACKAGE=ginop-crm-dms-hr APP_VERSION=1.0.1a npm run package:win",
     "package:crm": "npm run build:config && VITE_ACTIVE_PACKAGE=crm ERP_PACKAGE=crm APP_VERSION=1.0.1a npm run package:win",
     "package:hr": "npm run build:config && VITE_ACTIVE_PACKAGE=hr ERP_PACKAGE=hr APP_VERSION=1.0.1a npm run package:win",
+    "verify:windows-artifact": "node scripts/verify-windows-artifact.mjs",
+    "prepare:backend-bundle": "node scripts/prepare-backend-bundle.mjs",
     "package:mac": "cd apps/desktop && npm run package:mac",
     "package:linux": "cd apps/desktop && npm run package:linux",
     "test:desktop": "cd apps/desktop && npm run build && npm run package -- --dir && cd ../.. && open apps/desktop/release/mac-arm64/Mbit\\ ERP.app",

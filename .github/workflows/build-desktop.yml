@@ -217,6 +217,26 @@ jobs:
           Write-Host "=== Generating Prisma Client for production ==="
           npx prisma generate
           
+          if (-not (Test-Path "node_modules/.prisma/client/default.js")) {
+            Write-Host "❌ ERROR: node_modules/.prisma/client/default.js missing after prisma generate!"
+            exit 1
+          }
+          Write-Host "✅ .prisma/client/default.js exists in server node_modules"
+          
+          $engines = Get-ChildItem "node_modules/.prisma/client" -Filter "*query_engine*" -ErrorAction SilentlyContinue
+          if ($engines.Count -eq 0) {
+            Write-Host "❌ ERROR: No Prisma query engine binary in .prisma/client"
+            exit 1
+          }
+          foreach ($e in $engines) { Write-Host "✅ Prisma engine: $($e.Name)" }
+          
+          Write-Host ""
+          Write-Host "=== Staging backend bundle for Electron (includes .prisma) ==="
+          cd ../..
+          node scripts/prepare-backend-bundle.mjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cd apps/server
+          
           Write-Host ""
           Write-Host "=== Verifying critical dependencies exist with REAL FILES ==="
           
@@ -555,10 +575,36 @@ jobs:
           Write-Host "✅ Prisma schema found"
           
           if (-not (Test-Path $prismaClient)) {
-            Write-Host "❌ CRITICAL ERROR: Prisma client not found in packaged build!"
+            Write-Host "❌ CRITICAL ERROR: Prisma client directory not found in packaged build!"
             exit 1
           }
-          Write-Host "✅ Prisma client found"
+          Write-Host "✅ Prisma client directory found"
+          
+          $prismaDefaultJs = "$unpackedBackend/node_modules/.prisma/client/default.js"
+          $prismaIndexJs = "$unpackedBackend/node_modules/.prisma/client/index.js"
+          if (-not (Test-Path $prismaDefaultJs) -and -not (Test-Path $prismaIndexJs)) {
+            Write-Host "❌ CRITICAL ERROR: .prisma/client/default.js and index.js both missing!"
+            exit 1
+          }
+          Write-Host "✅ .prisma/client entry script present"
+          
+          if (-not (Test-Path "$unpackedBackend/node_modules/@prisma/client/default.js")) {
+            Write-Host "❌ CRITICAL ERROR: @prisma/client/default.js missing in packaged build!"
+            exit 1
+          }
+          Write-Host "✅ @prisma/client/default.js present"
+          
+          $winEngines = Get-ChildItem "$prismaClient" -Filter "*windows*" -ErrorAction SilentlyContinue
+          if ($winEngines.Count -eq 0) {
+            $anyEngine = Get-ChildItem "$prismaClient" -Filter "query_engine*" -ErrorAction SilentlyContinue
+            if ($anyEngine.Count -eq 0) {
+              Write-Host "❌ CRITICAL ERROR: No Prisma query engine in packaged .prisma/client!"
+              exit 1
+            }
+            Write-Host "⚠️ WARNING: query_engine-windows not found by name; found: $($anyEngine.Name)"
+          } else {
+            foreach ($e in $winEngines) { Write-Host "✅ Packaged Prisma engine: $($e.Name)" }
+          }
           
           Write-Host ""
           Write-Host "✅ Backend dependencies successfully bundled (all real files with content)"
@@ -603,6 +649,14 @@ jobs:
             Write-Host "Note: Icon embedding is handled by electron-builder during build process"
             Write-Host "If icon.ico is specified in package.json, it should be embedded in the .exe"
           }
+
+      - name: Verify Windows artifact (Prisma + launcher)
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          Write-Host "=== Node verify-windows-artifact ==="
+          node scripts/verify-windows-artifact.mjs apps/desktop/release/win-unpacked
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Verify portable app folder (win-unpacked)
         if: matrix.os == 'windows-latest'

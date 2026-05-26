@@ -172,3 +172,6 @@ resources/*.icns
 # Electron specific
 *.asar
 .webpack/
+
+# Electron backend staging (generated at build time, includes node_modules)
+apps/server/packaging/
