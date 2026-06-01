@@ -11,6 +11,7 @@
   "scripts": {
     "dev": "turbo run dev --parallel --filter=@mbit-erp/web --filter=@mbit-erp/server",
     "build": "turbo run build",
+    "build:config": "npm run build -w @mbit-erp/config",
     "start": "npm run start:prod --workspace=@mbit-erp/server & npm run preview --workspace=@mbit-erp/web",
     "build:desktop": "cd apps/desktop && npm run build",
     "build:pwa": "cd apps/web && npm run build:pwa",

@@ -155,12 +155,26 @@ jobs:
             Write-Host "Note: Prisma will use db push for schema synchronization in Electron environment"
           }
 
+      - name: Build shared config package
+        shell: pwsh
+        run: |
+          Write-Host "=== Building @mbit-erp/config (required by server) ==="
+          npm run build:config
+          if (-not (Test-Path "packages/config/dist/index.js")) {
+            Write-Host "❌ ERROR: packages/config/dist/index.js not found after build"
+            exit 1
+          }
+          if (-not (Test-Path "packages/config/dist/index.d.ts")) {
+            Write-Host "❌ ERROR: packages/config/dist/index.d.ts not found after build"
+            exit 1
+          }
+          Write-Host "✅ @mbit-erp/config build output verified"
+
       - name: Build server
         shell: pwsh
         run: |
           Write-Host "=== Building server ==="
-          cd apps/server
-          npm run build
+          npm run build -w @mbit-erp/server
           
           Write-Host ""
           Write-Host "=== Verifying build output ==="
