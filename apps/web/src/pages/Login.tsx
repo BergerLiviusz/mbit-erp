@@ -224,6 +224,11 @@ export default function Login({ onLogin }: LoginProps) {
             {loading ? 'Bejelentkezés...' : 'Bejelentkezés'}
           </button>
         </form>
+
+        <p className="text-center text-xs text-gray-500 mt-6">
+          MBIT ERP {import.meta.env.VITE_APP_VERSION ? `v${import.meta.env.VITE_APP_VERSION}` : ''}
+          {import.meta.env.VITE_ACTIVE_PACKAGE === 'customer-4module' ? ' · Customer Edition' : ''}
+        </p>
       </div>
     </div>
   );

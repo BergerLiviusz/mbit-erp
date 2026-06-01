@@ -16,6 +16,8 @@ export interface PackageDefinition {
   modules: Record<PackageModuleKey, boolean>;
   buildName: string;
   artifactSlug: string;
+  /** Windows portable ZIP modul rövidítés (pl. CRM-DMS-LOG-WF) */
+  artifactModuleLabel?: string;
   /** Régi build / telepítés azonosítók */
   legacyIds?: string[];
 }
@@ -64,7 +66,7 @@ export const ERP_PACKAGES: Record<string, PackageDefinition> = {
     id: 'customer-4module',
     displayName: 'Ügyfél 4 modulos csomag',
     editionLabel: 'Customer Edition',
-    version: APP_VERSION,
+    version: '1.0.1b',
     modules: {
       documents: true,
       team: true,
@@ -75,6 +77,7 @@ export const ERP_PACKAGES: Record<string, PackageDefinition> = {
     },
     buildName: 'mbit-erp-customer-4module',
     artifactSlug: 'customer-4module',
+    artifactModuleLabel: 'CRM-DMS-LOG-WF',
     legacyIds: ['ERP_CUSTOMER_4MODULE', 'ERP_CRM_DMS_LOGISTICS_WORKFLOW'],
   },
   'ginop-crm-dms-hr': {
@@ -318,6 +321,19 @@ export function isPermissionAllowedInPackage(
 export function buildArtifactBaseName(packageId?: string | null): string {
   const pkg = getPackageDefinition(packageId);
   return `mbit-erp-v${pkg.version}-${pkg.artifactSlug}`;
+}
+
+export function buildWindowsPortableZipName(packageId?: string | null): string {
+  const pkg = getPackageDefinition(packageId);
+  const modules = pkg.artifactModuleLabel ? `-${pkg.artifactModuleLabel}` : '';
+  return `mbit-erp-v${pkg.version}-${pkg.artifactSlug}${modules}-windows.zip`;
+}
+
+export function resolvePackageVersion(packageId?: string | null): string {
+  if (process.env.APP_VERSION?.trim()) {
+    return process.env.APP_VERSION.trim();
+  }
+  return getPackageDefinition(packageId).version;
 }
 
 /** Frontend modules.ts kulcsok → package modul */

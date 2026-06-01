@@ -174,6 +174,7 @@ jobs:
         shell: pwsh
         env:
           ERP_PACKAGE: ${{ steps.package.outputs.package }}
+          APP_VERSION: ${{ steps.package.outputs.package == 'customer-4module' && '1.0.1b' || '1.0.1a' }}
         run: |
           Write-Host "=== Building server (ERP_PACKAGE=$env:ERP_PACKAGE) ==="
           # Config must exist before Nest compile; prebuild in apps/server repeats this safely.
@@ -198,6 +199,22 @@ jobs:
           cd apps/server
           Remove-Item -Recurse -Force node_modules -ErrorAction SilentlyContinue
           npm install --omit=dev --install-strategy=hoisted --install-links=false --workspaces=false
+
+          Write-Host ""
+          Write-Host "=== Installing @mbit-erp/config for packaged backend runtime ==="
+          cd ../..
+          npm run build:config
+          node apps/desktop/scripts/ensure-backend-config-package.cjs
+          if (-not (Test-Path "apps/server/node_modules/@mbit-erp/config/package.json")) {
+            Write-Host "❌ ERROR: @mbit-erp/config missing after ensure-backend-config-package"
+            exit 1
+          }
+          if (-not (Test-Path "apps/server/node_modules/@mbit-erp/config/dist/index.js")) {
+            Write-Host "❌ ERROR: @mbit-erp/config/dist/index.js missing"
+            exit 1
+          }
+          Write-Host "✅ @mbit-erp/config installed in apps/server/node_modules"
+          cd apps/server
           
           Write-Host ""
           Write-Host "=== Generating Prisma Client for production ==="
@@ -277,9 +294,12 @@ jobs:
         shell: pwsh
         env:
           VITE_ACTIVE_PACKAGE: ${{ steps.package.outputs.package }}
+          ERP_PACKAGE: ${{ steps.package.outputs.package }}
+          APP_VERSION: ${{ steps.package.outputs.package == 'customer-4module' && '1.0.1b' || '1.0.1a' }}
         run: |
           Write-Host "=== Building frontend for package: ${{ steps.package.outputs.package }} ==="
           Write-Host "VITE_ACTIVE_PACKAGE environment variable: $env:VITE_ACTIVE_PACKAGE"
+          Write-Host "APP_VERSION: $env:APP_VERSION"
           
           # Verify the environment variable is set
           if (-not $env:VITE_ACTIVE_PACKAGE) {
@@ -366,8 +386,12 @@ jobs:
 
       - name: Package desktop app
         shell: pwsh
+        env:
+          ERP_PACKAGE: ${{ steps.package.outputs.package }}
+          VITE_ACTIVE_PACKAGE: ${{ steps.package.outputs.package }}
+          APP_VERSION: ${{ steps.package.outputs.package == 'customer-4module' && '1.0.1b' || '1.0.1a' }}
         run: |
-          Write-Host "=== Packaging desktop app ==="
+          Write-Host "=== Packaging desktop app (ERP_PACKAGE=$env:ERP_PACKAGE, APP_VERSION=$env:APP_VERSION) ==="
           cd apps/desktop
           
           # Clean release directory to avoid file locking issues on Windows
@@ -524,6 +548,20 @@ jobs:
             exit 1
           }
           Write-Host "✅ Prisma client found"
+
+          Write-Host ""
+          Write-Host "=== Verifying @mbit-erp/config in packaged backend ==="
+          $configPkg = "$unpackedBackend/node_modules/@mbit-erp/config/package.json"
+          $configMain = "$unpackedBackend/node_modules/@mbit-erp/config/dist/index.js"
+          if (-not (Test-Path $configPkg)) {
+            Write-Host "❌ CRITICAL ERROR: @mbit-erp/config/package.json not found in packaged backend!"
+            exit 1
+          }
+          if (-not (Test-Path $configMain)) {
+            Write-Host "❌ CRITICAL ERROR: @mbit-erp/config/dist/index.js not found in packaged backend!"
+            exit 1
+          }
+          Write-Host "✅ @mbit-erp/config present in packaged backend"
           
           Write-Host ""
           Write-Host "✅ Backend dependencies successfully bundled (all real files with content)"
@@ -575,11 +613,13 @@ jobs:
         run: |
           Write-Host "=== Creating portable ZIP from win-unpacked ==="
           
-          $packageJson = Get-Content "apps/desktop/package.json" -Raw | ConvertFrom-Json
-          $version = $packageJson.version
+          $package = "${{ steps.package.outputs.package }}"
+          $version = if ($package -eq "customer-4module") { "1.0.1b" } else { (Get-Content "apps/desktop/package.json" -Raw | ConvertFrom-Json).version }
+          $moduleLabel = if ($package -eq "customer-4module") { "-CRM-DMS-LOG-WF" } else { "" }
+          $slug = if ($package -eq "customer-4module") { "customer-4module" } else { $package }
           
           $unpackedDir = "apps/desktop/release/win-unpacked"
-          $zipPath = "apps/desktop/release/Mbit-ERP-Portable-$version.zip"
+          $zipPath = "apps/desktop/release/mbit-erp-v${version}-${slug}${moduleLabel}-windows.zip"
           
           if (-not (Test-Path $unpackedDir)) {
             Write-Host "❌ ERROR: win-unpacked directory not found!"
@@ -651,6 +691,7 @@ jobs:
           name: mbit-erp-${{ steps.package.outputs.package }}-windows-installer
           path: |
             apps/desktop/release/*Setup*.exe
+            apps/desktop/release/mbit-erp-v*-windows.zip
             apps/desktop/release/*Portable*.zip
           retention-days: 30
 

@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { SystemSettingsController } from './settings.controller';
 import { SystemSettingsService } from './settings.service';
 import { HealthController } from './health.controller';
+import { VersionController } from './version.controller';
 import { DiagnosticsController } from './diagnostics.controller';
 import { UserController } from './user.controller';
 import { UserService } from './user.service';
@@ -17,7 +18,7 @@ import { RbacModule } from '../common/rbac/rbac.module';
 
 @Module({
   imports: [PrismaModule, BackupModule, AuditModule, StorageModule, RbacModule],
-  controllers: [SystemSettingsController, HealthController, DiagnosticsController, UserController, RoleController, BugReportController],
+  controllers: [SystemSettingsController, HealthController, VersionController, DiagnosticsController, UserController, RoleController, BugReportController],
   providers: [SystemSettingsService, UserService, RoleService, BugReportService],
   exports: [SystemSettingsService, UserService, RoleService, BugReportService],
 })

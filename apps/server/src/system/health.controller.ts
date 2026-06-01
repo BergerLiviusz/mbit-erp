@@ -2,7 +2,10 @@ import { Controller, Get } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../common/storage/storage.service';
 import { Public } from '../common/rbac/rbac.decorator';
-import * as os from 'os';
+import {
+  getActivePackageIdFromEnv,
+  getPackageDefinition,
+} from '@mbit-erp/config';
 import * as fs from 'fs/promises';
 
 @Controller('health')
@@ -47,11 +50,15 @@ export class HealthController {
     }
 
     const overallStatus = dbStatus === 'healthy' && storageAvailable ? 'ok' : 'degraded';
+    const packageId = getActivePackageIdFromEnv();
+    const pkg = getPackageDefinition(packageId);
 
     return {
       status: overallStatus,
       timestamp: new Date().toISOString(),
-      version: '1.0.0',
+      version: process.env.APP_VERSION || pkg.version,
+      packageId: pkg.id,
+      edition: pkg.editionLabel,
       database: {
         status: dbStatus,
         latency: dbLatency,

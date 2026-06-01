@@ -46,10 +46,14 @@ function getActivePackage(): string {
 }
 
 const activePackage = getActivePackage();
+const appVersion =
+  process.env.APP_VERSION ||
+  (activePackage === 'customer-4module' ? '1.0.1b' : '1.0.1a');
 
 // Debug log a build során
 console.log('[Vite Config] VITE_ACTIVE_PACKAGE from env:', process.env.VITE_ACTIVE_PACKAGE);
 console.log('[Vite Config] Active package (determined):', activePackage);
+console.log('[Vite Config] APP_VERSION:', appVersion);
 
 export default defineConfig(({ mode }) => {
   return {
@@ -57,6 +61,7 @@ export default defineConfig(({ mode }) => {
     define: {
       // Build-time változó beállítása
       'import.meta.env.VITE_ACTIVE_PACKAGE': JSON.stringify(activePackage),
+      'import.meta.env.VITE_APP_VERSION': JSON.stringify(appVersion),
     },
   plugins: [
     react(),

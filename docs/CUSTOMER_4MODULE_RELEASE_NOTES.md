@@ -1,6 +1,6 @@
 # MBIT ERP – Ügyfél 4 modulos csomag (Customer Edition)
 
-**Verzió:** MBIT ERP v1.0.1a  
+**Verzió:** MBIT ERP v1.0.1b  
 **Package ID:** `customer-4module` (alias: `ERP_CUSTOMER_4MODULE`, legacy branch: `package-4`)  
 **Release dátum:** 2026-06-01  
 **Branding:** Customer Edition
@@ -52,7 +52,11 @@ cd apps/web && cross-env ELECTRON_BUILD=true VITE_ACTIVE_PACKAGE=customer-4modul
 cd apps/desktop && cross-env VITE_ACTIVE_PACKAGE=customer-4module ERP_PACKAGE=customer-4module npm run package:win
 ```
 
-**Artifact név:** `mbit-erp-v1.0.1a-customer-4module-windows.zip`
+**Artifact név:** `mbit-erp-v1.0.1b-customer-4module-CRM-DMS-LOG-WF-windows.zip`
+
+### v1.0.1b (runtime fix)
+- Packaged backend tartalmazza az `@mbit-erp/config` modult (`ensure-backend-config-package` + electron-builder extraResources).
+- Backend startup `Cannot find module '@mbit-erp/config'` hiba javítva.
 
 ## Termék részletek – UX javaslat
 
