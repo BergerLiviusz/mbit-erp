@@ -154,6 +154,36 @@ export const PACKAGE_CONFIGS: Record<string, PackageConfig> = {
       logistics: true
     }
   },
+  'dms-workflow-hr': {
+    name: 'DMS + Workflow + HR Edition',
+    modules: {
+      documents: true,
+      team: true,
+      controlling: false,
+      crm: false,
+      logistics: false
+    }
+  },
+  ERP_DMS_WORKFLOW_HR: {
+    name: 'DMS + Workflow + HR Edition',
+    modules: {
+      documents: true,
+      team: true,
+      controlling: false,
+      crm: false,
+      logistics: false
+    }
+  },
+  ERP_DMS_TEAM_HR: {
+    name: 'DMS + Workflow + HR Edition',
+    modules: {
+      documents: true,
+      team: true,
+      controlling: false,
+      crm: false,
+      logistics: false
+    }
+  },
   ERP_CUSTOMER_4MODULE: {
     name: 'Ügyfél 4 modulos csomag',
     modules: {
@@ -186,11 +216,21 @@ export const PACKAGE_CONFIGS: Record<string, PackageConfig> = {
   }
 };
 
+/** Legacy / alias package ID → canonical frontend package key */
+const PACKAGE_ALIASES: Record<string, keyof typeof PACKAGE_CONFIGS> = {
+  ERP_CUSTOMER_4MODULE: 'customer-4module',
+  ERP_CRM_DMS_LOGISTICS_WORKFLOW: 'customer-4module',
+  ERP_DMS_WORKFLOW_HR: 'dms-workflow-hr',
+  ERP_DMS_TEAM_HR: 'dms-workflow-hr',
+  'package-4': 'customer-4module',
+};
+
 // Aktuális csomag meghatározása build-time változóból
 export function getActivePackage(): keyof typeof PACKAGE_CONFIGS {
   // Vite build-time változó: VITE_ACTIVE_PACKAGE
   // Vite automatikusan elérhetővé teszi a VITE_ prefixű environment változókat
-  const packageName = import.meta.env.VITE_ACTIVE_PACKAGE || 'full';
+  const raw = import.meta.env.VITE_ACTIVE_PACKAGE || 'full';
+  const packageName = PACKAGE_ALIASES[raw] ?? raw;
   
   // Debug információ (csak development módban)
   if (import.meta.env.DEV) {

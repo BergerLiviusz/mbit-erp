@@ -13,6 +13,7 @@ on:
       - package-5
       - customer-4module
       - release/customer-crm-dms-logistics-workflow
+      - release/dms-workflow-hr
     tags:
       - 'v*'
   pull_request:
@@ -33,6 +34,7 @@ on:
           - package-4
           - package-5
           - customer-4module
+          - dms-workflow-hr
         default: 'full'
 
 permissions:
@@ -110,6 +112,9 @@ jobs:
           } elseif ("${{ github.ref }}" -eq "refs/heads/customer-4module" -or "${{ github.ref }}" -eq "refs/heads/release/customer-crm-dms-logistics-workflow") {
             $package = "customer-4module"
             Write-Host "Detected customer-4module release branch"
+          } elseif ("${{ github.ref }}" -eq "refs/heads/release/dms-workflow-hr") {
+            $package = "dms-workflow-hr"
+            Write-Host "Detected dms-workflow-hr release branch"
           } elseif ("${{ github.ref }}" -eq "refs/heads/main" -or "${{ github.ref }}" -eq "refs/heads/master") {
             $package = "full"
             Write-Host "Detected main/master branch, using full package"
@@ -174,7 +179,7 @@ jobs:
         shell: pwsh
         env:
           ERP_PACKAGE: ${{ steps.package.outputs.package }}
-          APP_VERSION: ${{ steps.package.outputs.package == 'customer-4module' && '1.0.1b' || '1.0.1a' }}
+          APP_VERSION: ${{ steps.package.outputs.package == 'dms-workflow-hr' && '1.0.1c' || (steps.package.outputs.package == 'customer-4module' && '1.0.1b' || '1.0.1c') }}
         run: |
           Write-Host "=== Building server (ERP_PACKAGE=$env:ERP_PACKAGE) ==="
           # Config must exist before Nest compile; prebuild in apps/server repeats this safely.
@@ -295,7 +300,7 @@ jobs:
         env:
           VITE_ACTIVE_PACKAGE: ${{ steps.package.outputs.package }}
           ERP_PACKAGE: ${{ steps.package.outputs.package }}
-          APP_VERSION: ${{ steps.package.outputs.package == 'customer-4module' && '1.0.1b' || '1.0.1a' }}
+          APP_VERSION: ${{ steps.package.outputs.package == 'dms-workflow-hr' && '1.0.1c' || (steps.package.outputs.package == 'customer-4module' && '1.0.1b' || '1.0.1c') }}
         run: |
           Write-Host "=== Building frontend for package: ${{ steps.package.outputs.package }} ==="
           Write-Host "VITE_ACTIVE_PACKAGE environment variable: $env:VITE_ACTIVE_PACKAGE"
@@ -389,7 +394,7 @@ jobs:
         env:
           ERP_PACKAGE: ${{ steps.package.outputs.package }}
           VITE_ACTIVE_PACKAGE: ${{ steps.package.outputs.package }}
-          APP_VERSION: ${{ steps.package.outputs.package == 'customer-4module' && '1.0.1b' || '1.0.1a' }}
+          APP_VERSION: ${{ steps.package.outputs.package == 'dms-workflow-hr' && '1.0.1c' || (steps.package.outputs.package == 'customer-4module' && '1.0.1b' || '1.0.1c') }}
         run: |
           Write-Host "=== Packaging desktop app (ERP_PACKAGE=$env:ERP_PACKAGE, APP_VERSION=$env:APP_VERSION) ==="
           cd apps/desktop
@@ -614,12 +619,21 @@ jobs:
           Write-Host "=== Creating portable ZIP from win-unpacked ==="
           
           $package = "${{ steps.package.outputs.package }}"
-          $version = if ($package -eq "customer-4module") { "1.0.1b" } else { (Get-Content "apps/desktop/package.json" -Raw | ConvertFrom-Json).version }
-          $moduleLabel = if ($package -eq "customer-4module") { "-CRM-DMS-LOG-WF" } else { "" }
-          $slug = if ($package -eq "customer-4module") { "customer-4module" } else { $package }
+          $version = switch ($package) {
+            "customer-4module" { "1.0.1b" }
+            "dms-workflow-hr" { "1.0.1c" }
+            default { (Get-Content "apps/desktop/package.json" -Raw | ConvertFrom-Json).version }
+          }
+          $moduleLabel = switch ($package) {
+            "customer-4module" { "-CRM-DMS-LOG-WF" }
+            "dms-workflow-hr" { "-DMS-WF-HR" }
+            default { "" }
+          }
+          $slug = $package
+          $shortSha = "${{ github.sha }}".Substring(0, 7)
           
           $unpackedDir = "apps/desktop/release/win-unpacked"
-          $zipPath = "apps/desktop/release/mbit-erp-v${version}-${slug}${moduleLabel}-windows.zip"
+          $zipPath = "apps/desktop/release/mbit-erp-v${version}-${shortSha}-${slug}${moduleLabel}-windows.zip"
           
           if (-not (Test-Path $unpackedDir)) {
             Write-Host "❌ ERROR: win-unpacked directory not found!"

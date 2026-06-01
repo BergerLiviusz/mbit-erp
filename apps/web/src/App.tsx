@@ -347,7 +347,11 @@ function App() {
                 </Link>
                 </div>
               </div>
-              <div className="flex items-center">
+              <div className="flex items-center gap-4">
+                <span className="text-xs text-gray-400 hidden lg:inline" title="Alkalmazás verzió">
+                  MBIT ERP
+                  {import.meta.env.VITE_APP_VERSION ? ` v${import.meta.env.VITE_APP_VERSION}` : ''}
+                </span>
                 <button
                   onClick={handleLogout}
                   className="hover:bg-gray-800 px-3 py-2 rounded flex items-center gap-2"

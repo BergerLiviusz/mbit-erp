@@ -4,12 +4,14 @@ import { AuthGuard } from '@nestjs/passport';
 import { Permission } from './permission.enum';
 import { PERMISSIONS_KEY, IS_PUBLIC_KEY } from './rbac.decorator';
 import { PrismaService } from '../../prisma/prisma.service';
+import { PackageResolverService } from '../package/package-resolver.service';
 
 @Injectable()
 export class RbacGuard extends AuthGuard('jwt') implements CanActivate {
   constructor(
     private reflector: Reflector,
     private prisma: PrismaService,
+    private packages: PackageResolverService,
   ) {
     super();
   }
@@ -82,6 +84,15 @@ export class RbacGuard extends AuthGuard('jwt') implements CanActivate {
       return true;
     }
 
+    const allowedPermissions = requiredPermissions.filter((p) =>
+      this.packages.isPermissionAllowed(p),
+    );
+    if (allowedPermissions.length === 0) {
+      throw new ForbiddenException(
+        `A(z) "${this.packages.getActivePackage().displayName}" csomag nem tartalmazza a kért funkciót.`,
+      );
+    }
+
     const jwtAuthenticated = await super.canActivate(context);
     if (!jwtAuthenticated) {
       throw new ForbiddenException('Nincs bejelentkezve');
@@ -123,12 +134,12 @@ export class RbacGuard extends AuthGuard('jwt') implements CanActivate {
       }
     }
 
-    const hasPermission = requiredPermissions.some((permission) =>
+    const hasPermission = allowedPermissions.some((permission) =>
       userPermissions.has(permission),
     );
 
     if (!hasPermission) {
-      const permissionNames = requiredPermissions.join(', ');
+      const permissionNames = allowedPermissions.join(', ');
       throw new ForbiddenException(
         `Nincs megfelelő jogosultság. Szükséges: ${permissionNames}`,
       );

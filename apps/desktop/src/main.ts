@@ -9,6 +9,45 @@ let mainWindow: BrowserWindow | null = null;
 let backendProcess: ChildProcess | null = null;
 const BACKEND_PORT = 3000;
 
+interface ErpBuildMeta {
+  packageId: string;
+  version: string;
+  buildSha: string | null;
+  buildDate: string;
+  editionLabel: string;
+  displayName: string;
+  productName: string;
+}
+
+function loadErpBuildMeta(): ErpBuildMeta | null {
+  const candidates = [
+    path.join(process.resourcesPath, 'erp-build-meta.json'),
+    path.join(__dirname, '..', 'resources', 'erp-build-meta.json'),
+  ];
+  for (const candidate of candidates) {
+    try {
+      if (fs.existsSync(candidate)) {
+        return JSON.parse(fs.readFileSync(candidate, 'utf8')) as ErpBuildMeta;
+      }
+    } catch {
+      // try next candidate
+    }
+  }
+  return null;
+}
+
+const erpBuildMeta = loadErpBuildMeta();
+
+function getWindowTitle(): string {
+  if (erpBuildMeta?.version) {
+    return `MBIT ERP v${erpBuildMeta.version}`;
+  }
+  if (process.env.APP_VERSION) {
+    return `MBIT ERP v${process.env.APP_VERSION}`;
+  }
+  return 'MBIT ERP';
+}
+
 // Allow overriding userData path in development via USER_DATA_DIR
 // This is useful on macOS to test different packages with isolated data directories
 // NOTE: We only apply this in development (when the app is not packaged),
@@ -252,6 +291,14 @@ async function startBackend(): Promise<void> {
       JWT_SECRET: process.env.JWT_SECRET || 'mbit-erp-default-secret-change-in-production',
       ELECTRON_RUN_AS_NODE: '1',
       NODE_PATH: backendNodeModulesPath,
+      APP_VERSION: erpBuildMeta?.version || process.env.APP_VERSION || '1.0.1c',
+      ERP_PACKAGE:
+        erpBuildMeta?.packageId ||
+        process.env.ERP_PACKAGE ||
+        process.env.VITE_ACTIVE_PACKAGE ||
+        'full',
+      BUILD_SHA: erpBuildMeta?.buildSha || process.env.BUILD_SHA || process.env.GITHUB_SHA || '',
+      BUILD_DATE: erpBuildMeta?.buildDate || process.env.BUILD_DATE || '',
     };
 
     // Log environment setup (without sensitive data)
@@ -514,7 +561,7 @@ function createWindow(): void {
     height: 900,
     minWidth: 1024,
     minHeight: 768,
-    title: 'Mbit ERP',
+    title: getWindowTitle(),
     icon: iconPath,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),

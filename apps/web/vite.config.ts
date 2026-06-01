@@ -19,6 +19,9 @@ function getActivePackage(): string {
     console.log('[Vite Config] Git branch:', gitBranch);
     
     // Branch nevek -> package nevek mapping
+    if (gitBranch === 'release/dms-workflow-hr') {
+      return 'dms-workflow-hr';
+    }
     if (
       gitBranch === 'package-1' ||
       gitBranch === 'package-2' ||
@@ -48,7 +51,11 @@ function getActivePackage(): string {
 const activePackage = getActivePackage();
 const appVersion =
   process.env.APP_VERSION ||
-  (activePackage === 'customer-4module' ? '1.0.1b' : '1.0.1a');
+  (activePackage === 'dms-workflow-hr'
+    ? '1.0.1c'
+    : activePackage === 'customer-4module'
+      ? '1.0.1b'
+      : '1.0.1c');
 
 // Debug log a build során
 console.log('[Vite Config] VITE_ACTIVE_PACKAGE from env:', process.env.VITE_ACTIVE_PACKAGE);

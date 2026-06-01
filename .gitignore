@@ -166,6 +166,7 @@ mbit-data/
 # Generated icons (electron-builder auto-generates from PNG)
 # Note: icon.ico is needed for Windows builds, so it's tracked in git
 apps/desktop/resources/*.icns
+apps/desktop/resources/erp-build-meta.json
 resources/*.ico
 resources/*.icns
 

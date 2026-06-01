@@ -15,6 +15,8 @@ interface HealthStatus {
   status: string;
   timestamp: string;
   version: string;
+  packageId?: string;
+  edition?: string;
   database: { status: string; latency: number };
   storage: { status: string; dataDir: string; available: boolean };
 }
@@ -356,8 +358,20 @@ export default function Settings() {
         <div className="grid grid-cols-2 gap-4">
           <div className="bg-gray-50 p-4 rounded">
             <div className="text-sm text-gray-600">Verzió</div>
-            <div className="text-lg font-semibold">{health.version}</div>
+            <div className="text-lg font-semibold">
+              MBIT ERP v{health.version}
+            </div>
           </div>
+
+          {health.edition && (
+            <div className="bg-gray-50 p-4 rounded">
+              <div className="text-sm text-gray-600">Csomag / kiadás</div>
+              <div className="text-lg font-semibold">{health.edition}</div>
+              {health.packageId && (
+                <div className="text-sm text-gray-500">{health.packageId}</div>
+              )}
+            </div>
+          )}
           
           <div className="bg-gray-50 p-4 rounded">
             <div className="text-sm text-gray-600">Állapot</div>

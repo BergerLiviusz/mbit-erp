@@ -1,5 +1,5 @@
 /** Központi alkalmazásverzió – GINOP audit és UI egyetlen forrása. */
-export const APP_VERSION = '1.0.1a';
+export const APP_VERSION = '1.0.1c';
 export const APP_NAME = 'MBIT ERP';
 export const APP_VENDOR = 'MB-IT Kft.';
 
