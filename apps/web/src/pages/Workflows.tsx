@@ -18,6 +18,31 @@ interface Role {
   leiras?: string | null;
 }
 
+type StepAssignFields = {
+  assignedToId?: string | null;
+  assignedUserIds?: string | null;
+};
+
+function getStepAssigneeIds(step: StepAssignFields): string[] {
+  const ids: string[] = [];
+  if (step.assignedToId) ids.push(step.assignedToId);
+  if (step.assignedUserIds) {
+    for (const part of step.assignedUserIds.split(',')) {
+      const id = part.trim();
+      if (id && !ids.includes(id)) ids.push(id);
+    }
+  }
+  return ids;
+}
+
+function buildStepAssignmentPatch(selectedIds: string[]) {
+  const unique = [...new Set(selectedIds.filter(Boolean))];
+  return {
+    assignedToId: unique[0] || undefined,
+    assignedUserIds: unique.length > 1 ? unique.slice(1).join(',') : undefined,
+  };
+}
+
 export default function Workflows() {
   const { data: workflows, isLoading } = useWorkflows();
   const createWorkflow = useCreateWorkflow();
@@ -170,6 +195,7 @@ export default function Workflows() {
         szin: step.szin || '#3B82F6',
         kotelezo: step.kotelezo,
         assignedToId: step.assignedToId || undefined,
+        assignedUserIds: step.assignedUserIds || undefined,
         roleId: step.roleId || undefined,
       })),
     });
@@ -559,45 +585,24 @@ export default function Workflows() {
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <label className="block text-xs text-gray-600 mb-1">Hozzárendelt személy</label>
+                        <label className="block text-xs text-gray-600 mb-1">Hozzárendelt személyek</label>
                         <select
-                          value={step.assignedToId || ''}
-                          onChange={(e) => handleStepChange(index, 'assignedToId', e.target.value || undefined)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                          multiple
+                          value={getStepAssigneeIds(step)}
+                          onChange={(e) => {
+                            const selected = Array.from(e.target.selectedOptions).map((o) => o.value);
+                            const patch = buildStepAssignmentPatch(selected);
+                            const newSteps = [...formData.steps];
+                            newSteps[index] = { ...newSteps[index], ...patch };
+                            setFormData({ ...formData, steps: newSteps });
+                          }}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm min-h-[88px]"
                         >
-                          <option value="">-- Válasszon --</option>
                           {users.map(u => (
                             <option key={u.id} value={u.id}>{u.nev} ({u.email})</option>
                           ))}
                         </select>
-                      </div>
-                      <div>
-                        <label className="block text-xs text-gray-600 mb-1">Szerepkör</label>
-                        <select
-                          value={step.roleId || ''}
-                          onChange={(e) => handleStepChange(index, 'roleId', e.target.value || undefined)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                        >
-                          <option value="">-- Válasszon --</option>
-                          {roles.map(r => (
-                            <option key={r.id} value={r.id}>{r.nev}</option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <label className="block text-xs text-gray-600 mb-1">Hozzárendelt személy</label>
-                        <select
-                          value={step.assignedToId || ''}
-                          onChange={(e) => handleStepChange(index, 'assignedToId', e.target.value || undefined)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                        >
-                          <option value="">-- Válasszon --</option>
-                          {users.map(u => (
-                            <option key={u.id} value={u.id}>{u.nev} ({u.email})</option>
-                          ))}
-                        </select>
+                        <p className="text-xs text-gray-500 mt-1">Ctrl/Cmd + kattintás: több személy</p>
                       </div>
                       <div>
                         <label className="block text-xs text-gray-600 mb-1">Szerepkör</label>
@@ -765,17 +770,24 @@ export default function Workflows() {
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <label className="block text-xs text-gray-600 mb-1">Hozzárendelt személy</label>
+                        <label className="block text-xs text-gray-600 mb-1">Hozzárendelt személyek</label>
                         <select
-                          value={step.assignedToId || ''}
-                          onChange={(e) => handleEditStepChange(index, 'assignedToId', e.target.value || undefined)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                          multiple
+                          value={getStepAssigneeIds(step)}
+                          onChange={(e) => {
+                            const selected = Array.from(e.target.selectedOptions).map((o) => o.value);
+                            const patch = buildStepAssignmentPatch(selected);
+                            const newSteps = [...(editFormData.steps || [])];
+                            newSteps[index] = { ...newSteps[index], ...patch };
+                            setEditFormData({ ...editFormData, steps: newSteps });
+                          }}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm min-h-[88px]"
                         >
-                          <option value="">-- Válasszon --</option>
                           {users.map(u => (
                             <option key={u.id} value={u.id}>{u.nev} ({u.email})</option>
                           ))}
                         </select>
+                        <p className="text-xs text-gray-500 mt-1">Ctrl/Cmd + kattintás: több személy</p>
                       </div>
                       <div>
                         <label className="block text-xs text-gray-600 mb-1">Szerepkör</label>

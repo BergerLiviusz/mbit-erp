@@ -15,8 +15,27 @@ export interface CreateWorkflowStepDto {
   lepesTipus?: string; // Szabadon beírható lépés típusa
   szin?: string; // Szín hex kódban
   kotelezo?: boolean;
-  assignedToId?: string; // Hozzárendelt felhasználó
+  assignedToId?: string; // Elsődleges hozzárendelt felhasználó
+  assignedUserIds?: string; // További user ID-k (vesszővel elválasztva)
   roleId?: string; // Szerepkör
+}
+
+function normalizeStepAssignmentFields(step: {
+  assignedToId?: string | null;
+  assignedUserIds?: string | null;
+}): { assignedToId: string | null; assignedUserIds: string | null } {
+  const ids: string[] = [];
+  if (step.assignedToId) ids.push(step.assignedToId);
+  if (step.assignedUserIds) {
+    for (const part of step.assignedUserIds.split(',')) {
+      const id = part.trim();
+      if (id && !ids.includes(id)) ids.push(id);
+    }
+  }
+  return {
+    assignedToId: ids[0] ?? null,
+    assignedUserIds: ids.length > 1 ? ids.slice(1).join(',') : null,
+  };
 }
 
 export interface UpdateWorkflowDto {
@@ -32,6 +51,7 @@ export interface UpdateWorkflowDto {
     szin?: string;
     kotelezo?: boolean;
     assignedToId?: string;
+    assignedUserIds?: string;
     roleId?: string;
   }>;
 }
@@ -43,8 +63,9 @@ export interface UpdateWorkflowStepDto {
   lepesTipus?: string;
   szin?: string;
   kotelezo?: boolean;
-  assignedToId?: string; // Hozzárendelt felhasználó
-  roleId?: string; // Szerepkör
+  assignedToId?: string;
+  assignedUserIds?: string;
+  roleId?: string;
 }
 
 @Injectable()
@@ -158,16 +179,20 @@ export class WorkflowService {
         aktiv: dto.aktiv ?? true,
         createdById: userId,
         steps: {
-          create: dto.steps.map(step => ({
-            nev: step.nev,
-            leiras: step.leiras,
-            sorrend: step.sorrend,
-            lepesTipus: step.lepesTipus,
-            szin: step.szin || '#3B82F6',
-            kotelezo: step.kotelezo ?? false,
-            assignedToId: step.assignedToId,
-            roleId: step.roleId,
-          })),
+          create: dto.steps.map((step) => {
+            const assignment = normalizeStepAssignmentFields(step);
+            return {
+              nev: step.nev,
+              leiras: step.leiras,
+              sorrend: step.sorrend,
+              lepesTipus: step.lepesTipus,
+              szin: step.szin || '#3B82F6',
+              kotelezo: step.kotelezo ?? false,
+              assignedToId: assignment.assignedToId,
+              assignedUserIds: assignment.assignedUserIds,
+              roleId: step.roleId,
+            };
+          }),
         },
       },
       include: {
@@ -240,6 +265,8 @@ export class WorkflowService {
 
       // Update or create steps
       for (const stepDto of dto.steps) {
+        const assignment = normalizeStepAssignmentFields(stepDto);
+
         if (stepDto.id && existingStepIds.includes(stepDto.id)) {
           // Update existing step
           await this.prisma.workflowStep.update({
@@ -251,7 +278,8 @@ export class WorkflowService {
               lepesTipus: stepDto.lepesTipus,
               szin: stepDto.szin,
               kotelezo: stepDto.kotelezo,
-              assignedToId: stepDto.assignedToId,
+              assignedToId: assignment.assignedToId,
+              assignedUserIds: assignment.assignedUserIds,
               roleId: stepDto.roleId,
             },
           });
@@ -266,7 +294,8 @@ export class WorkflowService {
               lepesTipus: stepDto.lepesTipus,
               szin: stepDto.szin || '#3B82F6',
               kotelezo: stepDto.kotelezo ?? false,
-              assignedToId: stepDto.assignedToId,
+              assignedToId: assignment.assignedToId,
+              assignedUserIds: assignment.assignedUserIds,
               roleId: stepDto.roleId,
             },
           });

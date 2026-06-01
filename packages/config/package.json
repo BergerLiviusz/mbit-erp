@@ -1,9 +1,13 @@
 {
   "name": "@mbit-erp/config",
-  "version": "1.0.0",
+  "version": "1.0.1a",
   "private": true,
-  "main": "./index.js",
-  "files": ["*.js", "*.json"],
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": ["dist/**/*"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
   "devDependencies": {
     "typescript": "^5.3.3"
   }

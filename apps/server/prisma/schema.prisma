@@ -2138,7 +2138,8 @@ model WorkflowStep {
   lepesTipus String? // Szabadon beírható lépés típusa (pl. "Ellenőrzés", "Jóváhagyás")
   szin       String?  @default("#3B82F6") // Szín hex kódban
   kotelezo   Boolean  @default(false)
-  assignedToId String? // Hozzárendelt felhasználó
+  assignedToId String? // Elsődleges hozzárendelt felhasználó
+  assignedUserIds String? // További hozzárendeltek (vesszővel elválasztott user ID-k)
   roleId     String? // Szerepkör
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt

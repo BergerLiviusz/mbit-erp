@@ -96,7 +96,7 @@ export class CommentService {
       throw new ForbiddenException('Nincs jogosultságod a komment szerkesztéséhez');
     }
 
-    return this.prisma.taskComment.update({
+    const updated = await this.prisma.taskComment.update({
       where: { id },
       data: dto,
       include: {
@@ -109,6 +109,17 @@ export class CommentService {
         },
       },
     });
+
+    await this.activityService.createActivity(
+      comment.taskId,
+      userId,
+      TaskActivityType.UPDATED,
+      'Hozzászólás szerkesztve',
+      comment.szoveg,
+      dto.szoveg,
+    );
+
+    return updated;
   }
 
   async delete(id: string, userId: string) {

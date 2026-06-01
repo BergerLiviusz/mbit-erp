@@ -17,6 +17,7 @@ interface Document {
   ervenyessegVeg?: string | null;
   lejarat?: string | null;
   jelenlegiHely?: string | null;
+  iratHelye?: string | null;
   category?: {
     id: string;
     nev: string;
@@ -64,6 +65,17 @@ interface Document {
   } | null;
   createdAt: string;
   updatedAt: string;
+  felelos?: string | null;
+  access?: Array<{
+    id: string;
+    userId: string;
+    jogosultsag: string;
+    user: {
+      id: string;
+      nev: string;
+      email: string;
+    };
+  }>;
 }
 
 interface Category {
@@ -202,7 +214,14 @@ export default function Documents() {
 
       if (response.ok) {
         const data = await response.json();
-        setDocuments(data.data || []);
+        const rows = (data.data || []).map((row: Record<string, unknown>) => {
+          const hely =
+            row.jelenlegiHely ||
+            row.iratHelye ||
+            (row.felelos && !row.jelenlegiHely ? row.felelos : null);
+          return { ...row, jelenlegiHely: hely };
+        });
+        setDocuments(rows);
       }
     } catch (error) {
       console.error('Hiba a dokumentumok betöltésekor:', error);
@@ -627,6 +646,7 @@ export default function Documents() {
         ervenyessegKezdet: formData.ervenyessegKezdet || undefined,
         ervenyessegVeg: formData.ervenyessegVeg || undefined,
         lejarat: formData.lejarat || undefined,
+        jelenlegiHely: formData.jelenlegiHely || undefined,
       };
 
       const createResponse = await apiFetch(`/dms/documents`, {
@@ -811,23 +831,45 @@ export default function Documents() {
 
   const loadUsers = async () => {
     try {
-      const response = await apiFetch(`/system/users`);
+      const response = await apiFetch(`/system/users?skip=0&take=200`);
       if (response.ok) {
         const data = await response.json();
-        setUsers(data || []);
+        const list = Array.isArray(data) ? data : (data.items || data.data || []);
+        setUsers(Array.isArray(list) ? list : []);
       }
     } catch (error) {
       console.error('Hiba a felhasználók betöltésekor:', error);
     }
   };
 
+  const normalizeDocumentDetail = (doc: Document & Record<string, unknown>): Document => {
+    const tags = Array.isArray(doc.tags) ? doc.tags : [];
+    const versions = Array.isArray(doc.versions) ? doc.versions : [];
+    const workflowLogs = Array.isArray(doc.workflowLogs) ? doc.workflowLogs : [];
+    const access = Array.isArray(doc.access) ? doc.access : [];
+    const jelenlegiHely =
+      (typeof doc.jelenlegiHely === 'string' && doc.jelenlegiHely) ||
+      (typeof doc.iratHelye === 'string' && doc.iratHelye) ||
+      (typeof doc.felelos === 'string' && doc.felelos && !doc.jelenlegiHely ? doc.felelos : null) ||
+      null;
+
+    return {
+      ...doc,
+      jelenlegiHely,
+      tags,
+      versions,
+      workflowLogs,
+      access,
+    };
+  };
+
   const handleViewDetails = async (documentId: string) => {
     try {
       const response = await apiFetch(`/dms/documents/${documentId}`);
       if (response.ok) {
-        const doc = await response.json();
+        const doc = normalizeDocumentDetail(await response.json());
         setDetailDocument(doc);
-        setDocumentAccess(doc.access || []);
+        setDocumentAccess(Array.isArray(doc.access) ? doc.access : []);
         setIsDetailModalOpen(true);
         await loadUsers();
       }
@@ -856,9 +898,9 @@ export default function Documents() {
         // Refresh document details
         const docResponse = await apiFetch(`/dms/documents/${documentId}`);
         if (docResponse.ok) {
-          const doc = await docResponse.json();
+          const doc = normalizeDocumentDetail(await docResponse.json());
           setDetailDocument(doc);
-          setDocumentAccess(doc.access || []);
+          setDocumentAccess(Array.isArray(doc.access) ? doc.access : []);
         }
       } else {
         const errorData = await response.json();
@@ -884,9 +926,9 @@ export default function Documents() {
         // Refresh document details
         const docResponse = await apiFetch(`/dms/documents/${documentId}`);
         if (docResponse.ok) {
-          const doc = await docResponse.json();
+          const doc = normalizeDocumentDetail(await docResponse.json());
           setDetailDocument(doc);
-          setDocumentAccess(doc.access || []);
+          setDocumentAccess(Array.isArray(doc.access) ? doc.access : []);
         }
       } else {
         const errorData = await response.json();
@@ -1839,27 +1881,51 @@ export default function Documents() {
       >
         {detailDocument && (
           <div className="space-y-6">
-            {/* Alap információk */}
-            <div className="grid grid-cols-2 gap-4">
+            {/* Kiemelt üzleti mezők */}
+            <div className="grid grid-cols-2 gap-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
               <div>
                 <div className="text-sm text-gray-600">Iktatószám</div>
-                <div className="font-medium">{detailDocument.iktatoSzam}</div>
+                <div className="font-semibold text-lg">{detailDocument.iktatoSzam || '-'}</div>
+              </div>
+              <div>
+                <div className="text-sm text-gray-600">Dokumentumtípus</div>
+                <div className="font-medium">{getTipusBadge(detailDocument.tipus)}</div>
+              </div>
+              <div>
+                <div className="text-sm text-gray-600">Irat helye</div>
+                <div>
+                  {detailDocument.jelenlegiHely ? (
+                    <span className="px-2 py-1 rounded text-sm font-medium bg-purple-100 text-purple-800">
+                      {detailDocument.jelenlegiHely}
+                    </span>
+                  ) : (
+                    <span className="text-gray-400">-</span>
+                  )}
+                </div>
+              </div>
+              <div>
+                <div className="text-sm text-gray-600">Felelős</div>
+                <div className="font-medium">{(detailDocument as { felelos?: string }).felelos || detailDocument.createdBy?.nev || '-'}</div>
+              </div>
+              <div>
+                <div className="text-sm text-gray-600">Állapot</div>
+                <div>{getAllapotBadge(detailDocument.allapot)}</div>
               </div>
               <div>
                 <div className="text-sm text-gray-600">Név</div>
                 <div className="font-medium">{detailDocument.nev}</div>
               </div>
+            </div>
+
+            {/* Metaadatok */}
+            <div className="grid grid-cols-2 gap-4 text-sm border-t pt-4">
               <div>
-                <div className="text-sm text-gray-600">Típus</div>
-                <div>{getTipusBadge(detailDocument.tipus)}</div>
-              </div>
-              <div>
-                <div className="text-sm text-gray-600">Irány</div>
+                <div className="text-gray-500">Irány</div>
                 <div>
                   {detailDocument.irany ? (
                     <span className={`px-2 py-1 rounded text-xs font-medium ${
-                      detailDocument.irany === 'bejovo' 
-                        ? 'bg-green-100 text-green-800' 
+                      detailDocument.irany === 'bejovo'
+                        ? 'bg-green-100 text-green-800'
                         : 'bg-blue-100 text-blue-800'
                     }`}>
                       {detailDocument.irany === 'bejovo' ? 'Beérkező' : 'Kimenő'}
@@ -1870,40 +1936,24 @@ export default function Documents() {
                 </div>
               </div>
               <div>
-                <div className="text-sm text-gray-600">Kategória</div>
+                <div className="text-gray-500">Kategória</div>
                 <div>{detailDocument.category?.nev || '-'}</div>
               </div>
               <div>
-                <div className="text-sm text-gray-600">Ügyfél</div>
+                <div className="text-gray-500">Ügyfél</div>
                 <div>{detailDocument.account?.nev || '-'}</div>
               </div>
               <div>
-                <div className="text-sm text-gray-600">Irat helye</div>
-                <div>
-                  {detailDocument.jelenlegiHely ? (
-                    <span className="px-2 py-1 rounded text-xs font-medium bg-purple-100 text-purple-800">
-                      {detailDocument.jelenlegiHely}
-                    </span>
-                  ) : (
-                    <span className="text-gray-400">-</span>
-                  )}
-                </div>
+                <div className="text-gray-500">Létrehozva</div>
+                <div className="text-gray-700">{formatDate(detailDocument.createdAt)}</div>
               </div>
               <div>
-                <div className="text-sm text-gray-600">Állapot</div>
-                <div>{getAllapotBadge(detailDocument.allapot)}</div>
+                <div className="text-gray-500">Utolsó módosítás</div>
+                <div className="text-gray-700">{formatDate(detailDocument.updatedAt)}</div>
               </div>
               <div>
-                <div className="text-sm text-gray-600">Létrehozva</div>
-                <div>{formatDate(detailDocument.createdAt)}</div>
-              </div>
-              <div>
-                <div className="text-sm text-gray-600">Módosítva</div>
-                <div>{formatDate(detailDocument.updatedAt)}</div>
-              </div>
-              <div>
-                <div className="text-sm text-gray-600">Létrehozta</div>
-                <div>{detailDocument.createdBy?.nev || '-'}</div>
+                <div className="text-gray-500">Létrehozta</div>
+                <div className="text-gray-700">{detailDocument.createdBy?.nev || '-'}</div>
               </div>
             </div>
 
@@ -2023,7 +2073,7 @@ export default function Documents() {
                       className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="">-- Válasszon felhasználót --</option>
-                      {users.filter(u => !documentAccess.some(acc => acc.userId === u.id)).map(u => (
+                      {(Array.isArray(users) ? users : []).filter(u => !documentAccess.some(acc => acc.userId === u.id)).map(u => (
                         <option key={u.id} value={u.id}>{u.nev} ({u.email})</option>
                       ))}
                     </select>

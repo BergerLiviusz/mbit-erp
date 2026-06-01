@@ -426,6 +426,20 @@ export function useCreateComment() {
   });
 }
 
+export function useUpdateComment() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: { szoveg: string }; taskId: string }) => {
+      const response = await axios.put(`/api/team/tasks/comments/${id}`, data);
+      return response.data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['task-comments', variables.taskId] });
+      queryClient.invalidateQueries({ queryKey: ['task', variables.taskId] });
+    },
+  });
+}
+
 // Dashboard hooks
 export function useDashboardStats() {
   return useQuery({

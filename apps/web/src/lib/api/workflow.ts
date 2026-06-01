@@ -11,6 +11,7 @@ export interface WorkflowStep {
   szin?: string | null;
   kotelezo: boolean;
   assignedToId?: string | null;
+  assignedUserIds?: string | null;
   roleId?: string | null;
   assignedTo?: {
     id: string;
@@ -57,6 +58,7 @@ export interface CreateWorkflowStepDto {
   szin?: string;
   kotelezo?: boolean;
   assignedToId?: string;
+  assignedUserIds?: string;
   roleId?: string;
 }
 
@@ -73,6 +75,7 @@ export interface UpdateWorkflowDto {
     szin?: string;
     kotelezo?: boolean;
     assignedToId?: string;
+    assignedUserIds?: string;
     roleId?: string;
   }>;
 }

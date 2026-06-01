@@ -135,7 +135,27 @@ export const PACKAGE_CONFIGS: Record<string, PackageConfig> = {
     }
   },
   'package-4': {
-    name: 'Csomag 4',
+    name: 'Csomag 4 (ügyfél 4 modul)',
+    modules: {
+      documents: true,
+      team: true,
+      controlling: false,
+      crm: true,
+      logistics: true
+    }
+  },
+  'customer-4module': {
+    name: 'Ügyfél 4 modulos csomag',
+    modules: {
+      documents: true,
+      team: true,
+      controlling: false,
+      crm: true,
+      logistics: true
+    }
+  },
+  ERP_CUSTOMER_4MODULE: {
+    name: 'Ügyfél 4 modulos csomag',
     modules: {
       documents: true,
       team: true,
@@ -245,10 +265,18 @@ export function getModuleMenuItems(module: 'documents' | 'team' | 'crm' | 'logis
   }
 }
 
+/** Package-ek, ahol az HR modul tiltott */
+const HR_DISABLED_PACKAGES = new Set([
+  'package-5',
+  'package-4',
+  'customer-4module',
+  'ERP_CUSTOMER_4MODULE',
+  'ERP_CRM_DMS_LOGISTICS_WORKFLOW',
+]);
+
 // Helper függvény: HR modul elérhetőségének ellenőrzése
-// Az HR modul minden package-ben elérhető, kivéve package-5-ben
 export function isHrModuleEnabled(): boolean {
   const activePackage = getActivePackage();
-  return activePackage !== 'package-5';
+  return !HR_DISABLED_PACKAGES.has(activePackage);
 }
 

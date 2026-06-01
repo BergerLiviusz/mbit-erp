@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useTask, useTaskComments, useCreateComment, useUpdateTask, useBoard, useTaskNotification, Task, TaskColumn } from '../../lib/api/team';
+import { useTask, useTaskComments, useCreateComment, useUpdateComment, useUpdateTask, useBoard, useTaskNotification, Task, TaskColumn, TaskComment } from '../../lib/api/team';
 import { format } from 'date-fns';
 import { hu } from 'date-fns/locale';
 import { X, Calendar, User, Mail } from 'lucide-react';
@@ -14,11 +14,15 @@ export default function TaskModal({ taskId, onClose, onTaskUpdate }: TaskModalPr
   const { data: task, isLoading } = useTask(taskId);
   const { data: comments } = useTaskComments(taskId);
   const createComment = useCreateComment();
+  const updateComment = useUpdateComment();
   const updateTask = useUpdateTask();
   const taskNotification = useTaskNotification();
   const [commentText, setCommentText] = useState('');
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+  const [editingCommentText, setEditingCommentText] = useState('');
   const [notificationError, setNotificationError] = useState<string>('');
   const [notificationSuccess, setNotificationSuccess] = useState<string>('');
+  const currentUserId = JSON.parse(localStorage.getItem('user') || '{}')?.id as string | undefined;
   
   // Load board to get available columns
   const boardId = task?.boardId || '';
@@ -34,6 +38,31 @@ export default function TaskModal({ taskId, onClose, onTaskUpdate }: TaskModalPr
       setCommentText('');
     } catch (error) {
       console.error('Failed to add comment:', error);
+    }
+  };
+
+  const handleStartEditComment = (comment: TaskComment) => {
+    setEditingCommentId(comment.id);
+    setEditingCommentText(comment.szoveg);
+  };
+
+  const handleCancelEditComment = () => {
+    setEditingCommentId(null);
+    setEditingCommentText('');
+  };
+
+  const handleSaveEditComment = async (commentId: string) => {
+    if (!editingCommentText.trim()) return;
+    try {
+      await updateComment.mutateAsync({
+        id: commentId,
+        taskId,
+        data: { szoveg: editingCommentText.trim() },
+      });
+      setEditingCommentId(null);
+      setEditingCommentText('');
+    } catch (error) {
+      console.error('Failed to update comment:', error);
     }
   };
 
@@ -213,19 +242,61 @@ export default function TaskModal({ taskId, onClose, onTaskUpdate }: TaskModalPr
           <div>
             <h3 className="font-semibold text-gray-900 mb-4">Hozzászólások</h3>
             <div className="space-y-4 mb-4">
-              {comments?.map((comment: any) => (
+              {(Array.isArray(comments) ? comments : []).map((comment: TaskComment) => (
                 <div key={comment.id} className="border-b border-gray-100 pb-4">
                   <div className="flex items-start gap-3">
                     <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
                         <span className="font-semibold text-gray-900">
                           {comment.user?.nev || 'Ismeretlen'}
                         </span>
                         <span className="text-xs text-gray-500">
                           {format(new Date(comment.createdAt), 'yyyy. MMMM d. HH:mm', { locale: hu })}
                         </span>
+                        {comment.updatedAt && comment.updatedAt !== comment.createdAt && (
+                          <span className="text-xs text-gray-400">
+                            (szerkesztve: {format(new Date(comment.updatedAt), 'yyyy. MM. dd. HH:mm', { locale: hu })})
+                          </span>
+                        )}
+                        {comment.userId === currentUserId && editingCommentId !== comment.id && (
+                          <button
+                            type="button"
+                            onClick={() => handleStartEditComment(comment)}
+                            className="text-xs text-blue-600 hover:text-blue-800 ml-auto"
+                          >
+                            Szerkesztés
+                          </button>
+                        )}
                       </div>
-                      <p className="text-gray-700">{comment.szoveg}</p>
+                      {editingCommentId === comment.id ? (
+                        <div className="space-y-2">
+                          <textarea
+                            value={editingCommentText}
+                            onChange={(e) => setEditingCommentText(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                            rows={3}
+                          />
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={() => handleSaveEditComment(comment.id)}
+                              disabled={!editingCommentText.trim() || updateComment.isPending}
+                              className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 disabled:opacity-50"
+                            >
+                              Mentés
+                            </button>
+                            <button
+                              type="button"
+                              onClick={handleCancelEditComment}
+                              className="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50"
+                            >
+                              Mégse
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-gray-700 whitespace-pre-wrap">{comment.szoveg}</p>
+                      )}
                     </div>
                   </div>
                 </div>

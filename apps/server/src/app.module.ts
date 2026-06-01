@@ -16,9 +16,11 @@ import { SeedModule } from './seed/seed.module';
 import { TeamModule } from './team/team.module';
 import { HrModule } from './hr/hr.module';
 import { ControllingModule } from './controlling/controlling.module';
+import { PackageGuardModule } from './common/package/package.module';
 
 @Module({
   imports: [
+    PackageGuardModule,
     PrismaModule,
     SeedModule,
     StorageModule,

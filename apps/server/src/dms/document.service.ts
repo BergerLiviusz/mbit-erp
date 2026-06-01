@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { SystemSettingsService } from '../system/settings.service';
+import { normalizeDocumentList, normalizeDocumentRecord } from './document-compat';
 
 export interface CreateDocumentDto {
   nev: string;
@@ -230,7 +231,12 @@ export class DocumentService {
     const page = Math.floor(skip / take) + 1;
     const pageSize = take;
 
-    return { data, total, page, pageSize };
+    return {
+      data: normalizeDocumentList(data),
+      total,
+      page,
+      pageSize,
+    };
   }
 
   async findOne(id: string, userId?: string, isAdmin: boolean = false) {
@@ -297,7 +303,7 @@ export class DocumentService {
       }
     }
 
-    return document;
+    return normalizeDocumentRecord(document);
   }
 
   async create(dto: CreateDocumentDto, userId?: string) {
@@ -333,7 +339,7 @@ export class DocumentService {
       },
     });
 
-    return document;
+    return normalizeDocumentRecord(document);
   }
 
   async update(id: string, dto: UpdateDocumentDto) {
@@ -355,10 +361,11 @@ export class DocumentService {
       updateData.irany = dto.irany || null;
     }
 
-    return this.prisma.document.update({
+    const updated = await this.prisma.document.update({
       where: { id },
       data: updateData,
     });
+    return normalizeDocumentRecord(updated);
   }
 
   async delete(id: string) {
