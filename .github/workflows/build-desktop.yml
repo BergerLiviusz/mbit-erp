@@ -172,19 +172,24 @@ jobs:
 
       - name: Build server
         shell: pwsh
+        env:
+          ERP_PACKAGE: ${{ steps.package.outputs.package }}
         run: |
-          Write-Host "=== Building server ==="
-          npm run build -w @mbit-erp/server
+          Write-Host "=== Building server (ERP_PACKAGE=$env:ERP_PACKAGE) ==="
+          # Config must exist before Nest compile; prebuild in apps/server repeats this safely.
+          npm run build:config
+          cd apps/server
+          npm run build
           
           Write-Host ""
           Write-Host "=== Verifying build output ==="
           if (-not (Test-Path "dist")) {
-            Write-Host "❌ ERROR: Build output directory not found!"
+            Write-Host "❌ ERROR: apps/server/dist not found after nest build!"
             exit 1
           }
           
           $distFiles = Get-ChildItem dist -Recurse -File | Measure-Object
-          Write-Host "✅ Build completed: $($distFiles.Count) files in dist/"
+          Write-Host "✅ Server build completed: $($distFiles.Count) files in apps/server/dist/"
 
       - name: Install server dependencies in HOISTED mode for packaging
         shell: pwsh
