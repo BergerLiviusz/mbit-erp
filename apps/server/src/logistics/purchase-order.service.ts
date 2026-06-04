@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { SystemSettingsService } from '../system/settings.service';
 
@@ -30,6 +30,7 @@ export interface UpdatePurchaseOrderDto {
   vegosszeg?: number;
   allapot?: string;
   megjegyzesek?: string;
+  items?: CreatePurchaseOrderItemDto[];
 }
 
 export interface PurchaseOrderFilters {
@@ -37,12 +38,37 @@ export interface PurchaseOrderFilters {
   supplierId?: string;
 }
 
+const CLOSED_STATUSES = ['RECEIVED', 'BEEERKEZETT', 'CLOSED', 'LEZARVA'];
+const DRAFT_STATUSES = ['DRAFT', 'TERVEZET', 'NYITOTT'];
+const LIMITED_EDIT_STATUSES = ['APPROVED', 'JOVAHAGYVA', 'ORDERED', 'RENDELVE'];
+
 @Injectable()
 export class PurchaseOrderService {
   constructor(
     private prisma: PrismaService,
     private settingsService: SystemSettingsService,
   ) {}
+
+  private normalizeStatus(status: string): string {
+    return status?.toUpperCase?.() ?? status;
+  }
+
+  private isDraft(status: string): boolean {
+    const s = this.normalizeStatus(status);
+    return DRAFT_STATUSES.includes(s);
+  }
+
+  private isClosed(status: string): boolean {
+    const s = this.normalizeStatus(status);
+    return CLOSED_STATUSES.includes(s);
+  }
+
+  private async hasStockMovements(purchaseOrderId: string): Promise<boolean> {
+    const count = await this.prisma.stockMove.count({
+      where: { referenciaId: purchaseOrderId },
+    });
+    return count > 0;
+  }
 
   async generateAzonosito(): Promise<string> {
     const pattern = await this.settingsService.get('numbering.purchase_order.pattern');
@@ -63,9 +89,7 @@ export class PurchaseOrderService {
 
     const nextNumber = (count + 1).toString().padStart(4, '0');
 
-    return template
-      .replace('{YYYY}', year)
-      .replace('{####}', nextNumber);
+    return template.replace('{YYYY}', year).replace('{####}', nextNumber);
   }
 
   async findAll(skip = 0, take = 50, filters?: PurchaseOrderFilters) {
@@ -104,7 +128,7 @@ export class PurchaseOrderService {
   }
 
   async findOne(id: string) {
-    return this.prisma.purchaseOrder.findUnique({
+    const order = await this.prisma.purchaseOrder.findUnique({
       where: { id },
       include: {
         supplier: true,
@@ -116,17 +140,23 @@ export class PurchaseOrderService {
         deliveryNotes: true,
       },
     });
+
+    if (!order) {
+      throw new NotFoundException('Beszerzési rendelés nem található');
+    }
+
+    return order;
   }
 
   async create(dto: CreatePurchaseOrderDto) {
     const azonosito = await this.generateAzonosito();
-
     const { items, ...orderData } = dto;
 
     return this.prisma.purchaseOrder.create({
       data: {
         ...orderData,
         azonosito,
+        allapot: dto.allapot || 'DRAFT',
         rendelesiDatum: dto.rendelesiDatum || new Date(),
         items: {
           create: items.map((item) => ({
@@ -149,9 +179,53 @@ export class PurchaseOrderService {
   }
 
   async update(id: string, dto: UpdatePurchaseOrderDto) {
+    const existing = await this.findOne(id);
+    const status = this.normalizeStatus(existing.allapot);
+
+    if (this.isClosed(status)) {
+      throw new BadRequestException(
+        'Beérkezett vagy lezárt rendelés nem módosítható. Használja az archiválást.',
+      );
+    }
+
+    if (LIMITED_EDIT_STATUSES.includes(status)) {
+      const allowedFields = ['megjegyzesek', 'szallitasiDatum'];
+      const dtoKeys = Object.keys(dto).filter((k) => (dto as any)[k] !== undefined);
+      const disallowed = dtoKeys.filter((k) => !allowedFields.includes(k));
+      if (disallowed.length > 0) {
+        throw new BadRequestException(
+          `Jóváhagyott/rendelt állapotban csak megjegyzés és szállítási dátum módosítható. Tiltott: ${disallowed.join(', ')}`,
+        );
+      }
+    }
+
+    const { items, ...orderData } = dto;
+
+    if (items && !this.isDraft(existing.allapot)) {
+      throw new BadRequestException('Tételek csak tervezet (DRAFT) állapotban módosíthatók.');
+    }
+
+    if (items) {
+      await this.prisma.purchaseOrderItem.deleteMany({ where: { purchaseOrderId: id } });
+    }
+
     return this.prisma.purchaseOrder.update({
       where: { id },
-      data: dto,
+      data: {
+        ...orderData,
+        ...(items
+          ? {
+              items: {
+                create: items.map((item) => ({
+                  itemId: item.itemId,
+                  mennyiseg: item.mennyiseg,
+                  egysegAr: item.egysegAr,
+                  osszeg: item.osszeg,
+                })),
+              },
+            }
+          : {}),
+      },
       include: {
         supplier: true,
         items: {
@@ -163,25 +237,64 @@ export class PurchaseOrderService {
     });
   }
 
-  async receive(id: string, warehouseId: string, receivedItems: Array<{ itemId: string; mennyiseg: number; sarzsGyartasiSzam?: string; beszerzesiAr?: number }>) {
+  async delete(id: string) {
+    const existing = await this.findOne(id);
+
+    if (!this.isDraft(existing.allapot)) {
+      throw new BadRequestException(
+        'Csak tervezet (DRAFT) állapotú rendelés törölhető. Lezárt rendelésnél használja az archiválást.',
+      );
+    }
+
+    if (await this.hasStockMovements(id)) {
+      throw new BadRequestException(
+        'A rendeléshez kapcsolódó készletmozgások miatt fizikai törlés nem engedélyezett.',
+      );
+    }
+
+    await this.prisma.purchaseOrderItem.deleteMany({ where: { purchaseOrderId: id } });
+    return this.prisma.purchaseOrder.delete({ where: { id } });
+  }
+
+  async archive(id: string) {
+    const existing = await this.findOne(id);
+
+    if (this.isDraft(existing.allapot)) {
+      throw new BadRequestException('Tervezet rendelés törölhető, archiválás helyett használja a törlést.');
+    }
+
+    return this.prisma.purchaseOrder.update({
+      where: { id },
+      data: { allapot: 'LEZARVA' },
+      include: {
+        supplier: true,
+        items: { include: { item: true } },
+      },
+    });
+  }
+
+  async receive(
+    id: string,
+    warehouseId: string,
+    receivedItems: Array<{
+      itemId: string;
+      mennyiseg: number;
+      sarzsGyartasiSzam?: string;
+      beszerzesiAr?: number;
+    }>,
+  ) {
     const purchaseOrder = await this.findOne(id);
 
-    if (!purchaseOrder) {
-      throw new Error('Beszerzési rendelés nem található');
+    if (this.isClosed(purchaseOrder.allapot)) {
+      throw new BadRequestException('A beszerzési rendelés már beérkezett vagy lezárva');
     }
 
-    if (purchaseOrder.allapot === 'BEEERKEZETT' || purchaseOrder.allapot === 'LEZARVA') {
-      throw new Error('A beszerzési rendelés már beérkezett vagy lezárva');
-    }
-
-    // Update stock levels for each received item
     for (const receivedItem of receivedItems) {
-      const orderItem = purchaseOrder.items.find(item => item.itemId === receivedItem.itemId);
+      const orderItem = purchaseOrder.items.find((item) => item.itemId === receivedItem.itemId);
       if (!orderItem) {
         throw new BadRequestException(`Termék nem található a rendelésben: ${receivedItem.itemId}`);
       }
 
-      // Find or create stock level
       const stockLevel = await this.prisma.stockLevel.findFirst({
         where: {
           itemId: receivedItem.itemId,
@@ -191,7 +304,6 @@ export class PurchaseOrderService {
       });
 
       if (stockLevel) {
-        // Update existing stock level
         await this.prisma.stockLevel.update({
           where: { id: stockLevel.id },
           data: {
@@ -201,7 +313,6 @@ export class PurchaseOrderService {
           },
         });
       } else {
-        // Create new stock level
         await this.prisma.stockLevel.create({
           data: {
             itemId: receivedItem.itemId,
@@ -211,7 +322,6 @@ export class PurchaseOrderService {
         });
       }
 
-      // Create stock lot if batch/serial number or purchase price is provided
       if (receivedItem.sarzsGyartasiSzam || receivedItem.beszerzesiAr) {
         await this.prisma.stockLot.create({
           data: {
@@ -224,7 +334,6 @@ export class PurchaseOrderService {
         });
       }
 
-      // Create stock move for audit trail
       await this.prisma.stockMove.create({
         data: {
           itemId: receivedItem.itemId,
@@ -238,7 +347,6 @@ export class PurchaseOrderService {
       });
     }
 
-    // Update purchase order status
     return this.prisma.purchaseOrder.update({
       where: { id },
       data: {

@@ -30,6 +30,8 @@ import { StockValuationController } from './stock-valuation.controller';
 import { StockValuationService } from './stock-valuation.service';
 import { StockReservationController } from './stock-reservation.controller';
 import { StockReservationService } from './stock-reservation.service';
+import { StockLotController } from './stock-lot.controller';
+import { ItemStockService } from './item-stock.service';
 import { PriceListController } from './price-list.controller';
 import { PriceListService } from './price-list.service';
 
@@ -51,9 +53,11 @@ import { PriceListService } from './price-list.service';
     StockValuationController,
     StockReservationController,
     PriceListController,
+    StockLotController,
   ],
   providers: [
     ItemService,
+    ItemStockService,
     WarehouseService,
     StockService,
     InventoryService,

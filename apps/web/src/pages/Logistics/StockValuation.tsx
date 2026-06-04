@@ -11,6 +11,7 @@ interface StockValuationResult {
   ertekelesMod: string;
   készletérték: number;
   atlagBeszerzesiAr: number;
+  priceSource?: 'LOT_COST' | 'ITEM_PURCHASE_PRICE' | 'MISSING_PRICE';
   lotDetails: Array<{
     lotId: string;
     sarzsGyartasiSzam?: string | null;
@@ -282,7 +283,18 @@ export default function StockValuation() {
                       {valuation.mennyiseg.toLocaleString('hu-HU')} db
                     </td>
                     <td className="p-4 text-sm text-right text-gray-600">
-                      {valuation.atlagBeszerzesiAr.toLocaleString('hu-HU')} HUF
+                      {valuation.priceSource === 'MISSING_PRICE' ? (
+                        <span className="text-amber-600" title="Nincs beszerzési ár adat">
+                          ⚠ Nincs ár
+                        </span>
+                      ) : (
+                        <>
+                          {valuation.atlagBeszerzesiAr.toLocaleString('hu-HU')} HUF
+                          {valuation.priceSource === 'ITEM_PURCHASE_PRICE' && (
+                            <span className="block text-xs text-gray-400">termék ár</span>
+                          )}
+                        </>
+                      )}
                     </td>
                     <td className="p-4 font-medium text-right text-gray-900">
                       {valuation.készletérték.toLocaleString('hu-HU')} HUF

@@ -38,6 +38,7 @@ import Chat from './pages/CRM/Chat';
 import StockValuation from './pages/Logistics/StockValuation';
 import StockReservations from './pages/Logistics/StockReservations';
 import PriceLists from './pages/PriceLists';
+import PurchaseOrders from './pages/PurchaseOrders';
 import { BackendStatus } from './components/BackendStatus';
 import { NotificationPanel } from './components/NotificationPanel';
 import { LoadingScreen } from './components/LoadingScreen';
@@ -408,6 +409,8 @@ function App() {
               <Route path="/returns" element={<ModuleRouteGuard module="logistics"><Returns /></ModuleRouteGuard>} />
               <Route path="/suppliers" element={<ModuleRouteGuard module="logistics"><Suppliers /></ModuleRouteGuard>} />
               <Route path="/price-lists" element={<ModuleRouteGuard module="logistics"><PriceLists /></ModuleRouteGuard>} />
+              <Route path="/purchase-orders" element={<ModuleRouteGuard module="logistics"><PurchaseOrders /></ModuleRouteGuard>} />
+              <Route path="/logistics/purchase-orders/:id" element={<ModuleRouteGuard module="logistics"><PurchaseOrders /></ModuleRouteGuard>} />
               <Route path="/orders-logistics" element={<ModuleRouteGuard module="logistics"><OrdersLogistics /></ModuleRouteGuard>} />
               <Route path="/inventory-sheets" element={<ModuleRouteGuard module="logistics"><InventorySheets /></ModuleRouteGuard>} />
               <Route path="/intrastat" element={<ModuleRouteGuard module="logistics"><Intrastat /></ModuleRouteGuard>} />

@@ -19,6 +19,53 @@ if (isElectron) {
 }
 
 /**
+ * Authenticated file download (PDF/XLSX) – works in Electron and web mode.
+ */
+export async function apiDownload(url: string, filename?: string): Promise<void> {
+  const response = await apiFetch(url);
+  if (!response.ok) {
+    const errorText = await response.text().catch(() => '');
+    throw new Error(errorText || `Letöltés sikertelen (${response.status})`);
+  }
+
+  const blob = await response.blob();
+  const blobUrl = window.URL.createObjectURL(blob);
+
+  let downloadName = filename;
+  if (!downloadName) {
+    const disposition = response.headers.get('Content-Disposition') || '';
+    const match = disposition.match(/filename="?([^";\n]+)"?/);
+    downloadName = match?.[1] || 'export';
+  }
+
+  const link = document.createElement('a');
+  link.href = blobUrl;
+  link.download = downloadName;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  window.URL.revokeObjectURL(blobUrl);
+}
+
+/**
+ * Open PDF in new tab for printing (Electron-compatible).
+ */
+export async function apiPrintPdf(url: string): Promise<void> {
+  const response = await apiFetch(url);
+  if (!response.ok) {
+    throw new Error(`PDF generálás sikertelen (${response.status})`);
+  }
+  const blob = await response.blob();
+  const blobUrl = window.URL.createObjectURL(blob);
+  const printWindow = window.open(blobUrl, '_blank');
+  if (printWindow) {
+    printWindow.addEventListener('load', () => {
+      printWindow.print();
+    });
+  }
+}
+
+/**
  * Fetch wrapper that handles Electron mode automatically
  * Strips /api prefix in Electron mode since backend doesn't use it
  */

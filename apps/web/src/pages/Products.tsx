@@ -50,6 +50,7 @@ interface Product {
     mennyiseg: number;
     beszerzesiAr: number;
     lejarat?: string | null;
+    expiryDate?: string | null;
     warehouse?: {
       id: string;
       nev: string;
@@ -57,6 +58,11 @@ interface Product {
     };
     createdAt: string;
   }>;
+  currentStockQuantity?: number;
+  stockValue?: number;
+  lastStockUpdateAt?: string | null;
+  nearestExpiryDate?: string | null;
+  purchasePrice?: number;
   createdAt: string;
 }
 
@@ -91,8 +97,12 @@ export default function Products() {
     szavatossagiIdoNap: '',
     itemGroupId: '',
     beszerzesiAdatok: '',
-    warehouses: [] as Array<{ warehouseId: string; mennyiseg: string; minimum: string; maximum: string; sarzsGyartasiSzam?: string }>,
+    warehouses: [] as Array<{ warehouseId: string; mennyiseg: string; minimum: string; maximum: string; sarzsGyartasiSzam?: string; lotId?: string }>,
   });
+
+  const [isLotsModalOpen, setIsLotsModalOpen] = useState(false);
+  const [productLots, setProductLots] = useState<Product['stockLots']>([]);
+  const [lotSaving, setLotSaving] = useState(false);
 
   const [itemGroupFormData, setItemGroupFormData] = useState({
     nev: '',
@@ -184,7 +194,7 @@ export default function Products() {
         
         // If stockLevels exist, calculate inventory value
         if (p.stockLevels && p.stockLevels.length > 0) {
-          const totalStock = p.stockLevels.reduce((stockSum, level) => {
+          const totalStock = p.currentStockQuantity ?? p.stockLevels.reduce((stockSum, level) => {
             const mennyiseg = level.mennyiseg || 0;
             return stockSum + mennyiseg;
           }, 0);
@@ -195,33 +205,73 @@ export default function Products() {
       }, 0);
   };
 
+  const getPurchasePrice = (product: Product) =>
+    product.purchasePrice ?? product.beszerzesiAr ?? 0;
+
+  const formatExpiry = (dateStr?: string | null) => {
+    if (!dateStr) return 'Nincs megadva';
+    return new Date(dateStr).toLocaleDateString('hu-HU');
+  };
+
   const handleOpenModal = async (product?: Product) => {
     if (product) {
       setEditingProductId(product.id);
-      setFormData({
-        nev: product.nev || '',
-        azonosito: product.azonosito || '',
-        leiras: product.leiras || '',
-        egyseg: product.egyseg || 'db',
-        beszerzesiAr: product.beszerzesiAr?.toString() || '0',
-        eladasiAr: product.eladasiAr?.toString() || '0',
-        afaKulcs: product.afaKulcs?.toString() || '27',
-        aktiv: product.aktiv ?? true,
-        szavatossagiIdoNap: product.szavatossagiIdoNap?.toString() || '',
-        itemGroupId: product.itemGroupId || '',
-        beszerzesiAdatok: (product as any).beszerzesiAdatok || '',
-        warehouses: product.stockLevels?.map(sl => {
-          // Find corresponding stock lot for this warehouse
-          const stockLot = product.stockLots?.find(lot => lot.warehouse?.id === sl.warehouseId);
-          return {
+      try {
+        const [productRes, lotsRes] = await Promise.all([
+          apiFetch(`/logistics/items/${product.id}`),
+          apiFetch(`/logistics/items/${product.id}/lots`),
+        ]);
+        const fullProduct = productRes.ok ? await productRes.json() : product;
+        const lots = lotsRes.ok ? await lotsRes.json() : fullProduct.stockLots || [];
+        setProductLots(lots);
+
+        setFormData({
+          nev: fullProduct.nev || '',
+          azonosito: fullProduct.azonosito || '',
+          leiras: fullProduct.leiras || '',
+          egyseg: fullProduct.egyseg || 'db',
+          beszerzesiAr: getPurchasePrice(fullProduct).toString(),
+          eladasiAr: fullProduct.eladasiAr?.toString() || '0',
+          afaKulcs: fullProduct.afaKulcs?.toString() || '27',
+          aktiv: fullProduct.aktiv ?? true,
+          szavatossagiIdoNap: fullProduct.szavatossagiIdoNap?.toString() || '',
+          itemGroupId: fullProduct.itemGroupId || '',
+          beszerzesiAdatok: fullProduct.beszerzesiAdatok || '',
+          warehouses: fullProduct.stockLevels?.map((sl: any) => {
+            const stockLot = lots.find((lot: any) => lot.warehouseId === sl.warehouseId || lot.warehouse?.id === sl.warehouseId);
+            return {
+              warehouseId: sl.warehouseId,
+              mennyiseg: sl.mennyiseg.toString(),
+              minimum: sl.minimum?.toString() || '',
+              maximum: sl.maximum?.toString() || '',
+              sarzsGyartasiSzam: stockLot?.sarzsGyartasiSzam || '',
+              lotId: stockLot?.id || '',
+            };
+          }) || [],
+        });
+      } catch {
+        setFormData({
+          nev: product.nev || '',
+          azonosito: product.azonosito || '',
+          leiras: product.leiras || '',
+          egyseg: product.egyseg || 'db',
+          beszerzesiAr: getPurchasePrice(product).toString(),
+          eladasiAr: product.eladasiAr?.toString() || '0',
+          afaKulcs: product.afaKulcs?.toString() || '27',
+          aktiv: product.aktiv ?? true,
+          szavatossagiIdoNap: product.szavatossagiIdoNap?.toString() || '',
+          itemGroupId: product.itemGroupId || '',
+          beszerzesiAdatok: (product as any).beszerzesiAdatok || '',
+          warehouses: product.stockLevels?.map(sl => ({
             warehouseId: sl.warehouseId,
             mennyiseg: sl.mennyiseg.toString(),
             minimum: sl.minimum?.toString() || '',
             maximum: sl.maximum?.toString() || '',
-            sarzsGyartasiSzam: stockLot?.sarzsGyartasiSzam || '',
-          };
-        }) || [],
-      });
+            sarzsGyartasiSzam: product.stockLots?.find(lot => lot.warehouse?.id === sl.warehouseId)?.sarzsGyartasiSzam || '',
+            lotId: product.stockLots?.find(lot => lot.warehouse?.id === sl.warehouseId)?.id || '',
+          })) || [],
+        });
+      }
     } else {
       setEditingProductId(null);
       setFormData({
@@ -1001,6 +1051,18 @@ export default function Products() {
             </div>
           </div>
 
+          {editingProductId && productLots && productLots.length > 1 && (
+            <div className="border-t pt-4">
+              <button
+                type="button"
+                onClick={() => setIsLotsModalOpen(true)}
+                className="text-sm bg-indigo-600 text-white px-3 py-2 rounded hover:bg-indigo-700"
+              >
+                Sarzsok kezelése ({productLots.length})
+              </button>
+            </div>
+          )}
+
           <div className="flex justify-end space-x-3 pt-4">
             <button
               type="button"
@@ -1019,6 +1081,81 @@ export default function Products() {
             </button>
           </div>
         </form>
+      </Modal>
+
+      {/* Sarzsok kezelése modal */}
+      <Modal
+        isOpen={isLotsModalOpen}
+        onClose={() => setIsLotsModalOpen(false)}
+        title="Sarzsok kezelése"
+        size="lg"
+      >
+        <div className="space-y-3">
+          {productLots?.map((lot) => (
+            <div key={lot.id} className="border rounded p-3 grid grid-cols-2 gap-2 text-sm">
+              <div>
+                <label className="text-xs text-gray-600">Raktár</label>
+                <div>{lot.warehouse?.nev || '-'}</div>
+              </div>
+              <div>
+                <label className="text-xs text-gray-600">Mennyiség</label>
+                <div>{lot.mennyiseg} db</div>
+              </div>
+              <div className="col-span-2">
+                <label className="text-xs text-gray-600">Sarzs/Gyártási szám</label>
+                <input
+                  type="text"
+                  defaultValue={lot.sarzsGyartasiSzam || ''}
+                  id={`lot-sarzs-${lot.id}`}
+                  className="w-full px-2 py-1 border rounded"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-gray-600">Lejárat</label>
+                <input
+                  type="date"
+                  defaultValue={lot.lejarat ? lot.lejarat.split('T')[0] : ''}
+                  id={`lot-lejarat-${lot.id}`}
+                  className="w-full px-2 py-1 border rounded"
+                />
+              </div>
+              <div className="flex items-end">
+                <button
+                  type="button"
+                  disabled={lotSaving}
+                  onClick={async () => {
+                    const sarzsInput = document.getElementById(`lot-sarzs-${lot.id}`) as HTMLInputElement;
+                    const lejaratInput = document.getElementById(`lot-lejarat-${lot.id}`) as HTMLInputElement;
+                    setLotSaving(true);
+                    try {
+                      const response = await apiFetch(`/logistics/stock-lots/${lot.id}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          sarzsGyartasiSzam: sarzsInput.value.trim() || null,
+                          lejarat: lejaratInput.value || null,
+                        }),
+                      });
+                      if (!response.ok) throw new Error('Sarzs mentése sikertelen');
+                      setSuccess('Sarzs adatok frissítve!');
+                      if (editingProductId) {
+                        const lotsRes = await apiFetch(`/logistics/items/${editingProductId}/lots`);
+                        if (lotsRes.ok) setProductLots(await lotsRes.json());
+                      }
+                    } catch (err: any) {
+                      setError(err.message || 'Hiba a sarzs mentésekor');
+                    } finally {
+                      setLotSaving(false);
+                    }
+                  }}
+                  className="px-3 py-1 bg-mbit-blue text-white rounded text-sm hover:bg-blue-600 disabled:opacity-50"
+                >
+                  Mentés
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
       </Modal>
 
       {/* Suppliers Modal - Separate from product form */}
@@ -1061,7 +1198,33 @@ export default function Products() {
               </div>
               <div>
                 <div className="text-sm text-gray-600">Beszerzési ár</div>
-                <div className="font-medium">{selectedProduct.beszerzesiAr.toLocaleString('hu-HU')} Ft</div>
+                <div className="font-medium">{getPurchasePrice(selectedProduct).toLocaleString('hu-HU')} Ft</div>
+              </div>
+              <div>
+                <div className="text-sm text-gray-600">Aktuális készlet</div>
+                <div className="font-medium text-blue-700">
+                  {(selectedProduct.currentStockQuantity ?? selectedProduct.stockLevels?.reduce((s, l) => s + l.mennyiseg, 0) ?? 0).toLocaleString('hu-HU')} {selectedProduct.egyseg}
+                </div>
+              </div>
+              <div>
+                <div className="text-sm text-gray-600">Készletérték</div>
+                <div className="font-medium">
+                  {(selectedProduct.stockValue ?? (getPurchasePrice(selectedProduct) * (selectedProduct.currentStockQuantity ?? 0))).toLocaleString('hu-HU')} Ft
+                </div>
+              </div>
+              {selectedProduct.lastStockUpdateAt && (
+                <div>
+                  <div className="text-sm text-gray-600">Utolsó készletfrissítés</div>
+                  <div className="font-medium text-sm">
+                    {new Date(selectedProduct.lastStockUpdateAt).toLocaleString('hu-HU')}
+                  </div>
+                </div>
+              )}
+              <div>
+                <div className="text-sm text-gray-600">Legközelebbi lejárat</div>
+                <div className="font-medium text-sm">
+                  {formatExpiry(selectedProduct.nearestExpiryDate)}
+                </div>
               </div>
               <div>
                 <div className="text-sm text-gray-600">Eladási ár</div>
@@ -1081,10 +1244,10 @@ export default function Products() {
               )}
             </div>
 
-            {/* Sarzs/Gyártásiszám információk */}
-            {selectedProduct.stockLots && selectedProduct.stockLots.length > 0 && (
-              <div>
-                <h3 className="font-medium mb-3">Sarzs/Gyártásiszám információk</h3>
+            {/* Sarzs/Gyártásiszám információk – sarzs szintű adat (StockLot) */}
+            <div>
+              <h3 className="font-medium mb-3">Sarzs/Gyártási számok</h3>
+              {selectedProduct.stockLots && selectedProduct.stockLots.length > 0 ? (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead className="bg-gray-50">
@@ -1113,7 +1276,7 @@ export default function Products() {
                           <td className="p-2 text-right">{lot.mennyiseg.toLocaleString('hu-HU')} {selectedProduct.egyseg}</td>
                           <td className="p-2 text-right">{lot.beszerzesiAr.toLocaleString('hu-HU')} Ft</td>
                           <td className="p-2 text-sm">
-                            {lot.lejarat ? new Date(lot.lejarat).toLocaleDateString('hu-HU') : '-'}
+                            {formatExpiry(lot.lejarat || lot.expiryDate)}
                           </td>
                           <td className="p-2 text-sm text-gray-600">
                             {new Date(lot.createdAt).toLocaleDateString('hu-HU')}
@@ -1123,8 +1286,10 @@ export default function Products() {
                     </tbody>
                   </table>
                 </div>
-              </div>
-            )}
+              ) : (
+                <p className="text-sm text-gray-500">Nincs rögzített sarzs adat.</p>
+              )}
+            </div>
           </div>
         )}
       </Modal>

@@ -28,6 +28,12 @@ export class ItemController {
     );
   }
 
+  @Get(':id/lots')
+  @Permissions(Permission.PRODUCT_VIEW)
+  findLots(@Param('id') id: string) {
+    return this.itemService.findItemLots(id);
+  }
+
   @Get(':id')
   @Permissions(Permission.PRODUCT_VIEW)
   findOne(@Param('id') id: string) {

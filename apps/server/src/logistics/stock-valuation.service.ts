@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { ItemStockService } from './item-stock.service';
 
 export interface StockValuationResult {
   itemId: string;
@@ -10,6 +11,7 @@ export interface StockValuationResult {
   ertekelesMod: string;
   készletérték: number;
   atlagBeszerzesiAr: number;
+  priceSource: 'LOT_COST' | 'ITEM_PURCHASE_PRICE' | 'MISSING_PRICE';
   lotDetails: Array<{
     lotId: string;
     sarzsGyartasiSzam?: string | null;
@@ -22,7 +24,26 @@ export interface StockValuationResult {
 
 @Injectable()
 export class StockValuationService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private itemStockService: ItemStockService,
+  ) {}
+
+  private resolvePrice(
+    itemBeszerzesiAr: number,
+    stockLots: Array<{ mennyiseg: number; beszerzesiAr: number }>,
+    mennyiseg: number,
+  ): Pick<StockValuationResult, 'atlagBeszerzesiAr' | 'készletérték' | 'priceSource'> {
+    const { atlagBeszerzesiAr, priceSource } = this.itemStockService.resolvePurchasePrice(
+      itemBeszerzesiAr,
+      stockLots,
+    );
+    return {
+      atlagBeszerzesiAr,
+      priceSource,
+      készletérték: mennyiseg * atlagBeszerzesiAr,
+    };
+  }
 
   async calculateStockValue(
     itemId: string,
@@ -65,6 +86,7 @@ export class StockValuationService {
     });
 
     if (stockLots.length === 0) {
+      const pricing = this.resolvePrice(item.beszerzesiAr, [], 0);
       return {
         itemId,
         itemNev: item.nev,
@@ -73,7 +95,8 @@ export class StockValuationService {
         mennyiseg: 0,
         ertekelesMod: valuationMethod,
         készletérték: 0,
-        atlagBeszerzesiAr: 0,
+        atlagBeszerzesiAr: pricing.atlagBeszerzesiAr,
+        priceSource: pricing.priceSource,
         lotDetails: [],
       };
     }
@@ -102,6 +125,8 @@ export class StockValuationService {
       const atlagBeszerzesiAr = totalQuantity > 0 ? totalValue / totalQuantity : 0;
       készletérték = totalValue;
 
+      const pricing = this.resolvePrice(item.beszerzesiAr, stockLots, totalQuantity);
+
       return {
         itemId,
         itemNev: item.nev,
@@ -109,8 +134,9 @@ export class StockValuationService {
         warehouseNev: warehouse.nev,
         mennyiseg: totalQuantity,
         ertekelesMod: valuationMethod,
-        készletérték,
-        atlagBeszerzesiAr,
+        készletérték: pricing.készletérték > 0 ? pricing.készletérték : készletérték,
+        atlagBeszerzesiAr: pricing.atlagBeszerzesiAr > 0 ? pricing.atlagBeszerzesiAr : atlagBeszerzesiAr,
+        priceSource: pricing.priceSource,
         lotDetails,
       };
     } else {
@@ -129,7 +155,7 @@ export class StockValuationService {
       }
 
       const totalQuantity = stockLots.reduce((sum, lot) => sum + lot.mennyiseg, 0);
-      const atlagBeszerzesiAr = totalQuantity > 0 ? készletérték / totalQuantity : 0;
+      const pricing = this.resolvePrice(item.beszerzesiAr, stockLots, totalQuantity);
 
       return {
         itemId,
@@ -138,8 +164,9 @@ export class StockValuationService {
         warehouseNev: warehouse.nev,
         mennyiseg: totalQuantity,
         ertekelesMod: valuationMethod,
-        készletérték,
-        atlagBeszerzesiAr,
+        készletérték: pricing.készletérték > 0 ? pricing.készletérték : készletérték,
+        atlagBeszerzesiAr: pricing.atlagBeszerzesiAr,
+        priceSource: pricing.priceSource,
         lotDetails,
       };
     }
@@ -315,29 +342,8 @@ export class StockValuationService {
         // Use average purchase price from item or default to 0
         const item = stockLevel.item;
         const warehouse = stockLevel.warehouse;
-        
-        // Try to get average purchase price from recent stock lots (any warehouse)
-        const recentLots = await this.prisma.stockLot.findMany({
-          where: {
-            itemId: stockLevel.itemId,
-            mennyiseg: {
-              gt: 0,
-            },
-          },
-          orderBy: {
-            createdAt: 'desc',
-          },
-          take: 10,
-        });
 
-        let avgPrice = 0;
-        if (recentLots.length > 0) {
-          const totalValue = recentLots.reduce((sum, lot) => sum + (lot.mennyiseg * lot.beszerzesiAr), 0);
-          const totalQty = recentLots.reduce((sum, lot) => sum + lot.mennyiseg, 0);
-          avgPrice = totalQty > 0 ? totalValue / totalQty : 0;
-        }
-
-        const készletérték = stockLevel.mennyiseg * avgPrice;
+        const pricing = this.resolvePrice(item.beszerzesiAr, [], stockLevel.mennyiseg);
 
         results.push({
           itemId: stockLevel.itemId,
@@ -346,8 +352,9 @@ export class StockValuationService {
           warehouseNev: warehouse.nev,
           mennyiseg: stockLevel.mennyiseg,
           ertekelesMod: ertekelesMod || warehouse.ertekelesMod || 'FIFO',
-          készletérték: készletérték,
-          atlagBeszerzesiAr: avgPrice,
+          készletérték: pricing.készletérték,
+          atlagBeszerzesiAr: pricing.atlagBeszerzesiAr,
+          priceSource: pricing.priceSource,
           lotDetails: [],
         });
       }

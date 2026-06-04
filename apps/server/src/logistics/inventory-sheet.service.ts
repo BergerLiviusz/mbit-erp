@@ -519,9 +519,10 @@ export class InventorySheetService {
       
       // Set response headers
       res.setHeader('Content-Type', 'application/pdf');
+      const dateStr = new Date().toISOString().split('T')[0];
       res.setHeader(
         'Content-Disposition',
-        `attachment; filename="leltariv_${sheet.azonosito}_${new Date().toISOString().split('T')[0]}.pdf"`
+        `attachment; filename="leltariv-${sheet.azonosito}-${dateStr}.pdf"`,
       );
 
       doc.pipe(res);
@@ -896,9 +897,10 @@ export class InventorySheetService {
       'Content-Type',
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     );
+    const dateStr = new Date().toISOString().split('T')[0];
     res.setHeader(
       'Content-Disposition',
-      `attachment; filename="leltariv_${sheet.azonosito}_${new Date().toISOString().split('T')[0]}.xlsx"`,
+      `attachment; filename="leltariv-${sheet.azonosito}-${dateStr}.xlsx"`,
     );
 
     await workbook.xlsx.write(res);

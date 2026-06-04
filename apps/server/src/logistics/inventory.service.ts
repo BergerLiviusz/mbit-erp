@@ -173,8 +173,7 @@ export class InventoryService {
     }
 
     if (existing) {
-      // Update existing stock level
-      return await this.prisma.stockLevel.update({
+      const updated = await this.prisma.stockLevel.update({
         where: { id: existing.id },
         data: {
           mennyiseg: data.mennyiseg !== undefined ? data.mennyiseg : existing.mennyiseg,
@@ -191,6 +190,43 @@ export class InventoryService {
           location: true,
         },
       });
+
+      if (data.sarzsGyartasiSzam !== undefined && data.sarzsGyartasiSzam?.trim()) {
+        const existingLot = await this.prisma.stockLot.findFirst({
+          where: {
+            itemId: data.itemId,
+            warehouseId: data.warehouseId,
+          },
+          orderBy: { createdAt: 'asc' },
+        });
+
+        const lotPrice =
+          data.beszerzesiAr ??
+          (updated.item?.beszerzesiAr || 0);
+
+        if (existingLot) {
+          await this.prisma.stockLot.update({
+            where: { id: existingLot.id },
+            data: {
+              sarzsGyartasiSzam: data.sarzsGyartasiSzam.trim(),
+              mennyiseg: data.mennyiseg !== undefined ? data.mennyiseg : existingLot.mennyiseg,
+              beszerzesiAr: lotPrice,
+            },
+          });
+        } else {
+          await this.prisma.stockLot.create({
+            data: {
+              itemId: data.itemId,
+              warehouseId: data.warehouseId,
+              sarzsGyartasiSzam: data.sarzsGyartasiSzam.trim(),
+              mennyiseg: data.mennyiseg ?? existing.mennyiseg,
+              beszerzesiAr: lotPrice,
+            },
+          });
+        }
+      }
+
+      return updated;
     }
 
     // Create new stock level

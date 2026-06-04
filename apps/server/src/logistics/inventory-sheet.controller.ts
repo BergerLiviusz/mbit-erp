@@ -228,15 +228,55 @@ export class InventorySheetController {
     return { message: 'Leltárív törölve' };
   }
 
+  @Get(':id/export/pdf')
+  @Permissions(Permission.STOCK_VIEW)
+  async exportPdf(@Param('id') id: string, @Res() res: Response, @Request() req: any) {
+    await this.auditService.log({
+      userId: req.user?.id,
+      esemeny: 'export',
+      entitas: 'InventorySheet',
+      entitasId: id,
+      uj: { format: 'pdf', action: 'print' },
+    });
+    await this.inventorySheetService.generatePdf(id, res);
+  }
+
+  @Get(':id/export/xlsx')
+  @Permissions(Permission.STOCK_VIEW)
+  async exportXlsx(@Param('id') id: string, @Res() res: Response, @Request() req: any) {
+    await this.auditService.log({
+      userId: req.user?.id,
+      esemeny: 'export',
+      entitas: 'InventorySheet',
+      entitasId: id,
+      uj: { format: 'xlsx' },
+    });
+    await this.inventorySheetService.generateExcel(id, res);
+  }
+
   @Get(':id/pdf')
   @Permissions(Permission.STOCK_VIEW)
-  async generatePdf(@Param('id') id: string, @Res() res: Response) {
+  async generatePdf(@Param('id') id: string, @Res() res: Response, @Request() req: any) {
+    await this.auditService.log({
+      userId: req.user?.id,
+      esemeny: 'export',
+      entitas: 'InventorySheet',
+      entitasId: id,
+      uj: { format: 'pdf' },
+    });
     await this.inventorySheetService.generatePdf(id, res);
   }
 
   @Get(':id/excel')
   @Permissions(Permission.STOCK_VIEW)
-  async generateExcel(@Param('id') id: string, @Res() res: Response) {
+  async generateExcel(@Param('id') id: string, @Res() res: Response, @Request() req: any) {
+    await this.auditService.log({
+      userId: req.user?.id,
+      esemeny: 'export',
+      entitas: 'InventorySheet',
+      entitasId: id,
+      uj: { format: 'xlsx' },
+    });
     await this.inventorySheetService.generateExcel(id, res);
   }
 }

@@ -35,6 +35,15 @@
 ### Csapat kommunikáció
 - Saját hozzászólás szerkesztése a feladat modálban; mentés audit activity loggal; `updatedAt` megjelenítése.
 
+### Logisztika (v1.0.1b hotfix)
+- **Termék részletek – aktuális készlet:** `GET /logistics/items/:id` most `currentStockQuantity`, `stockByWarehouse`, `stockValue`, `lastStockUpdateAt` mezőket ad (StockLevel/Lot/Move aggregáció).
+- **Sarzs/gyártási szám:** sarzs adat StockLot szintű; `GET /logistics/items/:id/lots`, `PATCH /logistics/stock-lots/:id`; szerkesztéskor visszatöltés és „Sarzsok kezelése” modal több lot esetén.
+- **Leltárív export:** PDF/XLSX letöltés auth-kompatibilis (`apiDownload`); nyomtatás gomb; minden állapotban exportálható; fájlnév: `leltariv-{azonosito}-{datum}.xlsx/pdf`.
+- **Készletérték riport:** átlag beszerzési ár fallback `Item.beszerzesiAr`-ra; `priceSource`: LOT_COST / ITEM_PURCHASE_PRICE / MISSING_PRICE.
+- **Termék részletek – beszerzési ár:** egységes `purchasePrice` / `beszerzesiAr` DTO lista és részletek között.
+- **Lejárat:** lot-szintű adat; részletekben „Legközelebbi lejárat” + sarzs táblázat.
+- **Beszerzési rendelések:** új UI (`/purchase-orders`); DRAFT szerkesztés/törlés; lezárt rendelés archiválás; backend business rule guard.
+
 ## Ismert korlátok
 
 - Windows telepítő csak CI / Windows gépen készíthető (`electron-builder --win`).

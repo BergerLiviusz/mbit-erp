@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { apiFetch } from '../lib/api';
+import { apiFetch, apiDownload, apiPrintPdf } from '../lib/api';
 import Modal from '../components/Modal';
 import ConfirmModal from '../components/ConfirmModal';
 
@@ -112,6 +112,25 @@ export default function InventorySheets() {
   }>>([]);
   const [loadingItems, setLoadingItems] = useState(false);
 
+  const [exportError, setExportError] = useState('');
+
+  const handleExport = async (sheetId: string, azonosito: string, format: 'pdf' | 'xlsx', action: 'download' | 'print' = 'download') => {
+    setExportError('');
+    const dateStr = new Date().toISOString().split('T')[0];
+    const ext = format === 'pdf' ? 'pdf' : 'xlsx';
+    const filename = `leltariv-${azonosito}-${dateStr}.${ext}`;
+    const url = `/logistics/inventory-sheets/${sheetId}/export/${ext}`;
+
+    try {
+      if (action === 'print' && format === 'pdf') {
+        await apiPrintPdf(url);
+      } else {
+        await apiDownload(url, filename);
+      }
+    } catch (err: any) {
+      setExportError(err.message || 'Export sikertelen');
+    }
+  };
   const [filters, setFilters] = useState({
     warehouseId: '',
     allapot: '',
@@ -700,30 +719,27 @@ export default function InventorySheets() {
               )}
             </div>
             
-            <div className="flex justify-end gap-2 mb-4">
+            <div className="flex justify-end gap-2 mb-4 flex-wrap">
+              {exportError && (
+                <div className="w-full text-sm text-red-600 mb-2">{exportError}</div>
+              )}
               <button
-                onClick={() => {
-                  const url = `/api/logistics/inventory-sheets/${selectedSheet.id}/pdf`;
-                  window.open(url, '_blank');
-                }}
+                onClick={() => selectedSheet && handleExport(selectedSheet.id, selectedSheet.azonosito, 'pdf', 'download')}
                 className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 flex items-center gap-2"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                </svg>
                 PDF letöltés
               </button>
               <button
-                onClick={() => {
-                  const url = `/api/logistics/inventory-sheets/${selectedSheet.id}/excel`;
-                  window.open(url, '_blank');
-                }}
+                onClick={() => selectedSheet && handleExport(selectedSheet.id, selectedSheet.azonosito, 'xlsx', 'download')}
                 className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 flex items-center gap-2"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
                 Excel letöltés
+              </button>
+              <button
+                onClick={() => selectedSheet && handleExport(selectedSheet.id, selectedSheet.azonosito, 'pdf', 'print')}
+                className="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-800 flex items-center gap-2"
+              >
+                Nyomtatás
               </button>
             </div>
 
