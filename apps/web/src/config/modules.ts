@@ -156,6 +156,36 @@ export const PACKAGE_CONFIGS: Record<string, PackageConfig> = {
       logistics: true
     }
   },
+  'dms-crm-workflow': {
+    name: 'DMS + CRM + Workflow Edition',
+    modules: {
+      documents: true,
+      team: true,
+      controlling: false,
+      crm: true,
+      logistics: false
+    }
+  },
+  ERP_DMS_CRM_WORKFLOW: {
+    name: 'DMS + CRM + Workflow Edition',
+    modules: {
+      documents: true,
+      team: true,
+      controlling: false,
+      crm: true,
+      logistics: false
+    }
+  },
+  ERP_CRM_DMS_WORKFLOW: {
+    name: 'DMS + CRM + Workflow Edition',
+    modules: {
+      documents: true,
+      team: true,
+      controlling: false,
+      crm: true,
+      logistics: false
+    }
+  },
   ERP_CUSTOMER_4MODULE: {
     name: 'Ügyfél 4 modulos csomag',
     modules: {
@@ -188,11 +218,26 @@ export const PACKAGE_CONFIGS: Record<string, PackageConfig> = {
   }
 };
 
+/** Legacy / alias package ID → canonical frontend package key */
+const PACKAGE_ALIASES: Record<string, keyof typeof PACKAGE_CONFIGS> = {
+  ERP_CUSTOMER_4MODULE: 'customer-4module',
+  ERP_CRM_DMS_LOGISTICS_WORKFLOW: 'customer-4module',
+  ERP_DMS_CRM_WORKFLOW: 'dms-crm-workflow',
+  ERP_CRM_DMS_WORKFLOW: 'dms-crm-workflow',
+  'package-4': 'customer-4module',
+};
+
+export const PACKAGE_EDITION_LABELS: Partial<Record<keyof typeof PACKAGE_CONFIGS, string>> = {
+  'customer-4module': 'Customer Edition',
+  'dms-crm-workflow': 'DMS + CRM + Workflow Edition',
+};
+
 // Aktuális csomag meghatározása build-time változóból
 export function getActivePackage(): keyof typeof PACKAGE_CONFIGS {
   // Vite build-time változó: VITE_ACTIVE_PACKAGE
   // Vite automatikusan elérhetővé teszi a VITE_ prefixű environment változókat
-  const packageName = import.meta.env.VITE_ACTIVE_PACKAGE || 'full';
+  const raw = import.meta.env.VITE_ACTIVE_PACKAGE || 'full';
+  const packageName = PACKAGE_ALIASES[raw] ?? raw;
   
   // Debug információ (csak development módban)
   if (import.meta.env.DEV) {
@@ -274,7 +319,15 @@ const HR_DISABLED_PACKAGES = new Set([
   'customer-4module',
   'ERP_CUSTOMER_4MODULE',
   'ERP_CRM_DMS_LOGISTICS_WORKFLOW',
+  'dms-crm-workflow',
+  'ERP_DMS_CRM_WORKFLOW',
+  'ERP_CRM_DMS_WORKFLOW',
 ]);
+
+export function getPackageEditionLabel(): string | null {
+  const activePackage = getActivePackage();
+  return PACKAGE_EDITION_LABELS[activePackage] ?? null;
+}
 
 // Helper függvény: HR modul elérhetőségének ellenőrzése
 export function isHrModuleEnabled(): boolean {

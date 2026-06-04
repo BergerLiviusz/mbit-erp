@@ -227,7 +227,17 @@ export default function Login({ onLogin }: LoginProps) {
 
         <p className="text-center text-xs text-gray-500 mt-6">
           MBIT ERP {import.meta.env.VITE_APP_VERSION ? `v${import.meta.env.VITE_APP_VERSION}` : ''}
-          {import.meta.env.VITE_ACTIVE_PACKAGE === 'customer-4module' ? ' · Customer Edition' : ''}
+          {(() => {
+            const edition =
+              import.meta.env.VITE_ACTIVE_PACKAGE === 'customer-4module'
+                ? 'Customer Edition'
+                : import.meta.env.VITE_ACTIVE_PACKAGE === 'dms-crm-workflow' ||
+                    import.meta.env.VITE_ACTIVE_PACKAGE === 'ERP_DMS_CRM_WORKFLOW' ||
+                    import.meta.env.VITE_ACTIVE_PACKAGE === 'ERP_CRM_DMS_WORKFLOW'
+                  ? 'DMS + CRM + Workflow Edition'
+                  : '';
+            return edition ? ` · ${edition}` : '';
+          })()}
         </p>
       </div>
     </div>

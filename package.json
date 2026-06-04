@@ -16,6 +16,8 @@
     "build:desktop": "cd apps/desktop && npm run build",
     "build:pwa": "cd apps/web && npm run build:pwa",
     "package:win": "cd apps/desktop && npm run package:win",
+    "package:customer-4module": "npm run build:config && cd apps/desktop && npx cross-env VITE_ACTIVE_PACKAGE=customer-4module ERP_PACKAGE=customer-4module APP_VERSION=1.0.1b npm run package:win",
+    "package:dms-crm-workflow": "npm run build:config && cd apps/desktop && npx cross-env VITE_ACTIVE_PACKAGE=dms-crm-workflow ERP_PACKAGE=dms-crm-workflow APP_VERSION=1.0.1d npm run package:win",
     "package:mac": "cd apps/desktop && npm run package:mac",
     "package:linux": "cd apps/desktop && npm run package:linux",
     "test:desktop": "cd apps/desktop && npm run build && npm run package -- --dir && cd ../.. && open apps/desktop/release/mac-arm64/Mbit\\ ERP.app",

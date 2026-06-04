@@ -19,6 +19,9 @@ function getActivePackage(): string {
     console.log('[Vite Config] Git branch:', gitBranch);
     
     // Branch nevek -> package nevek mapping
+    if (gitBranch === 'release/dms-crm-workflow') {
+      return 'dms-crm-workflow';
+    }
     if (
       gitBranch === 'package-1' ||
       gitBranch === 'package-2' ||
@@ -45,10 +48,14 @@ function getActivePackage(): string {
   return 'full';
 }
 
+const PACKAGE_VERSIONS: Record<string, string> = {
+  'customer-4module': '1.0.1b',
+  'dms-crm-workflow': '1.0.1d',
+};
+
 const activePackage = getActivePackage();
 const appVersion =
-  process.env.APP_VERSION ||
-  (activePackage === 'customer-4module' ? '1.0.1b' : '1.0.1a');
+  process.env.APP_VERSION || PACKAGE_VERSIONS[activePackage] || '1.0.1a';
 
 // Debug log a build során
 console.log('[Vite Config] VITE_ACTIVE_PACKAGE from env:', process.env.VITE_ACTIVE_PACKAGE);

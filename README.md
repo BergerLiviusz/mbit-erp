@@ -300,6 +300,10 @@ git push origin feature/crm-kedvezmeny-kezeles
 # Windows (MSI installer)
 npm run package:win
 
+# Customer / edition csomagok (Windows)
+npm run package:customer-4module    # v1.0.1b – CRM+DMS+Logisztika+Workflow
+npm run package:dms-crm-workflow    # v1.0.1d – DMS+CRM+Workflow
+
 # macOS (DMG + ZIP)
 npm run package:mac
 
@@ -307,7 +311,8 @@ npm run package:mac
 npm run package:linux
 ```
 
-**Kimenet:** `apps/desktop/dist/`
+**Kimenet:** `apps/desktop/release/`  
+**Csomag dokumentáció:** [docs/PACKAGE_STRATEGY.md](docs/PACKAGE_STRATEGY.md) · [DMS+CRM+Workflow release notes](docs/DMS_CRM_WORKFLOW_PACKAGE_RELEASE_NOTES.md)
 
 ### PWA Build
 

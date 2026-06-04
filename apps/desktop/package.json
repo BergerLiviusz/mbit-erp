@@ -24,6 +24,7 @@
     "test:local": "npm run build && electron-builder --dir && echo '✅ Packaged app built in dist/ directory. Run it manually or use npm run start:packaged'",
     "dev": "concurrently \"tsc -w\" \"wait-on dist-electron/main.js && electron .\"",
     "package": "npm run build && electron-builder",
+    "prepackage:win": "node scripts/write-build-meta.mjs",
     "package:win": "npm run build && electron-builder --win --x64",
     "package:mac": "npm run build && electron-builder --mac",
     "package:linux": "npm run build && electron-builder --linux",
@@ -106,6 +107,11 @@
       {
         "from": "resources/icon.png",
         "to": "icon.png"
+      },
+      {
+        "from": "resources/erp-build-meta.json",
+        "to": "erp-build-meta.json",
+        "filter": ["**/*"]
       }
     ],
     "win": {
