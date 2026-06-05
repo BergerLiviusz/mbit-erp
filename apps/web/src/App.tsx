@@ -1,4 +1,4 @@
-import { Routes, Route, Link, useLocation } from 'react-router-dom';
+import { Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
 import { useState, useEffect, useCallback } from 'react';
 import Dashboard from './pages/Dashboard';
 import CRM from './pages/CRM';
@@ -44,7 +44,14 @@ import { LoadingScreen } from './components/LoadingScreen';
 import { ModuleRouteGuard } from './components/ModuleRouteGuard';
 import MbitLogo from './assets/logo.svg';
 import axios from './lib/axios';
-import { isModuleEnabled, getModuleMenuItems, isHrModuleEnabled, getActivePackage } from './config/modules';
+import {
+  isModuleEnabled,
+  getModuleMenuItems,
+  isHrModuleEnabled,
+  getActivePackage,
+  isTeamCommunicationEnabled,
+  isWorkflowMenuEnabled,
+} from './config/modules';
 
 function DropdownMenu({ title, items }: { title: string; items: Array<{ to: string; label: string }> }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -242,36 +249,41 @@ function App() {
                     items={getModuleMenuItems('crm')}
                   />
                 )}
-                {/* Dokumentumok - mindig látható */}
-                <Link 
-                  to="/documents" 
-                  className="hover:bg-gray-800 px-3 py-2 rounded"
-                  onClick={() => {
-                    if (isElectron) {
-                      import('./components/DebugPanel').then(module => {
-                        module.addLog('info', 'Navigation: Clicked Dokumentumok', { to: '/documents' });
-                      }).catch(() => {});
-                    }
-                  }}
-                >
-                  Dokumentumok
-                </Link>
-                {/* Csapat kommunikáció - csak ha Team modul engedélyezve */}
-                {isModuleEnabled('team') && (
+                {/* Dokumentumok - csak ha DMS modul engedélyezve */}
+                {isModuleEnabled('documents') && (
+                  <Link 
+                    to="/documents" 
+                    className="hover:bg-gray-800 px-3 py-2 rounded"
+                    onClick={() => {
+                      if (isElectron) {
+                        import('./components/DebugPanel').then(module => {
+                          module.addLog('info', 'Navigation: Clicked Dokumentumok', { to: '/documents' });
+                        }).catch(() => {});
+                      }
+                    }}
+                  >
+                    Dokumentumok
+                  </Link>
+                )}
+                {/* Csapat kommunikáció - teljes Team modul (workflow-only kivétel) */}
+                {isTeamCommunicationEnabled() && (
+                  <Link 
+                    to="/team" 
+                    className="hover:bg-gray-800 px-3 py-2 rounded"
+                    onClick={() => {
+                      if (isElectron) {
+                        import('./components/DebugPanel').then(module => {
+                          module.addLog('info', 'Navigation: Clicked Csapat kommunikáció', { to: '/team' });
+                        }).catch(() => {});
+                      }
+                    }}
+                  >
+                    Csapat kommunikáció
+                  </Link>
+                )}
+                {/* Workflow menü – team API alatt, workflow-only csomagban is */}
+                {isWorkflowMenuEnabled() && (
                   <>
-                    <Link 
-                      to="/team" 
-                      className="hover:bg-gray-800 px-3 py-2 rounded"
-                      onClick={() => {
-                        if (isElectron) {
-                          import('./components/DebugPanel').then(module => {
-                            module.addLog('info', 'Navigation: Clicked Csapat kommunikáció', { to: '/team' });
-                          }).catch(() => {});
-                        }
-                      }}
-                    >
-                      Csapat kommunikáció
-                    </Link>
                     <Link 
                       to="/workflows" 
                       className="hover:bg-gray-800 px-3 py-2 rounded"
@@ -297,6 +309,19 @@ function App() {
                       }}
                     >
                       Feladatlista
+                    </Link>
+                    <Link 
+                      to="/workflow-instances" 
+                      className="hover:bg-gray-800 px-3 py-2 rounded"
+                      onClick={() => {
+                        if (isElectron) {
+                          import('./components/DebugPanel').then(module => {
+                            module.addLog('info', 'Navigation: Clicked Workflow példányok', { to: '/workflow-instances' });
+                          }).catch(() => {});
+                        }
+                      }}
+                    >
+                      Workflow példányok
                     </Link>
                   </>
                 )}
@@ -391,13 +416,24 @@ function App() {
             </>
           ) : null}
           
-          {/* Dokumentumok - mindig elérhető */}
-          <Route path="/documents" element={<Documents />} />
+          {/* Dokumentumok – guard redirect, ha a csomagban tiltva */}
+          <Route path="/documents" element={<ModuleRouteGuard module="documents"><Documents /></ModuleRouteGuard>} />
           
-          {/* Team route - csak ha engedélyezve */}
-          {isModuleEnabled('team') ? (
+          {/* Csapat kommunikáció – workflow-only csomagban redirect a főoldalra */}
+          <Route
+            path="/team"
+            element={
+              isTeamCommunicationEnabled() ? (
+                <ModuleRouteGuard module="team"><Team /></ModuleRouteGuard>
+              ) : (
+                <Navigate to="/" replace />
+              )
+            }
+          />
+
+          {/* Workflow route-ok – team API alatt */}
+          {isWorkflowMenuEnabled() ? (
             <>
-              <Route path="/team" element={<ModuleRouteGuard module="team"><Team /></ModuleRouteGuard>} />
               <Route path="/workflows" element={<ModuleRouteGuard module="team"><Workflows /></ModuleRouteGuard>} />
               <Route path="/workflow-tasks" element={<ModuleRouteGuard module="team"><WorkflowTasks /></ModuleRouteGuard>} />
               <Route path="/workflow-instances" element={<ModuleRouteGuard module="team"><WorkflowInstances /></ModuleRouteGuard>} />

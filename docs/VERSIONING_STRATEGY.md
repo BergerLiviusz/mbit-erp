@@ -42,6 +42,17 @@ Generálás: `apps/desktop/scripts/write-build-meta.mjs` (`prepackage:win`).
 
 Részletek: [DMS_WORKFLOW_HR_PACKAGE_RELEASE_NOTES.md](./DMS_WORKFLOW_HR_PACKAGE_RELEASE_NOTES.md)
 
+## Release példa – Workflow only
+
+| Mező | Érték |
+|------|--------|
+| Branch | `release/workflow-only` |
+| Verzió | MBIT ERP v1.0.1e |
+| Package ID | `workflow-only` |
+| Artifact | `mbit-erp-v1.0.1e-{sha}-workflow-only-WF-windows.zip` |
+
+Részletek: [WORKFLOW_ONLY_PACKAGE_RELEASE_NOTES.md](./WORKFLOW_ONLY_PACKAGE_RELEASE_NOTES.md)
+
 ## Policy
 
 1. Package-specifikus verzió: a `ERP_PACKAGES[id].version` és `APP_VERSION` env egyezzen.

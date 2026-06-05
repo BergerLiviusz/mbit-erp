@@ -308,6 +308,9 @@ npm run package:customer-4module
 # DMS + Workflow + HR v1.0.1c
 npm run package:dms-workflow-hr
 
+# Workflow only v1.0.1e
+npm run package:workflow-only
+
 # macOS / Linux
 npm run package:mac
 npm run package:linux

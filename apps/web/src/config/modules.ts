@@ -164,6 +164,36 @@ export const PACKAGE_CONFIGS: Record<string, PackageConfig> = {
       logistics: false
     }
   },
+  'workflow-only': {
+    name: 'Workflow Edition',
+    modules: {
+      documents: false,
+      team: true,
+      controlling: false,
+      crm: false,
+      logistics: false
+    }
+  },
+  ERP_WORKFLOW_ONLY: {
+    name: 'Workflow Edition',
+    modules: {
+      documents: false,
+      team: true,
+      controlling: false,
+      crm: false,
+      logistics: false
+    }
+  },
+  ERP_WORKFLOW: {
+    name: 'Workflow Edition',
+    modules: {
+      documents: false,
+      team: true,
+      controlling: false,
+      crm: false,
+      logistics: false
+    }
+  },
   ERP_DMS_WORKFLOW_HR: {
     name: 'DMS + Workflow + HR Edition',
     modules: {
@@ -222,8 +252,31 @@ const PACKAGE_ALIASES: Record<string, keyof typeof PACKAGE_CONFIGS> = {
   ERP_CRM_DMS_LOGISTICS_WORKFLOW: 'customer-4module',
   ERP_DMS_WORKFLOW_HR: 'dms-workflow-hr',
   ERP_DMS_TEAM_HR: 'dms-workflow-hr',
+  ERP_WORKFLOW_ONLY: 'workflow-only',
+  ERP_WORKFLOW: 'workflow-only',
   'package-4': 'customer-4module',
 };
+
+/** Csak workflow menü – nincs általános csapat kommunikáció */
+const WORKFLOW_ONLY_PACKAGES = new Set([
+  'workflow-only',
+  'ERP_WORKFLOW_ONLY',
+  'ERP_WORKFLOW',
+]);
+
+export function isWorkflowOnlyPackage(): boolean {
+  return WORKFLOW_ONLY_PACKAGES.has(getActivePackage());
+}
+
+/** Kanban / csapat kommunikáció – workflow-only csomagban tiltva */
+export function isTeamCommunicationEnabled(): boolean {
+  return isModuleEnabled('team') && !isWorkflowOnlyPackage();
+}
+
+/** Workflow menüpontok (folyamatleltár, feladatok, példányok) */
+export function isWorkflowMenuEnabled(): boolean {
+  return isModuleEnabled('team');
+}
 
 // Aktuális csomag meghatározása build-time változóból
 export function getActivePackage(): keyof typeof PACKAGE_CONFIGS {
@@ -289,6 +342,9 @@ export function getModuleMenuItems(module: 'documents' | 'team' | 'crm' | 'logis
     case 'documents':
       return MODULE_DOCUMENTS.menuItems;
     case 'team':
+      if (isWorkflowOnlyPackage()) {
+        return MODULE_TEAM.menuItems.filter((item) => item.to !== '/team');
+      }
       return MODULE_TEAM.menuItems;
     case 'crm':
       // Package-5-ben csak a Partnerek menüpontot mutatjuk meg
@@ -312,6 +368,9 @@ const HR_DISABLED_PACKAGES = new Set([
   'customer-4module',
   'ERP_CUSTOMER_4MODULE',
   'ERP_CRM_DMS_LOGISTICS_WORKFLOW',
+  'workflow-only',
+  'ERP_WORKFLOW_ONLY',
+  'ERP_WORKFLOW',
 ]);
 
 // Helper függvény: HR modul elérhetőségének ellenőrzése

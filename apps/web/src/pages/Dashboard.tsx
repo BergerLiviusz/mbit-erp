@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import axios from '../lib/axios';
-import { isModuleEnabled } from '../config/modules';
+import { isModuleEnabled, isWorkflowOnlyPackage, isTeamCommunicationEnabled } from '../config/modules';
 
 export default function Dashboard() {
   const { data: stats, isLoading, error } = useQuery({
@@ -45,7 +45,8 @@ export default function Dashboard() {
   if (isModuleEnabled('documents')) enabledModuleNames.push('DMS');
   if (isModuleEnabled('crm')) enabledModuleNames.push('CRM');
   if (isModuleEnabled('logistics')) enabledModuleNames.push('logisztikai');
-  if (isModuleEnabled('team')) enabledModuleNames.push('csapatmunka');
+  if (isWorkflowOnlyPackage()) enabledModuleNames.push('munkafolyamat-irányítás');
+  else if (isModuleEnabled('team')) enabledModuleNames.push('csapatmunka');
   if (isModuleEnabled('controlling')) enabledModuleNames.push('kontrolling');
 
   // Bevezető szöveg összeállítása
@@ -158,7 +159,18 @@ export default function Dashboard() {
           )}
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {isModuleEnabled('team') && (
+          {isWorkflowOnlyPackage() && (
+            <div className="border-l-4 border-orange-500 pl-4">
+              <h3 className="font-bold mb-2">Munkafolyamat irányítás</h3>
+              <ul className="text-sm text-gray-600 space-y-1">
+                <li>• Folyamatleltár és sablonok</li>
+                <li>• Feladatok és hozzárendelések</li>
+                <li>• Workflow példányok</li>
+                <li>• Kommentek és tevékenységnapló</li>
+              </ul>
+            </div>
+          )}
+          {isTeamCommunicationEnabled() && (
             <div className="border-l-4 border-orange-500 pl-4">
               <h3 className="font-bold mb-2">Csapat kommunikáció</h3>
               <ul className="text-sm text-gray-600 space-y-1">

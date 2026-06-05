@@ -11,9 +11,18 @@
 | Branch | Verzió | Package |
 |--------|--------|---------|
 | `release/dms-workflow-hr` | **1.0.1c** | `dms-workflow-hr` |
+| `release/workflow-only` | **1.0.1e** | `workflow-only` |
 | `release/customer-crm-dms-logistics-workflow` | 1.0.1b | `customer-4module` |
 
 Központi forrás: `packages/config/src/app-version.ts`
+
+## Lokális build – Workflow only
+
+```bash
+npm install
+npm run build:config
+npm run package:workflow-only
+```
 
 ## Lokális build – DMS + Workflow + HR
 
@@ -46,7 +55,8 @@ Test-Path apps/desktop/release/win-unpacked/resources/backend/node_modules/@mbit
 Workflow: `.github/workflows/build-desktop.yml`
 
 - Push: `release/dms-workflow-hr` → automatikus `dms-workflow-hr` build
-- `workflow_dispatch` → package: `dms-workflow-hr`
+- Push: `release/workflow-only` → automatikus `workflow-only` build
+- `workflow_dispatch` → package: `dms-workflow-hr` vagy `workflow-only`
 
 ## Ismert korlát
 
