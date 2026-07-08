@@ -174,6 +174,36 @@ export const PACKAGE_CONFIGS: Record<string, PackageConfig> = {
       logistics: false
     }
   },
+  'crm-only': {
+    name: 'CRM Edition',
+    modules: {
+      documents: false,
+      team: false,
+      controlling: false,
+      crm: true,
+      logistics: false
+    }
+  },
+  ERP_CRM_ONLY: {
+    name: 'CRM Edition',
+    modules: {
+      documents: false,
+      team: false,
+      controlling: false,
+      crm: true,
+      logistics: false
+    }
+  },
+  ERP_CRM: {
+    name: 'CRM Edition',
+    modules: {
+      documents: false,
+      team: false,
+      controlling: false,
+      crm: true,
+      logistics: false
+    }
+  },
   ERP_WORKFLOW_ONLY: {
     name: 'Workflow Edition',
     modules: {
@@ -254,6 +284,8 @@ const PACKAGE_ALIASES: Record<string, keyof typeof PACKAGE_CONFIGS> = {
   ERP_DMS_TEAM_HR: 'dms-workflow-hr',
   ERP_WORKFLOW_ONLY: 'workflow-only',
   ERP_WORKFLOW: 'workflow-only',
+  ERP_CRM_ONLY: 'crm-only',
+  ERP_CRM: 'crm-only',
   'package-4': 'customer-4module',
 };
 
@@ -266,6 +298,17 @@ const WORKFLOW_ONLY_PACKAGES = new Set([
 
 export function isWorkflowOnlyPackage(): boolean {
   return WORKFLOW_ONLY_PACKAGES.has(getActivePackage());
+}
+
+/** Csak CRM üzleti modul – nincs DMS / Workflow / HR / Logisztika */
+const CRM_ONLY_PACKAGES = new Set([
+  'crm-only',
+  'ERP_CRM_ONLY',
+  'ERP_CRM',
+]);
+
+export function isCrmOnlyPackage(): boolean {
+  return CRM_ONLY_PACKAGES.has(getActivePackage());
 }
 
 /** Kanban / csapat kommunikáció – workflow-only csomagban tiltva */
@@ -351,6 +394,13 @@ export function getModuleMenuItems(module: 'documents' | 'team' | 'crm' | 'logis
       if (activePackage === 'package-5') {
         return [{ to: '/crm', label: 'Partnerek', parentMenu: 'Ügyfélkezelés' }];
       }
+      if (isCrmOnlyPackage()) {
+        return MODULE_CRM.menuItems.map((item) =>
+          item.to === '/crm/invoices'
+            ? { ...item, label: 'CRM bizonylati stub' }
+            : item,
+        );
+      }
       return MODULE_CRM.menuItems;
     case 'logistics':
       return MODULE_LOGISTICS.menuItems;
@@ -371,6 +421,9 @@ const HR_DISABLED_PACKAGES = new Set([
   'workflow-only',
   'ERP_WORKFLOW_ONLY',
   'ERP_WORKFLOW',
+  'crm-only',
+  'ERP_CRM_ONLY',
+  'ERP_CRM',
 ]);
 
 // Helper függvény: HR modul elérhetőségének ellenőrzése

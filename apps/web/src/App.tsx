@@ -51,6 +51,7 @@ import {
   getActivePackage,
   isTeamCommunicationEnabled,
   isWorkflowMenuEnabled,
+  getModuleRoutes,
 } from './config/modules';
 
 function DropdownMenu({ title, items }: { title: string; items: Array<{ to: string; label: string }> }) {
@@ -480,6 +481,21 @@ function App() {
               <Route path="/controlling/queries" element={<ModuleRouteGuard module="controlling"><Queries /></ModuleRouteGuard>} />
             </>
           ) : null}
+          
+          {/* Tiltott modul route-ok – redirect a főoldalra (deep link védelem) */}
+          {(['team', 'crm', 'logistics', 'controlling'] as const).flatMap((mod) =>
+            !isModuleEnabled(mod)
+              ? getModuleRoutes(mod).map((path) => (
+                  <Route key={`blocked-${mod}-${path}`} path={path} element={<Navigate to="/" replace />} />
+                ))
+              : [],
+          )}
+          {!isHrModuleEnabled() && (
+            <Route path="/hr/*" element={<Navigate to="/" replace />} />
+          )}
+          {!isModuleEnabled('documents') && (
+            <Route path="/dms/*" element={<Navigate to="/" replace />} />
+          )}
           
           {/* Mindig elérhető */}
           <Route path="/settings" element={<Settings />} />

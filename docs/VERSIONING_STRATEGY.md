@@ -53,6 +53,17 @@ Részletek: [DMS_WORKFLOW_HR_PACKAGE_RELEASE_NOTES.md](./DMS_WORKFLOW_HR_PACKAGE
 
 Részletek: [WORKFLOW_ONLY_PACKAGE_RELEASE_NOTES.md](./WORKFLOW_ONLY_PACKAGE_RELEASE_NOTES.md)
 
+## Release példa – CRM only
+
+| Mező | Érték |
+|------|--------|
+| Branch | `release/crm-only` |
+| Verzió | MBIT ERP v1.0.1f |
+| Package ID | `crm-only` |
+| Artifact | `mbit-erp-v1.0.1f-{sha}-crm-only-CRM-windows.zip` |
+
+Részletek: [CRM_ONLY_PACKAGE_RELEASE_NOTES.md](./CRM_ONLY_PACKAGE_RELEASE_NOTES.md)
+
 ## Policy
 
 1. Package-specifikus verzió: a `ERP_PACKAGES[id].version` és `APP_VERSION` env egyezzen.

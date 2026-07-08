@@ -116,6 +116,24 @@ export const ERP_PACKAGES: Record<string, PackageDefinition> = {
     artifactModuleLabel: 'WF',
     legacyIds: ['ERP_WORKFLOW_ONLY', 'ERP_WORKFLOW'],
   },
+  'crm-only': {
+    id: 'crm-only',
+    displayName: 'CRM Edition',
+    editionLabel: 'CRM Edition',
+    version: '1.0.1f',
+    modules: {
+      documents: false,
+      team: false,
+      crm: true,
+      logistics: false,
+      controlling: false,
+      hr: false,
+    },
+    buildName: 'mbit-erp-crm-only',
+    artifactSlug: 'crm-only',
+    artifactModuleLabel: 'CRM',
+    legacyIds: ['ERP_CRM_ONLY', 'ERP_CRM'],
+  },
   'ginop-crm-dms-hr': {
     id: 'ginop-crm-dms-hr',
     displayName: 'GINOP CRM+DMS+HR',
@@ -135,7 +153,7 @@ export const ERP_PACKAGES: Record<string, PackageDefinition> = {
   },
   crm: {
     id: 'crm',
-    displayName: 'CRM csomag',
+    displayName: 'CRM csomag (legacy – használja: crm-only)',
     editionLabel: 'CRM Edition',
     version: APP_VERSION,
     modules: {
@@ -148,7 +166,6 @@ export const ERP_PACKAGES: Record<string, PackageDefinition> = {
     },
     buildName: 'mbit-erp-crm',
     artifactSlug: 'crm',
-    legacyIds: ['ERP_CRM'],
   },
   dms: {
     id: 'dms',

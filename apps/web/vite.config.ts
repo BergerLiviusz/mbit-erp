@@ -22,6 +22,12 @@ function getActivePackage(): string {
     if (gitBranch === 'release/dms-workflow-hr') {
       return 'dms-workflow-hr';
     }
+    if (gitBranch === 'release/workflow-only') {
+      return 'workflow-only';
+    }
+    if (gitBranch === 'release/crm-only') {
+      return 'crm-only';
+    }
     if (
       gitBranch === 'package-1' ||
       gitBranch === 'package-2' ||
@@ -51,11 +57,15 @@ function getActivePackage(): string {
 const activePackage = getActivePackage();
 const appVersion =
   process.env.APP_VERSION ||
-  (activePackage === 'dms-workflow-hr'
-    ? '1.0.1c'
-    : activePackage === 'customer-4module'
-      ? '1.0.1b'
-      : '1.0.1c');
+  (activePackage === 'crm-only'
+    ? '1.0.1f'
+    : activePackage === 'workflow-only'
+      ? '1.0.1e'
+      : activePackage === 'dms-workflow-hr'
+        ? '1.0.1c'
+        : activePackage === 'customer-4module'
+          ? '1.0.1b'
+          : '1.0.1c');
 
 // Debug log a build során
 console.log('[Vite Config] VITE_ACTIVE_PACKAGE from env:', process.env.VITE_ACTIVE_PACKAGE);

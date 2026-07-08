@@ -311,6 +311,9 @@ npm run package:dms-workflow-hr
 # Workflow only v1.0.1e
 npm run package:workflow-only
 
+# CRM only v1.0.1f
+npm run package:crm-only
+
 # macOS / Linux
 npm run package:mac
 npm run package:linux
