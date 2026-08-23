@@ -18,6 +18,7 @@ Az MBIT ERP moduláris **desktop (Electron)** csomagokban értékesíthető. Min
 | `dms-workflow-hr` | DMS + Workflow + HR (v1.0.1c) | ✓ | ✓ | ✓ | ✗ | ✗ | ✗ |
 | `workflow-only` | Workflow Edition (v1.0.1e) | ✗ | WF* | ✗ | ✗ | ✗ | ✗ |
 | `crm-only` | CRM Edition (v1.0.1f) | ✗ | ✗ | ✗ | ✓ | ✗ | ✗ |
+| `crm-dms-logistics` | CRM + DMS + Logistics (v1.0.1g) | ✓ | ✗ | ✗ | ✓ | ✓ | ✗ |
 | `ginop-crm-dms-hr` | GINOP CRM+DMS+HR | ✓ | ✗ | ✓ | ✓ | ✗ | ✗ |
 
 \* `workflow-only`: team API engedélyezett (workflow route-ok), csapat kommunikáció UI tiltva.
@@ -32,6 +33,7 @@ npm run package:customer-4module   # v1.0.1b – CRM+DMS+Log+WF
 npm run package:dms-workflow-hr    # v1.0.1c – DMS+WF+HR
 npm run package:workflow-only      # v1.0.1e – csak Workflow
 npm run package:crm-only           # v1.0.1f – csak CRM
+npm run package:crm-dms-logistics    # v1.0.1g – CRM + DMS + Logisztika
 ```
 
 ## Környezeti változók
@@ -53,6 +55,7 @@ Desktop csomagolás: `apps/desktop/scripts/write-build-meta.mjs` → `resources/
 | `dms-workflow-hr` | `mbit-erp-v1.0.1c-{sha}-dms-workflow-hr-DMS-WF-HR-windows.zip` |
 | `workflow-only` | `mbit-erp-v1.0.1e-{sha}-workflow-only-WF-windows.zip` |
 | `crm-only` | `mbit-erp-v1.0.1f-{sha}-crm-only-CRM-windows.zip` |
+| `crm-dms-logistics` | `mbit-erp-v1.0.1g-{sha}-crm-dms-logistics-CRM-DMS-LOG-windows.zip` |
 
 ## Branch stratégia
 
@@ -62,6 +65,7 @@ Desktop csomagolás: `apps/desktop/scripts/write-build-meta.mjs` → `resources/
 | `release/dms-workflow-hr` | `dms-workflow-hr` |
 | `release/workflow-only` | `workflow-only` |
 | `release/crm-only` | `crm-only` |
+| `release/crm-dms-logistics` | `crm-dms-logistics` |
 | `main` / `master` | `full` |
 
 GitHub Actions: `.github/workflows/build-desktop.yml`.

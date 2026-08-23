@@ -184,6 +184,26 @@ export const PACKAGE_CONFIGS: Record<string, PackageConfig> = {
       logistics: false
     }
   },
+  'crm-dms-logistics': {
+    name: 'CRM + DMS + Logistics Edition',
+    modules: {
+      documents: true,
+      team: false,
+      controlling: false,
+      crm: true,
+      logistics: true
+    }
+  },
+  ERP_CRM_DMS_LOGISTICS: {
+    name: 'CRM + DMS + Logistics Edition',
+    modules: {
+      documents: true,
+      team: false,
+      controlling: false,
+      crm: true,
+      logistics: true
+    }
+  },
   ERP_CRM_ONLY: {
     name: 'CRM Edition',
     modules: {
@@ -286,6 +306,7 @@ const PACKAGE_ALIASES: Record<string, keyof typeof PACKAGE_CONFIGS> = {
   ERP_WORKFLOW: 'workflow-only',
   ERP_CRM_ONLY: 'crm-only',
   ERP_CRM: 'crm-only',
+  ERP_CRM_DMS_LOGISTICS: 'crm-dms-logistics',
   'package-4': 'customer-4module',
 };
 
@@ -305,6 +326,8 @@ const CRM_ONLY_PACKAGES = new Set([
   'crm-only',
   'ERP_CRM_ONLY',
   'ERP_CRM',
+  'crm-dms-logistics',
+  'ERP_CRM_DMS_LOGISTICS',
 ]);
 
 export function isCrmOnlyPackage(): boolean {
@@ -424,6 +447,8 @@ const HR_DISABLED_PACKAGES = new Set([
   'crm-only',
   'ERP_CRM_ONLY',
   'ERP_CRM',
+  'crm-dms-logistics',
+  'ERP_CRM_DMS_LOGISTICS',
 ]);
 
 // Helper függvény: HR modul elérhetőségének ellenőrzése

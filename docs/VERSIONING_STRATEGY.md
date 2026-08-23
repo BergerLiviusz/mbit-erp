@@ -64,6 +64,17 @@ Részletek: [WORKFLOW_ONLY_PACKAGE_RELEASE_NOTES.md](./WORKFLOW_ONLY_PACKAGE_REL
 
 Részletek: [CRM_ONLY_PACKAGE_RELEASE_NOTES.md](./CRM_ONLY_PACKAGE_RELEASE_NOTES.md)
 
+## Release példa – CRM + DMS + Logistics
+
+| Mező | Érték |
+|------|--------|
+| Branch | `release/crm-dms-logistics` |
+| Verzió | MBIT ERP v1.0.1g |
+| Package ID | `crm-dms-logistics` |
+| Artifact | `mbit-erp-v1.0.1g-{sha}-crm-dms-logistics-CRM-DMS-LOG-windows.zip` |
+
+Részletek: [CRM_DMS_LOGISTICS_PACKAGE_RELEASE_NOTES.md](./CRM_DMS_LOGISTICS_PACKAGE_RELEASE_NOTES.md)
+
 ## Policy
 
 1. Package-specifikus verzió: a `ERP_PACKAGES[id].version` és `APP_VERSION` env egyezzen.
