@@ -31,6 +31,9 @@ function getActivePackage(): string {
     if (gitBranch === 'release/crm-dms-logistics') {
       return 'crm-dms-logistics';
     }
+    if (gitBranch === 'release/crm-dms-workflow') {
+      return 'crm-dms-workflow';
+    }
     if (
       gitBranch === 'package-1' ||
       gitBranch === 'package-2' ||
@@ -60,17 +63,19 @@ function getActivePackage(): string {
 const activePackage = getActivePackage();
 const appVersion =
   process.env.APP_VERSION ||
-  (activePackage === 'crm-dms-logistics'
-    ? '1.0.1g'
-    : activePackage === 'crm-only'
-      ? '1.0.1f'
-      : activePackage === 'workflow-only'
-        ? '1.0.1e'
-        : activePackage === 'dms-workflow-hr'
-          ? '1.0.1c'
-          : activePackage === 'customer-4module'
-            ? '1.0.1b'
-            : '1.0.1c');
+  (activePackage === 'crm-dms-workflow'
+    ? '1.0.1h'
+    : activePackage === 'crm-dms-logistics'
+      ? '1.0.1g'
+      : activePackage === 'crm-only'
+        ? '1.0.1f'
+        : activePackage === 'workflow-only'
+          ? '1.0.1e'
+          : activePackage === 'dms-workflow-hr'
+            ? '1.0.1c'
+            : activePackage === 'customer-4module'
+              ? '1.0.1b'
+              : '1.0.1c');
 
 // Debug log a build során
 console.log('[Vite Config] VITE_ACTIVE_PACKAGE from env:', process.env.VITE_ACTIVE_PACKAGE);

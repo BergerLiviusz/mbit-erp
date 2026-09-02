@@ -4,6 +4,7 @@
  */
 import fs from 'fs';
 import path from 'path';
+import { execSync } from 'child_process';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -12,7 +13,14 @@ const configDist = path.join(root, 'packages/config/dist/packages.js');
 
 const packageId = process.env.ERP_PACKAGE || process.env.VITE_ACTIVE_PACKAGE || 'full';
 const version = process.env.APP_VERSION || '1.0.1c';
-const buildSha = process.env.BUILD_SHA || process.env.GITHUB_SHA || '';
+let buildSha = process.env.BUILD_SHA || process.env.GITHUB_SHA || '';
+if (!buildSha) {
+  try {
+    buildSha = execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim();
+  } catch {
+    buildSha = '';
+  }
+}
 const buildDate = process.env.BUILD_DATE || new Date().toISOString();
 
 let editionLabel = packageId;

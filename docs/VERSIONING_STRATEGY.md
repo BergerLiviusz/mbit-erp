@@ -75,6 +75,17 @@ Részletek: [CRM_ONLY_PACKAGE_RELEASE_NOTES.md](./CRM_ONLY_PACKAGE_RELEASE_NOTES
 
 Részletek: [CRM_DMS_LOGISTICS_PACKAGE_RELEASE_NOTES.md](./CRM_DMS_LOGISTICS_PACKAGE_RELEASE_NOTES.md)
 
+## Release példa – CRM + DMS + Workflow (macOS Apple Silicon)
+
+| Mező | Érték |
+|------|--------|
+| Branch | `release/crm-dms-workflow` |
+| Verzió | MBIT ERP v1.0.1h |
+| Package ID | `crm-dms-workflow` |
+| Artifact | `mbit-erp-v1.0.1h-{sha}-crm-dms-workflow-CRM-DMS-WF-macos-arm64.zip` |
+
+Részletek: [CRM_DMS_WORKFLOW_PACKAGE_RELEASE_NOTES.md](./CRM_DMS_WORKFLOW_PACKAGE_RELEASE_NOTES.md)
+
 ## Policy
 
 1. Package-specifikus verzió: a `ERP_PACKAGES[id].version` és `APP_VERSION` env egyezzen.

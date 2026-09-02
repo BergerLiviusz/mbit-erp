@@ -14,6 +14,7 @@
 | `release/workflow-only` | **1.0.1e** | `workflow-only` |
 | `release/crm-only` | **1.0.1f** | `crm-only` |
 | `release/crm-dms-logistics` | **1.0.1g** | `crm-dms-logistics` |
+| `release/crm-dms-workflow` | **1.0.1h** | `crm-dms-workflow` (macOS arm64, lokális build) |
 | `release/customer-crm-dms-logistics-workflow` | 1.0.1b | `customer-4module` |
 
 Központi forrás: `packages/config/src/app-version.ts`
@@ -76,7 +77,8 @@ Workflow: `.github/workflows/build-desktop.yml`
 - Push: `release/workflow-only` → automatikus `workflow-only` build
 - Push: `release/crm-only` → automatikus `crm-only` build
 - Push: `release/crm-dms-logistics` → automatikus `crm-dms-logistics` build
-- `workflow_dispatch` → package: `dms-workflow-hr`, `workflow-only`, `crm-only` vagy `crm-dms-logistics`
+- Push: `release/crm-dms-workflow` → automatikus `crm-dms-workflow` Windows build (macOS artifact lokálisan: `npm run package:crm-dms-workflow:mac`)
+- `workflow_dispatch` → package: `dms-workflow-hr`, `workflow-only`, `crm-only`, `crm-dms-logistics` vagy `crm-dms-workflow`
 
 ## Ismert korlát
 

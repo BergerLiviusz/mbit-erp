@@ -152,6 +152,24 @@ export const ERP_PACKAGES: Record<string, PackageDefinition> = {
     artifactModuleLabel: 'CRM-DMS-LOG',
     legacyIds: ['ERP_CRM_DMS_LOGISTICS'],
   },
+  'crm-dms-workflow': {
+    id: 'crm-dms-workflow',
+    displayName: 'CRM + DMS + Workflow Edition',
+    editionLabel: 'CRM + DMS + Workflow Edition',
+    version: '1.0.1h',
+    modules: {
+      documents: true,
+      team: true,
+      crm: true,
+      logistics: false,
+      controlling: false,
+      hr: false,
+    },
+    buildName: 'mbit-erp-crm-dms-workflow',
+    artifactSlug: 'crm-dms-workflow',
+    artifactModuleLabel: 'CRM-DMS-WF',
+    legacyIds: ['ERP_CRM_DMS_WORKFLOW'],
+  },
   'ginop-crm-dms-hr': {
     id: 'ginop-crm-dms-hr',
     displayName: 'GINOP CRM+DMS+HR',
@@ -398,6 +416,12 @@ export function buildWindowsPortableZipName(packageId?: string | null): string {
   const pkg = getPackageDefinition(packageId);
   const modules = pkg.artifactModuleLabel ? `-${pkg.artifactModuleLabel}` : '';
   return `mbit-erp-v${pkg.version}-${pkg.artifactSlug}${modules}-windows.zip`;
+}
+
+export function buildMacosArm64ZipName(packageId?: string | null): string {
+  const pkg = getPackageDefinition(packageId);
+  const modules = pkg.artifactModuleLabel ? `-${pkg.artifactModuleLabel}` : '';
+  return `mbit-erp-v${pkg.version}-${pkg.artifactSlug}${modules}-macos-arm64.zip`;
 }
 
 export function resolvePackageVersion(packageId?: string | null): string {
