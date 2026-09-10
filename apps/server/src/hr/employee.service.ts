@@ -1,6 +1,19 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
+function optionalText(value?: string | null): string | undefined {
+  if (value == null) return undefined;
+  const trimmed = String(value).trim();
+  return trimmed === '' ? undefined : trimmed;
+}
+
+function optionalDate(value?: string | null): Date | undefined {
+  const text = optionalText(value);
+  if (!text) return undefined;
+  const date = new Date(text);
+  return Number.isNaN(date.getTime()) ? undefined : date;
+}
+
 export interface CreateEmployeeDto {
   azonosito: string;
   vezetekNev: string;
@@ -184,10 +197,13 @@ export class EmployeeService {
       throw new BadRequestException('Ez az azonos?t? m?r haszn?latban van');
     }
 
+    const tajSzam = optionalText(dto.tajSzam);
+    const jobPositionId = optionalText(dto.jobPositionId);
+
     // Check if TAJ number already exists (if provided)
-    if (dto.tajSzam) {
+    if (tajSzam) {
       const existingTaj = await this.prisma.employee.findUnique({
-        where: { tajSzam: dto.tajSzam },
+        where: { tajSzam },
       });
 
       if (existingTaj) {
@@ -195,11 +211,33 @@ export class EmployeeService {
       }
     }
 
-    const data: any = {
-      ...dto,
-      szuletesiDatum: dto.szuletesiDatum ? new Date(dto.szuletesiDatum) : undefined,
-      munkaviszonyKezdete: dto.munkaviszonyKezdete ? new Date(dto.munkaviszonyKezdete) : undefined,
-      munkaviszonyVege: dto.munkaviszonyVege ? new Date(dto.munkaviszonyVege) : undefined,
+    if (jobPositionId) {
+      const position = await this.prisma.jobPosition.findUnique({
+        where: { id: jobPositionId },
+      });
+      if (!position) {
+        throw new BadRequestException('A megadott munkakör nem található');
+      }
+    }
+
+    const data = {
+      azonosito: dto.azonosito.trim(),
+      vezetekNev: dto.vezetekNev.trim(),
+      keresztNev: dto.keresztNev.trim(),
+      szuletesiDatum: optionalDate(dto.szuletesiDatum),
+      szuletesiHely: optionalText(dto.szuletesiHely),
+      tajSzam: tajSzam ?? null,
+      szemelyiIgazolvanySzam: optionalText(dto.szemelyiIgazolvanySzam),
+      lakcim: optionalText(dto.lakcim),
+      tartozkodasiCim: optionalText(dto.tartozkodasiCim),
+      telefon: optionalText(dto.telefon),
+      email: optionalText(dto.email),
+      munkaviszonyKezdete: optionalDate(dto.munkaviszonyKezdete),
+      munkaviszonyVege: optionalDate(dto.munkaviszonyVege),
+      munkaviszonyTipusa: optionalText(dto.munkaviszonyTipusa),
+      jobPositionId: jobPositionId ?? null,
+      osztaly: optionalText(dto.osztaly),
+      reszleg: optionalText(dto.reszleg),
     };
 
     return this.prisma.employee.create({
@@ -213,22 +251,46 @@ export class EmployeeService {
   async update(id: string, dto: UpdateEmployeeDto) {
     const employee = await this.findOne(id);
 
+    const tajSzam = dto.tajSzam !== undefined ? optionalText(dto.tajSzam) ?? null : undefined;
+    const jobPositionId =
+      dto.jobPositionId !== undefined ? optionalText(dto.jobPositionId) ?? null : undefined;
+
     // Check if TAJ number is being changed and if it's already taken
-    if (dto.tajSzam && dto.tajSzam !== employee.tajSzam) {
+    if (tajSzam && tajSzam !== employee.tajSzam) {
       const existingTaj = await this.prisma.employee.findUnique({
-        where: { tajSzam: dto.tajSzam },
+        where: { tajSzam },
       });
 
       if (existingTaj) {
-        throw new BadRequestException('Ez a TAJ sz?m m?r haszn?latban van');
+        throw new BadRequestException('Ez a TAJ sz?m m?r használatban van');
+      }
+    }
+
+    if (jobPositionId) {
+      const position = await this.prisma.jobPosition.findUnique({
+        where: { id: jobPositionId },
+      });
+      if (!position) {
+        throw new BadRequestException('A megadott munkakör nem található');
       }
     }
 
     const data: any = {
       ...dto,
-      szuletesiDatum: dto.szuletesiDatum ? new Date(dto.szuletesiDatum) : undefined,
-      munkaviszonyKezdete: dto.munkaviszonyKezdete ? new Date(dto.munkaviszonyKezdete) : undefined,
-      munkaviszonyVege: dto.munkaviszonyVege ? new Date(dto.munkaviszonyVege) : undefined,
+      tajSzam,
+      jobPositionId,
+      szuletesiDatum:
+        dto.szuletesiDatum !== undefined
+          ? optionalDate(dto.szuletesiDatum) ?? null
+          : undefined,
+      munkaviszonyKezdete:
+        dto.munkaviszonyKezdete !== undefined
+          ? optionalDate(dto.munkaviszonyKezdete) ?? null
+          : undefined,
+      munkaviszonyVege:
+        dto.munkaviszonyVege !== undefined
+          ? optionalDate(dto.munkaviszonyVege) ?? null
+          : undefined,
     };
 
     return this.prisma.employee.update({

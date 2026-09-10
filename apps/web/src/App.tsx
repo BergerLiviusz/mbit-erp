@@ -51,6 +51,7 @@ import {
   getActivePackage,
   isTeamCommunicationEnabled,
   isWorkflowMenuEnabled,
+  isHrOnlyPackage,
   getModuleRoutes,
 } from './config/modules';
 
@@ -98,6 +99,7 @@ function App() {
   // Check if running in Electron desktop mode
   const isElectron = !!(window as any).electron || (navigator.userAgent.includes('Electron'));
   const location = useLocation();
+  const hrOnly = isHrOnlyPackage();
   
   // Log route changes
   useEffect(() => {
@@ -230,6 +232,7 @@ function App() {
                   <img src={MbitLogo} alt="Mbit Logo" className="h-10 w-auto" />
                 </Link>
                 <div className="flex space-x-4">
+                {!hrOnly && (
                 <Link 
                   to="/" 
                   className="hover:bg-gray-800 px-3 py-2 rounded"
@@ -243,6 +246,7 @@ function App() {
                 >
                   Főoldal
                 </Link>
+                )}
                 {/* Ügyfélkezelés - csak ha CRM modul engedélyezve */}
                 {isModuleEnabled('crm') && (
                   <DropdownMenu 
@@ -398,7 +402,7 @@ function App() {
         {isElectron && <BackendStatus />}
         {isElectron && <NotificationPanel />}
         <Routes>
-          <Route path="/" element={<Dashboard />} />
+          <Route path="/" element={hrOnly ? <Navigate to="/hr/employees" replace /> : <Dashboard />} />
           
           {/* CRM routes - csak ha engedélyezve */}
           {isModuleEnabled('crm') ? (

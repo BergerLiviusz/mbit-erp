@@ -184,6 +184,56 @@ export const PACKAGE_CONFIGS: Record<string, PackageConfig> = {
       logistics: false
     }
   },
+  'hr-only': {
+    name: 'HR Edition',
+    modules: {
+      documents: false,
+      team: false,
+      controlling: false,
+      crm: false,
+      logistics: false
+    }
+  },
+  ERP_HR_ONLY: {
+    name: 'HR Edition',
+    modules: {
+      documents: false,
+      team: false,
+      controlling: false,
+      crm: false,
+      logistics: false
+    }
+  },
+  ERP_HR: {
+    name: 'HR Edition',
+    modules: {
+      documents: false,
+      team: false,
+      controlling: false,
+      crm: false,
+      logistics: false
+    }
+  },
+  'package-hr': {
+    name: 'HR Edition',
+    modules: {
+      documents: false,
+      team: false,
+      controlling: false,
+      crm: false,
+      logistics: false
+    }
+  },
+  hr: {
+    name: 'HR Edition',
+    modules: {
+      documents: false,
+      team: false,
+      controlling: false,
+      crm: false,
+      logistics: false
+    }
+  },
   ERP_CRM_ONLY: {
     name: 'CRM Edition',
     modules: {
@@ -286,6 +336,10 @@ const PACKAGE_ALIASES: Record<string, keyof typeof PACKAGE_CONFIGS> = {
   ERP_WORKFLOW: 'workflow-only',
   ERP_CRM_ONLY: 'crm-only',
   ERP_CRM: 'crm-only',
+  ERP_HR_ONLY: 'hr-only',
+  ERP_HR: 'hr-only',
+  'package-hr': 'hr-only',
+  hr: 'hr-only',
   'package-4': 'customer-4module',
 };
 
@@ -309,6 +363,19 @@ const CRM_ONLY_PACKAGES = new Set([
 
 export function isCrmOnlyPackage(): boolean {
   return CRM_ONLY_PACKAGES.has(getActivePackage());
+}
+
+/** Csak HR modul – nincs DMS / Workflow / CRM / Logisztika */
+const HR_ONLY_PACKAGES = new Set([
+  'hr-only',
+  'ERP_HR_ONLY',
+  'ERP_HR',
+  'package-hr',
+  'hr',
+]);
+
+export function isHrOnlyPackage(): boolean {
+  return HR_ONLY_PACKAGES.has(getActivePackage());
 }
 
 /** Kanban / csapat kommunikáció – workflow-only csomagban tiltva */
@@ -429,6 +496,7 @@ const HR_DISABLED_PACKAGES = new Set([
 // Helper függvény: HR modul elérhetőségének ellenőrzése
 export function isHrModuleEnabled(): boolean {
   const activePackage = getActivePackage();
+  if (isHrOnlyPackage()) return true;
   return !HR_DISABLED_PACKAGES.has(activePackage);
 }
 

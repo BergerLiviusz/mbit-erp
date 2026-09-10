@@ -134,6 +134,24 @@ export const ERP_PACKAGES: Record<string, PackageDefinition> = {
     artifactModuleLabel: 'CRM',
     legacyIds: ['ERP_CRM_ONLY', 'ERP_CRM'],
   },
+  'hr-only': {
+    id: 'hr-only',
+    displayName: 'HR Edition',
+    editionLabel: 'HR Edition',
+    version: '1.0.1g',
+    modules: {
+      documents: false,
+      team: false,
+      crm: false,
+      logistics: false,
+      controlling: false,
+      hr: true,
+    },
+    buildName: 'mbit-erp-hr-only',
+    artifactSlug: 'hr-only',
+    artifactModuleLabel: 'HR',
+    legacyIds: ['ERP_HR_ONLY', 'ERP_HR', 'package-hr'],
+  },
   'ginop-crm-dms-hr': {
     id: 'ginop-crm-dms-hr',
     displayName: 'GINOP CRM+DMS+HR',
@@ -186,7 +204,7 @@ export const ERP_PACKAGES: Record<string, PackageDefinition> = {
   },
   hr: {
     id: 'hr',
-    displayName: 'HR csomag',
+    displayName: 'HR csomag (legacy – használja: hr-only)',
     editionLabel: 'HR Edition',
     version: APP_VERSION,
     modules: {
@@ -199,7 +217,6 @@ export const ERP_PACKAGES: Record<string, PackageDefinition> = {
     },
     buildName: 'mbit-erp-hr',
     artifactSlug: 'hr',
-    legacyIds: ['ERP_HR', 'package-hr'],
   },
   logistics: {
     id: 'logistics',

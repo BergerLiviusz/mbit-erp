@@ -13,6 +13,7 @@
 | `release/dms-workflow-hr` | **1.0.1c** | `dms-workflow-hr` |
 | `release/workflow-only` | **1.0.1e** | `workflow-only` |
 | `release/crm-only` | **1.0.1f** | `crm-only` |
+| `release/hr-only` | **1.0.1g** | `hr-only` |
 | `release/customer-crm-dms-logistics-workflow` | 1.0.1b | `customer-4module` |
 
 Központi forrás: `packages/config/src/app-version.ts`
@@ -23,6 +24,14 @@ Központi forrás: `packages/config/src/app-version.ts`
 npm install
 npm run build:config
 npm run package:crm-only
+```
+
+## Lokális build – HR only
+
+```bash
+npm install
+npm run build:config
+npm run package:hr-only
 ```
 
 ## Lokális build – Workflow only
@@ -66,7 +75,8 @@ Workflow: `.github/workflows/build-desktop.yml`
 - Push: `release/dms-workflow-hr` → automatikus `dms-workflow-hr` build
 - Push: `release/workflow-only` → automatikus `workflow-only` build
 - Push: `release/crm-only` → automatikus `crm-only` build
-- `workflow_dispatch` → package: `dms-workflow-hr`, `workflow-only` vagy `crm-only`
+- Push: `release/hr-only` → automatikus `hr-only` build
+- `workflow_dispatch` → package: `dms-workflow-hr`, `workflow-only`, `crm-only` vagy `hr-only`
 
 ## Ismert korlát
 

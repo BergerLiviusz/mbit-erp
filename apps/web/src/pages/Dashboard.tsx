@@ -1,18 +1,19 @@
 import { useQuery } from '@tanstack/react-query';
 import axios from '../lib/axios';
-import { isModuleEnabled, isWorkflowOnlyPackage, isTeamCommunicationEnabled } from '../config/modules';
+import { isModuleEnabled, isWorkflowOnlyPackage, isTeamCommunicationEnabled, isHrModuleEnabled } from '../config/modules';
 
 export default function Dashboard() {
   const { data: stats, isLoading, error } = useQuery({
     queryKey: ['dashboard-stats'],
     queryFn: async () => {
       try {
-        const [accounts, items, documents, returns, suppliers] = await Promise.all([
+        const [accounts, items, documents, returns, suppliers, employees] = await Promise.all([
           axios.get('/api/crm/accounts?skip=0&take=1').catch(() => ({ data: { total: 0 } })),
           axios.get('/api/logistics/items?skip=0&take=1').catch(() => ({ data: { total: 0 } })),
           axios.get('/api/dms/documents?skip=0&take=1').catch(() => ({ data: { total: 0 } })),
           axios.get('/api/logistics/returns?skip=0&take=1').catch(() => ({ data: { total: 0 } })),
           axios.get('/api/logistics/suppliers?skip=0&take=1').catch(() => ({ data: { total: 0 } })),
+          axios.get('/api/hr/employees?skip=0&take=1').catch(() => ({ data: { total: 0 } })),
         ]);
         return {
           accounts: accounts.data?.total || 0,
@@ -20,6 +21,7 @@ export default function Dashboard() {
           documents: documents.data?.total || 0,
           returns: returns.data?.total || 0,
           suppliers: suppliers.data?.total || 0,
+          employees: employees.data?.total || 0,
         };
       } catch (error) {
         console.error('Dashboard stats error:', error);
@@ -30,6 +32,7 @@ export default function Dashboard() {
           documents: 0,
           returns: 0,
           suppliers: 0,
+          employees: 0,
         };
       }
     },
@@ -48,6 +51,7 @@ export default function Dashboard() {
   if (isWorkflowOnlyPackage()) enabledModuleNames.push('munkafolyamat-irányítás');
   else if (isModuleEnabled('team')) enabledModuleNames.push('csapatmunka');
   if (isModuleEnabled('controlling')) enabledModuleNames.push('kontrolling');
+  if (isHrModuleEnabled()) enabledModuleNames.push('HR');
 
   // Bevezető szöveg összeállítása
   let welcomeText = 'Ez a moduláris vállalati alkalmazás';
@@ -107,10 +111,10 @@ export default function Dashboard() {
             <p className="text-4xl font-bold text-orange-900">{stats?.returns || 0}</p>
           </div>
         )}
-        {isModuleEnabled('logistics') && (
+        {isHrModuleEnabled() && (
           <div className="bg-white p-6 rounded-lg shadow">
-            <h3 className="text-gray-500 text-sm uppercase">Szállítók</h3>
-            <p className="text-4xl font-bold text-indigo-900">{stats?.suppliers || 0}</p>
+            <h3 className="text-gray-500 text-sm uppercase">Dolgozók</h3>
+            <p className="text-4xl font-bold text-rose-900">{stats?.employees || 0}</p>
           </div>
         )}
       </div>
@@ -178,6 +182,17 @@ export default function Dashboard() {
                 <li>• Feladatkezelés</li>
                 <li>• Email értesítések</li>
                 <li>• Kommentek és tevékenységek</li>
+              </ul>
+            </div>
+          )}
+          {isHrModuleEnabled() && (
+            <div className="border-l-4 border-rose-500 pl-4">
+              <h3 className="font-bold mb-2">HR Modul</h3>
+              <ul className="text-sm text-gray-600 space-y-1">
+                <li>• Dolgozók és munkakörök</li>
+                <li>• Munkaszerződések</li>
+                <li>• Cafeteria, toborzás, beléptetés</li>
+                <li>• Teljesítmény, idő, távollét</li>
               </ul>
             </div>
           )}

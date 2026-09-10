@@ -64,6 +64,17 @@ Részletek: [WORKFLOW_ONLY_PACKAGE_RELEASE_NOTES.md](./WORKFLOW_ONLY_PACKAGE_REL
 
 Részletek: [CRM_ONLY_PACKAGE_RELEASE_NOTES.md](./CRM_ONLY_PACKAGE_RELEASE_NOTES.md)
 
+## Release példa – HR only
+
+| Mező | Érték |
+|------|--------|
+| Branch | `release/hr-only` |
+| Verzió | MBIT ERP v1.0.1g |
+| Package ID | `hr-only` |
+| Artifact | `mbit-erp-v1.0.1g-{sha}-hr-only-HR-windows.zip` |
+
+Részletek: [HR_ONLY_PACKAGE_RELEASE_NOTES.md](./HR_ONLY_PACKAGE_RELEASE_NOTES.md)
+
 ## Policy
 
 1. Package-specifikus verzió: a `ERP_PACKAGES[id].version` és `APP_VERSION` env egyezzen.

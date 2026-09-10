@@ -208,31 +208,33 @@ export default function Employees() {
         ? `/hr/employees/${editingId}`
         : '/hr/employees';
       const method = editingId ? 'PUT' : 'POST';
+      const payload = {
+        ...(editingId ? {} : { azonosito: formData.azonosito.trim() }),
+        vezetekNev: formData.vezetekNev.trim(),
+        keresztNev: formData.keresztNev.trim(),
+        szuletesiDatum: formData.szuletesiDatum || undefined,
+        szuletesiHely: formData.szuletesiHely || undefined,
+        tajSzam: formData.tajSzam || undefined,
+        szemelyiIgazolvanySzam: formData.szemelyiIgazolvanySzam || undefined,
+        lakcim: formData.lakcim || undefined,
+        tartozkodasiCim: formData.tartozkodasiCim || undefined,
+        telefon: formData.telefon || undefined,
+        email: formData.email || undefined,
+        munkaviszonyKezdete: formData.munkaviszonyKezdete || undefined,
+        munkaviszonyVege: formData.munkaviszonyVege || undefined,
+        munkaviszonyTipusa: formData.munkaviszonyTipusa || undefined,
+        jobPositionId: formData.jobPositionId || undefined,
+        osztaly: formData.osztaly || undefined,
+        reszleg: formData.reszleg || undefined,
+        ...(editingId ? { aktiv: formData.aktiv } : {}),
+      };
 
       const response = await apiFetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(editingId ? {
-          vezetekNev: formData.vezetekNev,
-          keresztNev: formData.keresztNev,
-          szuletesiDatum: formData.szuletesiDatum || undefined,
-          szuletesiHely: formData.szuletesiHely || undefined,
-          tajSzam: formData.tajSzam || undefined,
-          szemelyiIgazolvanySzam: formData.szemelyiIgazolvanySzam || undefined,
-          lakcim: formData.lakcim || undefined,
-          tartozkodasiCim: formData.tartozkodasiCim || undefined,
-          telefon: formData.telefon || undefined,
-          email: formData.email || undefined,
-          munkaviszonyKezdete: formData.munkaviszonyKezdete || undefined,
-          munkaviszonyVege: formData.munkaviszonyVege || undefined,
-          munkaviszonyTipusa: formData.munkaviszonyTipusa || undefined,
-          jobPositionId: formData.jobPositionId || undefined,
-          osztaly: formData.osztaly || undefined,
-          reszleg: formData.reszleg || undefined,
-          aktiv: formData.aktiv,
-        } : formData),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {

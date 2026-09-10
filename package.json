@@ -20,6 +20,7 @@
     "package:dms-workflow-hr": "npm run build:config && cd apps/desktop && npx cross-env VITE_ACTIVE_PACKAGE=dms-workflow-hr ERP_PACKAGE=dms-workflow-hr APP_VERSION=1.0.1c npm run package:win",
     "package:workflow-only": "npm run build:config && cd apps/desktop && npx cross-env VITE_ACTIVE_PACKAGE=workflow-only ERP_PACKAGE=workflow-only APP_VERSION=1.0.1e npm run package:win",
     "package:crm-only": "npm run build:config && cd apps/desktop && npx cross-env VITE_ACTIVE_PACKAGE=crm-only ERP_PACKAGE=crm-only APP_VERSION=1.0.1f npm run package:win",
+    "package:hr-only": "npm run build:config && cd apps/desktop && npx cross-env VITE_ACTIVE_PACKAGE=hr-only ERP_PACKAGE=hr-only APP_VERSION=1.0.1g npm run package:win",
     "package:mac": "cd apps/desktop && npm run package:mac",
     "package:linux": "cd apps/desktop && npm run package:linux",
     "test:desktop": "cd apps/desktop && npm run build && npm run package -- --dir && cd ../.. && open apps/desktop/release/mac-arm64/Mbit\\ ERP.app",
