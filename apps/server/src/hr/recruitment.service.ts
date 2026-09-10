@@ -40,7 +40,7 @@ export class HrRecruitmentService {
       data: {
         cim: dto.cim,
         leiras: dto.leiras,
-        jobPositionId: dto.jobPositionId,
+        jobPositionId: dto.jobPositionId?.trim() ? dto.jobPositionId : undefined,
         allapot: dto.allapot || 'PISZKOZAT',
       },
     });

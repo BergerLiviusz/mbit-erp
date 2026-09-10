@@ -57,10 +57,24 @@ export interface UpdateEmployeeDto {
 export class EmployeeService {
   constructor(private prisma: PrismaService) {}
 
-  private normalizeOptionalId(value: string | undefined): string | undefined {
+  private normalizeOptionalId(value: string | undefined | null): string | null | undefined {
     if (value === undefined) return undefined;
-    const trimmed = value.trim();
-    return trimmed.length === 0 ? undefined : trimmed;
+    if (value == null) return null;
+    const trimmed = String(value).trim();
+    return trimmed.length === 0 ? null : trimmed;
+  }
+
+  private optionalText(value?: string | null): string | undefined {
+    if (value == null) return undefined;
+    const trimmed = String(value).trim();
+    return trimmed === '' ? undefined : trimmed;
+  }
+
+  private optionalDate(value?: string | null): Date | undefined {
+    const text = this.optionalText(value);
+    if (!text) return undefined;
+    const date = new Date(text);
+    return Number.isNaN(date.getTime()) ? undefined : date;
   }
 
   async findAll(skip = 0, take = 50, filters?: {
@@ -203,23 +217,53 @@ export class EmployeeService {
       throw new BadRequestException('Ez az azonos?t? m?r haszn?latban van');
     }
 
+    const tajSzam = this.optionalText(dto.tajSzam);
+    const jobPositionId = this.normalizeOptionalId(dto.jobPositionId) ?? null;
+
     // Check if TAJ number already exists (if provided)
-    if (dto.tajSzam) {
+    if (tajSzam) {
       const existingTaj = await this.prisma.employee.findUnique({
-        where: { tajSzam: dto.tajSzam },
+        where: { tajSzam },
       });
 
       if (existingTaj) {
-        throw new BadRequestException('Ez a TAJ sz?m m?r haszn?latban van');
+        throw new BadRequestException('Ez a TAJ szám már használatban van');
+      }
+    }
+
+    if (jobPositionId) {
+      const position = await this.prisma.jobPosition.findUnique({
+        where: { id: jobPositionId },
+      });
+      if (!position) {
+        throw new BadRequestException('A megadott munkakör nem található');
       }
     }
 
     const data: any = {
-      ...dto,
-      szuletesiDatum: dto.szuletesiDatum ? new Date(dto.szuletesiDatum) : undefined,
-      munkaviszonyKezdete: dto.munkaviszonyKezdete ? new Date(dto.munkaviszonyKezdete) : undefined,
-      munkaviszonyVege: dto.munkaviszonyVege ? new Date(dto.munkaviszonyVege) : undefined,
-      jobPositionId: this.normalizeOptionalId(dto.jobPositionId),
+      azonosito: dto.azonosito.trim(),
+      vezetekNev: dto.vezetekNev.trim(),
+      keresztNev: dto.keresztNev.trim(),
+      szuletesiDatum: this.optionalDate(dto.szuletesiDatum),
+      szuletesiHely: this.optionalText(dto.szuletesiHely),
+      szuletesiNev: this.optionalText(dto.szuletesiNev),
+      adoszam: this.optionalText(dto.adoszam),
+      anyjaNeve: this.optionalText(dto.anyjaNeve),
+      allapot: this.optionalText(dto.allapot),
+      besorolas: this.optionalText(dto.besorolas),
+      munkaido: this.optionalText(dto.munkaido),
+      tajSzam: tajSzam ?? null,
+      szemelyiIgazolvanySzam: this.optionalText(dto.szemelyiIgazolvanySzam),
+      lakcim: this.optionalText(dto.lakcim),
+      tartozkodasiCim: this.optionalText(dto.tartozkodasiCim),
+      telefon: this.optionalText(dto.telefon),
+      email: this.optionalText(dto.email),
+      munkaviszonyKezdete: this.optionalDate(dto.munkaviszonyKezdete),
+      munkaviszonyVege: this.optionalDate(dto.munkaviszonyVege),
+      munkaviszonyTipusa: this.optionalText(dto.munkaviszonyTipusa),
+      jobPositionId,
+      osztaly: this.optionalText(dto.osztaly),
+      reszleg: this.optionalText(dto.reszleg),
     };
 
     return this.prisma.employee.create({
@@ -250,6 +294,7 @@ export class EmployeeService {
       munkaviszonyKezdete: dto.munkaviszonyKezdete ? new Date(dto.munkaviszonyKezdete) : undefined,
       munkaviszonyVege: dto.munkaviszonyVege ? new Date(dto.munkaviszonyVege) : undefined,
       jobPositionId: dto.jobPositionId !== undefined ? this.normalizeOptionalId(dto.jobPositionId) : undefined,
+      tajSzam: dto.tajSzam !== undefined ? this.optionalText(dto.tajSzam) ?? null : undefined,
     };
 
     return this.prisma.employee.update({
