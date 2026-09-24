@@ -317,6 +317,9 @@ npm run package:crm-only
 # CRM + DMS + Logistics v1.0.1g
 npm run package:crm-dms-logistics
 
+# DMS + Workflow + Controlling v1.0.1h
+npm run package:dms-workflow-controlling
+
 # macOS / Linux
 npm run package:mac
 npm run package:linux

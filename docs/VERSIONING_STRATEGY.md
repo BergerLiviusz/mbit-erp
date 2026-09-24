@@ -75,6 +75,17 @@ Részletek: [CRM_ONLY_PACKAGE_RELEASE_NOTES.md](./CRM_ONLY_PACKAGE_RELEASE_NOTES
 
 Részletek: [CRM_DMS_LOGISTICS_PACKAGE_RELEASE_NOTES.md](./CRM_DMS_LOGISTICS_PACKAGE_RELEASE_NOTES.md)
 
+## Release példa – DMS + Workflow + Controlling
+
+| Mező | Érték |
+|------|--------|
+| Branch | `release/dms-workflow-controlling` |
+| Verzió | MBIT ERP v1.0.1h |
+| Package ID | `dms-workflow-controlling` |
+| Artifact | `mbit-erp-v1.0.1h-{sha}-dms-workflow-controlling-DMS-WF-CTRL-windows.zip` |
+
+Részletek: [DMS_WORKFLOW_CONTROLLING_PACKAGE_RELEASE_NOTES.md](./DMS_WORKFLOW_CONTROLLING_PACKAGE_RELEASE_NOTES.md)
+
 ## Policy
 
 1. Package-specifikus verzió: a `ERP_PACKAGES[id].version` és `APP_VERSION` env egyezzen.

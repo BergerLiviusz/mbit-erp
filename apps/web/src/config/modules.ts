@@ -204,6 +204,26 @@ export const PACKAGE_CONFIGS: Record<string, PackageConfig> = {
       logistics: true
     }
   },
+  'dms-workflow-controlling': {
+    name: 'DMS + Workflow + Controlling Edition',
+    modules: {
+      documents: true,
+      team: true,
+      controlling: true,
+      crm: false,
+      logistics: false
+    }
+  },
+  ERP_DMS_WORKFLOW_CONTROLLING: {
+    name: 'DMS + Workflow + Controlling Edition',
+    modules: {
+      documents: true,
+      team: true,
+      controlling: true,
+      crm: false,
+      logistics: false
+    }
+  },
   ERP_CRM_ONLY: {
     name: 'CRM Edition',
     modules: {
@@ -307,6 +327,7 @@ const PACKAGE_ALIASES: Record<string, keyof typeof PACKAGE_CONFIGS> = {
   ERP_CRM_ONLY: 'crm-only',
   ERP_CRM: 'crm-only',
   ERP_CRM_DMS_LOGISTICS: 'crm-dms-logistics',
+  ERP_DMS_WORKFLOW_CONTROLLING: 'dms-workflow-controlling',
   'package-4': 'customer-4module',
 };
 
@@ -449,6 +470,8 @@ const HR_DISABLED_PACKAGES = new Set([
   'ERP_CRM',
   'crm-dms-logistics',
   'ERP_CRM_DMS_LOGISTICS',
+  'dms-workflow-controlling',
+  'ERP_DMS_WORKFLOW_CONTROLLING',
 ]);
 
 // Helper függvény: HR modul elérhetőségének ellenőrzése
