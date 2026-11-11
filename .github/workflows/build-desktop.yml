@@ -18,6 +18,7 @@ on:
       - release/crm-only
       - release/crm-dms-logistics
       - release/dms-workflow-controlling
+      - release/crm-dms-workflow
     tags:
       - 'v*'
   pull_request:
@@ -43,6 +44,7 @@ on:
           - crm-only
           - crm-dms-logistics
           - dms-workflow-controlling
+          - crm-dms-workflow
         default: 'full'
 
 permissions:
@@ -135,6 +137,9 @@ jobs:
           } elseif ("${{ github.ref }}" -eq "refs/heads/release/dms-workflow-controlling") {
             $package = "dms-workflow-controlling"
             Write-Host "Detected dms-workflow-controlling release branch"
+          } elseif ("${{ github.ref }}" -eq "refs/heads/release/crm-dms-workflow") {
+            $package = "crm-dms-workflow"
+            Write-Host "Detected crm-dms-workflow release branch"
           } elseif ("${{ github.ref }}" -eq "refs/heads/main" -or "${{ github.ref }}" -eq "refs/heads/master") {
             $package = "full"
             Write-Host "Detected main/master branch, using full package"
@@ -199,7 +204,7 @@ jobs:
         shell: pwsh
         env:
           ERP_PACKAGE: ${{ steps.package.outputs.package }}
-          APP_VERSION: ${{ steps.package.outputs.package == 'dms-workflow-controlling' && '1.0.1h' || (steps.package.outputs.package == 'crm-dms-logistics' && '1.0.1g' || (steps.package.outputs.package == 'crm-only' && '1.0.1f' || (steps.package.outputs.package == 'workflow-only' && '1.0.1e' || (steps.package.outputs.package == 'dms-workflow-hr' && '1.0.1c' || (steps.package.outputs.package == 'customer-4module' && '1.0.1b' || '1.0.1c'))))) }}
+          APP_VERSION: ${{ steps.package.outputs.package == 'crm-dms-workflow' && '1.0.1i' || (steps.package.outputs.package == 'dms-workflow-controlling' && '1.0.1h' || (steps.package.outputs.package == 'crm-dms-logistics' && '1.0.1g' || (steps.package.outputs.package == 'crm-only' && '1.0.1f' || (steps.package.outputs.package == 'workflow-only' && '1.0.1e' || (steps.package.outputs.package == 'dms-workflow-hr' && '1.0.1c' || (steps.package.outputs.package == 'customer-4module' && '1.0.1b' || '1.0.1c')))))) }}
         run: |
           Write-Host "=== Building server (ERP_PACKAGE=$env:ERP_PACKAGE) ==="
           # Config must exist before Nest compile; prebuild in apps/server repeats this safely.
@@ -320,7 +325,7 @@ jobs:
         env:
           VITE_ACTIVE_PACKAGE: ${{ steps.package.outputs.package }}
           ERP_PACKAGE: ${{ steps.package.outputs.package }}
-          APP_VERSION: ${{ steps.package.outputs.package == 'dms-workflow-controlling' && '1.0.1h' || (steps.package.outputs.package == 'crm-dms-logistics' && '1.0.1g' || (steps.package.outputs.package == 'crm-only' && '1.0.1f' || (steps.package.outputs.package == 'workflow-only' && '1.0.1e' || (steps.package.outputs.package == 'dms-workflow-hr' && '1.0.1c' || (steps.package.outputs.package == 'customer-4module' && '1.0.1b' || '1.0.1c'))))) }}
+          APP_VERSION: ${{ steps.package.outputs.package == 'crm-dms-workflow' && '1.0.1i' || (steps.package.outputs.package == 'dms-workflow-controlling' && '1.0.1h' || (steps.package.outputs.package == 'crm-dms-logistics' && '1.0.1g' || (steps.package.outputs.package == 'crm-only' && '1.0.1f' || (steps.package.outputs.package == 'workflow-only' && '1.0.1e' || (steps.package.outputs.package == 'dms-workflow-hr' && '1.0.1c' || (steps.package.outputs.package == 'customer-4module' && '1.0.1b' || '1.0.1c')))))) }}
         run: |
           Write-Host "=== Building frontend for package: ${{ steps.package.outputs.package }} ==="
           Write-Host "VITE_ACTIVE_PACKAGE environment variable: $env:VITE_ACTIVE_PACKAGE"
@@ -414,7 +419,7 @@ jobs:
         env:
           ERP_PACKAGE: ${{ steps.package.outputs.package }}
           VITE_ACTIVE_PACKAGE: ${{ steps.package.outputs.package }}
-          APP_VERSION: ${{ steps.package.outputs.package == 'dms-workflow-controlling' && '1.0.1h' || (steps.package.outputs.package == 'crm-dms-logistics' && '1.0.1g' || (steps.package.outputs.package == 'crm-only' && '1.0.1f' || (steps.package.outputs.package == 'workflow-only' && '1.0.1e' || (steps.package.outputs.package == 'dms-workflow-hr' && '1.0.1c' || (steps.package.outputs.package == 'customer-4module' && '1.0.1b' || '1.0.1c'))))) }}
+          APP_VERSION: ${{ steps.package.outputs.package == 'crm-dms-workflow' && '1.0.1i' || (steps.package.outputs.package == 'dms-workflow-controlling' && '1.0.1h' || (steps.package.outputs.package == 'crm-dms-logistics' && '1.0.1g' || (steps.package.outputs.package == 'crm-only' && '1.0.1f' || (steps.package.outputs.package == 'workflow-only' && '1.0.1e' || (steps.package.outputs.package == 'dms-workflow-hr' && '1.0.1c' || (steps.package.outputs.package == 'customer-4module' && '1.0.1b' || '1.0.1c')))))) }}
         run: |
           Write-Host "=== Packaging desktop app (ERP_PACKAGE=$env:ERP_PACKAGE, APP_VERSION=$env:APP_VERSION) ==="
           cd apps/desktop
@@ -609,6 +614,32 @@ jobs:
           
           $frontendFiles = Get-ChildItem $unpackedFrontend -Recurse -File | Measure-Object
           Write-Host ("Frontend files: {0}" -f $frontendFiles.Count)
+
+          $package = "${{ steps.package.outputs.package }}"
+          if ($package -eq "crm-dms-workflow") {
+            Write-Host ""
+            Write-Host "=== Verifying preloaded DMS seed documents ==="
+            $seedDir = "apps/desktop/release/win-unpacked/resources/seed-documents"
+            $requiredSeedFiles = @(
+              "manifest.json",
+              "Adatlapok.pdf",
+              "Adatlapok_listaja_2026.xlsx",
+              "Munkalap_Anker_koz_klima_karbantartas.pdf",
+              "Munkalap.pdf"
+            )
+            if (-not (Test-Path $seedDir)) {
+              Write-Host "❌ CRITICAL ERROR: seed-documents not found in packaged build!"
+              exit 1
+            }
+            foreach ($seedFile in $requiredSeedFiles) {
+              $seedPath = Join-Path $seedDir $seedFile
+              if (-not (Test-Path $seedPath)) {
+                Write-Host "❌ CRITICAL ERROR: missing seed document: $seedFile"
+                exit 1
+              }
+              Write-Host "✅ $seedFile"
+            }
+          }
           
           Write-Host ""
           Write-Host "=== Verifying icon file in packaged build ==="
@@ -646,6 +677,7 @@ jobs:
             "crm-only" { "1.0.1f" }
             "crm-dms-logistics" { "1.0.1g" }
             "dms-workflow-controlling" { "1.0.1h" }
+            "crm-dms-workflow" { "1.0.1i" }
             default { (Get-Content "apps/desktop/package.json" -Raw | ConvertFrom-Json).version }
           }
           $moduleLabel = switch ($package) {
@@ -655,6 +687,7 @@ jobs:
             "crm-only" { "-CRM" }
             "crm-dms-logistics" { "-CRM-DMS-LOG" }
             "dms-workflow-controlling" { "-DMS-WF-CTRL" }
+            "crm-dms-workflow" { "-CRM-DMS-WF" }
             default { "" }
           }
           $slug = $package

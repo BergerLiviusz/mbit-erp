@@ -299,6 +299,9 @@ async function startBackend(): Promise<void> {
         'full',
       BUILD_SHA: erpBuildMeta?.buildSha || process.env.BUILD_SHA || process.env.GITHUB_SHA || '',
       BUILD_DATE: erpBuildMeta?.buildDate || process.env.BUILD_DATE || '',
+      SEED_DOCUMENTS_DIR: isDev
+        ? path.join(__dirname, '..', '..', 'server', 'seed-documents')
+        : path.join(process.resourcesPath, 'seed-documents'),
     };
 
     // Log environment setup (without sensitive data)

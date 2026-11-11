@@ -1,13 +1,33 @@
 import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { StorageService } from '../common/storage/storage.service';
 import * as bcrypt from 'bcrypt';
+import * as fs from 'fs';
+import * as path from 'path';
 import { Permission, PermissionDescriptions } from '../common/rbac/permission.enum';
+import { getActivePackageIdFromEnv } from '@mbit-erp/config';
+
+interface SeedDocumentManifest {
+  packageIds?: string[];
+  categoryName?: string;
+  documents: Array<{
+    file: string;
+    nev: string;
+    fajlNev?: string;
+    tipus?: string;
+    mimeType?: string;
+    irany?: string;
+  }>;
+}
 
 @Injectable()
 export class SeedService implements OnModuleInit {
   private readonly logger = new Logger(SeedService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly storage: StorageService,
+  ) {}
 
   async onModuleInit() {
     await this.seedDatabaseIfEmpty();
@@ -51,6 +71,7 @@ export class SeedService implements OnModuleInit {
     const adminUser = await this.seedAdminUser(roles[0].id);
     await this.seedSystemSettings();
     await this.seedDefaultBoard(adminUser.id);
+    await this.seedBundledDocuments(adminUser.id);
     
     this.logger.log(`✅ Admin felhasználó létrehozva: admin / 1234`);
   }
@@ -250,5 +271,103 @@ export class SeedService implements OnModuleInit {
     });
 
     this.logger.log('✅ Alapértelmezett board létrehozva');
+  }
+
+  private resolveSeedDocumentsDir(): string | null {
+    const candidates = [
+      process.env.SEED_DOCUMENTS_DIR,
+      path.join(process.cwd(), 'seed-documents'),
+      path.join(__dirname, '..', '..', 'seed-documents'),
+      path.join(__dirname, '..', 'seed-documents'),
+    ].filter((dir): dir is string => Boolean(dir));
+
+    for (const dir of candidates) {
+      if (fs.existsSync(path.join(dir, 'manifest.json'))) {
+        return dir;
+      }
+    }
+    return null;
+  }
+
+  private async seedBundledDocuments(adminUserId: string) {
+    const packageId = getActivePackageIdFromEnv();
+    const seedDir = this.resolveSeedDocumentsDir();
+    if (!seedDir) {
+      this.logger.log('ℹ️ Nincs előre csomagolt irat (seed-documents), dokumentum seed kihagyva');
+      return;
+    }
+
+    const manifestPath = path.join(seedDir, 'manifest.json');
+    let manifest: SeedDocumentManifest;
+    try {
+      manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8')) as SeedDocumentManifest;
+    } catch (error: any) {
+      this.logger.warn(`⚠️ Seed dokumentum manifest olvasása sikertelen: ${error.message}`);
+      return;
+    }
+
+    const allowedPackages = manifest.packageIds ?? [];
+    if (allowedPackages.length > 0 && !allowedPackages.includes(packageId)) {
+      this.logger.log(`ℹ️ Seed dokumentumok nem tartoznak a(z) ${packageId} csomaghoz, kihagyva`);
+      return;
+    }
+
+    const existingCount = await this.prisma.document.count();
+    if (existingCount > 0) {
+      this.logger.log('✅ Dokumentumok már léteznek, előre feltöltött iratok kihagyva');
+      return;
+    }
+
+    const categoryName = manifest.categoryName || 'Előtöltött iratok';
+    const category = await this.prisma.documentCategory.upsert({
+      where: { nev: categoryName },
+      update: { aktiv: true },
+      create: {
+        nev: categoryName,
+        leiras: 'Megrendelő által előre kért iratok',
+        aktiv: true,
+      },
+    });
+
+    const year = new Date().getFullYear();
+    let created = 0;
+
+    for (const [index, item] of (manifest.documents ?? []).entries()) {
+      const sourcePath = path.join(seedDir, item.file);
+      if (!fs.existsSync(sourcePath)) {
+        this.logger.warn(`⚠️ Seed irat nem található: ${sourcePath}`);
+        continue;
+      }
+
+      const buffer = fs.readFileSync(sourcePath);
+      const displayName = item.fajlNev || item.file;
+      const relativePath = await this.storage.saveFile('files', displayName, buffer);
+      const iktatoSzam = `MBIT/${year}/${String(index + 1).padStart(4, '0')}`;
+
+      await this.prisma.document.create({
+        data: {
+          nev: item.nev,
+          tipus: item.tipus || 'egyeb',
+          irany: item.irany || null,
+          categoryId: category.id,
+          allapot: 'aktiv',
+          fajlNev: displayName,
+          fajlMeret: buffer.length,
+          fajlUtvonal: relativePath,
+          mimeType: item.mimeType || 'application/octet-stream',
+          iktatoSzam,
+          createdById: adminUserId,
+          access: {
+            create: {
+              userId: adminUserId,
+              jogosultsag: 'FULL_ACCESS',
+            },
+          },
+        },
+      });
+      created += 1;
+    }
+
+    this.logger.log(`✅ ${created} előre feltöltött irat létrehozva az elektronikus iratkezelésben`);
   }
 }

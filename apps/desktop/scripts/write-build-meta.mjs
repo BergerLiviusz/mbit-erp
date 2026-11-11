@@ -44,3 +44,24 @@ const meta = {
 
 fs.writeFileSync(path.join(outDir, 'erp-build-meta.json'), JSON.stringify(meta, null, 2));
 console.log('[write-build-meta] Written erp-build-meta.json:', meta);
+
+const seedSrc = path.join(root, 'apps/server/seed-documents');
+const seedDest = path.join(outDir, 'seed-documents');
+fs.rmSync(seedDest, { recursive: true, force: true });
+fs.mkdirSync(seedDest, { recursive: true });
+
+const shouldBundleSeedDocs =
+  packageId === 'crm-dms-workflow' || packageId === 'ERP_CRM_DMS_WORKFLOW';
+
+if (shouldBundleSeedDocs && fs.existsSync(seedSrc)) {
+  for (const entry of fs.readdirSync(seedSrc)) {
+    const from = path.join(seedSrc, entry);
+    if (fs.statSync(from).isFile()) {
+      fs.copyFileSync(from, path.join(seedDest, entry));
+    }
+  }
+  console.log('[write-build-meta] Bundled seed documents into resources/seed-documents');
+} else {
+  fs.writeFileSync(path.join(seedDest, '.keep'), '');
+  console.log('[write-build-meta] No customer seed documents for this package');
+}

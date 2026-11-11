@@ -320,6 +320,9 @@ npm run package:crm-dms-logistics
 # DMS + Workflow + Controlling v1.0.1h
 npm run package:dms-workflow-controlling
 
+# CRM + DMS + Workflow v1.0.1i
+npm run package:crm-dms-workflow
+
 # macOS / Linux
 npm run package:mac
 npm run package:linux

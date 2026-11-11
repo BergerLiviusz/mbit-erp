@@ -15,9 +15,18 @@
 | `release/crm-only` | **1.0.1f** | `crm-only` |
 | `release/crm-dms-logistics` | **1.0.1g** | `crm-dms-logistics` |
 | `release/dms-workflow-controlling` | **1.0.1h** | `dms-workflow-controlling` |
+| `release/crm-dms-workflow` | **1.0.1i** | `crm-dms-workflow` |
 | `release/customer-crm-dms-logistics-workflow` | 1.0.1b | `customer-4module` |
 
 Központi forrás: `packages/config/src/app-version.ts`
+
+## Lokális build – CRM + DMS + Workflow
+
+```bash
+npm install
+npm run build:config
+npm run package:crm-dms-workflow
+```
 
 ## Lokális build – DMS + Workflow + Controlling
 
@@ -86,7 +95,8 @@ Workflow: `.github/workflows/build-desktop.yml`
 - Push: `release/crm-only` → automatikus `crm-only` build
 - Push: `release/crm-dms-logistics` → automatikus `crm-dms-logistics` build
 - Push: `release/dms-workflow-controlling` → automatikus `dms-workflow-controlling` build
-- `workflow_dispatch` → választható package a listából (pl. `dms-workflow-controlling`)
+- Push: `release/crm-dms-workflow` → automatikus `crm-dms-workflow` build
+- `workflow_dispatch` → választható package a listából (pl. `crm-dms-workflow`)
 
 ## Ismert korlát
 

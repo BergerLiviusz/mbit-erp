@@ -34,6 +34,9 @@ function getActivePackage(): string {
     if (gitBranch === 'release/dms-workflow-controlling') {
       return 'dms-workflow-controlling';
     }
+    if (gitBranch === 'release/crm-dms-workflow') {
+      return 'crm-dms-workflow';
+    }
     if (
       gitBranch === 'package-1' ||
       gitBranch === 'package-2' ||
@@ -63,7 +66,9 @@ function getActivePackage(): string {
 const activePackage = getActivePackage();
 const appVersion =
   process.env.APP_VERSION ||
-  (activePackage === 'dms-workflow-controlling'
+  (activePackage === 'crm-dms-workflow'
+    ? '1.0.1i'
+    : activePackage === 'dms-workflow-controlling'
     ? '1.0.1h'
     : activePackage === 'crm-dms-logistics'
       ? '1.0.1g'

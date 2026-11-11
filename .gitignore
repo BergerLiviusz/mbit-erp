@@ -167,6 +167,7 @@ mbit-data/
 # Note: icon.ico is needed for Windows builds, so it's tracked in git
 apps/desktop/resources/*.icns
 apps/desktop/resources/erp-build-meta.json
+apps/desktop/resources/seed-documents/
 resources/*.ico
 resources/*.icns
 

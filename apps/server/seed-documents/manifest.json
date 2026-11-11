@@ -1,0 +1,34 @@
+{
+  "packageIds": ["crm-dms-workflow", "ERP_CRM_DMS_WORKFLOW"],
+  "categoryName": "Előtöltött iratok",
+  "documents": [
+    {
+      "file": "Adatlapok.pdf",
+      "nev": "Adatlapok",
+      "fajlNev": "Adatlapok.pdf",
+      "tipus": "egyeb",
+      "mimeType": "application/pdf"
+    },
+    {
+      "file": "Adatlapok_listaja_2026.xlsx",
+      "nev": "Adatlapok listája 2026",
+      "fajlNev": "Adatlapok_listája_2026.xlsx",
+      "tipus": "egyeb",
+      "mimeType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    },
+    {
+      "file": "Munkalap_Anker_koz_klima_karbantartas.pdf",
+      "nev": "Munkalap - Anker köz klíma karbantartás",
+      "fajlNev": "Munkalap - Anker köz klíma karbantartás.pdf",
+      "tipus": "egyeb",
+      "mimeType": "application/pdf"
+    },
+    {
+      "file": "Munkalap.pdf",
+      "nev": "Munkalap",
+      "fajlNev": "Munkalap.pdf",
+      "tipus": "egyeb",
+      "mimeType": "application/pdf"
+    }
+  ]
+}

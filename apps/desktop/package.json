@@ -112,6 +112,11 @@
         "from": "resources/erp-build-meta.json",
         "to": "erp-build-meta.json",
         "filter": ["**/*"]
+      },
+      {
+        "from": "resources/seed-documents",
+        "to": "seed-documents",
+        "filter": ["**/*"]
       }
     ],
     "win": {
